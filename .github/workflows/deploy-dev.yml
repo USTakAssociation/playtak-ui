@@ -52,10 +52,11 @@ jobs:
                 echo "$PRIVATE_KEY" > private_key.pem && chmod 0400 private_key.pem
                 scp -o StrictHostKeyChecking=no -i private_key.pem artifact.tar.gz ${USER_NAME}@${HOSTNAME}:~
                 ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME} '
+                  cd
                   mkdir playtak-ui-tmp
                   tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
-                  rm -rf ~/var/www/beta
-                  mv playtak-ui-tmp/ ~/var/www/beta
+                  sudo rm -rf /var/www/beta
+                  sudo mv playtak-ui-tmp/ /var/www/beta
                   rm -rf playtak-ui-tmp
                   rm artifact.tar.gz
                 '
