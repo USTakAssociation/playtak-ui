@@ -57,6 +57,7 @@ jobs:
                   tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
                   sudo rm -rf /var/www/html/
                   sudo mv playtak-ui-tmp/ /var/www/html/
+                  sudo chown -R root:root /var/www/html
                   rm -rf playtak-ui-tmp
                   rm artifact.tar.gz
                 '
