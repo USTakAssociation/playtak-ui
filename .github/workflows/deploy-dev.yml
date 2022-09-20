@@ -1,0 +1,61 @@
+# This is a basic workflow that is manually triggered
+
+name: Build and deploy Playtak-UI
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+    push:
+        branches: [dev]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+    # This workflow contains a single job called "build"
+    build:
+        # The type of runner that the job will run on
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                node-version: [14.x]
+
+        # Steps represent a sequence of tasks that will be executed as part of the job
+        steps:
+            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+            - uses: actions/checkout@v2
+            # Caches NPM and the node_modules folder for faster builds
+            - name: Cache node modules
+              uses: actions/cache@v1
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+            - name: Node ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            # - name: Lint code
+            #   run: npm run lint
+            # - name: Run Unit tests
+            #   run: npm run test
+            # - name: Build
+            #   run: npm run build
+             - name: Prep Artifact
+               run : |
+                 tar -czf artifact.tar.gz ./src 
+            - name: Deploy
+              env: 
+                  PRIVATE_KEY: ${{ secrets.PRIVATE_KEY  }}
+                  HOSTNAME : ${{ secrets.HOSTNAME }}
+                  USER_NAME : ${{ secrets.USER_NAME }}
+              run: |
+                echo "$PRIVATE_KEY" > private_key.pem && chmod 0400 private_key.pem
+                scp -o StrictHostKeyChecking=no -i private_key.pem artifact.tar.gz ${USER_NAME}@${HOSTNAME}:~
+                ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME} '
+                  mkdir playtak-ui-tmp
+                  tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
+                  rm -rf ~/var/www/beta
+                  mv playtak-ui-tmp/ ~/var/www/beta
+                  rm -rf playtak-ui-tmp
+                  rm artifact.tar.gz
+                '

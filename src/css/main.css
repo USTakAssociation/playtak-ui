@@ -1,0 +1,905 @@
+/* || General styles */
+
+body {
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+	overflow: hidden;
+	height: 100px;
+}
+
+#gamecanvas{
+	display: block;
+	position: fixed;
+	left: 0px;
+	top: 0px;
+}
+
+/* || Header and Main Navigation */
+
+#menubar{
+	position: fixed;
+	left: 0;
+	top: 0;
+	right: 0;
+	z-index: 22;
+	background-color: white;
+	font: 14px/24px arial;
+	overflow: hidden;
+}
+
+.singleline{
+	height: 36px;
+}
+
+.navright{
+	float: right;
+}
+
+.navitem{
+	border: none;
+	padding: 0 1px;
+	margin: 0 5px;
+	background-color: transparent;
+	height: 36px;
+	vertical-align: middle;
+	display: inline-block;
+}
+
+a.navitem, div.navitem{
+	line-height: 36px;
+	text-decoration: none;
+	color: #333;
+}
+
+.navicon{
+	height: 20px;
+	width: 20px;
+	vertical-align: middle;
+}
+
+.navitemlogin{
+	border: 1px solid #090;
+	padding: 0 2px;
+	margin: 3px 4px;
+	background-color: #6f3;
+	height: 30px;
+	vertical-align: middle;
+	border-radius: 4px;
+	width: 80px;
+}
+
+.loggedin{
+	background-color: white;
+	border-color: #ccc;
+}
+
+#scratchlist{
+	display: inline-block;
+	position: fixed;
+	top: 36px;
+	left: 0;
+	background-color: white;
+	width: 50px;
+}
+
+.scratchsize{
+	border: 1px solid #ccc;
+	border-top: none;
+	line-height: 30px;
+}
+
+/* TODO work on this for dark mode */
+.toggle-text {
+	border-radius: 2px;
+	border: 2px solid #404040;
+	border-radius: 5px;
+	text-align: center;
+	color: #c3c3c3;
+	background-color: #404040;
+	line-height: 12px;
+	width: 19px;
+	cursor: pointer;
+	user-select: none;
+}
+
+/* || Info bar */
+
+#infobar{
+	position:absolute;
+	min-height:20px;
+	background-color:#fff;
+	border:1px solid #666;
+	border-radius:6px;
+	padding:8px;
+	text-align:center;
+	font-size:110%;
+}
+
+/* || Notation */
+
+#notation-toggle-text {
+	position: absolute;
+	left: 202px;
+	top: 2px;
+}
+
+#floating {
+	position: fixed;
+	left: 5px;
+	top: 42px;
+	bottom:5px;
+	z-index: 10;
+}
+
+#rmenu {
+	border-style: solid;
+	border-width: 2px;
+	border-color: black;
+	padding: 5px;
+	margin: 2px;
+	width: 200px;
+	text-align: left;
+	overflow: hidden;
+	background-color: #e7e7e7;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	max-height: 1200px;
+}
+
+.rulebox{
+	display: inline-block;
+	width: 80px;
+	padding: 5px;
+}
+
+#komirule{
+	text-align: right;
+}
+
+#piecerule{
+	text-align: left;
+}
+
+.optlist svg {
+	fill: #000;
+}
+
+.i-requested-undo, .i-offered-draw {
+	fill: #f00;
+}
+
+.opp-requested-undo, .opp-offered-draw {
+	fill: #00f;
+}
+
+.hurrytime {
+	color: #d00;
+}
+
+.optlist a {
+	margin-top: 2px;
+	margin-bottom: 2px;
+	margin-left: 10px;
+	margin-right: 10px;
+	padding: 0px;
+}
+
+#notationbar {
+	border-top: 1px solid #888;
+	border-bottom: 1px solid #888;
+	background-color: #eee;
+	overflow: auto;
+	flex: 1;
+}
+
+#moveslist {
+	display: table;
+	width: 150px;
+}
+
+#moveslist a {
+	color: inherit;
+	text-decoration: none;
+}
+
+#moveslist tbody tr td + td {
+	display: inline-block;
+	height: 100%;
+	width: 40%;
+}
+
+#moveslist tbody tr td {
+	display: inline-block;
+	height: 100%;
+	width: 20%;
+}
+
+#moveslist tbody tr td a {
+	display: block;
+	height: 100%;
+	width: 100%;
+}
+
+#moveslist tbody tr td a span {
+	display: block;
+	height: 100%;
+	width: 100%;
+	word-wrap: break-word;
+}
+
+#moveslist tbody tr td a span:hover {
+	background-color: #c3c3c3;
+}
+
+.curmove {
+	background-color: #c3c3c3;
+}
+
+/* Player styles */
+
+.playerimg{
+	height: 20px;
+	width: 20px;
+}
+
+#player-opp-img.iswhite, #player-me-img.iswhite {
+	fill: #fff;
+	stroke: #555;
+	stroke-width: 80px;
+}
+
+#player-opp-img.isblack, #player-me-img.isblack {
+	fill: #000;
+	stroke: #000;
+	stroke-width: 80px;
+}
+
+#player-me, #player-opp, .player1-name, .player2-name {
+	display: inline-block;
+	color: black;
+	padding: 2px;
+}
+
+#player-me-time, #player-opp-time {
+	font-size: x-large;
+}
+
+.selectplayer {
+	border-radius: 10px;
+	background-color: #cccccc;
+}
+
+/* || Chat */
+
+#chat-toggle-button{
+	position: absolute;
+	right: 202px;
+	top: 2px;
+}
+
+#chat {
+	position: fixed;
+	right: 5px;
+	top: 42px;
+	bottom:5px;
+	z-index: 10;
+}
+
+#cmenu {
+	border: 2px solid #000;
+	padding: 5px;
+	margin: 2px;
+	text-align: left;
+	overflow: hidden;
+	background-color: #e7e7e7;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	width: 180px;
+}
+
+#roomslist{
+	max-height: 20%;
+	overflow: auto;
+}
+
+#room_divs{
+	flex :1;
+	overflow: auto;
+}
+
+.roomheader{
+	cursor: pointer;
+	padding: 4px 8px;
+	border: 1px solid #333;
+	border-radius: 10px;
+	background-color: #999;
+	word-wrap: break-word;
+}
+
+.roomheader.newmessages{
+	background-color: #6c6;
+}
+
+.roomheader.selected{
+	background-color: #fff;
+	padding: 8px;
+}
+
+.chatclose{
+	float: right;
+	width: 20px;
+	height: 20px;
+	border: none;
+	background: none;
+	text-align: center;
+	line-height: 20px;
+	color: #666;
+	font-size: 16px;
+	font-weight: bold;
+	display: inline-block;
+	padding: 0;
+}
+
+.chatclose:hover{
+	color: #000;
+}
+
+.roombody{
+	display: none;
+	padding: 3px;
+	word-wrap: break-word;
+}
+
+.roombody.selected{
+	display: block;
+}
+
+.chatname{
+	font-weight: bold;
+}
+
+.context-player {
+	cursor: pointer;
+}
+
+/* || Modals */
+
+.modal {
+	text-align: center;
+}
+
+.modal:after {
+	display: inline-block;
+	vertical-align: middle;
+	content: "";
+	height: 100%;
+}
+
+.modal-dialog {
+	display: inline-block;
+	text-align: left;
+	vertical-align: middle;
+}
+
+.close {
+	text-shadow: none;
+	opacity: 1;
+}
+
+#watchgame-modal, #joingame-modal{
+	overflow-x: auto;
+}
+
+#help-modal ul li ul {
+	font-weight: bold;
+}
+
+#help-modal ul li ul li {
+	font-weight: normal;
+}
+
+#settings-modal ul li ul {
+	font-weight: bold;
+}
+
+#settings-modal ul li ul li {
+	font-weight: normal;
+}
+
+#seeklistbot tr, #seeklist tr, #gamelist tr{
+	cursor: pointer;
+}
+
+.playername {
+	font-weight: bold;
+}
+
+.ratingequal{
+	color: #aaa;
+}
+
+.ratingup{
+	color: red;
+}
+
+.ratingdown{
+	color: green;
+}
+
+.privateseek{
+	background-color: #ffd;
+}
+
+.playernamegame {
+	font-weight: bold;
+	word-wrap: break-word;
+	max-width: 100px;
+}
+
+.col-sm-6-custom{
+	position: relative;
+	padding-right: 15px;
+	padding-left: 15px;
+	float: left;
+	width: 100%;
+}
+
+/* || Forms */
+
+input[type=checkbox] {
+	vertical-align: middle;
+	line-height: 14px;
+	margin: 0px;
+}
+
+input[type=range] {
+	vertical-align: middle;
+	margin: 0px;
+	display: inline-block;
+	background: transparent;
+	width: 50%;
+}
+
+.radio-list-item {
+	display: inline-block;
+	margin: 0;
+	width: auto;
+}
+
+.radio-list-item input[type=radio] {
+	display: none;
+}
+
+.radio-list-img {
+	margin: 0;
+	border: 2px #fff solid;
+	cursor: pointer;
+}
+
+.radio-list-item input[type=radio]:checked + .radio-list-img {
+	border: 2px solid #88d;
+}
+
+#clearcolorbox {
+	width: 95px;
+	display: inline-block;
+}
+
+/* || Alerts */
+
+#alertbox {
+	position: fixed;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	z-index: 8;
+}
+
+.alerts {
+	width: 60%;
+	margin: auto;
+}
+
+.alert {
+	margin: 0px;
+}
+
+/* || Table */
+
+.linestable{
+	width: 100%;
+}
+
+.linestable tr.headerrow{
+	border-top: 2px solid #ccc;
+	border-bottom: 2px solid #ccc;
+}
+
+.linestable tr{
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+
+.linestable td{
+	padding: 8px 4px;
+}
+
+.linestable th{
+	padding: 8px 4px;
+}
+
+.colourcircle circle{
+	stroke:black;
+}
+
+/* || UTILITIES */
+
+.bold {
+	font-weight: bold;
+}
+
+.fullw {
+	width: 100%;
+}
+
+.width-full {
+	margin: 0 auto;
+	width: 100%;
+}
+
+.height-full {
+	margin: 0 auto;
+	height: 100%;
+}
+
+.height-auto {
+	height: auto;
+}
+
+.center {
+	text-align: center;
+}
+
+.left {
+	text-align: left;
+}
+
+.right {
+	text-align: right;
+}
+
+.vertical-text {
+	transform-origin: bottom right;
+	transform: rotate(-90deg);
+	float: left;
+}
+
+.border {
+	border-radius: 20px;
+	padding: 5px;
+	margin: 2px;
+	border: 2px solid #000;
+}
+
+#hovertext{
+	top: 0;
+	left: 0;
+	display: none;
+	position: fixed;
+	pointer-events: none;
+	border: 1px solid rgba(0,0,0,.6);
+	border-radius: 6px;
+	background-color: #ffd;
+	padding: 4px 7px;
+	z-index: 10000;
+	max-width: 400px;
+}
+
+/* || Responsive CSS */
+
+@media (min-width: 768px){
+	.navbar-nav > li > a{
+		padding: 8px;
+	}
+
+	.navbar{
+		min-height: 36px;
+		margin-bottom: 0px;
+	}
+
+	.navbar-btn {
+		margin-top: 1px;
+		margin-bottom: 1px;
+	}
+	
+	.halfrow{
+		display: inline-block;
+		width: 269px;
+		height: 280px;
+	}
+
+	.leftmost{
+		margin-right: 18px;
+	}
+}
+
+/* || Dark Mode */
+
+.dark-theme{
+	color: #ddd;
+	background-color: #000;
+}
+
+.dark-theme a{
+	color:#35d;
+}
+
+/* || Header and Main Navigation */
+
+.dark-theme #menubar{
+	background-color: black;
+}
+
+.dark-theme #menubar svg {
+	fill: #ddd;
+}
+
+.dark-theme a.navitem, .dark-theme div.navitem{
+	color: #ddd;
+}
+
+.dark-theme .navitemlogin{
+	border-color: #6e6;
+	background-color: #3a0;
+	color:#fff;
+}
+
+.dark-theme .loggedin{
+	background-color: black;
+	border-color: #555;
+}
+
+.dark-theme #scratchlist{
+	background-color: black;
+}
+
+.dark-theme .toggle-text {
+	color: #c3c3c3;
+	background-color: #404040;
+	border-color: #404040;
+}
+
+/* || Info bar */
+
+.dark-theme #infobar{
+	background-color:#000;
+	border-color:#999;
+}
+
+/* || Notation */
+
+.dark-theme #rmenu {
+	border-color: #999;
+	background-color: #222;
+}
+
+.dark-theme .optlist svg {
+	fill: #ddd;
+}
+
+.dark-theme .i-requested-undo, .dark-theme .i-offered-draw {
+	fill: #f00;
+}
+
+.dark-theme .opp-requested-undo, .dark-theme .opp-offered-draw {
+	fill: #00f;
+}
+
+.dark-theme .hurrytime {
+	color: #d00;
+}
+
+.dark-theme #notationbar {
+	border-top-color:#666;
+	border-bottom-color:#666;
+	background-color: #000;
+}
+
+.dark-theme #moveslist tbody tr td a span:hover {
+	background-color: #333;
+}
+
+.dark-theme .curmove {
+	background-color: #333;
+}
+
+/* Player styles */
+
+.dark-theme #player-opp-img.iswhite, .dark-theme #player-me-img.iswhite {
+	fill: #fff;
+	stroke: #fff;
+	stroke-width: 80px;
+}
+
+.dark-theme #player-opp-img.isblack, .dark-theme #player-me-img.isblack {
+	fill: #000;
+	stroke: #bbb;
+	stroke-width: 80px;
+}
+
+.dark-theme #player-me, .dark-theme #player-opp, .dark-theme .player1-name, .dark-theme .player2-name {
+	color: #ddd;
+}
+
+.dark-theme .selectplayer {
+	background-color: #555;
+}
+
+/* || Chat */
+
+.dark-theme #cmenu {
+	border-color: #999;
+	background-color: #222;
+}
+
+.dark-theme .roomheader{
+	border-color: #bbb;
+	background-color: #666;
+}
+
+.dark-theme .roomheader.newmessages{
+	background-color: #070;
+}
+
+.dark-theme .roomheader.selected{
+	background-color: #000;
+}
+
+.dark-theme .chatclose{
+	color: #aaa;
+}
+
+.dark-theme .chatclose:hover{
+	color: #ddd;
+}
+
+/* || Modals */
+
+.dark-theme .ratingequal{
+	color: #aaa;
+}
+
+.dark-theme .ratingup{
+	color: red;
+}
+
+.dark-theme .ratingdown{
+	color: #0a0;
+}
+
+.dark-theme .privateseek{
+	background-color: #660;
+}
+
+.dark-theme .modal-dialog {
+	color: #ddd;
+}
+
+.dark-theme .modal-header {
+	border-bottom-color: #666;
+}
+
+.dark-theme .close {
+	color: #aaa;
+}
+
+.dark-theme .close:hover{
+	color: #ddd;
+}
+
+.dark-theme .modal-content {
+	background-color: #000;
+}
+
+.dark-theme .nav>li>a {
+	color: #ddd;
+}
+
+.dark-theme .nav-tabs>li.active>a, .dark-theme .nav-tabs>li.active>a:focus, .dark-theme .nav-tabs>li.active>a:hover {
+	color: #ddd;
+	background-color: transparent;
+	border-color: #ddd;
+	border-bottom-color: transparent;
+}
+
+.dark-theme .nav>li>a:hover {
+	background-color: transparent;
+	color: #ddd;
+}
+
+/* || Forms */
+
+.dark-theme .radio-list-img {
+	border-color: #000;
+}
+
+.dark-theme .radio-list-item input[type=radio]:checked + .radio-list-img {
+	border-color: #66f;
+}
+
+.dark-theme .form-control{
+	color: #ddd;
+	background-color: #000;
+	border-color: #999;
+}
+
+/* || Alerts */
+
+.dark-theme .alert-success{
+	color: #6d6;
+	background-color: #050;
+	border-color: #3a3;
+}
+.dark-theme .alert-info{
+	color: #8af;
+	background-color: #026;
+	border-color: #68c;
+}
+.dark-theme .alert-warning{
+	color: #dd3;
+	background-color: #440;
+	border-color: #aa3;
+}
+.dark-theme .alert-danger{
+	color: #e33;
+	background-color: #600;
+	border-color: #b33;
+}
+
+/* || Table */
+
+.dark-theme .linestable tr.headerrow{
+	border-top-color: #666;
+	border-bottom-color: #666;
+}
+
+.dark-theme .linestable tr{
+	border-top-color: #666;
+	border-bottom-color: #666;
+}
+
+.dark-theme .colourcircle circle{
+	stroke:white;
+}
+
+/* || UTILITIES */
+
+.dark-theme .border {
+	border-color: #ddd;
+}
+
+.dark-theme .btn-default {
+	color: #ddd;
+	background-color: #000;
+	border-color: #999;
+}
+
+.dark-theme .btn-primary {
+	color: #ddd;
+	background-color: #02a;
+	border-color: #57c;
+}
+
+.dark-theme #hovertext{
+	border-color: rgba(255,255,255,.6);
+	background-color: #660;
+}
