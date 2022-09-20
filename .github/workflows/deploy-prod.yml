@@ -55,7 +55,7 @@ jobs:
                   mkdir playtak-ui-tmp
                   tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
                   rm -rf ~/var/www/html/
-                  mv playtak-ui-tmp/dist ~/var/www/html/
+                  mv playtak-ui-tmp/ ~/var/www/html/
                   rm -rf playtak-ui-tmp
                   rm artifact.tar.gz
                 '
