@@ -41,8 +41,8 @@ jobs:
             # - name: Build
             #   run: npm run build
             - name: Prep Artifact
-               run : |
-                 tar -czf artifact.tar.gz ./src 
+              run : |
+                tar -czf artifact.tar.gz ./src 
             - name: Deploy
               env: 
                   PRIVATE_KEY: ${{ secrets.PRIVATE_KEY  }}
