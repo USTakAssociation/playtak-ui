@@ -888,8 +888,6 @@ function formatTime(t){
 	}
 }
 
-
-
 /*
  * Settings loaded on initialization. Try to keep them in the order of the window.
  * First the left-hand div, then the right-hand div.
@@ -910,7 +908,7 @@ function loadSettings() {
 	}
 	
 	// load the setting for wall orientation.
-	if(localStorage.getItem('diagonal_walls')==='true') {
+	if(localStorage.getItem('diagonal_walls')==='true' || (!localStorage.getItem('diagonal_walls') && ismobile)) {
 		document.getElementById('wall-orientation').checked = true
 		diagonal_walls = true
 	}
@@ -982,11 +980,8 @@ function loadSettings() {
 	if(localStorage.getItem('fixedcamera')==='false') {
 		fixedcamera=false
 	}
-	else if(localStorage.getItem('fixedcamera')==='true') {
+	else(localStorage.getItem('fixedcamera')==='true') {
 		fixedcamera=true
-	}
-	else{
-		fixedcamera=ismobile
 	}
 	document.getElementById('fix-camera-checkbox').checked = fixedcamera
 
@@ -1018,12 +1013,7 @@ function loadSettings() {
 
 	perspective=localStorage.getItem("perspective")
 	if(!perspective){
-		if(ismobile){
-			perspective=0
-		}
-		else{
-			perspective=90
-		}
+		perspective=80
 	}
 	perspective=+perspective
 	document.getElementById('perspective-display').innerHTML=+perspective
