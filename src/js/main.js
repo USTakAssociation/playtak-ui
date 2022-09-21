@@ -487,6 +487,8 @@ function init() {
 	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5,3,16,100)
 	highlighter = new THREE.Mesh(geometry,materials.highlighter)
 	highlighter.rotateX(Math.PI / 2)
+	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
+	lastMoveHighlighter.rotateX(Math.PI / 2);
 
 	addressbarhack=document.getElementById("addressbarhack")
 
@@ -560,6 +562,9 @@ function floathashscene(){
 	update(settingscounter)
 	if(board.highlighted){
 		updatepoint(highlighter.position)
+	}
+	if (board.lastMoveHighlighted) {
+		updatepoint(lastMoveHighlighter.position);
 	}
 	function updatepoint(p){
 		update(p.x)
@@ -780,34 +785,7 @@ function loadptn(text) {
 	}
 	reader.readAsText(files[0])
 }
-/*
-function volume_change() {
-	var movesound = document.getElementById("move-sound")
-	var chimesound = document.getElementById("chime-sound")
-	var hurrysound = document.getElementById("hurry-sound")
 
-	if(localStorage["sound"]=="false") {
-		movesound.muted = false
-		chimesound.muted = false
-		hurrysound.muted = false
-		movesound.pause()
-		movesound.currentTime=0
-		movesound.play()
-		localStorage.setItem('sound','true')
-		document.getElementById("soundoff").display="none"
-		document.getElementById("soundon").display="inline-block"
-	}
-	else{
-		movesound.muted = true
-		chimesound.muted = true
-		hurrysound.muted = true
-
-		localStorage.setItem('sound','false')
-		document.getElementById("soundoff").display="inline-block"
-		document.getElementById("soundon").display="none"
-	}
-}
-*/
 function turnsoundon(){
 	var movesound = document.getElementById("move-sound")
 	var chimesound = document.getElementById("chime-sound")
@@ -1135,6 +1113,19 @@ function sliderPieceSize(newSize) {
 function showTable(event) {
 	localStorage.setItem('show_table', event.target.checked);
 	board.table.visible = event.target.checked
+}
+
+
+/*
+ * Notify checkbox change for checkbox:
+ *	 Show or hide last move highlighter
+ */
+function showLastMoveHighlighter(event) {
+	localStorage.setItem("show_last_move_highlight", event.target.checked);
+	board.lastMoveHighlighterVisible = event.target.checked;
+	if(!event.target.checked){
+		board.unHighlightLastMove_sq();
+	}
 }
 
 function perspectiveChange(newPerspective) {

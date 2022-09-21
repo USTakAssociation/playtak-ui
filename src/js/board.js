@@ -1,16 +1,17 @@
-const WHITE_PLAYER = 1,BLACK_PLAYER = 2
-var stack_dist = 15
-var piece_size = 60
-var piece_height = 15
-var sq_size = 90
-var sq_height = 15
-var capstone_height = 70
-var capstone_radius = 30
-var stack_selection_height = 60
-var border_size = 30
-var stackOffsetFromBorder = 50
-var letter_size = 12
-var diagonal_walls = false
+const WHITE_PLAYER = 1;
+const BLACK_PLAYER = 2;
+var stack_dist = 15;
+var piece_size = 60;
+var piece_height = 15;
+var sq_size = 90;
+var sq_height = 15;
+var capstone_height = 70;
+var capstone_radius = 30;
+var stack_selection_height = 60;
+var border_size = 30;
+var stackOffsetFromBorder = 50;
+var letter_size = 12;
+var diagonal_walls = false;
 var table_width = 1280;
 var table_depth = 920;
 var table_height = 50;
@@ -18,31 +19,33 @@ var table_height = 50;
 var light_position = [0, 800, -45];
 var light_radius = [1.8, 1600];
 
-var raycaster = new THREE.Raycaster()
-var highlighter
-var mouse = new THREE.Vector2()
-var offset = new THREE.Vector3()
+var raycaster = new THREE.Raycaster();
+var highlighter;
+var lastMoveHighlighter;
+var mouse = new THREE.Vector2();
+var offset = new THREE.Vector3();
 
 var materials = {
-	images_root_path:'images/'
-	,board_texture_path:'images/board/'
-	,pieces_texture_path:'images/pieces/'
-	,white_sqr_style_name:'sand-velvet-diamonds'
-	,black_sqr_style_name:'sand-velvet-diamonds'
-	,white_piece_style_name:"white_coral"
-	,black_piece_style_name:"black_pietersite"
-	,white_cap_style_name:"white_coral"
-	,black_cap_style_name:"black_pietersite"
-	,table_texture_path:'images/wooden_table.png'
-	,white_piece:new THREE.MeshBasicMaterial({color:0xd4b375})
-	,black_piece:new THREE.MeshBasicMaterial({color:0x573312})
-	,white_cap:new THREE.MeshBasicMaterial({color:0xd4b375})
-	,black_cap:new THREE.MeshBasicMaterial({color:0x573312})
-	,white_sqr:new THREE.MeshBasicMaterial({color:0xe6d4a7})
-	,black_sqr:new THREE.MeshBasicMaterial({color:0xba6639})
-	,border:new THREE.MeshBasicMaterial({color:0x6f4734})
-	,letter:new THREE.MeshBasicMaterial({color:0xFFF5B5})
-	,highlighter:new THREE.LineBasicMaterial({color:0x0000f0})
+	images_root_path: 'images/',
+	board_texture_path: 'images/board/',
+	pieces_texture_path: 'images/pieces/',
+	white_sqr_style_name: 'sand-velvet-diamonds',
+	black_sqr_style_name: 'sand-velvet-diamonds',
+	white_piece_style_name: "white_coral",
+	black_piece_style_name: "black_pietersite",
+	white_cap_style_name: "white_coral",
+	black_cap_style_name: "black_pietersite",
+	table_texture_path: 'images/wooden_table.png',
+	white_piece: new THREE.MeshBasicMaterial({color: 0xd4b375}),
+	black_piece: new THREE.MeshBasicMaterial({color: 0x573312}),
+	white_cap: new THREE.MeshBasicMaterial({color: 0xd4b375}),
+	black_cap: new THREE.MeshBasicMaterial({color: 0x573312}),
+	white_sqr: new THREE.MeshBasicMaterial({color: 0xe6d4a7}),
+	black_sqr: new THREE.MeshBasicMaterial({color: 0xba6639}),
+	border: new THREE.MeshBasicMaterial({color: 0x6f4734}),
+	letter: new THREE.MeshBasicMaterial({color: 0xFFF5B5}),
+	highlighter: new THREE.LineBasicMaterial({color: 0x0000f0}),
+	lastMoveHighlighter: new THREE.LineBasicMaterial({color: 0xfff9b8})
 
 	,getWhiteSquareTextureName:function(){
 		return this.board_texture_path + 'white_' + this.white_sqr_style_name + '.png'
@@ -158,8 +161,8 @@ var materials = {
 			for(i = 0;i < board.size * board.size;++i){
 				if(board.board_objects[i].isboard===true){
 					board.board_objects[i].material =
-((i + Math.floor(i / board.size) * ((board.size - 1) % 2)) % 2)
-	? materials.white_sqr : materials.black_sqr
+					((i + Math.floor(i / board.size) * ((board.size - 1) % 2)) % 2)
+						? materials.white_sqr : materials.black_sqr
 				}
 			}
 		}
@@ -167,8 +170,8 @@ var materials = {
 }
 
 var boardFactory = {
-	boardfont:null
-	,makeSquare:function(file,rankInverse,scene){
+	boardfont: null,
+	makeSquare:function(file,rankInverse,scene){
 		var geometry = new THREE.BoxGeometry(sq_size,sq_height,sq_size)
 		geometry.center()
 		var square = new THREE.Mesh(geometry,((file+rankInverse) % 2 ? materials.white_sqr : materials.black_sqr))
@@ -182,8 +185,8 @@ var boardFactory = {
 		square.isboard = true
 		scene.add(square)
 		return square
-	}
-	,makeBorders:function(scene){
+	},
+	makeBorders:function(scene){
 		// We use the same geometry for all 4 borders. This means the borders
 		// overlap each other at the corners. Probably OK at this point, but
 		// maybe there are cases where that would not be good.
@@ -317,8 +320,8 @@ var pieceFactory = {
 		piece.pieceNum=pieceNum
 		scene.add(piece)
 		return piece
-	}
-	,makeCap:function(playerNum,capNum,scene){
+	},
+	makeCap:function(playerNum,capNum,scene){
 		var geometry = capgeometry(playerNum === WHITE_PLAYER?"white":"black")
 
 		// the capstones go at the other end of the row
@@ -605,50 +608,52 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 }
 
 var board = {
-	size:0
-	,komi:0
-	,totcaps:0
-	,tottiles:0
-	,whitepiecesleft:0
-	,blackpiecesleft:0
-	,mycolor:"white"
-	,movecount:0 // how many moves have been made in this game
-	,moveshown:0 // which move are we showing (we can show previous moves)
+	size: 0,
+	komi: 0,
+	totcaps: 0,
+	tottiles: 0,
+	whitepiecesleft: 0,
+	blackpiecesleft: 0,
+	mycolor: "white",
+	movecount: 0, // how many moves have been made in this game,
+	moveshown: 0, // which move are we showing (we can show previous moves)
 	// movestart is the initial move number of this game.
 	// An empty board starts from 0, but a game loaded from
 	// TPS may start at some other move.
 	// This matters during Undo, because we can't undo beyond
 	// the initial board layout received from the TPS.
-	,movestart:0
-	,scratch:true
+	movestart: 0,
+	scratch: true,
 	// string representation of contents of each square on the board
-	,sq:[]
+	sq: [],
 	// visual objects representing the board
-	,board_objects:[]
+	board_objects: [],
 	// visual objects representing the pieces
-	,piece_objects:[]
-	,move:{start:null,end:null,dir:'U',squares:[]}
-	,highlighted:null
-	,totalhighlighted:null
-	,selected:null
-	,selectedStack:null
-	,ismymove:false
-	,gameno:0
-	,boardside:"white"
-	,result:""
-	,observing:false
+	piece_objects: [],
+	move: {start: null,end: null,dir: 'U',squares: []},
+	highlighted: null,
+	lastMoveHighlighted: null,
+	lastMoveHighlighterVisible: false,
+	totalhighlighted: null,
+	selected: null,
+	selectedStack: null,
+	ismymove: false,
+	gameno: 0,
+	boardside: "white",
+	result: "",
+	observing: false,
 
 	// Keep track of some important positions
-	,sq_position:{startx:0,startz:0,endx:0,endz:0}
-	,corner_position:{x:0,z:0,endx:0,endz:0}
+	sq_position: {startx: 0,startz: 0,endx: 0,endz: 0},
+	corner_position: {x: 0,z: 0,endx: 0,endz: 0},
 
-	// a stack of board layouts
-	,board_history:[]
-	,timer_started:false
-	// the game has ended and play cannot continue
-	,isPlayEnded:false
+	// a stack of board layouts,
+	board_history: [],
+	timer_started: false,
+	// the game has ended and play cannot continue,
+	isPlayEnded: false,
 
-	,create:function(sz,color,isScratch,obs,komi,pieces,capstones){
+	create:function(sz,color,isScratch,obs,komi,pieces,capstones){
 		this.size = sz
 		this.komi=komi||0
 
@@ -694,7 +699,8 @@ var board = {
 		this.scratch = isScratch
 		this.board_objects = []
 		this.piece_objects = []
-		this.highlighted = null
+		this.highlighted = null;
+		this.lastMoveHighlighted = null;
 		this.selected = null
 		this.selectedStack = null
 		this.gameno = 0
@@ -913,7 +919,6 @@ var board = {
 			$('.moveno'+this.movecount+':first').addClass('curmove')
 		}
 		this.movecount++
-		//document.getElementById("move-sound").pause()
 		document.getElementById("move-sound").currentTime=0
 		document.getElementById("move-sound").play()
 
@@ -1147,11 +1152,9 @@ var board = {
 		else if(pick[0]=="none"){
 			if(this.selected){
 				this.showmove(this.moveshown,true)
-
 			}
 			else if(this.selectedStack){
 				this.showmove(this.moveshown,true)
-
 			}
 			else{
 
@@ -1237,10 +1240,10 @@ var board = {
 		this.pushPieceOntoSquare(hlt,obj)
 
 		this.notatePmove(file + rank,caporwall)
+		console.log(file);
 		this.incmovecnt()
 
 		if(oldpos !== -1){board.showmove(oldpos)}
-
 		dontanimate = false
 	}
 	//Move move the server sends
@@ -1281,7 +1284,6 @@ var board = {
 		this.incmovecnt()
 
 		if(oldpos !== -1){board.showmove(oldpos)}
-
 		dontanimate = false
 	}
 	,gameover:function(premsg){
@@ -1618,6 +1620,7 @@ var board = {
 
 		pc.position.z = sq.position.z
 		pc.onsquare = sq
+		this.highlightLastMove_sq(sq);
 		st.push(pc)
 	}
 	,rotate:function(piece){
@@ -1716,7 +1719,6 @@ var board = {
 	}
 	,showmove:function(no,override){
 		if(this.movecount <= this.movestart || no>this.movecount || no<this.movestart || (this.moveshown === no && !override)){
-
 			return
 		}
 
@@ -1895,10 +1897,25 @@ var board = {
 			this.move.squares.push(lastsq)
 		}
 		this.selectedStack = null
+	},
+	highlightLastMove_sq: function(sq){
+		// TODO add check if setting is enabled
+		if (!this.lastMoveHighlighterVisible){ return; } 
+		this.unHighlightLastMove_sq(this.lastMoveHighlighted);
+		this.lastMoveHighlighted = sq;
+
+		lastMoveHighlighter.position.x = sq.position.x;
+		lastMoveHighlighter.position.y = sq_height / 2;
+		lastMoveHighlighter.position.z = sq.position.z;
+		scene.add(lastMoveHighlighter);
+	},
+	unHighlightLastMove_sq: function() {
+		this.lastMoveHighlighted = null;
+		scene.remove(lastMoveHighlighter);
 	}
 	,highlight_sq:function(sq){
 		this.unhighlight_sq(this.highlighted)
-		this.highlighted = sq
+		this.highlighted = sq;
 
 		highlighter.position.x = sq.position.x
 		highlighter.position.y = sq_height / 2
