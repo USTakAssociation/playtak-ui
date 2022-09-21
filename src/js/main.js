@@ -979,8 +979,7 @@ function loadSettings() {
 
 	if(localStorage.getItem('fixedcamera')==='false') {
 		fixedcamera=false
-	}
-	else(localStorage.getItem('fixedcamera')==='true') {
+	}else if (localStorage.getItem('fixedcamera')==='true') {
 		fixedcamera=true
 	}
 	document.getElementById('fix-camera-checkbox').checked = fixedcamera
