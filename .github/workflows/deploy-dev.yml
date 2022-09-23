@@ -58,6 +58,7 @@ jobs:
                   sudo rm -rf /var/www/beta
                   sudo mv playtak-ui-beta-tmp/src /var/www/beta
                   bash /gz-beta.sh
+                  sudo cp /static/ratinglist.json.gz /var/www/beta
                   sudo chown -R root:root /var/www/beta
                   rm -rf playtak-ui-beta-tmp
                   rm artifact-beta.tar.gz
