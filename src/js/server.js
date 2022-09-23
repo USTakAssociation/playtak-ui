@@ -147,7 +147,7 @@ function fetchratings(){
 			server.updateplayerinfo()
 		}
 	}
-	xhttp.open("GET",'/ratinglist.json',true)
+	xhttp.open("GET",'../ratinglist.json',true)
 	xhttp.send()
 	//Run shortly after ratings have been generated, random time within 3 minute window, in order to not DDoS the server.
 	setTimeout(fetchratings,(Math.ceil(Date.now()/3600000+0.16)-Math.random()*0.05-0.1)*3600000-Date.now())
