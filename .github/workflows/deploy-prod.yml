@@ -1,6 +1,6 @@
 # This is a basic workflow that is manually triggered
 
-name: Build and deploy Playtak-UI
+name: Build and deploy Playtak-UI prod
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
@@ -56,7 +56,8 @@ jobs:
                   mkdir playtak-ui-tmp
                   tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
                   sudo rm -rf /var/www/html/
-                  sudo mv playtak-ui-tmp/ /var/www/html/
+                  sudo mv playtak-ui-tmp/src /var/www/html/
+                  bash /gz-html.sh
                   sudo chown -R root:root /var/www/html
                   rm -rf playtak-ui-tmp
                   rm artifact.tar.gz
