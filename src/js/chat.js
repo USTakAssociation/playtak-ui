@@ -118,6 +118,11 @@ var chathandler={
 		$('#chat-size-slider').val(this.chat_width)
 		$('#cmenu').width(this.chat_width)
 
+		const vertical = window.screen.width < window.screen.height;
+		const chatstore = "showchat" + (vertical ? "v" : "h");
+		if (localStorage[chatstore] === "hide") {
+			return;
+		}
 		$('#chat-toggle-button').css('right',this.chat_width+12)
 	}
 	,hideChatTime:function(){

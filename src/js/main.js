@@ -594,9 +594,9 @@ function scratchbutton(size) {
 }
 
 function adjustsidemenu(notation,chat){
-	var vertical=window.screen.width<window.screen.height
-	var notationstore="shownotation"+(vertical?"v":"h")
-	var chatstore="showchat"+(vertical?"v":"h")
+	var vertical = window.screen.width<window.screen.height;
+	var notationstore = "shownotation"+(vertical?"v":"h");
+	var chatstore = "showchat"+(vertical?"v":"h");
 	
 	var notationstate=localStorage[notationstore]
 	if(notation=="show"){
@@ -964,7 +964,6 @@ function loadSettings() {
 	if(localStorage.getItem('hide-send')==='true') {
 		document.getElementById('hide-send-checkbox').checked = true
 		document.getElementById('send-button').style.display = "none"
-		//$('#chat').height(window.innerHeight - $('nav').height() - 51)
 	}
 
 	chathandler.adjustChatWidth(+localStorage.getItem('chat_size')||180)
@@ -1218,12 +1217,10 @@ function checkboxHideSend() {
 	if(document.getElementById('hide-send-checkbox').checked) {
 		localStorage.setItem('hide-send','true')
 		document.getElementById('send-button').style.display = "none"
-		//$('#chat').height(window.innerHeight - $('nav').height() - 51)
 	}
 	else{
 		localStorage.setItem('hide-send','false')
 		document.getElementById('send-button').style.display = "initial"
-		//$('#chat').height(window.innerHeight - $('nav').height() - 85)
 	}
 
 }
@@ -1314,7 +1311,6 @@ function sliderChatSize(newSize) {
 	if(newSize!=localStorage['chat_size']){
 		chathandler.adjustChatWidth(+newSize)
 		localStorage.setItem('chat_size',newSize)
-		//adjustsidemenu(null,"show")
 		generateCamera()
 	}
 }
