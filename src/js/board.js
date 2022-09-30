@@ -687,11 +687,12 @@ var board = {
 		if(capstones>=0){
 			this.totcaps=capstones
 		}
-		this.whitepiecesleft = this.tottiles + this.totcaps
-		this.blackpiecesleft = this.tottiles + this.totcaps
-		
-		$("#komirule").html("+"+Math.floor(this.komi/2)+(this.komi&1?".5":".0"))
-		$("#piecerule").html(this.tottiles+"/"+this.totcaps)
+		this.whitepiecesleft = this.tottiles + this.totcaps;
+		this.blackpiecesleft = this.tottiles + this.totcaps;
+		document.getElementById("komirule")
+			.appendChild(document.createTextNode("+" + Math.floor(this.komi / 2) + (this.komi & 1) ? ".5" : ".0"));
+		document.getElementById("piecerule")
+			.appendChild(document.createTextNode(this.tottiles + " / " + this.totcaps));
 
 		this.mycolor = color
 		this.sq = []
@@ -777,7 +778,7 @@ var board = {
 		scene.add(this.table);
 		this.table.visible = true;
 		if(!JSON.parse(localStorage.getItem('show_table'))) {
-		this.table.visible = false;
+			this.table.visible = false;
 		}
 	}
 	// Add light for the table
@@ -967,7 +968,7 @@ var board = {
 		// pos is a single dim. array of size*size containing arrays of piece types
 		var pos = this.board_history[moveNum - this.movestart]
 		if(pos === 'undefined'){
-			console.log("no board position found for moveNum " + moveNum)
+			console.warn("no board position found for moveNum " + moveNum)
 			return
 		}
 
@@ -1228,7 +1229,7 @@ var board = {
 		var obj = this.getfromstack((caporwall === 'C'),this.is_white_piece_to_move())
 
 		if(!obj){
-			console.log("something is wrong")
+			console.warn("something is wrong")
 			return
 		}
 
@@ -1240,7 +1241,6 @@ var board = {
 		this.pushPieceOntoSquare(hlt,obj)
 
 		this.notatePmove(file + rank,caporwall)
-		console.log(file);
 		this.incmovecnt()
 
 		if(oldpos !== -1){board.showmove(oldpos)}
@@ -1466,20 +1466,7 @@ var board = {
 			var cell2 = row.insertCell(2)
 			
 			cell1.innerHTML = txt
-			/*
-			if(txt==='R-0' || txt==='F-0' || txt==='1-0'){
-				cell1.innerHTML = txt
-				cell2.innerHTML = '--'
-			}
-			else if(txt==='0-R' || txt==='0-F' || txt==='0-1'){
-				cell1.innerHTML = '--'
-				cell2.innerHTML = txt
-			}
-			else if(txt==='1/2-1/2'){
-				cell1.innerHTML = '1/2 - '
-				cell2.innerHTML = '1/2'
-			}
-			*/
+
 			$('#notationbar').scrollTop(10000)
 			return
 		}
@@ -1811,11 +1798,7 @@ var board = {
 
 		$('#player-me-time').addClass('player2-time')
 		$('#player-opp-time').addClass('player1-time')
-		
-		/*
-		$('#player-me-img').removeClass('white-player-color')
-		$('#player-opp-img').addClass('white-player-color')
-		*/
+
 		$('#player-me-img').removeClass("iswhite")
 		$('#player-me-img').addClass("isblack")
 		$('#player-opp-img').removeClass("isblack")
@@ -1826,8 +1809,6 @@ var board = {
 		$('.player1-name:first').html('You')
 		$('.player2-name:first').html('You')
 		settimers(0,0,true)
-		//$('.player1-time:first').html('0:00')
-		//$('.player2-time:first').html('0:00')
 
 		$('#gameoveralert').modal('hide')
 	}
@@ -1852,7 +1833,6 @@ var board = {
 		if(this.scratch){return true}
 		if(this.observing){return false}
 		var tomove = (this.movecount % 2 === 0) ? "white" : "black"
-		//console.log('tomove = ', tomove, this.mycolor, tomove===this.mycolor);
 		return tomove === this.mycolor
 	}
 	,is_white_piece_to_move:function(){
@@ -1995,7 +1975,7 @@ var board = {
 				var rank = parseInt(match[3]) - 1
 				var obj = this.getfromstack((piece === 'C'),this.is_white_piece_to_move())
 				if(!obj){
-					console.log("bad PTN: too many pieces")
+					console.warn("bad PTN: too many pieces")
 					return
 				}
 				if(piece === 'S'){
@@ -2054,7 +2034,7 @@ var board = {
 				}
 			}
 			else{
-				console.log("unparseable: " + move)
+				console.warn("unparseable: " + move)
 				continue
 			}
 

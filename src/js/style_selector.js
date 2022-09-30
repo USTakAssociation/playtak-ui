@@ -40,7 +40,6 @@ function make_board_selector(color){
 function make_piece_selector(color){
 	var form = $('#'+color+'_pieces_form')
 
-	var arr=piece_styles
 	var call
 	if(color === 'white'){
 		call="radioPieceStyleWhite"

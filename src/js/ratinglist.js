@@ -1,12 +1,3 @@
-/*
-window.fetch('/ratinglist.json')
-	.then((response) => {
-		response.json()
-			.then(makeratinglist)
-			.catch((err) => console.error('Failed to parse JSON from ratings',err))
-	})
-	.catch((err) => console.error('Failed to get ratings',err))
-*/
 var xhttp = new XMLHttpRequest()
 xhttp.onreadystatechange = function(){
 	if(this.readyState == 4 && this.status == 200){
