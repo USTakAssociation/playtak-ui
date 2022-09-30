@@ -239,16 +239,20 @@ a.navitem, div.navitem{
 .player-box{
 	padding: 0px;
 }
+
 .rulebox{
-	display: inline-block;
-	width: 80px;
-	padding: 5px;
+	padding: 8px;
 }
 
 #komirule{
 	text-align: right;
 }
 
+#variablerules{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
 #piecerule{
 	text-align: left;
 }

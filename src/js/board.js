@@ -689,10 +689,8 @@ var board = {
 		}
 		this.whitepiecesleft = this.tottiles + this.totcaps;
 		this.blackpiecesleft = this.tottiles + this.totcaps;
-		document.getElementById("komirule")
-			.appendChild(document.createTextNode("+" + Math.floor(this.komi / 2) + (this.komi & 1) ? ".5" : ".0"));
-		document.getElementById("piecerule")
-			.appendChild(document.createTextNode(this.tottiles + " / " + this.totcaps));
+		$("#komirule").html("+" + Math.floor(this.komi / 2) + (this.komi & 1 ? ".5" : ".0"));
+		$("#piecerule").html(this.tottiles + "/" + this.totcaps);
 
 		this.mycolor = color
 		this.sq = []
