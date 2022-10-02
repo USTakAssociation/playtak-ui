@@ -390,11 +390,6 @@ a.navitem, div.navitem{
 	width: 180px;
 }
 
-#roomslist{
-	max-height: 20%;
-	overflow: auto;
-}
-
 #room_divs{
 	flex :1;
 	overflow: auto;

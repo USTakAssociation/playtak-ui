@@ -881,7 +881,7 @@ var server = {
 			var players=roomname.split("-")
 			var id="room-"+roomname
 			if(players.length==2){
-				chathandler.createRoom(id,"<b>"+players[0]+"</b> vs <b>"+players[1]+"</b>")
+				chathandler.createRoom(id,"<div><b>"+players[0]+"</b> vs <b>"+players[1]+"</b></div>")
 			}
 			else{
 				chathandler.createRoom(id,roomname)
