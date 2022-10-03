@@ -738,6 +738,9 @@ input[type=range] {
 	background-color: var(--secondary-bg-color);
 }
 
+.margin-top--8{
+	margin-top: 8px;
+}
 .margin-bottom--8{
 	margin-bottom: 8px;
 }
