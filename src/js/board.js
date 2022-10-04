@@ -1037,7 +1037,6 @@ var board = {
 					this.unselect()
 					var hlt=pick[1]
 					this.pushPieceOntoSquare(hlt,sel)
-
 					var stone = 'Piece'
 					if(sel.iscapstone){stone = 'Cap'}
 					else if(sel.isstanding){stone = 'Wall'}
@@ -1074,7 +1073,8 @@ var board = {
 							}
 						}
 					}
-					this.incmovecnt()
+					this.incmovecnt();
+					this.highlightLastMove_sq(hlt);
 				}
 			}
 			else if(this.selectedStack){
@@ -1094,17 +1094,17 @@ var board = {
 					}
 					if(goodmove){
 						var obj = this.selectedStack.pop()
-						this.pushPieceOntoSquare(pick[1],obj)
+						this.pushPieceOntoSquare(pick[1],obj);
 						this.move_stack_over(pick[1],this.selectedStack)
 						this.move.squares.push(pick[1])
-
+						
 						if(this.move.squares.length > 1 && this.move.dir === 'U'){this.setmovedir()}
-
+						
 						if(this.selectedStack.length === 0){
-							this.move.end = pick[1]
-							this.selectedStack = null
-							this.unhighlight_sq()
-							this.generateMove()
+							this.move.end = pick[1];
+							this.selectedStack = null;
+							this.unhighlight_sq();
+							this.generateMove();
 						}
 					}
 				}
@@ -1586,7 +1586,8 @@ var board = {
 				this.checkroadwin()
 				this.checksquaresover()
 			}
-			this.incmovecnt()
+			this.incmovecnt();
+			this.highlightLastMove_sq(this.move.end);
 		}
 		this.move = {start:null,end:null,dir:'U',squares:[]}
 	}
@@ -1605,7 +1606,6 @@ var board = {
 
 		pc.position.z = sq.position.z
 		pc.onsquare = sq
-		this.highlightLastMove_sq(sq);
 		st.push(pc)
 	}
 	,rotate:function(piece){
