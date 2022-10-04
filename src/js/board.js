@@ -1877,7 +1877,9 @@ var board = {
 		this.selectedStack = null
 	},
 	highlightLastMove_sq: function(sq){
-		// TODO add check if setting is enabled
+		if (JSON.parse(localStorage.getItem("show_last_move_highlight"))) {
+			this.lastMoveHighlighterVisible = true;
+		}
 		if (!this.lastMoveHighlighterVisible){ return; } 
 		this.unHighlightLastMove_sq(this.lastMoveHighlighted);
 		this.lastMoveHighlighted = sq;

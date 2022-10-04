@@ -850,148 +850,156 @@ function formatTime(t){
  */
 function loadSettings() {
 	// Load theme
-	var storedTheme = localStorage.getItem('theme') || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
-	if (storedTheme === 'dark-theme'){
+	var storedTheme =
+		localStorage.getItem("theme") ||
+		(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
+	if (storedTheme === "dark-theme") {
 		var body = document.body;
 		body.classList.add(storedTheme);
-		document.getElementById('dark-mode').checked = true;
-		if(!localStorage.getItem('clearcolor')) {
-			localStorage.setItem('clearcolor', '#152028');
-			document.getElementById("clearcolorbox").value = '#152028';
+		document.getElementById("dark-mode").checked = true;
+		if (!localStorage.getItem("clearcolor")) {
+			localStorage.setItem("clearcolor", "#152028");
+			document.getElementById("clearcolorbox").value = "#152028";
 			clearcolorchange();
 		}
 	}
-	
+
 	// load the setting for wall orientation.
-	if(localStorage.getItem('diagonal_walls')==='true' || (!localStorage.getItem('diagonal_walls') && ismobile)) {
-		document.getElementById('wall-orientation').checked = true
-		diagonal_walls = true
+	if (localStorage.getItem("diagonal_walls") === "true" || (!localStorage.getItem("diagonal_walls") && ismobile)) {
+		document.getElementById("wall-orientation").checked = true;
+		diagonal_walls = true;
 	}
 
 	// load the setting for piece size.
-	if(localStorage.getItem('piece_size')!==null) {
-		piece_size = parseInt(localStorage.getItem('piece_size'))
-		document.getElementById('piece-size-display').innerHTML = piece_size
-		document.getElementById('piece-size-slider').value = piece_size
+	if (localStorage.getItem("piece_size") !== null) {
+		piece_size = parseInt(localStorage.getItem("piece_size"));
+		document.getElementById("piece-size-display").innerHTML = piece_size;
+		document.getElementById("piece-size-slider").value = piece_size;
 	}
 
 	// load the setting for displaying the table.
-	if(localStorage.getItem('show_table')!==null || ismobile) {
-		show_table = JSON.parse(localStorage.getItem('show_table'));
-		let storedTheme = localStorage.getItem('theme') || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
+	if (localStorage.getItem("show_table") !== null || ismobile) {
+		show_table = JSON.parse(localStorage.getItem("show_table"));
+		let storedTheme =
+			localStorage.getItem("theme") ||
+			(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
 		if (show_table === null && ismobile && storedTheme === "dark-theme") {
 			show_table = true;
 			localStorage.setItem("show_table", true);
 		}
-		document.getElementById('show-table').checked = show_table;
+		document.getElementById("show-table").checked = show_table;
+	}
+	// load the setting for showing the last move highlight.
+	if (localStorage.getItem("show_last_move_highlight") !== null) {
+		showLastMove = JSON.parse(localStorage.getItem("show_last_move_highlight"));
+		document.getElementById("show-last-move").checked = showLastMove;
+		//showLastMoveHighlighter(showLastMove);
 	}
 
 	// load white piece style.
-	if(localStorage.getItem('piece_style_white3')!==null) {
-		var styleName = localStorage.getItem('piece_style_white3')
-		if(!piece_styles.hasOwnProperty(styleName)){
-			styleName=Object.keys(piece_styles)[0]
+	if (localStorage.getItem("piece_style_white3") !== null) {
+		var styleName = localStorage.getItem("piece_style_white3");
+		if (!piece_styles.hasOwnProperty(styleName)) {
+			styleName = Object.keys(piece_styles)[0];
 		}
-		materials.white_piece_style_name = styleName
-		materials.white_cap_style_name = styleName
-		document.getElementById('piece-style-white-' + styleName).checked = true
+		materials.white_piece_style_name = styleName;
+		materials.white_cap_style_name = styleName;
+		document.getElementById("piece-style-white-" + styleName).checked = true;
 	}
 
 	// load black piece style.
-	if(localStorage.getItem('piece_style_black3')!==null) {
-		var styleName = localStorage.getItem('piece_style_black3')
-		if(!piece_styles.hasOwnProperty(styleName)){
-			styleName=Object.keys(piece_styles)[Object.keys(piece_styles).length-1]
+	if (localStorage.getItem("piece_style_black3") !== null) {
+		var styleName = localStorage.getItem("piece_style_black3");
+		if (!piece_styles.hasOwnProperty(styleName)) {
+			styleName = Object.keys(piece_styles)[Object.keys(piece_styles).length - 1];
 		}
-		materials.black_piece_style_name = styleName
-		materials.black_cap_style_name = styleName
-		document.getElementById('piece-style-black-' + styleName).checked = true
+		materials.black_piece_style_name = styleName;
+		materials.black_cap_style_name = styleName;
+		document.getElementById("piece-style-black-" + styleName).checked = true;
 	}
 
 	// load black board style.
-	if(localStorage.getItem('board_style_black2')!==null) {
-		var styleName = localStorage.getItem('board_style_black2')
-		if(black_square_styles.indexOf(styleName)==-1){
-			styleName=black_square_styles[0]
+	if (localStorage.getItem("board_style_black2") !== null) {
+		var styleName = localStorage.getItem("board_style_black2");
+		if (black_square_styles.indexOf(styleName) == -1) {
+			styleName = black_square_styles[0];
 		}
-		materials.black_sqr_style_name = styleName
-		document.getElementById('board-style-black-' + styleName).checked = true
+		materials.black_sqr_style_name = styleName;
+		document.getElementById("board-style-black-" + styleName).checked = true;
 	}
 
 	// load white board style.
-	if(localStorage.getItem('board_style_white2')!==null) {
-		var styleName = localStorage.getItem('board_style_white2')
-		if(white_square_styles.indexOf(styleName)==-1){
-			styleName=white_square_styles[0]
+	if (localStorage.getItem("board_style_white2") !== null) {
+		var styleName = localStorage.getItem("board_style_white2");
+		if (white_square_styles.indexOf(styleName) == -1) {
+			styleName = white_square_styles[0];
 		}
-		materials.white_sqr_style_name = styleName
-		document.getElementById('board-style-white-' + styleName).checked = true
+		materials.white_sqr_style_name = styleName;
+		document.getElementById("board-style-white-" + styleName).checked = true;
 	}
 
 	// load the setting for antialiasing.
-	if(localStorage.getItem('antialiasing_mode')==='false') {
-		document.getElementById('antialiasing-checkbox').checked = false
-		antialiasing_mode = false
+	if (localStorage.getItem("antialiasing_mode") === "false") {
+		document.getElementById("antialiasing-checkbox").checked = false;
+		antialiasing_mode = false;
 	}
 
-	sliderAniso(+localStorage['aniso']>=0?+localStorage['aniso']:3)
-	sliderScale(+localStorage['scale']>=0?+localStorage['scale']:2)
+	sliderAniso(+localStorage["aniso"] >= 0 ? +localStorage["aniso"] : 3);
+	sliderScale(+localStorage["scale"] >= 0 ? +localStorage["scale"] : 2);
 
-	if(localStorage.getItem('fixedcamera')==='false') {
-		fixedcamera=false
-	}else if (localStorage.getItem('fixedcamera')==='true') {
-		fixedcamera=true
+	if (localStorage.getItem("fixedcamera") === "false") {
+		fixedcamera = false;
+	} else if (localStorage.getItem("fixedcamera") === "true") {
+		fixedcamera = true;
 	}
-	document.getElementById('fix-camera-checkbox').checked = fixedcamera
+	document.getElementById("fix-camera-checkbox").checked = fixedcamera;
 
-	if(localStorage.getItem('clickthrough')==='false') {
-		clickthrough=false
+	if (localStorage.getItem("clickthrough") === "false") {
+		clickthrough = false;
 	}
-	document.getElementById('click-checkbox').checked = clickthrough
-	
-	if(localStorage.getItem('hovertext')==='false') {
-		hovertext=false
+	document.getElementById("click-checkbox").checked = clickthrough;
+
+	if (localStorage.getItem("hovertext") === "false") {
+		hovertext = false;
+	} else if (localStorage.getItem("hovertext") === "true") {
+		hovertext = true;
+	} else {
+		hovertext = !ismobile;
 	}
-	else if(localStorage.getItem('hovertext')==='true') {
-		hovertext=true
-	}
-	else{
-		hovertext=!ismobile
-	}
-	document.getElementById('hover-checkbox').checked = hovertext
+	document.getElementById("hover-checkbox").checked = hovertext;
 
 	// load whether or not the 'Send' button should be hidden.
-	if(localStorage.getItem('hide-send')==='true') {
-		document.getElementById('hide-send-checkbox').checked = true
-		document.getElementById('send-button').style.display = "none"
+	if (localStorage.getItem("hide-send") === "true") {
+		document.getElementById("hide-send-checkbox").checked = true;
+		document.getElementById("send-button").style.display = "none";
 	}
 
-	chathandler.adjustChatWidth(+localStorage.getItem('chat_size')||180)
-	adjustsidemenu()
+	chathandler.adjustChatWidth(+localStorage.getItem("chat_size") || 180);
+	adjustsidemenu();
 
-	perspective=localStorage.getItem("perspective")
-	if(!perspective){
-		perspective=80
+	perspective = localStorage.getItem("perspective");
+	if (!perspective) {
+		perspective = 80;
 	}
-	perspective=+perspective
-	document.getElementById('perspective-display').innerHTML=+perspective
-	document.getElementById('perspective-slider').value=perspective
+	perspective = +perspective;
+	document.getElementById("perspective-display").innerHTML = +perspective;
+	document.getElementById("perspective-slider").value = perspective;
 
 	//load setting for hide chat time
-	if(localStorage.getItem('hide-chat-time')==='true') {
-		document.getElementById('hide-chat-time').checked = true
-		$('.chattime').each(function(index) {
-			$(this).addClass('hidden')
-		})
+	if (localStorage.getItem("hide-chat-time") === "true") {
+		document.getElementById("hide-chat-time").checked = true;
+		$(".chattime").each(function (index) {
+			$(this).addClass("hidden");
+		});
 	}
 
 	// load the setting for automatically rotating the board, when assigned player 2.
-	if(localStorage.getItem('auto_rotate')==='false') {
-		document.getElementById('auto-rotate-checkbox').checked = false
+	if (localStorage.getItem("auto_rotate") === "false") {
+		document.getElementById("auto-rotate-checkbox").checked = false;
 	}
-	
-	document.getElementById("clearcolorbox").value=localStorage["clearcolor"]||"#dddddd"
-	clearcolorchange()
+
+	document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
+	clearcolorchange();
 }
 
 /*
