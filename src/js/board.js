@@ -630,6 +630,7 @@ var board = {
 	board_objects: [],
 	// visual objects representing the pieces
 	piece_objects: [],
+	lastMovedSquareList: [],
 	move: {start: null,end: null,dir: 'U',squares: []},
 	highlighted: null,
 	lastMoveHighlighted: null,
@@ -943,9 +944,6 @@ var board = {
 			for(var j=0;j<this.size;j++){
 				var bp_sq = []
 				var stk = this.sq[i][j]
-
-				//if(stk.length===0)
-				//	bp_sq.push('.');
 				for(var s=0;s<stk.length;s++){
 					var pc = stk[s]
 					var c = 'p'
@@ -961,6 +959,7 @@ var board = {
 		}
 		this.board_history.push(bp)
 	}
+	// called on show move and undo
 	,apply_board_pos:function(moveNum){
 		// grab the given board_history
 		// pos is a single dim. array of size*size containing arrays of piece types
@@ -990,8 +989,7 @@ var board = {
 					// we know that there were enough pieces.
 					if(iswall){this.standup(pc)}
 
-					this.pushPieceOntoSquare(sq,pc)
-
+					this.pushPieceOntoSquare(sq,pc);
 					if(iswhite){this.whitepiecesleft--}
 					else{this.blackpiecesleft--}
 				}
@@ -1001,7 +999,6 @@ var board = {
 	,mousepick:function(){
 		raycaster.setFromCamera(mouse,camera)
 		var intersects = raycaster.intersectObjects(scene.children)
-		var obj=null
 		var a
 		for(a=0;a<intersects.length;a++){
 			var potential=intersects[a].object
@@ -1028,7 +1025,6 @@ var board = {
 		if(!this.ismymove){
 			return
 		}
-
 		if(pick[0]=="board"){
 			var destinationstack = this.get_stack(pick[1])
 			if(this.selected){
@@ -1037,6 +1033,7 @@ var board = {
 					this.unselect()
 					var hlt=pick[1]
 					this.pushPieceOntoSquare(hlt,sel)
+					//check if actually moved
 					var stone = 'Piece'
 					if(sel.iscapstone){stone = 'Cap'}
 					else if(sel.isstanding){stone = 'Wall'}
@@ -1047,6 +1044,8 @@ var board = {
 						stone,
 						this.squarename(hlt.file,hlt.rank)
 					)
+					this.highlightLastMove_sq(hlt);
+					this.lastMovedSquareList.push(hlt);
 
 					var sqname = this.squarename(hlt.file,hlt.rank)
 					var msg = "P " + sqname
@@ -1074,13 +1073,13 @@ var board = {
 						}
 					}
 					this.incmovecnt();
-					this.highlightLastMove_sq(hlt);
 				}
 			}
+			// Left click move stack
 			else if(this.selectedStack){
 				var tp = this.top_of_stack(pick[1])
 				if(tp && (tp.iscapstone || (tp.isstanding && !this.selectedStack[this.selectedStack.length - 1].iscapstone))){
-
+					console.log('selected stack?')
 				}
 				else{
 					var prev = this.move.squares[this.move.squares.length - 1]
@@ -1236,7 +1235,9 @@ var board = {
 		}
 
 		var hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0),rank - 1)
-		this.pushPieceOntoSquare(hlt,obj)
+		this.pushPieceOntoSquare(hlt,obj);
+		this.highlightLastMove_sq(hlt);
+		this.lastMovedSquareList.push(hlt);
 
 		this.notatePmove(file + rank,caporwall)
 		this.incmovecnt()
@@ -1269,7 +1270,9 @@ var board = {
 		for(i = 0;i < nums.length;i++){
 			var sq = this.get_board_obj(s1.file + (i + 1) * fi,s1.rank + (i + 1) * ri)
 			for(j = 0;j < nums[i];j++){
-				this.pushPieceOntoSquare(sq,tstk.pop())
+				this.pushPieceOntoSquare(sq,tstk.pop());
+				this.highlightLastMove_sq(sq);
+				this.lastMovedSquareList.push(sq);
 			}
 		}
 		this.notateMmove(
@@ -1588,6 +1591,7 @@ var board = {
 			}
 			this.incmovecnt();
 			this.highlightLastMove_sq(this.move.end);
+			this.lastMovedSquareList.push(this.move.end);
 		}
 		this.move = {start:null,end:null,dir:'U',squares:[]}
 	}
@@ -1603,7 +1607,6 @@ var board = {
 			else{pc.position.y = sq_height/2 + piece_size/2 + piece_height * st.length}
 		}
 		else{pc.position.y = sq_height + st.length * piece_height}
-
 		pc.position.z = sq.position.z
 		pc.onsquare = sq
 		st.push(pc)
@@ -1723,7 +1726,7 @@ var board = {
 	,undo:function(){
 		// we can't undo before the place we started from
 		if(this.movecount <= this.movestart){return}
-
+		this.unHighlightLastMove_sq()
 		// This resetpieces() is to make sure there aren't any pieces
 		// in mid-move, in case the user clicked a piece to place it, but
 		// then clicked undo.
@@ -1731,7 +1734,11 @@ var board = {
 		this.movecount--
 		this.apply_board_pos(this.movecount)
 		this.board_history.pop()
-		this.moveshown = this.movecount
+		this.lastMovedSquareList.pop();
+		if(this.movecount >= 1){
+			this.highlightLastMove_sq(this.lastMovedSquareList.at(-1));
+		}
+		this.moveshown = this.movecount;
 
 		$('#player-me').toggleClass('selectplayer')
 		$('#player-opp').toggleClass('selectplayer')
@@ -1940,7 +1947,6 @@ var board = {
 			stk[i].onsquare = sq
 		}
 	}
-
 	,loadptn:function(ptn){
 		if(!this.scratch && !this.observing){
 			alert('warning','PTN cannot be loaded while in the middle of a game')
@@ -2049,7 +2055,6 @@ var board = {
 			this.result = ''
 		}
 	}
-
 	// This function loads any valid TPS
 	// It also will allow some liberties with the notation:
 	//	 * if you don't complete a row it assumes the cells are empty
