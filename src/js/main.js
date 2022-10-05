@@ -25,11 +25,11 @@ function alert2(type,msg) {
 	})
 }
 
-var infobartimer=0
-var currentinfomessage=1
-var infochangetime=-Infinity
-//var infodisplaytimes=[]
-var infodisplayweights=[]
+var infobartimer = 0;
+var currentinfomessage = 1;
+var infochangetime =- Infinity;
+var infodisplayweights = [];
+
 function infobar(){
 	var bar=document.getElementById("infobar")
 	if(!bar){
@@ -37,12 +37,12 @@ function infobar(){
 		bar.id="infobar"
 		document.body.appendChild(bar)
 	}
-	var cuttop=$('nav').height()+10
-	var cutleft=($('#rmenu').hasClass('hidden')?0:209)+10
-	var cutright=($('#cmenu').hasClass('hidden')?0:24+(+localStorage.getItem('chat_size')||180))+10
-	bar.style.top=(cuttop+2)+"px"
-	bar.style.left=(cutleft+20)+"px"
-	bar.style.right=(cutright+20)+"px"
+	var cuttop = $('header').height()+10;
+	var cutleft = ($('#rmenu').hasClass('hidden')?0:209)+10;
+	var cutright = ($('#cmenu').hasClass('hidden')?0:24+(+localStorage.getItem('chat_size')||180))+10;
+	bar.style.top = (cuttop+2)+"px";
+	bar.style.left = (cutleft+20)+"px";
+	bar.style.right = (cutright+20)+"px";
 	
 	var messages=[
 		{
@@ -135,40 +135,6 @@ function infobar(){
 		}
 		infobartimer=setTimeout(changemessage,infochangetime-now)
 	}
-	/*
-	function changemessage(){
-		var now=invarianttime()
-		var a
-		var nextmessage=0
-		clearTimeout(infobartimer)
-		if(now>infochangetime || !(messages[currentinfomessage].c())){
-			var possibilities=[]
-			for(a=0;a<messages.length;a++){
-				infodisplaytimes[a]=infodisplaytimes[a]||(-Math.floor(Math.random()*1000000000))
-				if(messages[a].c() && currentinfomessage!=a){
-					possibilities.push(a)
-				}
-			}
-			if(possibilities[0]==0){
-				nextmessage=0
-			}
-			else{
-				possibilities.sort(function(a,b){return infodisplaytimes[a]-infodisplaytimes[b]})
-				if(possibilities.length>=2){
-					nextmessage=possibilities[Math.floor(Math.random()*2)]
-				}
-				else if(possibilities.length>=1){
-					nextmessage=possibilities[0]
-				}
-			}
-			currentinfomessage=nextmessage
-			infochangetime=now+1000*messages[nextmessage].t
-			bar.innerHTML=messages[nextmessage].m
-			infodisplaytimes[nextmessage]=now
-		}
-		infobartimer=setTimeout(changemessage,infochangetime-now)
-	}
-	*/
 }
 function infobaroff(){
 	try{
@@ -235,25 +201,28 @@ function generateCamera(){
 	if(!rendererdone){
 		return
 	}
-	
-	settingscounter=(settingscounter+1)&15
-	
-	var cuttop=$('nav').height()+10
-	var cutleft=($('#rmenu').hasClass('hidden')?0:209)+10
-	var cutright=($('#cmenu').hasClass('hidden')?0:24+(+localStorage.getItem('chat_size')||180))+10
-	var cutbottom=0+10
 
-	var pointlist=[]
-	var xsizea=board.size*sq_size/2+border_size+stackOffsetFromBorder+piece_size
-	var xsizeb=(board.size-1)*sq_size/2+piece_size/2
-	var yneg=sq_height/2
-	var yposa=10*piece_height-yneg
-	var yposb=20*piece_height+yneg
-	var zsizea=board.size*sq_size/2+border_size
-	var zsizeb=xsizeb
-	var a,b
-	for(a=-1;a<2;a+=2){
-		for(b=-1;b<2;b+=2){
+	settingscounter = (settingscounter+1) & 15;
+	const PADDING = 10;
+	var cuttop = $('header').height() + PADDING;
+	var cutleft = ($("#rmenu").hasClass("hidden") ? 0 : 209) + PADDING;
+	if (!$("#settings-drawer").hasClass("hidden") && $("#rmenu").hasClass("hidden")){
+		cutleft = 209 + PADDING;
+	}
+	var cutright = ($("#cmenu").hasClass("hidden") ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + PADDING;
+	var cutbottom = 0 + PADDING;
+
+	var pointlist = [];
+	var xsizea = board.size*sq_size/2+border_size+stackOffsetFromBorder+piece_size;
+	var xsizeb = (board.size-1)*sq_size/2+piece_size/2;
+	var yneg = sq_height/2;
+	var yposa = 10*piece_height-yneg;
+	var yposb = 20*piece_height+yneg;
+	var zsizea = board.size*sq_size/2+border_size;
+	var zsizeb = xsizeb;
+
+	for(let a =- 1 ; a < 2; a += 2){
+		for(let b = -1; b < 2; b += 2){
 			pointlist.push(new THREE.Vector3(a*xsizea,-yneg,b*zsizea))
 			pointlist.push(new THREE.Vector3(a*xsizea,yposa,b*zsizea))
 			pointlist.push(new THREE.Vector3(a*xsizeb,yposb,b*zsizeb))
@@ -394,7 +363,6 @@ function generateCamera(){
 		cuttop+=ypadding/2
 		cutbottom+=ypadding/2
 
-		//console.log(cutleft,cutright,cuttop,cutbottom)
 		camera = new THREE.OrthographicCamera(-maxleft-cutleft*scale,-maxright+cutright*scale,maxtop+cuttop*scale,maxbottom-cutbottom*scale,2000,5000 )
 		var campos=invcamdir.multiplyScalar(3500)
 		camera.position.set(campos.x,campos.y,campos.z)
@@ -428,8 +396,6 @@ function init() {
 	}
 	if(ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
 		isidevice=true
-		//document.body.ontouchstart=document.body.ontouchmove=document.body.ontouchend=document.body.ontouchcancel=document.body.ontouchforcechange=
-		
 		document.body.ongesturestart=document.body.ongesturechange=document.body.ongestureend=function(ev){
 			ev.preventDefault()
 		}
@@ -437,11 +403,13 @@ function init() {
 	
 	var fson=false
 	if(ismobile && !isidevice){
-		var fsbutton=document.createElement("button")
-		fsbutton.className="navitem"
-		fsbutton.innerHTML="Fullscreen"
-		fsbutton.onclick=togglefs
-		document.getElementById("menubar").appendChild(fsbutton)
+		let fsbutton = document.createElement("button");
+		let li = document.createElement('li');
+		fsbutton.className = "navitem";
+		fsbutton.innerHTML = "Fullscreen";
+		fsbutton.onclick = togglefs;
+		li.appendChild(fsbutton);
+		document.getElementById("main-nav").appendChild(li);
 	}
 	function togglefs(){
 		if(fson){
@@ -452,18 +420,7 @@ function init() {
 		}
 		fson=!fson
 	}
-	
-	/*
-	document.body.onclick=document.body.onmousedown=document.body.onmouseup=document.body.onmousemove=function(ev){
-		if(ev.target && (ev.target.nodeName=="BUTTON" || ev.target.nodeName=="INPUT" || ev.target.nodeName=="A" || ev.target.onclick)){
-			
-		}
-		else{
-			//console.log(ev)
-			ev.preventDefault()
-		}
-	}
-	*/
+
 	loadSettings()
 
 	canvas = document.getElementById("gamecanvas")
@@ -507,14 +464,7 @@ function onWindowResize() {
 		pixelratio=(window.devicePixelRatio||1)*scalelevel
 		renderer.setPixelRatio(pixelratio)
 		adjustsidemenu()
-
 		generateCamera()
-
-		$('#chat').css("top",($('nav').height() + 6)+"px")
-		//$('#chat-toggle-button').css("top",($('nav').height() + 7)+"px")
-		//$('#chat').height(window.innerHeight - $('nav').height() - 118)
-		$('#floating').css("top",($('nav').height() + 6)+"px")
-		//alert("info",$('nav').height())
 	}
 }
 
@@ -522,7 +472,6 @@ var dontanimate=false
 var scenehash=0
 var lastanimate=0
 function animate() {
-	adjustlayout()
 	if(!dontanimate){
 		controls.update()
 		var newscenehash=floathashscene()
@@ -534,15 +483,6 @@ function animate() {
 		}
 	}
 	requestAnimationFrame(animate)
-}
-
-function adjustlayout(){
-	if(document.getElementById("menubar").scrollHeight>50){
-		$("#moremenu").show()
-	}
-	else{
-		$("#moremenu").hide()
-	}
 }
 
 function floathashscene(){
@@ -654,9 +594,9 @@ function scratchbutton(size) {
 }
 
 function adjustsidemenu(notation,chat){
-	var vertical=window.screen.width<window.screen.height
-	var notationstore="shownotation"+(vertical?"v":"h")
-	var chatstore="showchat"+(vertical?"v":"h")
+	var vertical = window.screen.width<window.screen.height;
+	var notationstore = "shownotation"+(vertical?"v":"h");
+	var chatstore = "showchat"+(vertical?"v":"h");
 	
 	var notationstate=localStorage[notationstore]
 	if(notation=="show"){
@@ -676,16 +616,16 @@ function adjustsidemenu(notation,chat){
 	localStorage[notationstore]=notationstate
 	if($('#rmenu').hasClass('hidden')){
 		if(notationstate=="show"){
-			$('#notation-toggle-text').html('&lt;&lt;<br>n<br>o<br>t<br>a<br>t<br>i<br>o<br>n')
-			$('#notation-toggle-text').css("left","202px")
+			document.getElementById('notation-arrow').classList.add('rotate-arrow');
+			$('#notation-toggle-text').css("left","200px")
 			$('#rmenu').removeClass('hidden')
 			generateCamera()
 		}
 	}
 	else if(notationstate=="hide"){
 		$('#rmenu').addClass('hidden')
-		$('#notation-toggle-text').html('&gt;&gt;<br>n<br>o<br>t<br>a<br>t<br>i<br>o<br>n')
-		$('#notation-toggle-text').css("left","-5px")
+		document.getElementById("notation-arrow").classList.remove("rotate-arrow");
+		$('#notation-toggle-text').css("left","0px")
 		generateCamera()
 	}
 	
@@ -707,47 +647,63 @@ function adjustsidemenu(notation,chat){
 	localStorage[chatstore]=chatstate
 	if($('#cmenu').hasClass('hidden')){
 		if(chatstate=="show"){
-			$('#chat-toggle-button').css('right',chathandler.chat_width+16)
-			$('#chat-toggle-button').html('&gt;&gt;<br>c<br>h<br>a<br>t')
-			$('#cmenu').removeClass('hidden')
+			$('#chat-toggle-button').css('right',chathandler.chat_width + 12 )
+			document.getElementById("chat-arrow").classList.remove("rotate-arrow");
+			document.getElementById("cmenu").classList.remove("hidden");
 			generateCamera()
 		}
 	}
 	else if(chatstate=="hide"){
-		$('#chat-toggle-button').css('right',"-5px")
-		$('#chat-toggle-button').html('&lt;&lt;<br>c<br>h<br>a<br>t')
-		$('#cmenu').addClass('hidden')
+		$('#chat-toggle-button').css('right',"0px")
+		document.getElementById("chat-arrow").classList.add("rotate-arrow");
+		document.getElementById("cmenu").classList.add('hidden');
 		generateCamera()
 	}
+
 	infobar()
 }
-function rmenu() {
-	if($('#rmenu').hasClass('hidden')) {showrmenu()}
-	else{hidermenu()}
+
+let settingsToggle = false;
+function toggleSettingsDrawer(){
+	const settingElem = document.getElementById('settings-drawer');
+	if (!settingsToggle) {
+		settingElem.classList.remove("hidden");
+		settingsToggle = true;
+	} else {
+		settingElem.classList.add("hidden");
+		settingsToggle = false;
+	}
+	generateCamera();
 }
 
-function showrmenu() {
-	$('#notation-toggle-text').html('&lt;&lt;<br>n<br>o<br>t<br>a<br>t<br>i<br>o<br>n')
-	$('#notation-toggle-text').css("left","202px")
-	$('#rmenu').removeClass('hidden')
-	if(fixedcamera || true){
-		generateCamera()
+let menuToggle = false
+function toggleMobileMenu(){
+	const menuElem = document.getElementById("menu-wrapper");
+	const mOpenElem = document.getElementById("mobile-open");
+	const mCloseElem = document.getElementById("mobile-close");
+	if (!menuToggle) {
+		menuElem.style.display = 'block'
+		mOpenElem.classList.add('hidden');
+		mCloseElem.classList.remove('hidden');
+		menuToggle = true;
+	} else {
+		menuElem.style.display = '';
+		mOpenElem.classList.remove("hidden");
+		mCloseElem.classList.add("hidden");
+		menuToggle = false;
 	}
 }
 
-function hidermenu() {
-	$('#rmenu').addClass('hidden')
-	$('#notation-toggle-text').html('&gt;&gt;<br>n<br>o<br>t<br>a<br>t<br>i<br>o<br>n')
-	$('#notation-toggle-text').css("left","-5px")
-	if(fixedcamera || true){
-		generateCamera()
+function closeMobileMenu(){
+	const menuElem = document.getElementById("menu-wrapper");
+	const mOpenElem = document.getElementById("mobile-open");
+	const mCloseElem = document.getElementById("mobile-close");
+	if(menuToggle){
+		menuElem.style.display = "";
+		mOpenElem.classList.remove("hidden");
+		mCloseElem.classList.add("hidden");
+		menuToggle = false;
 	}
-}
-
-function zoom(out) {
-	console.log('zoom',out,controls)
-	if(out) {controls.constraint.dollyOut(1.5)}
-	else{controls.constraint.dollyIn(1.5)}
 }
 
 function load() {
@@ -894,145 +850,156 @@ function formatTime(t){
  */
 function loadSettings() {
 	// Load theme
-	var storedTheme = localStorage.getItem('theme') || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
-	if (storedTheme === 'dark-theme'){
+	var storedTheme =
+		localStorage.getItem("theme") ||
+		(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
+	if (storedTheme === "dark-theme") {
 		var body = document.body;
 		body.classList.add(storedTheme);
-		document.getElementById('dark-mode').checked = true;
-		if(!localStorage.getItem('clearcolor')) {
-			console.log('no color')
-			localStorage.setItem('clearcolor', '#152028');
-			document.getElementById("clearcolorbox").value = '#152028';
+		document.getElementById("dark-mode").checked = true;
+		if (!localStorage.getItem("clearcolor")) {
+			localStorage.setItem("clearcolor", "#152028");
+			document.getElementById("clearcolorbox").value = "#152028";
 			clearcolorchange();
 		}
 	}
-	
+
 	// load the setting for wall orientation.
-	if(localStorage.getItem('diagonal_walls')==='true' || (!localStorage.getItem('diagonal_walls') && ismobile)) {
-		document.getElementById('wall-orientation').checked = true
-		diagonal_walls = true
+	if (localStorage.getItem("diagonal_walls") === "true" || (!localStorage.getItem("diagonal_walls") && ismobile)) {
+		document.getElementById("wall-orientation").checked = true;
+		diagonal_walls = true;
 	}
 
 	// load the setting for piece size.
-	if(localStorage.getItem('piece_size')!==null) {
-		piece_size = parseInt(localStorage.getItem('piece_size'))
-		document.getElementById('piece-size-display').innerHTML = piece_size
-		document.getElementById('piece-size-slider').value = piece_size
+	if (localStorage.getItem("piece_size") !== null) {
+		piece_size = parseInt(localStorage.getItem("piece_size"));
+		document.getElementById("piece-size-display").innerHTML = piece_size;
+		document.getElementById("piece-size-slider").value = piece_size;
 	}
 
 	// load the setting for displaying the table.
-	if(localStorage.getItem('show_table')!==null) {
-		show_table = JSON.parse(localStorage.getItem('show_table'));
-		document.getElementById('show-table').checked = show_table;
+	if (localStorage.getItem("show_table") !== null || ismobile) {
+		show_table = JSON.parse(localStorage.getItem("show_table"));
+		let storedTheme =
+			localStorage.getItem("theme") ||
+			(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
+		if (show_table === null && ismobile && storedTheme === "dark-theme") {
+			show_table = true;
+			localStorage.setItem("show_table", true);
+		}
+		document.getElementById("show-table").checked = show_table;
+	}
+	// load the setting for showing the last move highlight.
+	if (localStorage.getItem("show_last_move_highlight") !== null) {
+		showLastMove = JSON.parse(localStorage.getItem("show_last_move_highlight"));
+		document.getElementById("show-last-move").checked = showLastMove;
+		//showLastMoveHighlighter(showLastMove);
 	}
 
 	// load white piece style.
-	if(localStorage.getItem('piece_style_white3')!==null) {
-		var styleName = localStorage.getItem('piece_style_white3')
-		if(!piece_styles.hasOwnProperty(styleName)){
-			styleName=Object.keys(piece_styles)[0]
+	if (localStorage.getItem("piece_style_white3") !== null) {
+		var styleName = localStorage.getItem("piece_style_white3");
+		if (!piece_styles.hasOwnProperty(styleName)) {
+			styleName = Object.keys(piece_styles)[0];
 		}
-		materials.white_piece_style_name = styleName
-		materials.white_cap_style_name = styleName
-		document.getElementById('piece-style-white-' + styleName).checked = true
+		materials.white_piece_style_name = styleName;
+		materials.white_cap_style_name = styleName;
+		document.getElementById("piece-style-white-" + styleName).checked = true;
 	}
 
 	// load black piece style.
-	if(localStorage.getItem('piece_style_black3')!==null) {
-		var styleName = localStorage.getItem('piece_style_black3')
-		if(!piece_styles.hasOwnProperty(styleName)){
-			styleName=Object.keys(piece_styles)[Object.keys(piece_styles).length-1]
+	if (localStorage.getItem("piece_style_black3") !== null) {
+		var styleName = localStorage.getItem("piece_style_black3");
+		if (!piece_styles.hasOwnProperty(styleName)) {
+			styleName = Object.keys(piece_styles)[Object.keys(piece_styles).length - 1];
 		}
-		materials.black_piece_style_name = styleName
-		materials.black_cap_style_name = styleName
-		document.getElementById('piece-style-black-' + styleName).checked = true
+		materials.black_piece_style_name = styleName;
+		materials.black_cap_style_name = styleName;
+		document.getElementById("piece-style-black-" + styleName).checked = true;
 	}
 
 	// load black board style.
-	if(localStorage.getItem('board_style_black2')!==null) {
-		var styleName = localStorage.getItem('board_style_black2')
-		if(black_square_styles.indexOf(styleName)==-1){
-			styleName=black_square_styles[0]
+	if (localStorage.getItem("board_style_black2") !== null) {
+		var styleName = localStorage.getItem("board_style_black2");
+		if (black_square_styles.indexOf(styleName) == -1) {
+			styleName = black_square_styles[0];
 		}
-		materials.black_sqr_style_name = styleName
-		document.getElementById('board-style-black-' + styleName).checked = true
+		materials.black_sqr_style_name = styleName;
+		document.getElementById("board-style-black-" + styleName).checked = true;
 	}
 
 	// load white board style.
-	if(localStorage.getItem('board_style_white2')!==null) {
-		var styleName = localStorage.getItem('board_style_white2')
-		if(white_square_styles.indexOf(styleName)==-1){
-			styleName=white_square_styles[0]
+	if (localStorage.getItem("board_style_white2") !== null) {
+		var styleName = localStorage.getItem("board_style_white2");
+		if (white_square_styles.indexOf(styleName) == -1) {
+			styleName = white_square_styles[0];
 		}
-		materials.white_sqr_style_name = styleName
-		document.getElementById('board-style-white-' + styleName).checked = true
+		materials.white_sqr_style_name = styleName;
+		document.getElementById("board-style-white-" + styleName).checked = true;
 	}
 
 	// load the setting for antialiasing.
-	if(localStorage.getItem('antialiasing_mode')==='false') {
-		document.getElementById('antialiasing-checkbox').checked = false
-		antialiasing_mode = false
+	if (localStorage.getItem("antialiasing_mode") === "false") {
+		document.getElementById("antialiasing-checkbox").checked = false;
+		antialiasing_mode = false;
 	}
 
-	sliderAniso(+localStorage['aniso']>=0?+localStorage['aniso']:3)
-	sliderScale(+localStorage['scale']>=0?+localStorage['scale']:2)
+	sliderAniso(+localStorage["aniso"] >= 0 ? +localStorage["aniso"] : 3);
+	sliderScale(+localStorage["scale"] >= 0 ? +localStorage["scale"] : 2);
 
-	if(localStorage.getItem('fixedcamera')==='false') {
-		fixedcamera=false
-	}else if (localStorage.getItem('fixedcamera')==='true') {
-		fixedcamera=true
+	if (localStorage.getItem("fixedcamera") === "false") {
+		fixedcamera = false;
+	} else if (localStorage.getItem("fixedcamera") === "true") {
+		fixedcamera = true;
 	}
-	document.getElementById('fix-camera-checkbox').checked = fixedcamera
+	document.getElementById("fix-camera-checkbox").checked = fixedcamera;
 
-	if(localStorage.getItem('clickthrough')==='false') {
-		clickthrough=false
+	if (localStorage.getItem("clickthrough") === "false") {
+		clickthrough = false;
 	}
-	document.getElementById('click-checkbox').checked = clickthrough
-	
-	if(localStorage.getItem('hovertext')==='false') {
-		hovertext=false
+	document.getElementById("click-checkbox").checked = clickthrough;
+
+	if (localStorage.getItem("hovertext") === "false") {
+		hovertext = false;
+	} else if (localStorage.getItem("hovertext") === "true") {
+		hovertext = true;
+	} else {
+		hovertext = !ismobile;
 	}
-	else if(localStorage.getItem('hovertext')==='true') {
-		hovertext=true
-	}
-	else{
-		hovertext=!ismobile
-	}
-	document.getElementById('hover-checkbox').checked = hovertext
+	document.getElementById("hover-checkbox").checked = hovertext;
 
 	// load whether or not the 'Send' button should be hidden.
-	if(localStorage.getItem('hide-send')==='true') {
-		document.getElementById('hide-send-checkbox').checked = true
-		document.getElementById('send-button').style.display = "none"
-		//$('#chat').height(window.innerHeight - $('nav').height() - 51)
+	if (localStorage.getItem("hide-send") === "true") {
+		document.getElementById("hide-send-checkbox").checked = true;
+		document.getElementById("send-button").style.display = "none";
 	}
 
-	chathandler.adjustChatWidth(+localStorage.getItem('chat_size')||180)
-	adjustsidemenu()
+	chathandler.adjustChatWidth(+localStorage.getItem("chat_size") || 180);
+	adjustsidemenu();
 
-	perspective=localStorage.getItem("perspective")
-	if(!perspective){
-		perspective=80
+	perspective = localStorage.getItem("perspective");
+	if (!perspective) {
+		perspective = 80;
 	}
-	perspective=+perspective
-	document.getElementById('perspective-display').innerHTML=+perspective
-	document.getElementById('perspective-slider').value=perspective
+	perspective = +perspective;
+	document.getElementById("perspective-display").innerHTML = +perspective;
+	document.getElementById("perspective-slider").value = perspective;
 
 	//load setting for hide chat time
-	if(localStorage.getItem('hide-chat-time')==='true') {
-		document.getElementById('hide-chat-time').checked = true
-		$('.chattime').each(function(index) {
-			$(this).addClass('hidden')
-		})
+	if (localStorage.getItem("hide-chat-time") === "true") {
+		document.getElementById("hide-chat-time").checked = true;
+		$(".chattime").each(function (index) {
+			$(this).addClass("hidden");
+		});
 	}
 
 	// load the setting for automatically rotating the board, when assigned player 2.
-	if(localStorage.getItem('auto_rotate')==='false') {
-		document.getElementById('auto-rotate-checkbox').checked = false
+	if (localStorage.getItem("auto_rotate") === "false") {
+		document.getElementById("auto-rotate-checkbox").checked = false;
 	}
-	
-	document.getElementById("clearcolorbox").value=localStorage["clearcolor"]||"#dddddd"
-	clearcolorchange()
+
+	document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
+	clearcolorchange();
 }
 
 /*
@@ -1258,12 +1225,10 @@ function checkboxHideSend() {
 	if(document.getElementById('hide-send-checkbox').checked) {
 		localStorage.setItem('hide-send','true')
 		document.getElementById('send-button').style.display = "none"
-		//$('#chat').height(window.innerHeight - $('nav').height() - 51)
 	}
 	else{
 		localStorage.setItem('hide-send','false')
 		document.getElementById('send-button').style.display = "initial"
-		//$('#chat').height(window.innerHeight - $('nav').height() - 85)
 	}
 
 }
@@ -1354,7 +1319,6 @@ function sliderChatSize(newSize) {
 	if(newSize!=localStorage['chat_size']){
 		chathandler.adjustChatWidth(+newSize)
 		localStorage.setItem('chat_size',newSize)
-		//adjustsidemenu(null,"show")
 		generateCamera()
 	}
 }
@@ -1425,7 +1389,7 @@ function changeboardsize(){
 function dohovertext(ev){
 	var el=document.getElementById("hovertext")
 	el.style.left=ev.clientX+"px"
-	el.style.top=(ev.clientY+50)+"px"
+	el.style.top=(ev.clientY+25)+"px"
 	var target=ev.target
 	var hoverstring=""
 	while(target){

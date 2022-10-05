@@ -206,10 +206,6 @@ var server = {
 				url=window.location.host.replace(/\:\d+$/,"")+":9999" + '/ws'
 				// uncomment to play locally against the live server
 				//url = "www.playtak.com:9999/ws";
-				if(false){
-					url = "www.playtak.com/ws/"
-					proto = 'wss://'
-				}
 			}
 			this.connection = new WebSocket(proto+url,"binary")
 			this.connection.onerror = function(e){
@@ -326,7 +322,6 @@ var server = {
 			this.connection.onopen=function(){server.guestlogin()}
 		}
 		else if(this.connection.readyState==1){
-			//this.send("Login Guest")
 			var now=+new Date()
 			var tokenexpire=+localStorage["guesttokendecay"]
 			var token
@@ -427,7 +422,6 @@ var server = {
 			board.newgame(Number(spl[3]),spl[7],+spl[9],+spl[10],+spl[11])
 			board.gameno = Number(spl[2])
 			console.log("gno "+board.gameno)
-			//document.getElementById("scratchsize").disabled = true
 
 			$('#player-me-name').removeClass('player1-name')
 			$('#player-me-name').removeClass('player2-name')
@@ -448,11 +442,7 @@ var server = {
 
 				$('#player-me-time').addClass('player1-time')
 				$('#player-opp-time').addClass('player2-time')
-				
-				/*
-				$('#player-me-img').addClass('white-player-color')
-				$('#player-opp-img').removeClass('white-player-color')
-				*/
+
 				$('#player-me-img').addClass("iswhite")
 				$('#player-me-img').removeClass("isblack")
 				$('#player-opp-img').addClass("isblack")
@@ -467,10 +457,6 @@ var server = {
 				$('#player-me-time').addClass('player2-time')
 				$('#player-opp-time').addClass('player1-time')
 
-				/*
-				$('#player-me-img').removeClass('white-player-color')
-				$('#player-opp-img').addClass('white-player-color')
-				*/
 				$('#player-me-img').removeClass("iswhite")
 				$('#player-me-img').addClass("isblack")
 				$('#player-opp-img').removeClass("isblack")
@@ -519,11 +505,6 @@ var server = {
 
 			var time = +spl[5]
 			settimers(time*1000,time*1000)
-
-			/*
-			if(!chathandler.roomExists('room','Game'+board.gameno)) {chathandler.createGameRoom('Game'+board.gameno,p1,p2)}
-			chathandler.setRoom('room','Game'+board.gameno)
-			*/
 		}
 		else if(startswith("GameList Add ",e)){
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
@@ -673,7 +654,6 @@ var server = {
 						}
 					}
 
-					//document.getElementById("scratchsize").disabled = false
 					stopTime()
 
 					$('#gameoveralert-text').html(msg)
@@ -695,7 +675,6 @@ var server = {
 					var msg = "Game abandoned by " + spl[2] + "."
 					if(!board.observing){msg += " You win!"}
 
-					//document.getElementById("scratchsize").disabled = false
 					stopTime()
 
 					$('#gameoveralert-text').html(msg)
@@ -833,7 +812,6 @@ var server = {
 			var msg = e.split("CmdReply ")[1]
 			msg = '<span class="cmdreply">' + msg + '</span>'
 
-			//chathandler.raw('global','global',msg)
 			chathandler.recieved("global","","&gt;",msg)
 		}
 		//new seek
@@ -903,7 +881,7 @@ var server = {
 			var players=roomname.split("-")
 			var id="room-"+roomname
 			if(players.length==2){
-				chathandler.createRoom(id,"<b>"+players[0]+"</b> vs <b>"+players[1]+"</b>")
+				chathandler.createRoom(id,"<div><b>"+players[0]+"</b> vs <b>"+players[1]+"</b></div>")
 			}
 			else{
 				chathandler.createRoom(id,roomname)
@@ -973,16 +951,6 @@ var server = {
 				colourleft="black"
 			}
 			var imgstring='<svg class="colourcircle" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourleft+'"></circle><clipPath id="g-clip"><rect height="16" width="8" x="8" y="0"></rect></clipPath><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourright+'" clip-path="url(#g-clip)"></circle></svg>'
-			/*
-			var img = "images/circle_any.svg"
-			if(seek.color=="W"){
-				img="images/circle_white.svg"
-			}
-			if(seek.color=="B"){
-				img="images/circle_black.svg"
-			}
-			var imgstring = '<img src="'+img+'"/>'
-			*/
 
 			var pspan = "<span class='playername'>"+seek.player+"</span>"
 			var sizespan = "<span class='badge'>"+seek.size+"</span>"
