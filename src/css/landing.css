@@ -15,6 +15,7 @@
 	font-family: 'Roboto', sans-serif;
 	font-size: 100%;
 	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 .landing .landing-wrapper {
@@ -188,7 +189,7 @@
 }
 
 .landing td{
-	padding: 16px 0;
+	padding: 16px 8px 16px 0;
 }
 
 /* Animations */
