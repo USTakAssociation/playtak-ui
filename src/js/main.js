@@ -6,7 +6,7 @@ function alert(type,msg) {
 	$alert.addClass("alert-"+type)
 	$alert.removeClass('hidden')
 	$alert.stop(true,true)
-	$alert.fadeTo(4000,500).slideUp(500,function() {
+	$alert.fadeTo(7000,500).slideUp(500,function() {
 		$alert.addClass('hidden')
 	})
 	alert2(type,msg)
@@ -1216,7 +1216,6 @@ function clearcolorchange(value){
 	}
 }
 
-
 /*
  * Notify checkbox change for checkbox:
  *	 Hide 'Send' button
@@ -1349,11 +1348,6 @@ function undoButton() {
 	else{server.undo()}
 }
 
-function showresetpwd() {
-	$('#login').modal('hide')
-	$('#resetpwd-modal').modal('show')
-}
-
 function fastrewind() {
 	board.showmove(board.movestart)
 }
@@ -1407,6 +1401,7 @@ function dohovertext(ev){
 		el.style.display="none"
 	}
 }
+
 document.body.onmousemove=dohovertext
 
 $(document).ready(function() {
@@ -1425,8 +1420,109 @@ $(document).ready(function() {
 	}
 	else{
 		server.connect()
-		$('#login').modal('show')
 	}
-	fetchratings()
+	if(localStorage.getItem('isLoggedIn')){
+		hideElement("signup-button");
+		hideElement("landing-login-button");
+		hideElement("action-links");
+		showElement("play-button");
+	}
+	fetchratings();
 	infobar()
+	fetchEvents();
 })
+
+
+// Landing functions
+function hideElement(element) {
+	document.getElementById(element).style.display = "none";
+}
+
+function showElement(element){
+	document.getElementById(element).style.display = "flex";
+}
+
+async function fetchEvents(){
+	showElement('loading-events')
+	try {
+		let path = '/events'
+		let url = 'https://api.' + window.location.host;
+		if (
+			window.location.host.indexOf("localhost") > -1 ||
+			window.location.host.indexOf("127.0.0.1") > -1 ||
+			window.location.host.indexOf("192.168.") == 0
+		) {
+			url = "http://localhost:3003";
+		}
+		const results = await fetch(url + path, {
+			method: 'GET'
+		})
+		const data = await results.json();
+		createEventTable(data);
+		hideElement('loading-events')
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+function createEventTable(data){
+	const table = document.createElement('table');
+	table.id = "event-table";
+	for (let i = 0; i < data.data.length; i++) {
+		const el = data.data[i];
+		const tr = table.insertRow(-1);
+		tr.id = el.category.toLowerCase().replace(' ', '-');
+		const name = tr.insertCell(-1);
+		name.innerHTML = `<b>${el.name}</b>`;
+		const dates = tr.insertCell(-1);
+		const range = el.start_date && el.end_date ? `${el.start_date} - ${el.end_date}` : "TBD";
+		dates.innerHTML = range;
+		const details = tr.insertCell(-1);
+		const link = `<a href="${el.link}" target="_blank">Details</a>`
+		details.innerHTML = el.link ? link : '';
+	}
+	const eventData = document.getElementById("event-data");
+	const filterButtons = document.getElementById('filter-buttons');
+	filterButtons.classList = "flex gap--8 flex-wrap"
+	// create the category buttons
+	for (let i = 0; i < data.categories.length; i++) {
+		const categoryClean = data.categories[i].toLowerCase().replace(' ', '-');
+		const filterButton = document.createElement('button');
+		filterButton.innerHTML = data.categories[i];
+		filterButton.id = `filter-${categoryClean}`;
+		filterButton.classList = "btn btn--secondary";
+		if(categoryClean === 'all'){ filterButton.classList = 'btn btn-primary'}
+		filterButton.onclick = () => filterTable(categoryClean);
+		filterButtons.appendChild(filterButton);
+	}
+	eventData.appendChild(table)
+}
+
+function filterTable(category){
+	const table = document.querySelectorAll('#event-table');
+	const trs = table[0].childNodes[0].childNodes;
+	const filterAll = document.getElementById('filter-all');
+	// loop through button and reset classes
+	const filterButtons = document.getElementById("filter-buttons");
+	filterButtons.childNodes.forEach(el => {
+		el.classList = 'btn btn-secondary';
+	})
+	// reset styles for all filter
+	if(category === 'all'){
+		filterAll.classList = 'btn btn-primary';
+		trs.forEach(el => {
+			el.style.display = ''
+		})
+		return;
+	}
+	// set active button style
+	const button = document.getElementById(`filter-${category}`);
+	button.classList = 'btn btn-primary';
+	filterAll.classList = 'btn btn-secondary';
+
+	// loop through rows and set display style
+	trs.forEach(element => {
+		element.style.display = element.id === category ? "" : "none";
+	});
+	
+}

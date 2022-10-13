@@ -180,17 +180,21 @@ a.navitem, div.navitem{
 	display: flex;
 	align-items: center;
 }
+
 .toggle-wrapper svg{
 	fill: var(--primary-fill-color);
 }
+
 .rotate-arrow{
 	transform: rotate(180deg);
 }
+
 .notation-toggle{
 	left: 200px;
 	border-top-right-radius: 6px;
 	border-bottom-right-radius: 6px;
 }
+
 .chat-toggle{
 	right: 200px;
 	border-top-left-radius: 6px;
@@ -349,11 +353,13 @@ a.navitem, div.navitem{
 	stroke: var(--dark-stroke-color);
 	stroke-width: 70px;
 }
+
 #player-me, #player-opp {
 	padding: 8px 0;
 	border-top: 1px solid var(--primary-border-color);
 	border-bottom: 1px solid var(--primary-border-color);
 }
+
 .player1-name, .player2-name {
 	color: var(--primary-font-color);
 }
@@ -581,6 +587,10 @@ input[type=range] {
 	width: 50%;
 }
 
+input:invalid {
+	border: 1px solid var(--alert-color);
+}
+
 .radio-list-item {
 	display: inline-block;
 	margin: 0;
@@ -609,10 +619,10 @@ input[type=range] {
 /* || Alerts */
 #alertbox {
 	position: fixed;
-	bottom: 0px;
+	bottom: 30px;
 	left: 0px;
 	width: 100%;
-	z-index: 8;
+	z-index: 999;
 }
 
 .alerts {
@@ -622,6 +632,10 @@ input[type=range] {
 
 .alert {
 	margin: 0px;
+}
+
+.text-error{
+	color: var(--alert-color);
 }
 
 /* || Table */
@@ -667,8 +681,41 @@ input[type=range] {
 .flex {
 	display: flex;
 }
-.space-between{
+
+.flex-space-between {
 	justify-content: space-between;
+}
+
+.flex-center {
+	justify-content: center;
+}
+
+.flex-column {
+	flex-direction: column;
+}
+
+.flex-align-center {
+	align-items: center;
+}
+
+.flex-wrap {
+	flex-wrap: wrap;
+}
+
+.gap--8 {
+	gap: 8px;
+}
+
+.gap--32 {
+	gap: 32px;
+}
+
+.flex--1 {
+	flex: 1;
+}
+
+.verticle-align--middle {
+	vertical-align: middle;
 }
 
 .bold {
@@ -741,8 +788,17 @@ input[type=range] {
 .margin-top--8{
 	margin-top: 8px;
 }
+
+.margin-top--32 {
+	margin-top: 32px;
+}
+
 .margin-bottom--8{
 	margin-bottom: 8px;
+}
+
+.margin-bottom--32 {
+	margin-bottom: 32px;
 }
 
 .padding-left--8{
@@ -774,11 +830,9 @@ input[type=range] {
 	.leftmost{
 		margin-right: 18px;
 	}
-	
-
 }
 
-@media (max-width: 950px) {
+@media (max-width: 1055px) {
 	.menu-button-container {
 		display: flex;
 	}
@@ -794,9 +848,11 @@ input[type=range] {
 		z-index: 999;
 		background-color: var(--primary-bg-color);
 	}
+
 	#menu-wrapper {
 		display: none;
 	}
+
 	#menu-toggle {
 		display: block;
 	}
@@ -813,6 +869,12 @@ input[type=range] {
 	.menu>li:not(:last-child) {
 		border-bottom: 1px solid #444;
 	}
+
+	.menu .navitem{
+		width: 100%;
+		text-align: center;
+	}
+
 	.settings-pane {
 		height: 75vh;
 	}

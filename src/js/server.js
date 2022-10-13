@@ -209,7 +209,7 @@ var server = {
 			}
 			this.connection = new WebSocket(proto+url,"binary")
 			this.connection.onerror = function(e){
-				output("Connection error: " + e)
+				console.error("Connection error: " + e);
 			}
 			this.connection.onmessage = function(e){
 				var blob = e.data
@@ -258,6 +258,7 @@ var server = {
 		localStorage.removeItem('keeploggedin')
 		localStorage.removeItem('usr')
 		localStorage.removeItem('token')
+		localStorage.removeItem('isLoggedIn')
 		if(this.connection){
 			this.connection.close()
 			alert("info","Disconnnecting from server....")
@@ -266,10 +267,17 @@ var server = {
 	}
 	,loginbutton:function(){
 		if(server.loggedin){
-			this.logout()
+			this.logout();
+			hideElement('play-button');
+			showElement('hero-actions');
+			showElement('signup-button');
+			showElement('landing-login-button');
+			showElement('action-links');
 		}
 		else{
-			$('#login').modal('show')
+			showElement('landing');
+			hideElement('hero-actions');
+			showElement('landing-login');
 		}
 	}
 
@@ -349,7 +357,7 @@ var server = {
 			var retyped_email = $('#retype-register-email').val()
 
 			if(email !== retyped_email){
-				alert("danger","Email addresses don't match")
+				alert("danger","Email addresses don't match");
 				return
 			}
 
@@ -382,6 +390,8 @@ var server = {
 			this.connection.onopen=function(){server.sendresettoken()}
 		}
 		else if(this.connection.readyState==1){
+			hideElement("send-token");
+			showElement('loading');
 			var name = $('#resettoken-username').val()
 			var email = $('#resettoken-email').val()
 			this.send('SendResetToken '+name+' '+email)
@@ -413,7 +423,6 @@ var server = {
 	}
 	,msg:function(e){
 		console.log(e)
-		output(e)
 		e = e.replace(/[\n\r]+$/,"")
 		if(startswith("Game Start",e)){
 			//Game Start no. size player_white vs player_black yourcolor time
@@ -685,8 +694,6 @@ var server = {
 		}
 		else if(startswith("Login or Register",e)){
 			server.stopLoginTimer()
-			//server.send("Client TakWeb-21.10.28")
-			//server.send("Protocol 1")
 			clearInterval(this.timeoutvar)
 			this.timeoutvar = setInterval(this.keepalive,10000)
 			if(localStorage.getItem('keeploggedin')==='true' && this.tries<3){
@@ -697,19 +704,26 @@ var server = {
 				this.tries++
 			}
 			else{
-				localStorage.removeItem('keeploggedin')
-				localStorage.removeItem('usr')
-				localStorage.removeItem('token')
-				$('#login').modal('show')
+				localStorage.removeItem('keeploggedin');
+				localStorage.removeItem('usr');
+				localStorage.removeItem('token');
+				localStorage.removeItem('isLoggedIn');
+				hideElement("play-button");
+				showElement("hero-actions");
+				showElement("signup-button");
+				showElement("landing-login-button");
+				showElement("action-links");
 			}
 		}
 		//Registered ...
 		else if(startswith("Registered",e)){
 			alert("success","You're registered! Check mail for password")
+			hideElement('sign-up');
+			showElement('landing-login');
 		}
 		//Name already taken
 		else if(startswith("Name already taken",e)){
-			alert("danger","Name is already taken")
+			alert("danger","Name is already taken");
 		}
 		//Can't register with guest in the name
 		else if(startswith("Can't register with guest in the name",e)){
@@ -721,19 +735,18 @@ var server = {
 		}
 		//Authentication failure
 		else if(startswith("Authentication failure",e)){
-			console.log('failure')
 			if(($('#login').data('bs.modal') || {}).isShown){
 				alert("danger","Authentication failure")
 			}
 			else{
-				localStorage.removeItem('keeploggedin')
-				localStorage.removeItem('usr')
-				localStorage.removeItem('token')
-				$('#login').modal('show')
+				localStorage.removeItem('keeploggedin');
+				localStorage.removeItem('usr');
+				localStorage.removeItem('token');
+				showElement("login-error");
 			}
 		}
 		else if(startswith("Wrong password",e)){
-			alert("danger","Wrong Password")
+			showElement("login-error");
 		}
 		//You're already logged in
 		else if(startswith("You're already logged in",e)){
@@ -742,28 +755,41 @@ var server = {
 		}
 		//Welcome kaka!
 		else if(startswith("Welcome ",e)){
-
-			this.tries = 0
-			$('#login').modal('hide')
-			document.getElementById('login-button').textContent = 'Log Out'
-			document.getElementById('login-button').classList.add("loggedin")
-			this.myname = e.split("Welcome ")[1].split("!")[0]
-			server.updateplayerinfo()
-			alert("success","You're logged in "+this.myname+"!")
-			document.title = "Tak"
-			server.loggedin=true
-
-			var rem = $('#keeploggedin').is(':checked')
-			if(rem === true && !startswith("Guest",this.myname)){
-				console.log('storing')
-				var name = $('#login-username').val()
-				var token = $('#login-pwd').val()
-
-				localStorage.setItem('keeploggedin','true')
-				localStorage.setItem('usr',name)
-				localStorage.setItem('token',token)
+			this.tries = 0;
+			
+			// Guest logging back in 
+			if(localStorage.getItem('guesttoken') && !localStorage.getItem('usr')){
+				hideElement('landing')
+			} else if (localStorage.getItem("isLoggedIn")) {
+				// Logged in user
+				hideElement('signup-button');
+				hideElement("landing-login-button");
+				hideElement("action-links");
+				showElement('play-button');
+			} else {
+				hideElement("landing");
 			}
-			infobar()
+			document.getElementById("login-button").textContent = "Log Out";
+			document.getElementById("login-button").classList.add("loggedin");
+			this.myname = e.split("Welcome ")[1].split("!")[0];
+			server.updateplayerinfo();
+			alert("success", "You're logged in " + this.myname + "!");
+			document.title = "Tak";
+			server.loggedin = true;
+
+			var rem = $("#keeploggedin").is(":checked");
+			if (rem === true && !startswith("Guest", this.myname)) {
+				console.log("storing");
+				var name = $("#login-username").val();
+				var token = $("#login-pwd").val();
+
+				localStorage.setItem("keeploggedin", "true");
+				localStorage.setItem("usr", name);
+				localStorage.setItem("token", token);
+			}
+			infobar();
+			hideElement('login-error');
+			localStorage.setItem('isLoggedIn', true);
 		}
 		else if(startswith("Password changed",e)){
 			$('#settings-modal').modal('hide')
@@ -857,8 +883,8 @@ var server = {
 		}
 		//Reset token sent
 		else if(startswith("Reset token sent",e)){
-			alert("success","Token sent to your email")
-			$("#resetpwd-ul li:eq(1) a").tab('show')
+			hideElement("loading");
+			showElement("reset-password");
 		}
 		//Wrong token
 		else if(startswith("Wrong token",e)){
@@ -867,13 +893,9 @@ var server = {
 		//Password is changed
 		else if(startswith("Password is changed",e)){
 			alert("danger","Password changed. Login with your new password.")
-			$('#resetpwd-modal').modal('hide')
-
-			var name = $('#resetpwd-username').val()
-			var pass = $('#reset-new-pwd').val()
-			
-			server.sendClient()
-			this.send("Login " + name + " " + pass)
+			hideElement('reset-password');
+			hideElement('forgot-password');
+			showElement('landing-login');
 		}
 		else if(startswith("Joined room ",e)){
 			var spl = e.split(" ")

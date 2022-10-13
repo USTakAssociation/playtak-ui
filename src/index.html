@@ -15,13 +15,14 @@
 			name="description"
 			content="Play online Tak games. Tak is a strategy board game created by James Ernest and Patrick Rothfuss"
 		/>
-		<meta name="keywords" content="online tak, playtak, play tak" />
+		<meta name="keywords" content="online tak, playtak, play tak, tak game, tak online" />
 
 		<title>Tak</title>
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
 
 		<link rel="stylesheet" href="css/thirdparty/bootstrap.min.css" />
 		<link rel="stylesheet" href="css/thirdparty/jquery.contextMenu.min.css" />
+		<link rel="stylesheet" href="css/landing.css">
 		<link rel="stylesheet" href="css/main.css" />
 
 		<script>
@@ -48,20 +49,6 @@
 				}
 			};
 		</script>
-
-		<script src="js/thirdparty/jquery.min.js"></script>
-		<script src="js/thirdparty/three.min.js"></script>
-		<script src="js/thirdparty/OrbitControlsNPD.min.js"></script>
-		<script src="js/thirdparty/linkify.min.js"></script>
-		<script src="js/thirdparty/linkify-string.min.js"></script>
-		<script src="js/thirdparty/bootstrap.min.js"></script>
-		<script src="js/thirdparty/jquery.contextMenu.min.js"></script>
-
-		<script src="js/chat.js"></script>
-		<script src="js/server.js"></script>
-		<script src="js/style_selector.js"></script>
-		<script src="js/board.js"></script>
-		<script src="js/ptn.js"></script>
 	</head>
 
 	<body>
@@ -388,7 +375,7 @@
 		</div>
 
 		<div id="settings-drawer" class="hidden">
-			<div class="flex space-between">
+			<div class="flex flex-space-between">
 				<h4 class="padding-left--8">Settings</h4>
 				<button class="btn btn-link" onclick="toggleSettingsDrawer(false)">
 					<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'><path d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z'/></svg>
@@ -823,92 +810,527 @@
 				</div>
 			</div>
 		</div>
-
-		<div id="login" class="modal fade" role="dialog">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-body">
-						<div class="row center border">
-							<div class="col-sm-12">
-								<form role="form" onsubmit="server.guestlogin(); return false;">
-									<br />
-									<button
-										type="submit"
-										class="btn btn-primary"
-										data-hover="As guest you will be able to play, but you will not be rated or have a permanent user name"
-									>
-										Guest Login
-									</button>
-									<br /><br />
-								</form>
-							</div>
-						</div>
-						<br />
-						<div class="row border halfrow leftmost">
-							<div class="col-sm-6-custom">
-								<form role="form" onsubmit="server.login(); return false;">
-									<div class="form-group" data-hover="Note: Case sensitive">
-										<label for="usr">Username</label>
-										<input type="text" class="form-control" id="login-username" />
-									</div>
-									<div class="form-group">
-										<label for="pwd">Password:</label>
-										<input type="password" class="form-control" id="login-pwd" />
-									</div>
-									<div class="checkbox">
-										<label
-											><input id="keeploggedin" type="checkbox" value="" />Keep me logged
-											in</label
+		
+		<!-- Landing page -->
+		
+		<div id="landing" class="landing">
+			<div class="landing-wrapper flex flex-column flex-space-between">
+				<div class="wrapper">
+					<!-- hero section -->
+					<div class="header flex flex-center flex-align-center width--100">
+						<div class="hero flex flex-center flex-wrap gap--32">
+							<div class="usta-logo-large">
+								<!-- logo -->
+								<svg
+									width="277"
+									height="283"
+									viewBox="0 0 277 283"
+									fill="none"
+									xmlns="http://www.w3.org/2000/svg"
+								>
+									<path
+										d="M2.1455 79H31.0609V62.0311H41.8859C50.4679 62.0311 56.8394 59.593 61.0003 54.7169C65.1938 49.8408 67.2905 43.323 67.2905 35.1636C67.2905 27.0042 65.1125 20.4377 60.7565 15.4641C56.433 10.4904 50.3541 8.00359 42.5198 8.00359H2.1455V79ZM31.0609 43.5506V28.0445H34.3767C35.872 28.0445 36.9123 28.7759 37.4974 30.2387C38.1151 31.7016 38.4239 33.5708 38.4239 35.8463C38.4239 38.0243 38.1151 39.861 37.4974 41.3563C36.9123 42.8191 35.872 43.5506 34.3767 43.5506H31.0609ZM70.8014 79H123.512V56.5698H99.7168V8.00359H70.8014V79ZM124.292 79H152.086L160.425 43.3555C160.717 42.0227 160.977 40.8687 161.205 39.8935C161.432 38.9182 161.562 38.3331 161.595 38.1381H161.692C161.725 38.3331 161.839 38.9345 162.034 39.9422C162.261 40.9175 162.554 42.0715 162.911 43.4043L172.274 79H200.409L178.32 8.00359H147.308L124.292 79ZM141.066 71.1007H183.05L179.393 53.1078H144.333L141.066 71.1007ZM211.331 79H240.734V52.3763L263.213 8.00359H235.907L229.275 22.0956C229.048 22.5832 228.837 23.0383 228.642 23.4609C228.479 23.851 228.317 24.2899 228.154 24.7775H227.959C227.796 24.2899 227.618 23.851 227.423 23.4609C227.228 23.0383 227.016 22.5832 226.789 22.0956L219.865 8.00359H188.755L211.331 52.4251V79Z"
+										fill="black"
+									/>
+									<g filter="url(#filter0_di_298_1040)">
+										<circle cx="129.34" cy="138.833" r="69.1965" fill="white" />
+										<circle
+											cx="129.34"
+											cy="138.833"
+											r="68.7557"
+											stroke="url(#paint0_radial_298_1040)"
+											stroke-width="0.881484"
+										/>
+									</g>
+									<g filter="url(#filter1_i_298_1040)">
+										<path
+											d="M169.447 137.512L105.981 171.864L105.981 103.159L169.447 137.512Z"
+											fill="white"
+										/>
+									</g>
+									<path
+										d="M106.421 103.899L168.521 137.512L106.421 171.124L106.421 103.899Z"
+										stroke="#B1B0B0"
+										stroke-opacity="0.1"
+										stroke-width="0.881484"
+									/>
+									<path
+										d="M43.1174 208.057H61.7929V265.352H79.2495V208.057H97.8275V194.355H43.1174V208.057ZM92.5613 265.352H109.14L122.159 217.322C122.484 215.989 122.777 214.835 123.037 213.86C123.297 212.884 123.525 212.039 123.72 211.324H123.866C124.061 212.039 124.272 212.901 124.5 213.908C124.76 214.884 125.069 216.038 125.426 217.37L139.08 265.352H155.951L134.106 194.355H114.845L92.5613 265.352ZM105.337 251.26H142.834L140.299 239.947H107.629L105.337 251.26ZM159.511 265.352H176.723V242.141L213.587 194.355H195.984L176.723 221.076V194.355H159.511V265.352ZM196.472 265.352H215.781L187.012 218.102L176.723 231.072L196.472 265.352Z"
+										fill="black"
+									/>
+									<defs>
+										<filter
+											id="filter0_di_298_1040"
+											x="30.1729"
+											y="56.4147"
+											width="226.541"
+											height="226.541"
+											filterUnits="userSpaceOnUse"
+											color-interpolation-filters="sRGB"
 										>
-									</div>
-									<button type="submit" class="btn btn-primary">Login</button>
-								</form>
-								<br />
-								<a href="#" onclick="showresetpwd(); return false;">Forgot password?</a>
-								<br />
+											<feFlood flood-opacity="0" result="BackgroundImageFix" />
+											<feColorMatrix
+												in="SourceAlpha"
+												type="matrix"
+												values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+												result="hardAlpha"
+											/>
+											<feOffset dx="14.1037" dy="30.8519" />
+											<feGaussianBlur stdDeviation="22.0371" />
+											<feComposite in2="hardAlpha" operator="out" />
+											<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0" />
+											<feBlend
+												mode="normal"
+												in2="BackgroundImageFix"
+												result="effect1_dropShadow_298_1040"
+											/>
+											<feBlend
+												mode="normal"
+												in="SourceGraphic"
+												in2="effect1_dropShadow_298_1040"
+												result="shape"
+											/>
+											<feColorMatrix
+												in="SourceAlpha"
+												type="matrix"
+												values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+												result="hardAlpha"
+											/>
+											<feMorphology
+												radius="6.17039"
+												operator="dilate"
+												in="SourceAlpha"
+												result="effect2_innerShadow_298_1040"
+											/>
+											<feOffset dx="-8.81484" dy="-5.2889" />
+											<feGaussianBlur stdDeviation="10.5778" />
+											<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+											<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.85 0" />
+											<feBlend mode="normal" in2="shape" result="effect2_innerShadow_298_1040" />
+										</filter>
+										<filter
+											id="filter1_i_298_1040"
+											x="105.981"
+											y="103.159"
+											width="63.4668"
+											height="72.2308"
+											filterUnits="userSpaceOnUse"
+											color-interpolation-filters="sRGB"
+										>
+											<feFlood flood-opacity="0" result="BackgroundImageFix" />
+											<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+											<feColorMatrix
+												in="SourceAlpha"
+												type="matrix"
+												values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+												result="hardAlpha"
+											/>
+											<feOffset dy="3.52594" />
+											<feGaussianBlur stdDeviation="4.40742" />
+											<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+											<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0" />
+											<feBlend mode="normal" in2="shape" result="effect1_innerShadow_298_1040" />
+										</filter>
+										<radialGradient
+											id="paint0_radial_298_1040"
+											cx="0"
+											cy="0"
+											r="1"
+											gradientUnits="userSpaceOnUse"
+											gradientTransform="translate(165.921 183.348) rotate(-129.174) scale(122.802)"
+										>
+											<stop stop-color="#D1D1D1" />
+											<stop offset="1" stop-color="#747474" stop-opacity="0.1" />
+										</radialGradient>
+									</defs>
+								</svg>
 							</div>
-						</div>
-						<div class="row border halfrow">
-							<div class="col-sm-6-custom">
-								<form role="form" onsubmit="server.register(); return false;">
-									<div
-										class="form-group"
-										data-hover="4 to 16 characters, use numbers, letters and underscore"
-									>
-										<label for="usr">Username</label>
-										<input type="text" class="form-control" id="register-username" />
+							<div class="hero-actions flex flex-column">
+								<div id="loading" class="loading flex flex-column flex-align-center flex-center" style="display: none;">
+									<svg id="eIZHlkQSopD1" width="100px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 322 333" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+										<style>
+										#eIZHlkQSopD2_to {animation: eIZHlkQSopD2_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD2_to__to { 0% {transform: translate(156.137404px,-68.747306px)} 25% {transform: translate(158.448219px,236.280287px)} 100% {transform: translate(158.448219px,236.280287px)}} #eIZHlkQSopD10_to {animation: eIZHlkQSopD10_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD10_to__to { 0% {transform: translate(159.586113px,-65.806554px)} 33.333333% {transform: translate(159.586113px,-65.806554px)} 58.333333% {transform: translate(161.896928px,183.761477px)} 100% {transform: translate(161.896928px,183.761477px)}} #eIZHlkQSopD19_to {animation: eIZHlkQSopD19_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD19_to__to { 0% {transform: translate(158.408461px,-95.253131px)} 66.666667% {transform: translate(158.408461px,-95.253131px)} 91.666667% {transform: translate(157.253053px,102.899263px)} 100% {transform: translate(157.253053px,102.899263px)}}
+										</style>
+										<g id="eIZHlkQSopD2_to" transform="translate(156.137404,-68.747306)">
+											<g transform="translate(-328.442978,-343.332138)">
+												<path d="M311.446381,301.72814L181.86988,236.01434l2.31386,49.97951l127.26264,68.95321l127.26264-64.32548l1.703388-49.275111-130.605587-61.511321" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
+												<path d="M311.44638,355.87261l.92555-54.14447l126.33709-60.38167" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
+												<path d="M304.50478,298.48873l7.86715,3.70219v0" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+												<path d="M179.36093,233.226908l133.011002-53.461463" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="5.9"/>
+												<path d="M187.338363,284.20992c-.23051-.0829-2.228383-42.73749-2.008763-42.86345q.0308-.0177,124.02725,62.94902-.936136,44.275504-.965667,45.250045" transform="translate(18.048442 50.165292)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+												<path d="M314.73227,345.9967c.12149-2.12045,0-42.017209,0-42.89424c0-.50088,122.847671-57.824683,122.922361-57.749993.17823.17824-1.960741,43.183303-2.156441,43.339723-.0827.0661-18.84441,9.55605-41.6928,21.08885s-50.03661,25.26675-60.41827,30.51988l-18.87575,9.55113Z" transform="translate(18.07172 50.165292)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+												<path d="M434.68067,364.075751c-.305236-.886472-128.722551-65.00629-127.707259-65.401108.669627-.260399,126.985102-50.461121,127.059792-50.386431.17823.17824,124.803949,58.488857,124.608249,58.645277" transform="translate(-105.162569-15.421729)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/></g></g><g id="eIZHlkQSopD10_to" transform="translate(159.586113,-65.806554)"><g transform="translate(-303.926314,-203.923043)">
+												<path d="M187.014758,186.782838l-.517148,42.752682l108.109762,71.013532l1.567488-50.188742-108.701804-62.808993" transform="translate(-13.591378-42.513835)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+												<path d="M167.171091,242.703479l128.427556-35.347092" transform="translate(3.765193-95.86076)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+												<path d="M296.63764,250.82309l148.5502-50.905058" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
+												<path d="M296.63764,303.302978l148.5502-53.405438l3.23941-51.36783" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+												<path d="M311.115184,153.860341l138.646388,47.73442" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.3"/>
+												<path d="M241.03605,261.37205l-51-33.41488.0466-11.5029c.0256-6.32659.21688-24.490052.33163-24.604802q.11475-.11475,102.685341,60.325599L292.03606,294.78693l-51-33.41488Z" transform="translate(-13.740499-42.364714)" fill="#b6b6b6" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+												<path d="M300.290606,253.219412l145.564409-49.855916q-1.963433,44.134117-2.073831,44.241727c-.195474.19051-144.535863,51.095772-144.535863,51.095772" transform="translate(-14.656238-42.063856)" fill="#dedede" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+												<path d="M201.758421,237.553578l116.800285-30.656019q123.670585,42.163322,123.560187,42.270932c-.195474.19051-138.328898,47.531833-138.328898,47.531833" transform="translate(-20.275769-91.851013)" fill="#dedede" fill-rule="evenodd" stroke="#fff" stroke-width="0"/></g></g><g id="eIZHlkQSopD19_to" transform="translate(158.408461,-95.253131)"><g transform="translate(-314.511369,-137.437729)">
+												<path d="M179.55601,143.92247l117.5444-54.607238L445.18784,134.20423l-1.38832,52.29338-109.67725,64.78825-153.64071-53.68169Z" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.8"/>
+												<path d="M182.33265,143.92247L334.58504,195.2903l-1.38832,57.38388v0v0v0" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.9"/>
+												<path d="M445.65061,134.66701L334.58504,196.21585v0" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.8"/>
+												<path d="M262.19615,167.5467c-39.81397-13.45075-72.3895-24.5517-72.39005-24.66877s24.19918-11.45565,53.7772-25.19684l53.77822-24.983994l69.52353,21.059824c38.23794,11.58291,70.118408,21.458821,70.543388,21.595181-.792612.447114-102.102598,56.693379-102.365408,56.678179s-33.0529-11.03282-72.86688-24.48358Z" transform="translate(-6.104343-33.069716)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+												<path d="M336.65212,239.42097c.12543-3.78465.39875-14.51794.60739-23.85175s.40821-17.08608.4435-17.22726c.0687-.27483,103.93805-57.91472,104.09028-57.76249.0498.0499-.14468,8.35159-.43229,18.44831s-.52519,19.97314-.52797,21.9476l-.005,3.58993-51.35363,30.32506c-28.2445,16.67879-51.73538,30.56958-52.20196,30.86842l-.84833.54337.22805-6.88119Z" transform="translate(-6.104343-33.069716)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+												<path d="M295.51755,234.45216c-18.76485-6.58859-35.47025-12.44128-37.12311-13.00598s-17.88096-6.23192-36.06244-12.59381-34.33004-12.00182-35.88567-12.53319l-2.82843-.96613-.41681-23.82871c-.22924-13.10579-.37021-23.87531-.31326-23.93225.11432-.11432,148.07361,49.7441,148.30809,49.97596.16026.15846-.5512,33.97495-.9087,43.19185-.12256,3.15989-.31935,5.72865-.43731,5.70837s-15.56752-5.42753-34.33236-12.01611Z" transform="translate(-6.104343-33.069716)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+											</g>
+										</g>
+									</svg>
+									<div>
+										Loading...
 									</div>
-									<div class="form-group">
-										<label for="email">Email address:</label>
-										<input type="email" class="form-control" id="register-email" />
+								</div>
+								<div id="hero-actions" class="flex flex-column" >
+									<!-- action buttons -->
+									<button id="play-button" class="btn btn-secondary" style="display: none;" onclick="hideElement('landing');">Play</button>
+									<button id="signup-button" class="btn btn-primary" onclick="hideElement('hero-actions'); showElement('sign-up')">Sign Up</button>
+									<button id="landing-login-button" class="btn btn-secondary" onclick="hideElement('hero-actions'); showElement('landing-login')">Login</button>
+									<a class="btn btn-primary" href="https://discord.gg/2xEt42X" target="_blank"rel="noopener noreferrer">
+										<svg
+											class="verticle-align--middle"
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 640 512"
+										>
+											<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
+											<path
+												d="M524.531,69.836a1.5,1.5,0,0,0-.764-.7A485.065,485.065,0,0,0,404.081,32.03a1.816,1.816,0,0,0-1.923.91,337.461,337.461,0,0,0-14.9,30.6,447.848,447.848,0,0,0-134.426,0,309.541,309.541,0,0,0-15.135-30.6,1.89,1.89,0,0,0-1.924-.91A483.689,483.689,0,0,0,116.085,69.137a1.712,1.712,0,0,0-.788.676C39.068,183.651,18.186,294.69,28.43,404.354a2.016,2.016,0,0,0,.765,1.375A487.666,487.666,0,0,0,176.02,479.918a1.9,1.9,0,0,0,2.063-.676A348.2,348.2,0,0,0,208.12,430.4a1.86,1.86,0,0,0-1.019-2.588,321.173,321.173,0,0,1-45.868-21.853,1.885,1.885,0,0,1-.185-3.126c3.082-2.309,6.166-4.711,9.109-7.137a1.819,1.819,0,0,1,1.9-.256c96.229,43.917,200.41,43.917,295.5,0a1.812,1.812,0,0,1,1.924.233c2.944,2.426,6.027,4.851,9.132,7.16a1.884,1.884,0,0,1-.162,3.126,301.407,301.407,0,0,1-45.89,21.83,1.875,1.875,0,0,0-1,2.611,391.055,391.055,0,0,0,30.014,48.815,1.864,1.864,0,0,0,2.063.7A486.048,486.048,0,0,0,610.7,405.729a1.882,1.882,0,0,0,.765-1.352C623.729,277.594,590.933,167.465,524.531,69.836ZM222.491,337.58c-28.972,0-52.844-26.587-52.844-59.239S193.056,219.1,222.491,219.1c29.665,0,53.306,26.82,52.843,59.239C275.334,310.993,251.924,337.58,222.491,337.58Zm195.38,0c-28.971,0-52.843-26.587-52.843-59.239S388.437,219.1,417.871,219.1c29.667,0,53.307,26.82,52.844,59.239C470.715,310.993,447.538,337.58,417.871,337.58Z"
+											/>
+										</svg>
+										Find Players
+									</a>
+									<div id="action-links" class="flex flex-space-between">
+										<div class="font-small padding--8">
+											<a href="#" onclick="server.guestlogin()" data-hover="As guest you will be able to play, but you will not be rated or have a permanent user name">
+												Play as Guest
+											</a>
+										</div>
+										<div class="font-small padding--8">
+											<a href="#" onclick="hideElement('landing')">
+												Play Scratch
+											</a>
+										</div>
 									</div>
-									<div class="form-group">
-										<label for="email">Re-type Email address:</label>
-										<input type="email" class="form-control" id="retype-register-email" />
+								</div>
+								<!-- sign up -->
+								<div id="sign-up" class="fade-in--right" style="display: none;">
+									<form role="form" onsubmit="return;">
+										<div
+											class="form-group"
+											data-hover="4 to 16 characters, use numbers, letters and underscore"
+										>
+											<label for="usr">Username</label>
+											<input type="text" class="form-control" id="register-username" />
+										</div>
+										<div class="form-group">
+											<label for="email">Email address:</label>
+											<input type="email" class="form-control" id="register-email" />
+										</div>
+										<div class="form-group">
+											<label for="email">Re-type Email address:</label>
+											<input type="email" class="form-control" id="retype-register-email" />
+										</div>
+										<div class="flex flex-space-between">
+											<button type="submit" class="btn btn-primary" onclick="server.register();">Sign up</button>
+											<button class="btn btn-secondary" onclick="hideElement('sign-up'); showElement('hero-actions')">Cancel</button>
+										</div>
+									</form>
+								</div>
+								<!-- login -->
+								<div id="landing-login" class="fade-in--right" style="display: none;">
+									<div class="flex--1">
+										<span id="login-error" class="text-error" style="display: none;">
+											Incorrect username or password.
+										</span>
+										<form role="form" onsubmit="server.login(); return false;">
+											<div class="form-group">
+												<label for="usr">Username</label>
+												<input type="text" class="form-control" id="login-username" />
+											</div>
+											<div class="form-group">
+												<label for="pwd">Password:</label>
+												<input type="password" class="form-control" id="login-pwd" />
+											</div>
+											<div class="checkbox">
+												<label>
+													<input id="keeploggedin" type="checkbox" value="" />
+													Keep me logged in
+												</label>
+											</div>
+											<div class="flex flex-space-between">
+												<button type="submit" class="btn btn-primary">Login</button>
+												<button class="btn btn-secondary" onclick="hideElement('landing-login'); showElement('hero-actions'); return false;">cancel</button>
+											</div>
+										</form>
+										<br />
+										<a href="#" onclick="hideElement('landing-login'); showElement('forgot-password')">Forgot password?</a>
 									</div>
-									<button type="submit" class="btn btn-primary">Sign up</button>
-								</form>
-							</div>
-						</div>
-
-						<div class="row center">
-							<div class="col-sm-12">
-								<div id="alert2" class="alert alert-dismissible hidden" role="alert">
-									<span id="alert-text2">Text</span>
+								</div>
+								<!-- forgot password -->
+								<div id="forgot-password" class="fade-in--right" style="display: none;">
+									<div id="send-token" class="flex--1">
+										<form role="form" onsubmit="return;">
+											<div class="form-group">
+												<label for="usr">Username</label>
+												<input type="text" class="form-control" id="resettoken-username" />
+											</div>
+											<div class="form-group">
+												<label for="email">Email address:</label>
+												<input type="email" class="form-control" id="resettoken-email" />
+											</div>
+											<div id="token-error" style="display: none"></div>
+											<div class="flex flex-space-between flex-wrap gap--8">
+												<button type="submit" class="btn btn-primary" onclick="server.sendresettoken()">Send token</button>
+												<button class="btn btn-secondary" onclick="hideElement('forgot-password'); showElement('landing-login')">Cancel</button>
+											</div>
+										</form>
+									</div>
+									<div id="reset-password" style="display: none;">
+										<div>
+											<p>Please check your email for the reset token.</p>
+											<form role="form" onsubmit="server.resetpwd(); return false;">
+												<div class="form-group">
+													<label for="usr">Username</label>
+													<input type="text" class="form-control" id="resetpwd-username" />
+												</div>
+												<div class="form-group">
+													<label for="usr">Token</label>
+													<input type="text" class="form-control" id="resetpwd-token" />
+												</div>
+												<div class="form-group">
+													<label for="pwd">New password:</label>
+													<input type="password" class="form-control" id="reset-new-pwd" />
+												</div>
+												<div class="form-group">
+													<label for="pwd">Retype New password:</label>
+													<input type="password" class="form-control" id="reset-retype-new-pwd" />
+												</div>
+												<button type="submit" class="btn btn-primary">Reset password</button>
+											</form>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="modal-footer">
-						<button
-							type="button"
-							class="btn btn-default"
-							data-dismiss="modal"
-							onclick="$('#login').modal('hide')"
-						>
-							Close
-						</button>
+					<section class="parallax flex flex-center flex-align-center gap--32 width--100">
+						<div>
+							<h2 class="text-center padding--8"><a href="https://ustak.org/play-beautiful-game-tak/" target="_blank" rel="noopener noreferrer">Learn how to play tak!</a></h2>
+						</div>
+					</section>
+					<!-- Events and Matched -->
+					<section class="events-wrapper margin-top--32 margin-bottom--32">
+						<div>
+							<h2>Upcoming <b>Matches & EVENTS</b></h2>
+							<div id="loading-events" class="loading flex flex-column flex-align-center flex-center" style="display: none;">
+								<svg id="eIZHlkQSopD1" width="100px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 322 333" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+									<style>
+									#eIZHlkQSopD2_to {animation: eIZHlkQSopD2_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD2_to__to { 0% {transform: translate(156.137404px,-68.747306px)} 25% {transform: translate(158.448219px,236.280287px)} 100% {transform: translate(158.448219px,236.280287px)}} #eIZHlkQSopD10_to {animation: eIZHlkQSopD10_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD10_to__to { 0% {transform: translate(159.586113px,-65.806554px)} 33.333333% {transform: translate(159.586113px,-65.806554px)} 58.333333% {transform: translate(161.896928px,183.761477px)} 100% {transform: translate(161.896928px,183.761477px)}} #eIZHlkQSopD19_to {animation: eIZHlkQSopD19_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD19_to__to { 0% {transform: translate(158.408461px,-95.253131px)} 66.666667% {transform: translate(158.408461px,-95.253131px)} 91.666667% {transform: translate(157.253053px,102.899263px)} 100% {transform: translate(157.253053px,102.899263px)}}
+									</style>
+									<g id="eIZHlkQSopD2_to" transform="translate(156.137404,-68.747306)">
+										<g transform="translate(-328.442978,-343.332138)">
+											<path d="M311.446381,301.72814L181.86988,236.01434l2.31386,49.97951l127.26264,68.95321l127.26264-64.32548l1.703388-49.275111-130.605587-61.511321" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
+											<path d="M311.44638,355.87261l.92555-54.14447l126.33709-60.38167" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
+											<path d="M304.50478,298.48873l7.86715,3.70219v0" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+											<path d="M179.36093,233.226908l133.011002-53.461463" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="5.9"/>
+											<path d="M187.338363,284.20992c-.23051-.0829-2.228383-42.73749-2.008763-42.86345q.0308-.0177,124.02725,62.94902-.936136,44.275504-.965667,45.250045" transform="translate(18.048442 50.165292)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+											<path d="M314.73227,345.9967c.12149-2.12045,0-42.017209,0-42.89424c0-.50088,122.847671-57.824683,122.922361-57.749993.17823.17824-1.960741,43.183303-2.156441,43.339723-.0827.0661-18.84441,9.55605-41.6928,21.08885s-50.03661,25.26675-60.41827,30.51988l-18.87575,9.55113Z" transform="translate(18.07172 50.165292)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+											<path d="M434.68067,364.075751c-.305236-.886472-128.722551-65.00629-127.707259-65.401108.669627-.260399,126.985102-50.461121,127.059792-50.386431.17823.17824,124.803949,58.488857,124.608249,58.645277" transform="translate(-105.162569-15.421729)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/></g></g><g id="eIZHlkQSopD10_to" transform="translate(159.586113,-65.806554)"><g transform="translate(-303.926314,-203.923043)">
+											<path d="M187.014758,186.782838l-.517148,42.752682l108.109762,71.013532l1.567488-50.188742-108.701804-62.808993" transform="translate(-13.591378-42.513835)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+											<path d="M167.171091,242.703479l128.427556-35.347092" transform="translate(3.765193-95.86076)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+											<path d="M296.63764,250.82309l148.5502-50.905058" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
+											<path d="M296.63764,303.302978l148.5502-53.405438l3.23941-51.36783" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
+											<path d="M311.115184,153.860341l138.646388,47.73442" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.3"/>
+											<path d="M241.03605,261.37205l-51-33.41488.0466-11.5029c.0256-6.32659.21688-24.490052.33163-24.604802q.11475-.11475,102.685341,60.325599L292.03606,294.78693l-51-33.41488Z" transform="translate(-13.740499-42.364714)" fill="#b6b6b6" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+											<path d="M300.290606,253.219412l145.564409-49.855916q-1.963433,44.134117-2.073831,44.241727c-.195474.19051-144.535863,51.095772-144.535863,51.095772" transform="translate(-14.656238-42.063856)" fill="#dedede" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+											<path d="M201.758421,237.553578l116.800285-30.656019q123.670585,42.163322,123.560187,42.270932c-.195474.19051-138.328898,47.531833-138.328898,47.531833" transform="translate(-20.275769-91.851013)" fill="#dedede" fill-rule="evenodd" stroke="#fff" stroke-width="0"/></g></g><g id="eIZHlkQSopD19_to" transform="translate(158.408461,-95.253131)"><g transform="translate(-314.511369,-137.437729)">
+											<path d="M179.55601,143.92247l117.5444-54.607238L445.18784,134.20423l-1.38832,52.29338-109.67725,64.78825-153.64071-53.68169Z" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.8"/>
+											<path d="M182.33265,143.92247L334.58504,195.2903l-1.38832,57.38388v0v0v0" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.9"/>
+											<path d="M445.65061,134.66701L334.58504,196.21585v0" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.8"/>
+											<path d="M262.19615,167.5467c-39.81397-13.45075-72.3895-24.5517-72.39005-24.66877s24.19918-11.45565,53.7772-25.19684l53.77822-24.983994l69.52353,21.059824c38.23794,11.58291,70.118408,21.458821,70.543388,21.595181-.792612.447114-102.102598,56.693379-102.365408,56.678179s-33.0529-11.03282-72.86688-24.48358Z" transform="translate(-6.104343-33.069716)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+											<path d="M336.65212,239.42097c.12543-3.78465.39875-14.51794.60739-23.85175s.40821-17.08608.4435-17.22726c.0687-.27483,103.93805-57.91472,104.09028-57.76249.0498.0499-.14468,8.35159-.43229,18.44831s-.52519,19.97314-.52797,21.9476l-.005,3.58993-51.35363,30.32506c-28.2445,16.67879-51.73538,30.56958-52.20196,30.86842l-.84833.54337.22805-6.88119Z" transform="translate(-6.104343-33.069716)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+											<path d="M295.51755,234.45216c-18.76485-6.58859-35.47025-12.44128-37.12311-13.00598s-17.88096-6.23192-36.06244-12.59381-34.33004-12.00182-35.88567-12.53319l-2.82843-.96613-.41681-23.82871c-.22924-13.10579-.37021-23.87531-.31326-23.93225.11432-.11432,148.07361,49.7441,148.30809,49.97596.16026.15846-.5512,33.97495-.9087,43.19185-.12256,3.15989-.31935,5.72865-.43731,5.70837s-15.56752-5.42753-34.33236-12.01611Z" transform="translate(-6.104343-33.069716)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+										</g>
+									</g>
+								</svg>
+								<div>
+									Loading...
+								</div>
+							</div>
+							<div id="filter-buttons"></div>
+							<div id="event-data"></div>
+						</div>
+					</section>
+				</div>
+
+				<div class="footer flex flex-column width--100">
+					<div class="bottom-credit flex flex-column flex-align-center width--100">
+						<!-- powered by USTA -->
+						<div class="usta-logo-small">
+							<svg width="618" height="508" viewBox="0 0 618 508" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M6 216.95L310.505 5L612.233 228.982L302.175 502.944L6 216.95Z"
+									stroke="black"
+									stroke-width="7.2"
+								/>
+								<path
+									d="M503.944 148.46C195.737 396.506 193.397 397.036 193.397 397.036"
+									stroke="black"
+									stroke-width="6.8"
+								/>
+								<path
+									d="M95.7778 303.026C401.208 75.3416 401.208 74.416 401.208 74.416"
+									stroke="black"
+									stroke-width="6.7"
+								/>
+								<path
+									d="M115.214 140.13C412.315 402.985 415.091 406.687 415.091 406.687"
+									stroke="black"
+									stroke-width="6.8"
+								/>
+								<path
+									d="M213.318 71.6394C516.688 315.41 515.755 314.48 515.755 314.48"
+									stroke="black"
+									stroke-width="6.9"
+								/>
+								<path
+									d="M137.116 339.384C135.256 337.588 133.724 336.108 133.71 336.094L133.685 336.069L133.725 336.071L133.765 336.073L137.109 339.301C138.948 341.077 140.48 342.557 140.514 342.589L140.576 342.649L140.536 342.648L140.496 342.648L137.116 339.384L137.116 339.384Z"
+									fill="#7FB2F0"
+								/>
+								<path
+									d="M163.709 178.49C140.408 157.816 121.458 140.813 121.596 140.705C121.735 140.597 141.216 127.063 164.887 110.63C188.558 94.1966 209.238 79.7768 210.844 78.5859L213.763 76.4207L256.658 110.738C280.251 129.613 299.554 145.414 299.554 145.853C299.554 146.489 206.976 216.211 206.268 216.108C206.161 216.092 187.01 199.164 163.709 178.49Z"
+									fill="#7FB2F0"
+								/>
+								<path
+									d="M361.169 185.49C336.447 165.641 315.224 148.657 314.007 147.748L311.795 146.096L354.323 114.27C377.713 96.7652 398.002 81.2392 399.408 79.7674C401.21 77.8812 402.304 77.3575 403.115 77.9932C403.748 78.4892 424.701 93.9952 449.679 112.451C474.656 130.907 497.234 147.645 498.072 148.478C499.484 149.88 494.837 151.682 453.133 185.131C428.381 204.984 407.676 221.306 407.124 221.403C406.571 221.5 385.892 205.339 361.169 185.49Z"
+									fill="#7FB2F0"
+								/>
+								<path
+									d="M402.3 390.355C396.235 384.891 373.343 364.461 351.429 344.955C329.515 325.449 311.586 309.073 311.586 308.564C311.586 306.93 406.754 230.971 407.795 231.774C426.06 245.871 510.109 313.777 509.92 314.286C509.773 314.683 489.036 333.203 463.838 355.442C438.64 377.682 416.967 396.87 415.676 398.083L413.327 400.289L402.3 390.355Z"
+									fill="#7FB2F0"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M146.195 348.338C107.712 311.563 99.6206 303.508 100.405 302.749C100.93 302.242 124.857 284.487 153.578 263.294L205.798 224.76L208.382 226.997C209.803 228.227 230.551 246.429 254.489 267.445C278.426 288.462 298.702 306.197 299.547 306.856C300.391 307.516 300.924 308.189 300.732 308.351C296.644 311.8 193.373 393.043 193.106 393.02C193.014 393.012 171.904 372.905 146.195 348.338Z"
+									fill="#7FB2F0"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M180.003 144.295L297.547 89.6875L445.635 134.576L444.246 186.87L334.569 251.658L180.928 197.976L180.003 144.295Z"
+									stroke="black"
+									stroke-width="6.8"
+								/>
+								<path d="M182.78 144.295L335.032 195.663L333.644 253.046" stroke="black" stroke-width="6.9" />
+								<path d="M446.098 135.039L335.032 196.588" stroke="black" stroke-width="6.8" />
+								<path
+									d="M187.407 200.29L186.944 229.908L295.696 301.175L296.622 250.733L257.286 224.354"
+									stroke="black"
+									stroke-width="6.6"
+								/>
+								<path d="M297.084 251.195L312.819 244.717" stroke="black" stroke-width="6.7" />
+								<path
+									d="M296.159 301.638L445.635 250.27L448.874 198.902L436.421 191.682"
+									stroke="black"
+									stroke-width="6.6"
+								/>
+								<path d="M436.842 191.96L448.411 198.902" stroke="black" stroke-width="6.3" />
+								<path
+									d="M246.411 268.781L182.317 236.387L184.631 286.366L311.893 355.319L439.156 290.994L441.007 255.36L441.171 251.924"
+									stroke="black"
+									stroke-width="6.7"
+								/>
+								<path d="M311.894 356.245L312.819 302.1L367.889 276.648" stroke="black" stroke-width="6.7" />
+								<path d="M304.952 298.861L312.819 302.563" stroke="black" stroke-width="6.6" />
+								<path d="M180.466 235.924L189.259 230.833" stroke="black" stroke-width="5.9" />
+								<path
+									d="M304.373 303.836C295.465 307.191 295.465 307.191 295.465 307.191"
+									stroke="white"
+									stroke-width="3.7"
+								/>
+								<path
+									d="M182.079 229.84C175.716 233.542 175.716 233.542 175.716 233.542"
+									stroke="white"
+									stroke-width="3.1"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M248.235 317.226C215.275 299.349 188.175 284.676 188.014 284.617C187.783 284.535 185.557 241.845 185.776 241.719C185.807 241.701 199.052 248.383 215.208 256.568L244.584 271.449L270.155 288.226C284.219 297.453 295.979 304.982 296.287 304.958C296.596 304.934 298.101 304.411 299.632 303.797C303.841 302.108 304.46 302.083 307.338 303.475L309.804 304.668L309.612 306.62C309.506 307.694 309.33 317.084 309.221 327.488C309.028 345.818 308.881 349.779 308.394 349.745C308.266 349.736 281.195 335.102 248.235 317.226Z"
+									fill="#35478C"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M315.179 346.369C315.301 344.248 315.505 333.951 315.633 323.485C315.863 304.651 315.873 304.451 316.61 303.976C317.02 303.711 328.253 298.455 341.573 292.294L365.791 281.093L401.649 268.759C421.37 261.976 437.567 256.486 437.642 256.561C437.82 256.739 436.141 288.908 435.945 289.064C435.863 289.131 417.101 298.62 394.253 310.153C371.404 321.686 344.216 335.42 333.834 340.673L314.958 350.224L315.179 346.369Z"
+									fill="#35478C"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M262.643 167.919C222.829 154.468 190.253 143.367 190.253 143.25C190.252 143.133 214.452 131.795 244.03 118.053L297.808 93.0693L367.332 114.129C405.57 125.712 437.203 135.301 437.628 135.437C438.242 135.634 427.908 141.499 387.194 164.057C359.031 179.662 335.773 192.418 335.51 192.403C335.247 192.387 302.457 181.37 262.643 167.919Z"
+									fill="#35478C"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M337.099 239.793C337.225 236.009 337.498 225.275 337.707 215.941C337.915 206.608 338.115 198.855 338.15 198.714C338.219 198.439 442.088 140.799 442.24 140.952C442.29 141.002 442.096 149.303 441.808 159.4C441.52 169.497 441.283 179.373 441.28 181.348L441.275 184.938L389.921 215.263C361.677 231.941 338.186 245.832 337.719 246.131L336.871 246.674L337.099 239.793H337.099Z"
+									fill="#35478C"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M295.965 234.824C277.2 228.236 260.494 222.383 258.842 221.818C257.189 221.254 240.961 215.587 222.779 209.225C204.598 202.863 188.449 197.223 186.893 196.691L184.065 195.725L183.648 171.897C183.419 158.791 183.278 148.021 183.335 147.964C183.449 147.85 331.409 197.708 331.643 197.94C331.803 198.099 331.092 231.915 330.734 241.132C330.612 244.292 330.415 246.861 330.297 246.841C330.179 246.82 314.729 241.413 295.965 234.824Z"
+									fill="#35478C"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M192.876 238.334C189.809 236.78 187.286 235.494 187.268 235.477C187.236 235.444 188.553 234.671 188.64 234.671C188.685 234.671 198.39 241.009 198.511 241.118C198.549 241.151 198.549 241.169 198.511 241.165C198.479 241.162 195.943 239.888 192.876 238.334Z"
+									fill="#35478C"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M241.483 261.744L190.483 228.329L190.53 216.827C190.555 210.5 190.67 205.23 190.785 205.115C190.899 205 205.784 210.075 223.861 216.393L256.728 227.88L274.98 240.133L293.233 252.386L293.162 261.235C293.123 266.101 292.955 275.725 292.787 282.621L292.483 295.159L241.483 261.744Z"
+									fill="#B6B6B6"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M288.996 241.905C284.351 238.785 280.581 236.201 280.619 236.163C280.71 236.072 304.775 244.474 304.777 244.598C304.778 244.703 297.799 247.601 297.578 247.587C297.503 247.582 293.641 245.026 288.996 241.905Z"
+									fill="#B6B6B6"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M299.186 288.855C299.438 284.48 299.646 274.81 299.648 267.366L299.651 253.832L306.693 250.86L313.735 247.889L324.178 251.53C332.022 254.265 334.977 255.009 336.051 254.518C336.837 254.158 349.717 246.63 364.671 237.789L391.861 221.713L418.629 212.611L445.397 203.509L444.984 208.263C444.757 210.878 444.086 220.804 443.493 230.32C442.899 239.835 442.326 247.709 442.218 247.817C442.027 248.007 425.78 253.621 380.261 269.222C368.01 273.421 344.93 281.346 328.971 286.833C313.013 292.321 299.68 296.81 299.342 296.81C299.003 296.81 298.933 293.237 299.186 288.855H299.186Z"
+									fill="#DEDEDE"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M418.937 205.541C419.205 205.24 435.968 195.383 436.212 195.383C436.527 195.383 440.896 197.968 440.903 198.159C440.908 198.275 430.989 201.664 419.159 205.589C418.953 205.657 418.853 205.636 418.937 205.541V205.541Z"
+									fill="#DEDEDE"
+								/>
+								<path
+									d="M296.236 304.917C303.952 302.243 303.975 302.243 303.975 302.243"
+									stroke="black"
+									stroke-width="0.5"
+								/>
+								<path
+									d="M449.283 198.961C391.83 218.23 389.267 219.49 389.267 219.49"
+									stroke="black"
+									stroke-width="6.2"
+								/>
+							</svg>
+						</div>
+						<div>Power by the <b>U.S. Tak Association</b></div>
 					</div>
+					<div class="footer-banner"></div>
 				</div>
 			</div>
 		</div>
@@ -929,61 +1351,6 @@
 							<li>IP addresses will be logged for abuse control</li>
 							<li>Only email addresses, passwords, IP addresses will remain private on the server</li>
 						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div id="resetpwd-modal" class="modal fade">
-			<div class="modal-dialog modal-md">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
-						<h4 class="modal-title">Reset Password</h4>
-					</div>
-					<div class="modal-body">
-						<ul class="nav nav-tabs" id="resetpwd-ul">
-							<li role="presentation" class="active">
-								<a href="#sendresettoken" data-toggle="tab">Send Reset Token</a>
-							</li>
-							<li role="presentation"><a href="#resetpwd" data-toggle="tab">Reset Password</a></li>
-						</ul>
-						<div class="tab-content clearfix">
-							<div class="tab-pane active" id="sendresettoken">
-								<form role="form" onsubmit="server.sendresettoken(); return false;">
-									<div class="form-group">
-										<label for="usr">Username</label>
-										<input type="text" class="form-control" id="resettoken-username" />
-									</div>
-									<div class="form-group">
-										<label for="email">Email address:</label>
-										<input type="email" class="form-control" id="resettoken-email" />
-									</div>
-									<button type="submit" class="btn btn-primary">Send token</button>
-								</form>
-							</div>
-							<div class="tab-pane" id="resetpwd">
-								<form role="form" onsubmit="server.resetpwd(); return false;">
-									<div class="form-group">
-										<label for="usr">Username</label>
-										<input type="text" class="form-control" id="resetpwd-username" />
-									</div>
-									<div class="form-group">
-										<label for="usr">Token</label>
-										<input type="text" class="form-control" id="resetpwd-token" />
-									</div>
-									<div class="form-group">
-										<label for="pwd">New password:</label>
-										<input type="password" class="form-control" id="reset-new-pwd" />
-									</div>
-									<div class="form-group">
-										<label for="pwd">Retype New password:</label>
-										<input type="password" class="form-control" id="reset-retype-new-pwd" />
-									</div>
-									<button type="submit" class="btn btn-primary">Reset password</button>
-								</form>
-							</div>
-						</div>
 					</div>
 				</div>
 			</div>
@@ -1341,6 +1708,21 @@
 		<div id="addressbarhack" style="height: 5000px; width: 100%; position: absolute; top: 0; left: 0"></div>
 		<canvas id="gamecanvas"></canvas>
 		<div id="hovertext"></div>
+		
+		<script src="js/thirdparty/jquery.min.js"></script>
+		<script src="js/thirdparty/three.min.js"></script>
+		<script src="js/thirdparty/OrbitControlsNPD.min.js"></script>
+		<script src="js/thirdparty/linkify.min.js"></script>
+		<script src="js/thirdparty/linkify-string.min.js"></script>
+		<script src="js/thirdparty/bootstrap.min.js"></script>
+		<script src="js/thirdparty/jquery.contextMenu.min.js"></script>
+
+		<script src="js/chat.js"></script>
+		<script src="js/server.js"></script>
+		<script src="js/style_selector.js"></script>
+		<script src="js/board.js"></script>
+		<script src="js/ptn.js"></script>
+		
 		<script src="js/main.js"></script>
 
 		<!-- Google tag (gtag.js) -->

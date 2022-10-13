@@ -1,6 +1,8 @@
 # PlayTak-UI
 Javascript based Play Tak web client
 
+Playtak backend can be found here [Playtak](https://github.com/USTakAssociation/Playtak)
+
 ## Getting Started
 Pull the source by cloning the repository, then cd in to the project
 ```
@@ -28,7 +30,7 @@ This will start a local dev server for you
 
 If you make any changes just reload the page as caching is turned off
 
-To play locally against the live playtak server in the /ssrc/js/server.js on line 208 uncomment that line and reload
+To play locally against the live playtak server in the /src/js/server.js on line 208 uncomment that line and reload
 
 
 ## TODO
