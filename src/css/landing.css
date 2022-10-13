@@ -39,8 +39,6 @@
 
 .landing svg {
 	fill: var(--primary-bg-color);
-	width: 20px;
-	height: 20px;
 }
 
 .landing .loading svg {
@@ -53,7 +51,8 @@
 	background-image: url(../images/board-top.svg);
 	background-position: 0 0;
 	background-repeat: no-repeat;
-	background-size: contain;
+	background-size: cover;
+	background-color: var(--primary-bg-color);
 }
 
 .landing .usta-logo-large svg {
@@ -71,23 +70,38 @@
 
 .landing .parallax {
 	background-image: linear-gradient(0deg, rgb(53 68 136), rgb(255 255 255 / 30%)), url('../images/parallax.jpg');
-	min-height: 230px;
-	background-attachment: fixed;
 	background-position: center;
+	background-attachment: fixed;
 	background-repeat: no-repeat;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
 	background-size: cover;
 }
+.landing .parallax-inner {
+	min-height: 230px;
+}
 
-.landing .parallax h2 a{
+.landing .heading-text a{
 	color: var(--secondary-font-color);
 }
 
+.landing .heading-text a span {
+	text-decoration: inherit;
+}
+
+.landing .events{
+	background-color: var(--primary-bg-color);
+	height: auto;
+}
 .landing .events-wrapper{
 	min-height: 200px;
 	width: 80vw;
 	margin: 0 auto;
 	padding-top: 32px;
 	padding-bottom: 32px;
+}
+.landing #filter-buttons .btn {
+	margin: 0;
 }
 
 .landing .usta-logo-small svg {
@@ -109,6 +123,7 @@
 	background-image: url('../images/board-bottom.svg');
 	background-position: bottom;
 	background-size: cover;
+	background-color: var(--primary-bg-color);
 }
 
 .landing .footer-banner{
@@ -219,5 +234,11 @@
 	
 	.landing .footer {
 		background-size: auto;
+	}
+}
+
+@media (max-width: 500px) {
+	.landing .parallax{
+		background-attachment: local;
 	}
 }

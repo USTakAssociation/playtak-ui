@@ -718,6 +718,13 @@ input:invalid {
 	vertical-align: middle;
 }
 
+.verticle-align--bottom {
+	vertical-align: bottom;
+}
+
+.display--inline-block {
+	display: inline-block;
+}
 .bold {
 	font-weight: bold;
 }
@@ -801,8 +808,16 @@ input:invalid {
 	margin-bottom: 32px;
 }
 
+.padding-top--32{
+	padding-top: 32px;
+}
 .padding-left--8{
 	padding-left: 8px;
+}
+
+.icon-40{
+	width: 40px;
+	height: 40px;
 }
 /* || Responsive CSS */
 
