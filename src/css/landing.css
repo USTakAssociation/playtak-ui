@@ -89,6 +89,10 @@
 	text-decoration: inherit;
 }
 
+.landing .scroll-mobile {
+	display: none;
+}
+
 .landing .events{
 	background-color: var(--primary-bg-color);
 	height: auto;
@@ -240,5 +244,10 @@
 @media (max-width: 500px) {
 	.landing .parallax{
 		background-attachment: local;
+	}
+}
+@media (max-width: 450px) {
+	.landing .scroll-mobile {
+		display: block;
 	}
 }
