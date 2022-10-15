@@ -82,22 +82,10 @@ function infobar(){
 			,f:1
 		}
 		,{
-			m:"In settings (gear icon), you can enable perspective and make the board rotatable."
-			,c:function(){return server.loggedin && (perspective==0 && fixedcamera && ismobile)}
-			,t:20
-			,f:1
-		}
-		,{
 			m:"You can join the <a target='_blank' href='https://ustak.org/'>US Tak Association</a>."
 			,c:function(){return server.loggedin}
 			,t:20
 			,f:1
-		}
-		,{
-			m:"Sign up for the <a target='_blank' href='https://play.toornament.com/en_US/tournaments/5570424523300052992/'>US Tak Beginner tournament</a>."
-			,c:function(){var myrating=1000;if(server.myname){myrating=getrating(server.myname)||1000};return server.loggedin && myrating<1500}
-			,t:20
-			,f:10
 		}
 	]
 	changemessage()
