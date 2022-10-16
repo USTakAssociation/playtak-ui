@@ -435,8 +435,7 @@ function init() {
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
 
-	addressbarhack=document.getElementById("addressbarhack")
-	window.scroll(0, 1000);
+	//addressbarhack=document.getElementById("addressbarhack");
 	canvas.addEventListener('mousedown',onDocumentMouseDown,false)
 	canvas.addEventListener('mouseup',onDocumentMouseUp,false)
 	canvas.addEventListener('mousemove',onDocumentMouseMove,false)
