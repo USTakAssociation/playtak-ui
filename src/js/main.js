@@ -436,7 +436,7 @@ function init() {
 	lastMoveHighlighter.rotateX(Math.PI / 2);
 
 	addressbarhack=document.getElementById("addressbarhack")
-
+	window.scroll(0, 1000);
 	canvas.addEventListener('mousedown',onDocumentMouseDown,false)
 	canvas.addEventListener('mouseup',onDocumentMouseUp,false)
 	canvas.addEventListener('mousemove',onDocumentMouseMove,false)
