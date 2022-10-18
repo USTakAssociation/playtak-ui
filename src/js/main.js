@@ -648,13 +648,13 @@ function adjustsidemenu(notation,chat){
 
 let settingsToggle = false;
 function toggleSettingsDrawer(){
+	const el = document.getElementById("settings-drawer");
 	if (!settingsToggle) {
-		showElement("settings-drawer", 'block');
+		el.classList.remove('hidden')
 		settingsToggle = true;
 	} else {
-		hideElement("settings-drawer");
+		el.classList.add('hidden')
 		settingsToggle = false;
-		closeScratch();
 	}
 	generateCamera();
 }
@@ -672,6 +672,7 @@ function toggleMobileMenu(){
 		hideElement("mobile-close");
 		showElement("mobile-open", 'block');
 		menuToggle = false;
+		closeScratch();
 	}
 }
 

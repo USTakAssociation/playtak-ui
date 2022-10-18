@@ -71,7 +71,7 @@ svg {
 header{
 	width: 100vw;
 	height: 36px;
-	position: fixed;
+	position: absolute;
 	z-index: 22;
 	background-color: var(--primary-bg-color);
 	font: 14px/24px arial;
