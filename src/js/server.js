@@ -224,8 +224,7 @@ var server = {
 			}
 			this.connection.onclose = function(e){
 				server.loggedin=false
-				showElement("login-button", 'block');
-				hideElement("logout-button");
+				resetToLoginState();
 				$('#onlineplayers').addClass('hidden')
 				document.getElementById("onlineplayersbadge").innerHTML = "0"
 				document.getElementById("seekcount").innerHTML = "0"
@@ -257,7 +256,8 @@ var server = {
 		localStorage.removeItem('keeploggedin')
 		localStorage.removeItem('usr')
 		localStorage.removeItem('token')
-		localStorage.removeItem('isLoggedIn')
+		localStorage.removeItem('isLoggedIn');
+		resetToLoginState();
 		if(this.connection){
 			this.connection.close()
 			alert("info","Disconnnecting from server....")
@@ -267,16 +267,10 @@ var server = {
 	,loginbutton:function(){
 		if(server.loggedin){
 			this.logout();
-			hideElement('play-button');
-			showElement('hero-actions');
-			showElement('signup-button');
-			showElement('landing-login-button');
-			showElement('action-links');
 		}
 		else{
+			resetToLoginState();
 			showElement('landing');
-			hideElement('hero-actions');
-			showElement('landing-login');
 		}
 	}
 
@@ -707,11 +701,7 @@ var server = {
 				localStorage.removeItem('usr');
 				localStorage.removeItem('token');
 				localStorage.removeItem('isLoggedIn');
-				hideElement("play-button");
-				showElement("hero-actions");
-				showElement("signup-button");
-				showElement("landing-login-button");
-				showElement("action-links");
+				resetToLoginState();
 			}
 		}
 		//Registered ...
@@ -755,21 +745,17 @@ var server = {
 		//Welcome kaka!
 		else if(startswith("Welcome ",e)){
 			this.tries = 0;
-			
+			setLoggedInState();
 			// Guest logging back in 
 			if(localStorage.getItem('guesttoken') && !localStorage.getItem('usr')){
-				hideElement('landing')
+				hideElement('landing');
 			} else if (localStorage.getItem("isLoggedIn")) {
 				// Logged in user
-				hideElement('signup-button');
-				hideElement("landing-login-button");
-				hideElement("action-links");
-				showElement('play-button');
+				setLoggedInState();
 			} else {
 				hideElement("landing");
 			}
-			hideElement('login-button');
-			showElement('logout-button', 'block');
+			
 			this.myname = e.split("Welcome ")[1].split("!")[0];
 			server.updateplayerinfo();
 			alert("success", "You're logged in " + this.myname + "!");

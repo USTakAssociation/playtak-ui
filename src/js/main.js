@@ -1439,13 +1439,41 @@ $(document).ready(function() {
 	fetchEvents();
 })
 
+function resetToLoginState() {
+	// header reset
+	hideElement("playerinfo");
+	showElement("login-button", 'block');
+	hideElement("logout-button");
+	// Landing page reset
+	hideElement("sign-up");
+	hideElement("landing-login");
+	hideElement("forgot-password");
+	hideElement("play-button");
+	showElement("hero-actions");
+	showElement("signup-button");
+	showElement("landing-login-button");
+	showElement("action-links");
+}
+
+function setLoggedInState() {
+	// header
+	hideElement("login-button");
+	showElement("logout-button", "block");
+	showElement("playerinfo");
+	
+	//Landing 
+	hideElement("signup-button");
+	hideElement("landing-login-button");
+	hideElement("action-links");
+	showElement("play-button");
+}
+
 function showEvents() {
 	showElement('landing');
 	const element = document.getElementById("events");
 	element.scrollIntoView();
 }
 
-// Landing functions
 function hideElement(element) {
 	document.getElementById(element).style.display = "none";
 }
@@ -1454,6 +1482,7 @@ function showElement(element, type){
 	document.getElementById(element).style.display = type || "flex";
 }
 
+// Landing functions
 async function fetchEvents(){
 	showElement('loading-events')
 	try {
