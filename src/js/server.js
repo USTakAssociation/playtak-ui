@@ -224,14 +224,13 @@ var server = {
 			}
 			this.connection.onclose = function(e){
 				server.loggedin=false
-				document.getElementById('login-button').textContent = 'Log In'
-				document.getElementById('login-button').classList.remove("loggedin")
+				showElement("login-button", 'block');
+				hideElement("logout-button");
 				$('#onlineplayers').addClass('hidden')
 				document.getElementById("onlineplayersbadge").innerHTML = "0"
 				document.getElementById("seekcount").innerHTML = "0"
 				document.getElementById("seekcountbot").innerHTML = "0"
 				document.getElementById("gamecount").innerHTML = "0"
-				//document.getElementById("scratchsize").disabled = false
 				board.scratch = true
 				board.observing = false
 				board.gameno = 0
@@ -769,8 +768,8 @@ var server = {
 			} else {
 				hideElement("landing");
 			}
-			document.getElementById("login-button").textContent = "Log Out";
-			document.getElementById("login-button").classList.add("loggedin");
+			hideElement('login-button');
+			showElement('logout-button', 'block');
 			this.myname = e.split("Welcome ")[1].split("!")[0];
 			server.updateplayerinfo();
 			alert("success", "You're logged in " + this.myname + "!");

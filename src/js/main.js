@@ -1439,6 +1439,11 @@ $(document).ready(function() {
 	fetchEvents();
 })
 
+function showEvents() {
+	showElement('landing');
+	const element = document.getElementById("events");
+	element.scrollIntoView();
+}
 
 // Landing functions
 function hideElement(element) {
