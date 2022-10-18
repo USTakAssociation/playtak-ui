@@ -1465,7 +1465,9 @@ function setLoggedInState() {
 	hideElement("signup-button");
 	hideElement("landing-login-button");
 	hideElement("action-links");
+	hideElement("landing-login");
 	showElement("play-button");
+	showElement("hero-actions");
 }
 
 function showEvents() {
