@@ -925,6 +925,6 @@ input:invalid {
 	}
 
 	.settings-pane {
-		height: 75vh;
+		height: calc(100vh - 100px);
 	}
 }
