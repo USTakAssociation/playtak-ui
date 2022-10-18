@@ -394,7 +394,7 @@ function init() {
 
 	var fson = false;
 	//if(ismobile && !isidevice)
-	if (ismobile) {
+	if (ismobile || isidevice) {
 		let fsbutton = document.createElement("button");
 		let li = document.createElement("li");
 		fsbutton.className = "navitem";
@@ -514,7 +514,6 @@ function floathashscene(){
 	}
 	return hash
 }
-
 
 function onDocumentMouseMove(e) {
 	var x = e.clientX - canvas.offsetLeft
@@ -655,6 +654,7 @@ function toggleSettingsDrawer(){
 	} else {
 		hideElement("settings-drawer");
 		settingsToggle = false;
+		closeScratch();
 	}
 	generateCamera();
 }
