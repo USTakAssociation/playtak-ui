@@ -418,7 +418,7 @@ function init() {
 	scene = new THREE.Scene();
 
 	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: antialiasing_mode });
-	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
 	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
 	renderer.setPixelRatio(pixelratio);
 	renderer.setClearColor(clearcolor, 1);
@@ -455,12 +455,12 @@ function init() {
 
 function onWindowResize() {
 	if(rendererdone){
-		renderer.setSize(window.innerWidth,window.innerHeight)
+		renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
 		pixelratio=(window.devicePixelRatio||1)*scalelevel
 		renderer.setPixelRatio(pixelratio)
 		adjustsidemenu();
 		closeMobileMenu();
-		generateCamera();
+		setTimeout(generateCamera, 100);
 	}
 }
 
