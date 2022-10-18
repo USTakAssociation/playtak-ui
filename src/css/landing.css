@@ -240,9 +240,12 @@
 	}
 }
 
-@media (max-width: 500px) {
+@media (max-width: 740px) {
+	.landing .hero-actions {
+		min-width: 25vw;
+	}
 	.landing .parallax{
-		background-attachment: local;
+		background-attachment: scroll;
 	}
 }
 @media (max-width: 450px) {

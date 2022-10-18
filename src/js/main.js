@@ -393,8 +393,7 @@ function init() {
 	}
 
 	var fson = false;
-	//if(ismobile && !isidevice)
-	if (ismobile || isidevice) {
+	if (ismobile && !isidevice) {
 		let fsbutton = document.createElement("button");
 		let li = document.createElement("li");
 		fsbutton.className = "navitem";
@@ -1474,8 +1473,23 @@ async function fetchEvents(){
 }
 
 function createEventTable(data){
-	const table = document.createElement('table');
-	table.id = "event-table";
+	const filterButtons = document.getElementById("filter-buttons");
+	filterButtons.classList = "flex gap--8 flex-wrap";
+	// create the category buttons
+	for (let i = 0; i < data.categories.length; i++) {
+		const categoryClean = data.categories[i].toLowerCase().replace(" ", "-");
+		const filterButton = document.createElement("button");
+		filterButton.innerHTML = data.categories[i];
+		filterButton.id = `filter-${categoryClean}`;
+		filterButton.classList = "btn btn--secondary";
+		if (categoryClean === "all") {
+			filterButton.classList = "btn btn-primary";
+		}
+		filterButton.onclick = () => filterTable(categoryClean);
+		filterButtons.appendChild(filterButton);
+	}
+
+	const table = document.getElementById('event-data');
 	for (let i = 0; i < data.data.length; i++) {
 		const el = data.data[i];
 		const tr = table.insertRow(-1);
@@ -1483,32 +1497,20 @@ function createEventTable(data){
 		const name = tr.insertCell(-1);
 		name.innerHTML = `<b>${el.name}</b>`;
 		const dates = tr.insertCell(-1);
-		const range = el.start_date && el.end_date ? `${el.start_date} - ${el.end_date}` : "TBD";
+		const range =
+			!el.start_date && !el.end_date
+				? "TBD"
+				: el.start_date && el.end_date ? `${el.start_date} - ${el.end_date}` : `${el.start_date || el.end_date}`;
 		dates.innerHTML = range;
 		const details = tr.insertCell(-1);
 		const link = `<a href="${el.link}" target="_blank">Details</a>`
 		details.innerHTML = el.link ? link : '';
 	}
-	const eventData = document.getElementById("event-data");
-	const filterButtons = document.getElementById('filter-buttons');
-	filterButtons.classList = "flex gap--8 flex-wrap"
-	// create the category buttons
-	for (let i = 0; i < data.categories.length; i++) {
-		const categoryClean = data.categories[i].toLowerCase().replace(' ', '-');
-		const filterButton = document.createElement('button');
-		filterButton.innerHTML = data.categories[i];
-		filterButton.id = `filter-${categoryClean}`;
-		filterButton.classList = "btn btn--secondary";
-		if(categoryClean === 'all'){ filterButton.classList = 'btn btn-primary'}
-		filterButton.onclick = () => filterTable(categoryClean);
-		filterButtons.appendChild(filterButton);
-	}
-	eventData.appendChild(table)
 }
 
 function filterTable(category){
-	const table = document.querySelectorAll('#event-table');
-	const trs = table[0].childNodes[0].childNodes;
+	const table = document.getElementById('event-data');
+	const trs = table.childNodes;
 	const filterAll = document.getElementById('filter-all');
 	// loop through button and reset classes
 	const filterButtons = document.getElementById("filter-buttons");
