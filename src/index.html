@@ -64,80 +64,18 @@
 			<source src="audio/hurry.ogg" type="audio/ogg" />
 			<source src="audio/hurry.mp3" type="audio/mpeg" />
 		</audio>
-		<header class="singleline">
-			<div>
-				<button id="menu-toggle" class="btn btn-link menu-button" onclick="toggleMobileMenu()">
+		<header id="header" class="singleline flex flex-space-between flex-align-start flex-row-reverse flex-wrap">
+			<div id="menu-toggle" class="flex--20">
+				<button  class="btn btn-link menu-button" onclick="toggleMobileMenu()">
 					<div id="mobile-open">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg>
 					</div>
-					<div id="mobile-close" class="hidden">
+					<div id="mobile-close" style="display: none;">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"/></svg>
 					</div>
 				</button>
-				<nav id="menu-wrapper" class="menu-wrapper">
-					<ul id="main-nav" class="menu">
-						<li>
-							<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()">New Game</button>
-						</li>
-						<li>
-							<button class="navitem" style="min-width: 124px" onclick="$('#joingame-modal').modal('show');  closeMobileMenu()">
-								Join Game
-								<span class="badge" data-hover="Available humans + AIs to play against">
-									<span id="seekcount">0</span> + <span id="seekcountbot">0</span></span>
-							</button>
-						</li>
-						<li>
-							<button class="navitem" style="min-width: 76px" onclick="$('#watchgame-modal').modal('show');  closeMobileMenu()">
-								Watch <span class="badge" id="gamecount" data-hover="Games in progress">0</span>
-							</button>
-						</li>
-						<li>
-							<button
-							class="navitem"
-							onclick="$('#help-modal').modal('show'); closeMobileMenu()"
-							data-hover="Information on game rules and Tak communities">
-								Help
-							</button>
-						</li>
-						<li>
-							<a class="navitem" href="/games" target="_blank" data-hover="Find and review old games">Old Games</a>
-						</li>
-						<li>
-							<button
-							class="navitem"
-							id="scratchbutton"
-							style="position: relative; top: 0; left: 0"
-							onclick="togglescratch()"
-							onblur="$('#scratchlist').hide()"
-							data-hover="Open a scratch board">
-								Board <span class="caret"></span>
-								<div id="scratchlist" style="display: none">
-									<div class="scratchsize" onclick="scratchbutton(3); closeMobileMenu()">3x3</div>
-									<div class="scratchsize" onclick="scratchbutton(4); closeMobileMenu()">4x4</div>
-									<div class="scratchsize" onclick="scratchbutton(5); closeMobileMenu()">5x5</div>
-									<div class="scratchsize" onclick="scratchbutton(6); closeMobileMenu()">6x6</div>
-									<div class="scratchsize" onclick="scratchbutton(7); closeMobileMenu()">7x7</div>
-									<div class="scratchsize" onclick="scratchbutton(8); closeMobileMenu()">8x8</div>
-								</div>
-							</button>
-						</li>
-						<li>
-							<button
-							class="navitem"
-							onclick="$('#loadmodal').modal('show'); closeMobileMenu()"
-							data-hover="Load a game state from a PTN or TPS file">
-								Load
-							</button>
-						</li>
-						<li>
-							<div class="navitem" style="min-width: 78px" data-hover="Number of players currently logged in">
-								Online <span class="badge" id="onlineplayersbadge">0</span>
-							</div>
-						</li>
-					</ul>
-				</nav>
 			</div>
-			<div>
+			<div class="right-nav flex flex-end">
 				<a
 					class="navitem"
 					href="ratings.html"
@@ -173,11 +111,86 @@
 					Log In
 				</button>
 			</div>
+			<nav id="menu-wrapper" class="menu-wrapper">
+				<ul id="main-nav" class="menu flex">
+					<li>
+						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()">New Game</button>
+					</li>
+					<li>
+						<button class="navitem" style="min-width: 124px" onclick="$('#joingame-modal').modal('show');  closeMobileMenu()">
+							Join Game
+							<span class="badge" data-hover="Available humans + AIs to play against">
+								<span id="seekcount">0</span> + <span id="seekcountbot">0</span></span>
+						</button>
+					</li>
+					<li>
+						<button class="navitem" style="min-width: 76px" onclick="$('#watchgame-modal').modal('show');  closeMobileMenu()">
+							Watch <span class="badge" id="gamecount" data-hover="Games in progress">0</span>
+						</button>
+					</li>
+					<li>
+						<button
+						class="navitem"
+						onclick="$('#help-modal').modal('show'); closeMobileMenu()"
+						data-hover="Information on game rules and Tak communities">
+							Help
+						</button>
+					</li>
+					<li>
+						<a class="navitem" href="/games" target="_blank" data-hover="Find and review old games">Old Games</a>
+					</li>
+					<li class="flex-wrap">
+						<button
+							class="navitem"
+							id="scratchbutton"
+							onclick="togglescratch();"
+							data-hover="Open a scratch board">
+							Board <span class="caret"></span>
+						</button>
+						<div id="scratchlist" style="display: none">
+							<ul class="flex flex-column flex-center flex-align-center">
+								<li>
+									<button class="navitem" onclick="scratchbutton(3); closeMobileMenu();">3 x 3</button>
+								</li>
+								<li>
+									<button class="navitem" onclick="scratchbutton(4); closeMobileMenu();">4 x 4</button>
+								</li>
+								<li>
+									<button class="navitem" onclick="scratchbutton(5); closeMobileMenu();">5 x 5</button>
+								</li>
+								<li>
+									<button class="navitem" onclick="scratchbutton(6); closeMobileMenu();">6 x 6</button>
+								</li>
+								<li>
+									<button class="navitem" onclick="scratchbutton(7); closeMobileMenu();">7 x 7</button>
+								</li>
+								<li>
+									<button class="navitem" onclick="scratchbutton(8); closeMobileMenu();">8 x 8</button>
+								</li>
+							</ul>
+						</div>
+					</li>
+					<li>
+						<button
+						class="navitem"
+						onclick="$('#loadmodal').modal('show'); closeMobileMenu()"
+						data-hover="Load a game state from a PTN or TPS file">
+							Load
+						</button>
+					</li>
+					<li>
+						<div class="navitem" style="min-width: 78px" data-hover="Number of players currently logged in">
+							Online <span class="badge" id="onlineplayersbadge">0</span>
+						</div>
+					</li>
+				</ul>
+			</nav>
+			
 		</header>
 		<div id="floating">
 			<div
 				id="notation-toggle-text"
-				class="toggle-wrapper notation-toggle"
+				class="toggle-wrapper notation-toggle flex flex-align-center"
 				data-hover="Click to show/hide notation"
 				onclick="adjustsidemenu('toggle',null)"
 			>
@@ -188,7 +201,7 @@
 				</svg>
 			</div>
 
-			<div id="rmenu">
+			<div id="rmenu" class="flex flex-column">
 				<div class="center player-box">
 					<div id="player-opp">
 						<div class="flex flex-center flex-align-center gap--8">
@@ -213,7 +226,7 @@
 					</div>
 				</div>
 
-				<div class="center" id="variablerules">
+				<div id="variablerules" class="flex flex-center flex-align-center">
 					<span
 						id="komirule"
 						class="rulebox"
@@ -265,7 +278,7 @@
 					</button>
 				</div>
 
-				<div id="notationbar">
+				<div id="notationbar" class="flex--1">
 					<table id="moveslist"></table>
 				</div>
 
@@ -356,7 +369,7 @@
 		<div id="chat">
 			<div
 				id="chat-toggle-button"
-				class="toggle-wrapper chat-toggle"
+				class="toggle-wrapper chat-toggle flex flex-align-center"
 				data-hover="Click to show/hide chat"
 				onclick="adjustsidemenu(null,'toggle')"
 			>
@@ -366,7 +379,7 @@
 					/>
 				</svg>
 			</div>
-			<div id="cmenu">
+			<div id="cmenu" class="flex flex-column">
 				<div id="roomslist"></div>
 				<div id="room_divs"></div>
 				<div id="chatwrite">
@@ -378,7 +391,7 @@
 			</div>
 		</div>
 
-		<div id="settings-drawer" class="hidden">
+		<div id="settings-drawer" style="display: none">
 			<div class="flex flex-space-between">
 				<h4 class="padding-left--8">Settings</h4>
 				<button class="btn btn-link" onclick="toggleSettingsDrawer(false)">

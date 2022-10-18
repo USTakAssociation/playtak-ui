@@ -377,72 +377,81 @@ function generateCamera(){
 }
 
 function init() {
-	make_style_selector()
-	var ua = navigator.userAgent.toLowerCase()
-	if(ua.indexOf("android") > -1 || ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
-		ismobile=true
+	make_style_selector();
+	var ua = navigator.userAgent.toLowerCase();
+	if (ua.indexOf("android") > -1 || ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1) {
+		ismobile = true;
 	}
-	if(ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
-		isidevice=true
-		document.body.ongesturestart=document.body.ongesturechange=document.body.ongestureend=function(ev){
-			ev.preventDefault()
-		}
+	if (ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1) {
+		isidevice = true;
+		document.body.ongesturestart =
+			document.body.ongesturechange =
+			document.body.ongestureend =
+				function (ev) {
+					ev.preventDefault();
+				};
 	}
-	
-	var fson=false
-	if(ismobile && !isidevice){
+
+	var fson = false;
+	//if(ismobile && !isidevice)
+	if (ismobile) {
 		let fsbutton = document.createElement("button");
-		let li = document.createElement('li');
+		let li = document.createElement("li");
 		fsbutton.className = "navitem";
 		fsbutton.innerHTML = "Fullscreen";
 		fsbutton.onclick = togglefs;
 		li.appendChild(fsbutton);
 		document.getElementById("main-nav").appendChild(li);
 	}
-	function togglefs(){
-		if(fson){
-			document.exitFullscreen()
+	function togglefs() {
+		if (fson) {
+			document.exitFullscreen();
+		} else {
+			document.documentElement.requestFullscreen();
 		}
-		else{
-			document.documentElement.requestFullscreen()
-		}
-		fson=!fson
+		fson = !fson;
 	}
 
-	loadSettings()
+	loadSettings();
 
-	canvas = document.getElementById("gamecanvas")
+	canvas = document.getElementById("gamecanvas");
 
-	scene = new THREE.Scene()
+	scene = new THREE.Scene();
 
-	renderer = new THREE.WebGLRenderer({canvas:canvas,antialias:antialiasing_mode})
-	renderer.setSize( window.innerWidth,window.innerHeight )
-	pixelratio=(window.devicePixelRatio||1)*scalelevel
-	renderer.setPixelRatio(pixelratio)
-	renderer.setClearColor(clearcolor,1)
-	maxaniso=Math.min(renderer.getMaxAnisotropy()||1,16)
+	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: antialiasing_mode });
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
+	renderer.setPixelRatio(pixelratio);
+	renderer.setClearColor(clearcolor, 1);
+	maxaniso = Math.min(renderer.getMaxAnisotropy() || 1, 16);
 
-	window.addEventListener('resize',onWindowResize,false)
-	window.addEventListener('keyup',onKeyUp,false)
+	window.addEventListener("resize", onWindowResize, false);
+	window.addEventListener("keyup", onKeyUp, false);
 
-	board.create(5,"white",true)
-	board.initEmpty()
-	rendererdone=true
-	generateCamera()
-	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5,3,16,100)
-	highlighter = new THREE.Mesh(geometry,materials.highlighter)
-	highlighter.rotateX(Math.PI / 2)
+	board.create(5, "white", true);
+	board.initEmpty();
+	rendererdone = true;
+	generateCamera();
+	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5, 3, 16, 100);
+	highlighter = new THREE.Mesh(geometry, materials.highlighter);
+	highlighter.rotateX(Math.PI / 2);
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
 
 	//addressbarhack=document.getElementById("addressbarhack");
-	canvas.addEventListener('mousedown',onDocumentMouseDown,false)
-	canvas.addEventListener('mouseup',onDocumentMouseUp,false)
-	canvas.addEventListener('mousemove',onDocumentMouseMove,false)
-	canvas.addEventListener('contextmenu',function(e){e.preventDefault()},false)
+	canvas.addEventListener("mousedown", onDocumentMouseDown, false);
+	canvas.addEventListener("mouseup", onDocumentMouseUp, false);
+	canvas.addEventListener("mousemove", onDocumentMouseMove, false);
+	canvas.addEventListener(
+		"contextmenu",
+		function (e) {
+			e.preventDefault();
+		},
+		false
+	);
 
-	materials.updateBoardMaterials()
-	materials.updatePieceMaterials()
+	materials.updateBoardMaterials();
+	materials.updatePieceMaterials();
 }
 
 function onWindowResize() {
@@ -450,8 +459,9 @@ function onWindowResize() {
 		renderer.setSize(window.innerWidth,window.innerHeight)
 		pixelratio=(window.devicePixelRatio||1)*scalelevel
 		renderer.setPixelRatio(pixelratio)
-		adjustsidemenu()
-		generateCamera()
+		adjustsidemenu();
+		closeMobileMenu();
+		generateCamera();
 	}
 }
 
@@ -567,19 +577,6 @@ function buttonclick() {
 	server.send(data)
 }
 
-function togglescratch(){
-	var rect=document.getElementById("scratchbutton").getBoundingClientRect()
-	$("#scratchlist").css("top",(rect.top+36)+"px").css("left",rect.left+"px").toggle()
-}
-function scratchbutton(size) {
-	if(board.observing) {server.send("Unobserve " + board.gameno)}
-	if(board.scratch || board.observing) {
-		board.clear()
-		board.create(size,"white",true)
-		board.initEmpty()
-	}
-}
-
 function adjustsidemenu(notation,chat){
 	var vertical = window.screen.width<window.screen.height;
 	var notationstore = "shownotation"+(vertical?"v":"h");
@@ -652,45 +649,68 @@ function adjustsidemenu(notation,chat){
 
 let settingsToggle = false;
 function toggleSettingsDrawer(){
-	const settingElem = document.getElementById('settings-drawer');
 	if (!settingsToggle) {
-		settingElem.classList.remove("hidden");
+		showElement("settings-drawer", 'block');
 		settingsToggle = true;
 	} else {
-		settingElem.classList.add("hidden");
+		hideElement("settings-drawer");
 		settingsToggle = false;
 	}
 	generateCamera();
 }
 
-let menuToggle = false
+var menuToggle = false;
 function toggleMobileMenu(){
-	const menuElem = document.getElementById("menu-wrapper");
-	const mOpenElem = document.getElementById("mobile-open");
-	const mCloseElem = document.getElementById("mobile-close");
+	const header = document.getElementById('header');
 	if (!menuToggle) {
-		menuElem.style.display = 'block'
-		mOpenElem.classList.add('hidden');
-		mCloseElem.classList.remove('hidden');
+		header.style.height = "auto";
+		hideElement("mobile-open");
+		showElement("mobile-close", 'block');
 		menuToggle = true;
 	} else {
-		menuElem.style.display = '';
-		mOpenElem.classList.remove("hidden");
-		mCloseElem.classList.add("hidden");
+		header.style.height = "36px";
+		hideElement("mobile-close");
+		showElement("mobile-open", 'block');
 		menuToggle = false;
 	}
 }
 
 function closeMobileMenu(){
-	const menuElem = document.getElementById("menu-wrapper");
-	const mOpenElem = document.getElementById("mobile-open");
-	const mCloseElem = document.getElementById("mobile-close");
-	if(menuToggle){
-		menuElem.style.display = "";
-		mOpenElem.classList.remove("hidden");
-		mCloseElem.classList.add("hidden");
-		menuToggle = false;
+	if(!menuToggle){ return }
+	const header = document.getElementById('header');
+	header.style.height = "36px";
+	hideElement("mobile-close");
+	showElement("mobile-open", "block");
+	menuToggle = false;
+	generateCamera();
+}
+
+
+var scratchToggle = false;
+function togglescratch() {
+	if (!scratchToggle) {
+		showElement("scratchlist", "block");
+		scratchToggle = true;
+	} else {
+		hideElement("scratchlist");
+		scratchToggle = false;
 	}
+}
+function closeScratch() {
+	hideElement("scratchlist");
+	scratchToggle = false;
+}
+
+function scratchbutton(size) {
+	if (board.observing) {
+		server.send("Unobserve " + board.gameno);
+	}
+	if (board.scratch || board.observing) {
+		board.clear();
+		board.create(size, "white", true);
+		board.initEmpty();
+	}
+	hideElement("scratchlist");
 }
 
 function load() {
@@ -1425,8 +1445,8 @@ function hideElement(element) {
 	document.getElementById(element).style.display = "none";
 }
 
-function showElement(element){
-	document.getElementById(element).style.display = "flex";
+function showElement(element, type){
+	document.getElementById(element).style.display = type || "flex";
 }
 
 async function fetchEvents(){
