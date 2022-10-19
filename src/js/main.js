@@ -1506,6 +1506,7 @@ async function fetchEvents(){
 		createEventTable(data);
 		hideElement('loading-events')
 	} catch (error) {
+		hideElement("loading-events");
 		console.error(error);
 	}
 }
@@ -1541,8 +1542,8 @@ function createEventTable(data){
 				: el.start_date && el.end_date ? `${el.start_date} - ${el.end_date}` : `${el.start_date || el.end_date}`;
 		dates.innerHTML = range;
 		const details = tr.insertCell(-1);
-		const link = `<a href="${el.link}" target="_blank">Details</a>`
-		details.innerHTML = el.link ? link : '';
+		details.innerHTML = el.details ? `<a href="${el.details}" target="_blank">Details</a>` : "";
+		el.registration ? details.innerHTML += ` | <a href="${el.registration}" target="_blank">Registration</a> `: '';
 	}
 }
 
