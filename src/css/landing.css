@@ -40,6 +40,10 @@
 	fill: var(--primary-bg-color);
 }
 
+.landing .svg-accent {
+	fill: var(--primary-font-color);
+}
+
 .landing .loading svg {
 	width: 90px;
 	height: 90px;
@@ -54,8 +58,11 @@
 	background-color: var(--primary-bg-color);
 }
 
-.landing .usta-logo-large svg {
-	width: 250px;
+.landing .playtak-logo svg {
+	width: 35rem;
+	height: 22rem;
+	fill: inherit;
+	stroke: inherit;
 }
 
 .landing .hero{
@@ -112,11 +119,6 @@
 	height: 60px;
 }
 
-.landing .usta-logo-large svg {
-	width: 250px;
-	height: 250px;
-}
-
 .landing .bottom-credit {
 	height: 7em;
 }
@@ -136,7 +138,7 @@
 
 /* utilities */
 .landing .font-small {
-	font-size: .8em;
+	font-size: .9em;
 }
 
 .landing .text-center{
@@ -241,6 +243,13 @@
 }
 
 @media (max-width: 740px) {
+	.landing .playtak-logo svg {
+			width: 30rem;
+			height: 20rem;
+			fill: inherit;
+			stroke: inherit;
+	}
+	
 	.landing .hero-actions {
 		min-width: 25vw;
 	}

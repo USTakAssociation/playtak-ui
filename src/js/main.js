@@ -1449,6 +1449,7 @@ function resetToLoginState() {
 	hideElement("landing-login");
 	hideElement("forgot-password");
 	hideElement("play-button");
+	hideElement("close-events");
 	showElement("hero-actions");
 	showElement("signup-button");
 	showElement("landing-login-button");
@@ -1468,6 +1469,7 @@ function setLoggedInState() {
 	hideElement("landing-login");
 	showElement("play-button");
 	showElement("hero-actions");
+	showElement("close-events");
 }
 
 function showEvents() {
