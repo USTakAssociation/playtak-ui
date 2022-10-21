@@ -233,7 +233,7 @@ var server = {
 				board.scratch = true
 				board.observing = false
 				board.gameno = 0
-				document.title = "Tak"
+				document.title = "Play Tak"
 				server.myname=null
 				server.seekslist=[]
 				server.gameslist=[]
@@ -613,7 +613,7 @@ var server = {
 				}
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
-					document.title = "Tak"
+					document.title = "Play Tak"
 					board.result = spl[2]
 
 					var msg = "Game over <span class='bold'>" + spl[2] + "</span><br>"
@@ -665,7 +665,7 @@ var server = {
 				//Game#1 Abandoned
 				else if(spl[1] === "Abandoned."){
 					//Game#1 Abandoned. name quit
-					document.title = "Tak"
+					document.title = "Play Tak"
 
 					if(board.mycolor === "white"){
 						board.result = "1-0"
@@ -759,7 +759,7 @@ var server = {
 			this.myname = e.split("Welcome ")[1].split("!")[0];
 			server.updateplayerinfo();
 			alert("success", "You're logged in " + this.myname + "!");
-			document.title = "Tak";
+			document.title = "Play Tak";
 			server.loggedin = true;
 
 			var rem = $("#keeploggedin").is(":checked");
