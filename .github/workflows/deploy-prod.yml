@@ -48,7 +48,7 @@ jobs:
                   PRIVATE_KEY: ${{ secrets.PRIVATE_KEY  }}
                   HOSTNAME: ${{ secrets.HOSTNAME }}
                   USER_NAME: ${{ secrets.USER_NAME }}
-                  SSH_PORT: ${{SSH_PORT}}
+                  SSH_PORT: ${{ secrets.SSH_PORT }}
               run: |
                 echo "$PRIVATE_KEY" > private_key.pem && chmod 0400 private_key.pem
                 scp -p ${SSH_PORT} -o StrictHostKeyChecking=no -i private_key.pem artifact.tar.gz ${USER_NAME}@${HOSTNAME}:~
