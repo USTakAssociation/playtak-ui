@@ -871,6 +871,11 @@ function loadSettings() {
 		}
 	}
 
+	// load the setting for disable landing.
+	if (localStorage.getItem("disable-landing") === "true") {
+		document.getElementById("show-landing").checked = false;
+	}
+
 	// load the setting for wall orientation.
 	if (localStorage.getItem("diagonal_walls") === "true" || (!localStorage.getItem("diagonal_walls") && ismobile)) {
 		document.getElementById("wall-orientation").checked = true;
@@ -1011,6 +1016,18 @@ function loadSettings() {
 
 /*
  * Notify checkbox change for checkbox:
+ *	 Disable landing
+ */
+function disableLanding() {
+	if(!document.getElementById('show-landing').checked){
+		localStorage.setItem('disable-landing', true);
+	}else {
+		localStorage.removeItem("disable-landing", true);
+	}
+}
+
+/*
+ * Notify checkbox change for checkbox:
  *	 Dark Mode
  */
 function checkboxDarkMode() {
@@ -1077,7 +1094,6 @@ function showTable(event) {
 	localStorage.setItem('show_table', event.target.checked);
 	board.table.visible = event.target.checked
 }
-
 
 /*
  * Notify checkbox change for checkbox:
@@ -1428,7 +1444,10 @@ $(document).ready(function() {
 	else{
 		server.connect()
 	}
-	if(localStorage.getItem('isLoggedIn')){
+	if (localStorage.getItem("usr") && localStorage.getItem('disable-landing') === 'true'){
+		hideElement('landing')
+	}
+	if (localStorage.getItem("isLoggedIn")) {
 		hideElement("signup-button");
 		hideElement("landing-login-button");
 		hideElement("action-links");

@@ -345,6 +345,8 @@ var server = {
 			this.connection.onopen=function(){server.register()}
 		}
 		else if(this.connection.readyState==1){
+			hideElement("sign-up");
+			showElement("loading");
 			var name = $('#register-username').val()
 			var email = $('#register-email').val()
 			var retyped_email = $('#retype-register-email').val()
@@ -706,8 +708,10 @@ var server = {
 		}
 		//Registered ...
 		else if(startswith("Registered",e)){
-			alert("success","You're registered! Check mail for password")
+			alert("success","You're registered! Check mail for password");
+			hideElement("loading");
 			hideElement('sign-up');
+			hideElement("hero-actions");
 			showElement('landing-login');
 		}
 		//Name already taken
@@ -745,6 +749,7 @@ var server = {
 		//Welcome kaka!
 		else if(startswith("Welcome ",e)){
 			this.tries = 0;
+			hideElement("loading");
 			setLoggedInState();
 			// Guest logging back in 
 			if(localStorage.getItem('guesttoken') && !localStorage.getItem('usr')){

@@ -5,6 +5,7 @@
 	--primary-border-color: #cccccc;
 	--secondary-border-color: #666666;
 	--primary-font-color: #333333;
+	--primary-font-color-50: #ffffff;
 	--secondary-font-color: #ffffff;
 	--primary-fill-color: #000000;
 	--primary-stroke-color: #000000;
@@ -12,14 +13,16 @@
 	--secondary-stroke-color: #666666;
 	--dark-fill-color: #000000;
 	--dark-stroke-color: #000000;
+
 	--success-color: #128618;
 	--warning-color: #ffa500;
 	--warning-light-color: #fbecd1;
 	--alert-color: #ff0000;
 	--primary-color: #5397f4;
-	--secondary-color: ;
+	--secondary-color: #35478C;
+	--secondary-color-300: #3d52a5;
 	--box-shadow-color: #b3b3b3;
-	
+
 	--highlight-bg-color: #cccccc;
 	--hover-font-color: #333333;
 }
@@ -29,16 +32,17 @@
 	--secondary-bg-color: #2f2e2e;
 	--primary-border-color: #343434;
 	--primary-font-color: #c8c8c8;
+	--primary-font-color-50: #ffffff;
 	--secondary-font-color: #272727;
 	--primary-fill-color: #cccccc;
 	--box-shadow-color: #3f3f3f;
-	
+
 	--dark-stroke-color: #939393;
 	--primary-fill-color: #cccccc;
 	--primary-stroke-color: #cccccc;
 	--secondary-fill-color: #cccccc;
 	--secondary-stroke-color: #666666;
-	
+
 	--highlight-bg-color: #35455e;
 }
 /* || General styles */
@@ -59,6 +63,10 @@ svg {
 	fill: var(--primary-fill-color);
 	width: 20px;
 	height: 20px;
+}
+.svg-small {
+	width: 15px;
+	height: 15px;
 }
 #gamecanvas{
 	display: block;
@@ -399,7 +407,7 @@ a.navitem, div.navitem{
 	cursor: pointer;
 	padding: 4px 8px;
 	border: 1px solid var(--primary-border-color);
-	border-radius: 10px;
+	border-radius: 30px;
 	background-color: var(--primary-bg-color);
 	word-wrap: break-word;
 	margin-bottom: 2px;
@@ -460,7 +468,7 @@ a.navitem, div.navitem{
 	top: 0px;
 	z-index: 30;
 	background-color: var(--primary-bg-color);
-	border-right: 1px solild var(--primar-border-color);
+	border-right: 1px solid var(--primar-border-color);
 	bottom: 0;
 	width: 225px;
 }
@@ -783,7 +791,9 @@ input:invalid {
 	margin: 2px;
 	border: 1px solid var(--primary-border-color);
 }
-
+.border-none {
+	border: none;
+}
 #hovertext{
 	top: 0;
 	left: 0;
@@ -799,11 +809,6 @@ input:invalid {
 	color: var(--hover-font-color)
 }
 
-.btn-default{
-	color: var(--primary-font-color);
-	background-color: var(--secondary-bg-color);
-}
-
 .margin-top--8{
 	margin-top: 8px;
 }
@@ -813,7 +818,9 @@ input:invalid {
 .margin-top--32 {
 	margin-top: 32px;
 }
-
+.margin-right--8{
+	margin-right: 8px;
+}
 .margin-bottom--8{
 	margin-bottom: 8px;
 }
@@ -822,6 +829,9 @@ input:invalid {
 	margin-bottom: 32px;
 }
 
+.padding--8 {
+	padding: 8px;
+}
 .padding-top--32{
 	padding-top: 32px;
 }
@@ -832,6 +842,52 @@ input:invalid {
 .icon-40{
 	width: 40px;
 	height: 40px;
+}
+
+/* || Button CSS */
+
+.btn.focus,
+.btn:focus,
+.btn:hover {
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+}
+.btn-pill {
+	background: transparent;
+	border: 2px solid var(--secondary-color);
+	border-radius: 30px;
+	height: 40px;
+	padding: 0 16px;
+}
+
+.btn-default {
+	color: var(--primary-font-color);
+	background-color: var(--secondary-bg-color);
+}
+
+.btn-primary {
+	background-color: var(--secondary-color);
+	color: var(--primary-font-color-50);
+}
+.btn-primary svg {
+	fill: var(--primary-font-color-50);
+}
+.btn-primary:hover {
+	color: var(--primary-font-color-50);
+	background-color: var(--secondary-color-300);
+	cursor: pointer;
+}
+.btn-secondary{
+	border-color: var(--secondary-border-color);
+}
+.btn-secondary:hover{
+	color: var(--primary-font-color);
+	background-color: var(--secondary-bg-color);
+}
+
+.btn-slim {
+	height: 30px;
 }
 /* || Responsive CSS */
 

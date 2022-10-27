@@ -7,8 +7,7 @@
 	--primary-font-color: #1c1b1b;
 	--border-color: #e7e7e7;
 	position: relative;
-	background: var(--primary-bg-color);
-	color: var(--primary-font-color);
+	
 	z-index: 99;
 	margin: 0;
 	padding: 0;
@@ -20,6 +19,8 @@
 .landing .landing-wrapper {
 	width: 100vw;
 	height: 100vh;
+	background: var(--primary-bg-color);
+	color: var(--primary-font-color);
 }
 
 .landing a{
@@ -154,49 +155,18 @@
 }
 
 /* Button css */
-.landing .btn {
-	background: transparent;
-	border: 2px solid var(--primary-color);
-	border-radius: 30px;
-	height: 40px;
-	margin: 8px 0;
-	padding: 0 16px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
 
 .landing .btn-primary {
-	background-color: var(--primary-color);
 	color: var(--secondary-font-color)
 }
-
-.landing .btn-primary:hover {
-	background-color: var(--primary-color-300);
-	cursor: pointer;
-}
-
-.landing .btn-secondary{
+.landing .btn-secondary {
 	background-color: var(--primary-bg-color);
-}
-
-.landing .btn-secondary:hover{
-	background-color: var(--secondary-bg-color);
-	cursor: pointer;
 }
 
 .landing .btn-primary svg{
 	fill: var(--secondary-font-color);
 	padding-right: 8px;
 	width: 30px;
-}
-
-.landing .padding--8{
-	padding: 8px;
-}
-
-.landing .margin-top--8{
-	margin-top: 8px;;
 }
 
 /* Table */
