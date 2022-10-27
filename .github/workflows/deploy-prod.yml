@@ -51,8 +51,8 @@ jobs:
                   SSH_PORT: ${{ secrets.SSH_PORT }}
               run: |
                 echo "$PRIVATE_KEY" > private_key.pem && chmod 0400 private_key.pem
-                scp -p ${SSH_PORT} -o StrictHostKeyChecking=no -i private_key.pem artifact.tar.gz ${USER_NAME}@${HOSTNAME}:~
-                ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME} '
+                scp -o StrictHostKeyChecking=no -i private_key.pem artifact.tar.gz -p ${SSH_PORT} ${USER_NAME}@${HOSTNAME}:~
+                ssh -o StrictHostKeyChecking=no -i private_key.pem -p ${SSH_PORT} ${USER_NAME}@${HOSTNAME} '
                   cd
                   mkdir playtak-ui-tmp
                   tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
