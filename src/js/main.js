@@ -1436,9 +1436,8 @@ $(document).ready(function() {
 		var text = decodeURIComponent(location.search.split('?load=')[1])
 		$('#loadptntext').val(text.replace(/\n/g,' '))
 		document.title = "Tak Review"
-		load();
-		server.connect();
 		hideElement("landing");
+		load();
 	}
 	else if(localStorage.getItem('keeploggedin')==='true') {
 		server.connect()
