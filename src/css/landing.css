@@ -221,7 +221,7 @@
 	}
 	
 	.landing .hero-actions {
-		min-width: 25vw;
+		min-width: 50%;
 	}
 	.landing .parallax{
 		background-attachment: scroll;

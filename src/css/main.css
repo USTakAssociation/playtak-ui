@@ -873,7 +873,7 @@ input:invalid {
 .btn-primary svg {
 	fill: var(--primary-font-color-50);
 }
-.btn-primary:hover {
+.btn-primary:hover, .btn-primary:focus {
 	color: var(--primary-font-color-50);
 	background-color: var(--secondary-color-300);
 	cursor: pointer;

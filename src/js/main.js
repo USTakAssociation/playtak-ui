@@ -1436,7 +1436,9 @@ $(document).ready(function() {
 		var text = decodeURIComponent(location.search.split('?load=')[1])
 		$('#loadptntext').val(text.replace(/\n/g,' '))
 		document.title = "Tak Review"
-		load()
+		load();
+		server.connect();
+		hideElement("landing");
 	}
 	else if(localStorage.getItem('keeploggedin')==='true') {
 		server.connect()
@@ -1539,9 +1541,9 @@ function createEventTable(data){
 		const filterButton = document.createElement("button");
 		filterButton.innerHTML = data.categories[i];
 		filterButton.id = `filter-${categoryClean}`;
-		filterButton.classList = "btn btn--secondary";
+		filterButton.classList = "btn btn-pill btn--secondary";
 		if (categoryClean === "all") {
-			filterButton.classList = "btn btn-primary";
+			filterButton.classList = "btn btn-pill btn-primary";
 		}
 		filterButton.onclick = () => filterTable(categoryClean);
 		filterButtons.appendChild(filterButton);
@@ -1573,11 +1575,11 @@ function filterTable(category){
 	// loop through button and reset classes
 	const filterButtons = document.getElementById("filter-buttons");
 	filterButtons.childNodes.forEach(el => {
-		el.classList = 'btn btn-secondary';
+		el.classList = 'btn btn-pill btn-secondary';
 	})
 	// reset styles for all filter
 	if(category === 'all'){
-		filterAll.classList = 'btn btn-primary';
+		filterAll.classList = 'btn btn-pill btn-primary';
 		trs.forEach(el => {
 			el.style.display = ''
 		})
@@ -1585,8 +1587,8 @@ function filterTable(category){
 	}
 	// set active button style
 	const button = document.getElementById(`filter-${category}`);
-	button.classList = 'btn btn-primary';
-	filterAll.classList = 'btn btn-secondary';
+	button.classList = 'btn btn-pill btn-primary';
+	filterAll.classList = 'btn btn-pill btn-secondary';
 
 	// loop through rows and set display style
 	trs.forEach(element => {
