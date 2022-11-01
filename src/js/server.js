@@ -353,7 +353,9 @@ var server = {
 
 			if(email !== retyped_email){
 				alert("danger","Email addresses don't match");
-				return
+				hideElement('loading');
+				showElement('sign-up');
+				return;
 			}
 
 			this.send("Register " + name + " " + email)
@@ -717,26 +719,30 @@ var server = {
 		//Name already taken
 		else if(startswith("Name already taken",e)){
 			alert("danger","Name is already taken");
+			hideElement('loading');
+			hideElement('hero-actions');
+			showElement('sign-up');
 		}
 		//Can't register with guest in the name
-		else if(startswith("Can't register with guest in the name",e)){
-			alert("danger","Can't register with guest in the name")
+		else if(startswith("Can't register with guest in the name", e)){
+			alert("danger","Can't register with guest in the name");
+			hideElement("loading");
+			hideElement("hero-actions");
+			showElement("sign-up");
 		}
 		//Unknown format for username/email
-		else if(startswith("Unknown format for username/email",e)){
-			alert("danger",e)
+		else if(startswith("Unknown format for username/email", e)){
+			alert("danger",e);
+			hideElement('loading');
+			showElement('login')
 		}
 		//Authentication failure
 		else if(startswith("Authentication failure",e)){
-			if(($('#login').data('bs.modal') || {}).isShown){
-				alert("danger","Authentication failure")
-			}
-			else{
-				localStorage.removeItem('keeploggedin');
-				localStorage.removeItem('usr');
-				localStorage.removeItem('token');
-				showElement("login-error");
-			}
+			localStorage.removeItem("keeploggedin");
+			localStorage.removeItem("usr");
+			localStorage.removeItem("token");
+			showElement("login-error");
+			alert("danger","Authentication failure")
 		}
 		else if(startswith("Wrong password",e)){
 			showElement("login-error");

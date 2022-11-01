@@ -1252,7 +1252,6 @@ function checkboxHideSend() {
 		localStorage.setItem('hide-send','false')
 		document.getElementById('send-button').style.display = "initial"
 	}
-
 }
 
 /*

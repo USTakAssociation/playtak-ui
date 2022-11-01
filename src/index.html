@@ -1055,7 +1055,7 @@
 										</div>
 										<div class="flex flex-space-between">
 											<button type="submit" class="btn btn-pill btn-primary flex flex-center flex-align-center" onclick="server.register();">Sign up</button>
-											<button class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('sign-up'); showElement('hero-actions')">Cancel</button>
+											<button type="reset" class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('sign-up'); showElement('hero-actions')">Cancel</button>
 										</div>
 									</form>
 								</div>
@@ -1082,7 +1082,7 @@
 											</div>
 											<div class="flex flex-space-between">
 												<button type="submit" class="btn btn-pill btn-primary flex flex-center flex-align-center">Login</button>
-												<button class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('landing-login'); showElement('hero-actions'); return false;">cancel</button>
+												<button type="reset" class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('landing-login'); showElement('hero-actions');">cancel</button>
 											</div>
 										</form>
 										<br />
@@ -1104,7 +1104,7 @@
 											<div id="token-error" style="display: none"></div>
 											<div class="flex flex-space-between flex-wrap gap--8">
 												<button type="submit" class="btn btn-pill btn-primary flex flex-center flex-align-center" onclick="server.sendresettoken()">Send token</button>
-												<button class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('forgot-password'); showElement('landing-login')">Cancel</button>
+												<button type="reset" class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('forgot-password'); showElement('landing-login')">Cancel</button>
 											</div>
 										</form>
 									</div>
