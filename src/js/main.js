@@ -1276,13 +1276,13 @@ function getHeader(key,val) {
 	return'['+key+' "'+val+'"]\r\n'
 }
 
-function getNotation() {
+function getNotation(id) {
 	var p1 = $('.player1-name:first').html()
 	var p2 = $('.player2-name:first').html()
 	var now = new Date()
 	var dt = now.getFullYear()+'.'+(now.getMonth()+1)+'.'+now.getDate()+' '+now.getHours()+'.'+getZero(now.getMinutes())
 
-	$('#download_notation').attr('download',p1+' vs '+p2+' '+dt+'.ptn')
+	$(`#${id || "download_notation"}`).attr("download", p1 + " vs " + p2 + " " + dt + ".ptn");
 
 	var res=''
 	res += getHeader('Site','PlayTak.com')
@@ -1311,8 +1311,8 @@ function getNotation() {
 	return res
 }
 
-function downloadNotation() {
-	$('#download_notation').attr('href','data:text/plain;charset=utf-8,'+encodeURIComponent(getNotation()))
+function downloadNotation(id) {
+	$(`#${id}`).attr('href','data:text/plain;charset=utf-8,'+encodeURIComponent(getNotation(id)))
 }
 
 function copyNotationLink() {
