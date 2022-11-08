@@ -265,13 +265,8 @@ var server = {
 		}
 	}
 	,loginbutton:function(){
-		if(server.loggedin){
-			this.logout();
-		}
-		else{
-			resetToLoginState();
-			showElement('landing');
-		}
+		this.logout();
+		showElement('landing');
 	}
 
 	,loginTimer:null
