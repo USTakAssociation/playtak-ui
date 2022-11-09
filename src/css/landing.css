@@ -1,0 +1,234 @@
+.landing {
+	--primary-color: #35478C;
+	--primary-color-300: #3d52a5;
+	--secondary-font-color: #ffffff;
+	--primary-bg-color: #ffffff;
+	--secondary-bg-color: #e2e2e2;
+	--primary-font-color: #1c1b1b;
+	--border-color: #e7e7e7;
+	position: relative;
+	
+	z-index: 99;
+	margin: 0;
+	padding: 0;
+	font-size: 100%;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+.landing .landing-wrapper {
+	width: 100vw;
+	height: 100vh;
+	background: var(--primary-bg-color);
+	color: var(--primary-font-color);
+}
+
+.landing a{
+	color: var(--primary-color);
+	text-decoration: none;
+}
+
+.landing a:hover {
+	text-decoration: underline;
+}
+
+.landing h2 {
+	font-weight: 400;
+	text-transform: uppercase;
+}
+
+.landing svg {
+	fill: var(--primary-bg-color);
+}
+
+.landing .svg-accent {
+	fill: var(--primary-font-color);
+}
+
+.landing .loading svg {
+	width: 90px;
+	height: 90px;
+}
+
+.landing .header {
+	min-height: 30vh;
+	background-image: url(../images/board-top.svg);
+	background-position: 0 0;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-color: var(--primary-bg-color);
+}
+
+.landing .playtak-logo svg {
+	width: 35rem;
+	height: 22rem;
+	fill: inherit;
+	stroke: inherit;
+}
+
+.landing .hero{
+	margin: 8vh 0;
+}
+
+.landing .hero-actions {
+	min-width: 16vw;
+	margin-top: 15px;;
+}
+
+.landing .parallax {
+	background-image: linear-gradient(0deg, rgb(53 68 136), rgb(255 255 255 / 30%)), url('../images/parallax.jpg');
+	background-position: center;
+	background-attachment: fixed;
+	background-repeat: no-repeat;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	background-size: cover;
+}
+.landing .parallax-inner {
+	min-height: 230px;
+}
+
+.landing .heading-text a{
+	color: var(--secondary-font-color);
+}
+
+.landing .heading-text a span {
+	text-decoration: inherit;
+}
+
+.landing .scroll-mobile {
+	display: none;
+}
+
+.landing .events{
+	background-color: var(--primary-bg-color);
+	height: auto;
+}
+.landing .events-wrapper{
+	min-height: 200px;
+	width: 80vw;
+	margin: 0 auto;
+	padding-top: 32px;
+	padding-bottom: 32px;
+}
+.landing #filter-buttons .btn {
+	margin: 0;
+}
+
+.landing .usta-logo-small svg {
+	width: 60px;
+	height: 60px;
+}
+
+.landing .bottom-credit {
+	height: 7em;
+}
+
+.landing .footer {
+	margin-top: auto;
+	background-image: url('../images/board-bottom.svg');
+	background-position: bottom;
+	background-size: cover;
+	background-color: var(--primary-bg-color);
+}
+
+.landing .footer-banner{
+	height: 50px;
+	background-color: var(--primary-color);
+}
+
+/* utilities */
+.landing .font-small {
+	font-size: .9em;
+}
+
+.landing .text-center{
+	text-align: center;
+}
+
+.landing .width--100{
+	width: 100vw;
+}
+
+.landing .width--35{
+	width: 35vw;
+}
+
+/* Button css */
+
+.landing .btn-primary {
+	color: var(--secondary-font-color)
+}
+.landing .btn-secondary {
+	background-color: var(--primary-bg-color);
+}
+
+.landing .btn-primary svg{
+	fill: var(--secondary-font-color);
+	padding-right: 8px;
+	width: 30px;
+}
+
+/* Table */
+.landing table{
+	width: 100%
+}
+
+.landing tr {
+	border-bottom: 1px solid var(--secondary-bg-color);
+}
+
+.landing td{
+	padding: 16px 8px 16px 0;
+}
+
+/* Animations */
+
+.landing .fade-in--right {
+	animation: fadeInRight 1s;
+}
+
+@keyframes fadeInRight {
+	0% {
+		opacity: 0;
+		transform: translateX(40px);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* Responsive CSS */
+
+@media (max-width: 750px) {
+	.landing .header{
+		background-size: initial;
+	}
+	
+	.landing .footer {
+		background-size: auto;
+	}
+}
+
+@media (max-width: 740px) {
+	.landing .playtak-logo svg {
+			width: 30rem;
+			height: 20rem;
+			fill: inherit;
+			stroke: inherit;
+	}
+	
+	.landing .hero-actions {
+		min-width: 50%;
+	}
+	.landing .parallax{
+		background-attachment: scroll;
+	}
+}
+@media (max-width: 450px) {
+	.landing .scroll-mobile {
+		display: block;
+	}
+}

@@ -46,20 +46,23 @@ jobs:
             - name: Deploy
               env: 
                   PRIVATE_KEY: ${{ secrets.PRIVATE_KEY  }}
-                  HOSTNAME : ${{ secrets.HOSTNAME }}
-                  USER_NAME : ${{ secrets.USER_NAME }}
+                  HOSTNAME: ${{ secrets.HOSTNAME }}
+                  USER_NAME: ${{ secrets.USER_NAME }}
+                  SSH_PORT: ${{ secrets.SSH_PORT }}
               run: |
                 echo "$PRIVATE_KEY" > private_key.pem && chmod 0400 private_key.pem
-                scp -o StrictHostKeyChecking=no -i private_key.pem artifact.tar.gz ${USER_NAME}@${HOSTNAME}:~
-                ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME} '
+                scp -P ${SSH_PORT} -o StrictHostKeyChecking=no -i private_key.pem artifact.tar.gz  ${USER_NAME}@${HOSTNAME}:~
+                ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -i private_key.pem  ${USER_NAME}@${HOSTNAME} '
                   cd
                   mkdir playtak-ui-tmp
                   tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
-                  mv /var/www/html/games_anon.db.gz /var/www/
+                  sudo mv /var/www/html/games_anon.db.gz /var/www/
+                  sudo mv /var/www/html/ratinglist.json.gz /var/www/
                   sudo rm -rf /var/www/html/
                   sudo mv playtak-ui-tmp/src /var/www/html/
                   bash /gz-html.sh
-                  mv /var/www/games_anon.db.gz /var/www/html
+                  sudo mv /var/www/games_anon.db.gz /var/www/html
+                  sudo mv /var/www/ratinglist.json.gz /var/www/html
                   sudo chown -R root:root /var/www/html
                   rm -rf playtak-ui-tmp
                   rm artifact.tar.gz

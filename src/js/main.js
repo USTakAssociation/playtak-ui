@@ -6,7 +6,7 @@ function alert(type,msg) {
 	$alert.addClass("alert-"+type)
 	$alert.removeClass('hidden')
 	$alert.stop(true,true)
-	$alert.fadeTo(4000,500).slideUp(500,function() {
+	$alert.fadeTo(7000,500).slideUp(500,function() {
 		$alert.addClass('hidden')
 	})
 	alert2(type,msg)
@@ -82,22 +82,10 @@ function infobar(){
 			,f:1
 		}
 		,{
-			m:"In settings (gear icon), you can enable perspective and make the board rotatable."
-			,c:function(){return server.loggedin && (perspective==0 && fixedcamera && ismobile)}
-			,t:20
-			,f:1
-		}
-		,{
 			m:"You can join the <a target='_blank' href='https://ustak.org/'>US Tak Association</a>."
 			,c:function(){return server.loggedin}
 			,t:20
 			,f:1
-		}
-		,{
-			m:"Sign up for the <a target='_blank' href='https://play.toornament.com/en_US/tournaments/5570424523300052992/'>US Tak Beginner tournament</a>."
-			,c:function(){var myrating=1000;if(server.myname){myrating=getrating(server.myname)||1000};return server.loggedin && myrating<1500}
-			,t:20
-			,f:10
 		}
 	]
 	changemessage()
@@ -389,82 +377,90 @@ function generateCamera(){
 }
 
 function init() {
-	make_style_selector()
-	var ua = navigator.userAgent.toLowerCase()
-	if(ua.indexOf("android") > -1 || ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
-		ismobile=true
+	make_style_selector();
+	var ua = navigator.userAgent.toLowerCase();
+	if (ua.indexOf("android") > -1 || ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1) {
+		ismobile = true;
 	}
-	if(ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
-		isidevice=true
-		document.body.ongesturestart=document.body.ongesturechange=document.body.ongestureend=function(ev){
-			ev.preventDefault()
-		}
+	if (ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1) {
+		isidevice = true;
+		document.body.ongesturestart =
+			document.body.ongesturechange =
+			document.body.ongestureend =
+				function (ev) {
+					ev.preventDefault();
+				};
 	}
-	
-	var fson=false
-	if(ismobile && !isidevice){
+
+	var fson = false;
+	if (ismobile && !isidevice) {
 		let fsbutton = document.createElement("button");
-		let li = document.createElement('li');
+		let li = document.createElement("li");
 		fsbutton.className = "navitem";
 		fsbutton.innerHTML = "Fullscreen";
 		fsbutton.onclick = togglefs;
 		li.appendChild(fsbutton);
 		document.getElementById("main-nav").appendChild(li);
 	}
-	function togglefs(){
-		if(fson){
-			document.exitFullscreen()
+	function togglefs() {
+		if (fson) {
+			document.exitFullscreen();
+		} else {
+			document.documentElement.requestFullscreen();
 		}
-		else{
-			document.documentElement.requestFullscreen()
-		}
-		fson=!fson
+		fson = !fson;
 	}
 
-	loadSettings()
+	loadSettings();
 
-	canvas = document.getElementById("gamecanvas")
+	canvas = document.getElementById("gamecanvas");
 
-	scene = new THREE.Scene()
+	scene = new THREE.Scene();
 
-	renderer = new THREE.WebGLRenderer({canvas:canvas,antialias:antialiasing_mode})
-	renderer.setSize( window.innerWidth,window.innerHeight )
-	pixelratio=(window.devicePixelRatio||1)*scalelevel
-	renderer.setPixelRatio(pixelratio)
-	renderer.setClearColor(clearcolor,1)
-	maxaniso=Math.min(renderer.getMaxAnisotropy()||1,16)
+	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: antialiasing_mode });
+	renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
+	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
+	renderer.setPixelRatio(pixelratio);
+	renderer.setClearColor(clearcolor, 1);
+	maxaniso = Math.min(renderer.getMaxAnisotropy() || 1, 16);
 
-	window.addEventListener('resize',onWindowResize,false)
-	window.addEventListener('keyup',onKeyUp,false)
+	window.addEventListener("resize", onWindowResize, false);
+	window.addEventListener("keyup", onKeyUp, false);
 
-	board.create(5,"white",true)
-	board.initEmpty()
-	rendererdone=true
-	generateCamera()
-	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5,3,16,100)
-	highlighter = new THREE.Mesh(geometry,materials.highlighter)
-	highlighter.rotateX(Math.PI / 2)
+	board.create(5, "white", true);
+	board.initEmpty();
+	rendererdone = true;
+	generateCamera();
+	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5, 3, 16, 100);
+	highlighter = new THREE.Mesh(geometry, materials.highlighter);
+	highlighter.rotateX(Math.PI / 2);
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
 
-	addressbarhack=document.getElementById("addressbarhack")
+	//addressbarhack=document.getElementById("addressbarhack");
+	canvas.addEventListener("mousedown", onDocumentMouseDown, false);
+	canvas.addEventListener("mouseup", onDocumentMouseUp, false);
+	canvas.addEventListener("mousemove", onDocumentMouseMove, false);
+	canvas.addEventListener(
+		"contextmenu",
+		function (e) {
+			e.preventDefault();
+		},
+		false
+	);
 
-	canvas.addEventListener('mousedown',onDocumentMouseDown,false)
-	canvas.addEventListener('mouseup',onDocumentMouseUp,false)
-	canvas.addEventListener('mousemove',onDocumentMouseMove,false)
-	canvas.addEventListener('contextmenu',function(e){e.preventDefault()},false)
-
-	materials.updateBoardMaterials()
-	materials.updatePieceMaterials()
+	materials.updateBoardMaterials();
+	materials.updatePieceMaterials();
 }
 
 function onWindowResize() {
 	if(rendererdone){
-		renderer.setSize(window.innerWidth,window.innerHeight)
+		renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
 		pixelratio=(window.devicePixelRatio||1)*scalelevel
 		renderer.setPixelRatio(pixelratio)
-		adjustsidemenu()
-		generateCamera()
+		adjustsidemenu();
+		closeMobileMenu();
+		setTimeout(generateCamera, 100);
 	}
 }
 
@@ -517,7 +513,6 @@ function floathashscene(){
 	}
 	return hash
 }
-
 
 function onDocumentMouseMove(e) {
 	var x = e.clientX - canvas.offsetLeft
@@ -578,19 +573,6 @@ function buttonclick() {
 	var data = input.value
 	input.value = ""
 	server.send(data)
-}
-
-function togglescratch(){
-	var rect=document.getElementById("scratchbutton").getBoundingClientRect()
-	$("#scratchlist").css("top",(rect.top+36)+"px").css("left",rect.left+"px").toggle()
-}
-function scratchbutton(size) {
-	if(board.observing) {server.send("Unobserve " + board.gameno)}
-	if(board.scratch || board.observing) {
-		board.clear()
-		board.create(size,"white",true)
-		board.initEmpty()
-	}
 }
 
 function adjustsidemenu(notation,chat){
@@ -665,45 +647,70 @@ function adjustsidemenu(notation,chat){
 
 let settingsToggle = false;
 function toggleSettingsDrawer(){
-	const settingElem = document.getElementById('settings-drawer');
+	const el = document.getElementById("settings-drawer");
 	if (!settingsToggle) {
-		settingElem.classList.remove("hidden");
+		el.classList.remove('hidden')
 		settingsToggle = true;
 	} else {
-		settingElem.classList.add("hidden");
+		el.classList.add('hidden')
 		settingsToggle = false;
 	}
 	generateCamera();
 }
 
-let menuToggle = false
+var menuToggle = false;
 function toggleMobileMenu(){
-	const menuElem = document.getElementById("menu-wrapper");
-	const mOpenElem = document.getElementById("mobile-open");
-	const mCloseElem = document.getElementById("mobile-close");
+	const header = document.getElementById('header');
 	if (!menuToggle) {
-		menuElem.style.display = 'block'
-		mOpenElem.classList.add('hidden');
-		mCloseElem.classList.remove('hidden');
+		header.style.height = "auto";
+		hideElement("mobile-open");
+		showElement("mobile-close", 'block');
 		menuToggle = true;
 	} else {
-		menuElem.style.display = '';
-		mOpenElem.classList.remove("hidden");
-		mCloseElem.classList.add("hidden");
+		header.style.height = "36px";
+		hideElement("mobile-close");
+		showElement("mobile-open", 'block');
 		menuToggle = false;
+		closeScratch();
 	}
 }
 
 function closeMobileMenu(){
-	const menuElem = document.getElementById("menu-wrapper");
-	const mOpenElem = document.getElementById("mobile-open");
-	const mCloseElem = document.getElementById("mobile-close");
-	if(menuToggle){
-		menuElem.style.display = "";
-		mOpenElem.classList.remove("hidden");
-		mCloseElem.classList.add("hidden");
-		menuToggle = false;
+	if(!menuToggle){ return }
+	const header = document.getElementById('header');
+	header.style.height = "36px";
+	hideElement("mobile-close");
+	showElement("mobile-open", "block");
+	menuToggle = false;
+	generateCamera();
+}
+
+
+var scratchToggle = false;
+function togglescratch() {
+	if (!scratchToggle) {
+		showElement("scratchlist", "block");
+		scratchToggle = true;
+	} else {
+		hideElement("scratchlist");
+		scratchToggle = false;
 	}
+}
+function closeScratch() {
+	hideElement("scratchlist");
+	scratchToggle = false;
+}
+
+function scratchbutton(size) {
+	if (board.observing) {
+		server.send("Unobserve " + board.gameno);
+	}
+	if (board.scratch || board.observing) {
+		board.clear();
+		board.create(size, "white", true);
+		board.initEmpty();
+	}
+	hideElement("scratchlist");
 }
 
 function load() {
@@ -864,6 +871,11 @@ function loadSettings() {
 		}
 	}
 
+	// load the setting for disable landing.
+	if (localStorage.getItem("disable-landing") === "true") {
+		document.getElementById("show-landing").checked = false;
+	}
+
 	// load the setting for wall orientation.
 	if (localStorage.getItem("diagonal_walls") === "true" || (!localStorage.getItem("diagonal_walls") && ismobile)) {
 		document.getElementById("wall-orientation").checked = true;
@@ -1004,6 +1016,18 @@ function loadSettings() {
 
 /*
  * Notify checkbox change for checkbox:
+ *	 Disable landing
+ */
+function disableLanding() {
+	if(!document.getElementById('show-landing').checked){
+		localStorage.setItem('disable-landing', true);
+	}else {
+		localStorage.removeItem("disable-landing", true);
+	}
+}
+
+/*
+ * Notify checkbox change for checkbox:
  *	 Dark Mode
  */
 function checkboxDarkMode() {
@@ -1070,7 +1094,6 @@ function showTable(event) {
 	localStorage.setItem('show_table', event.target.checked);
 	board.table.visible = event.target.checked
 }
-
 
 /*
  * Notify checkbox change for checkbox:
@@ -1216,7 +1239,6 @@ function clearcolorchange(value){
 	}
 }
 
-
 /*
  * Notify checkbox change for checkbox:
  *	 Hide 'Send' button
@@ -1230,7 +1252,6 @@ function checkboxHideSend() {
 		localStorage.setItem('hide-send','false')
 		document.getElementById('send-button').style.display = "initial"
 	}
-
 }
 
 /*
@@ -1255,13 +1276,13 @@ function getHeader(key,val) {
 	return'['+key+' "'+val+'"]\r\n'
 }
 
-function getNotation() {
+function getNotation(id) {
 	var p1 = $('.player1-name:first').html()
 	var p2 = $('.player2-name:first').html()
 	var now = new Date()
 	var dt = now.getFullYear()+'.'+(now.getMonth()+1)+'.'+now.getDate()+' '+now.getHours()+'.'+getZero(now.getMinutes())
 
-	$('#download_notation').attr('download',p1+' vs '+p2+' '+dt+'.ptn')
+	$(`#${id || "download_notation"}`).attr("download", p1 + " vs " + p2 + " " + dt + ".ptn");
 
 	var res=''
 	res += getHeader('Site','PlayTak.com')
@@ -1290,8 +1311,8 @@ function getNotation() {
 	return res
 }
 
-function downloadNotation() {
-	$('#download_notation').attr('href','data:text/plain;charset=utf-8,'+encodeURIComponent(getNotation()))
+function downloadNotation(id) {
+	$(`#${id}`).attr('href','data:text/plain;charset=utf-8,'+encodeURIComponent(getNotation(id)))
 }
 
 function copyNotationLink() {
@@ -1349,11 +1370,6 @@ function undoButton() {
 	else{server.undo()}
 }
 
-function showresetpwd() {
-	$('#login').modal('hide')
-	$('#resetpwd-modal').modal('show')
-}
-
 function fastrewind() {
 	board.showmove(board.movestart)
 }
@@ -1407,6 +1423,7 @@ function dohovertext(ev){
 		el.style.display="none"
 	}
 }
+
 document.body.onmousemove=dohovertext
 
 $(document).ready(function() {
@@ -1418,15 +1435,162 @@ $(document).ready(function() {
 		var text = decodeURIComponent(location.search.split('?load=')[1])
 		$('#loadptntext').val(text.replace(/\n/g,' '))
 		document.title = "Tak Review"
-		load()
+		hideElement("landing");
+		load();
 	}
 	else if(localStorage.getItem('keeploggedin')==='true') {
 		server.connect()
 	}
 	else{
 		server.connect()
-		$('#login').modal('show')
 	}
-	fetchratings()
+	if (localStorage.getItem("usr") && localStorage.getItem('disable-landing') === 'true'){
+		hideElement('landing')
+	}
+	if (localStorage.getItem("isLoggedIn")) {
+		hideElement("signup-button");
+		hideElement("landing-login-button");
+		hideElement("action-links");
+		showElement("play-button");
+	}
+	fetchratings();
 	infobar()
+	fetchEvents();
 })
+
+function resetToLoginState() {
+	// header reset
+	hideElement("playerinfo");
+	showElement("login-button", 'block');
+	hideElement("logout-button");
+	// Landing page reset
+	hideElement("sign-up");
+	hideElement("landing-login");
+	hideElement("forgot-password");
+	hideElement("play-button");
+	hideElement("close-events");
+	showElement("hero-actions");
+	showElement("signup-button");
+	showElement("landing-login-button");
+	showElement("action-links");
+}
+
+function setLoggedInState() {
+	// header
+	hideElement("login-button");
+	showElement("logout-button", "block");
+	showElement("playerinfo");
+	
+	//Landing 
+	hideElement("signup-button");
+	hideElement("landing-login-button");
+	hideElement("action-links");
+	hideElement("landing-login");
+	showElement("play-button");
+	showElement("hero-actions");
+	showElement("close-events");
+}
+
+function showEvents() {
+	showElement('landing');
+	const element = document.getElementById("events");
+	element.scrollIntoView();
+}
+
+function hideElement(element) {
+	document.getElementById(element).style.display = "none";
+}
+
+function showElement(element, type){
+	document.getElementById(element).style.display = type || "flex";
+}
+
+// Landing functions
+async function fetchEvents(){
+	showElement('loading-events')
+	try {
+		let path = '/events'
+		let url = 'https://api.' + window.location.host;
+		if (
+			window.location.host.indexOf("localhost") > -1 ||
+			window.location.host.indexOf("127.0.0.1") > -1 ||
+			window.location.host.indexOf("192.168.") == 0
+		) {
+			url = "http://localhost:3003";
+		}
+		const results = await fetch(url + path, {
+			method: 'GET'
+		})
+		const data = await results.json();
+		createEventTable(data);
+		hideElement('loading-events')
+	} catch (error) {
+		hideElement("loading-events");
+		console.error(error);
+	}
+}
+
+function createEventTable(data){
+	const filterButtons = document.getElementById("filter-buttons");
+	filterButtons.classList = "flex gap--8 flex-wrap";
+	// create the category buttons
+	for (let i = 0; i < data.categories.length; i++) {
+		const categoryClean = data.categories[i].toLowerCase().replace(" ", "-");
+		const filterButton = document.createElement("button");
+		filterButton.innerHTML = data.categories[i];
+		filterButton.id = `filter-${categoryClean}`;
+		filterButton.classList = "btn btn-pill btn--secondary";
+		if (categoryClean === "all") {
+			filterButton.classList = "btn btn-pill btn-primary";
+		}
+		filterButton.onclick = () => filterTable(categoryClean);
+		filterButtons.appendChild(filterButton);
+	}
+
+	const table = document.getElementById('event-data');
+	for (let i = 0; i < data.data.length; i++) {
+		const el = data.data[i];
+		const tr = table.insertRow(-1);
+		tr.id = el.category.toLowerCase().replace(' ', '-');
+		const name = tr.insertCell(-1);
+		name.innerHTML = `<b>${el.name}</b>`;
+		const dates = tr.insertCell(-1);
+		const range =
+			!el.start_date && !el.end_date
+				? "TBD"
+				: el.start_date && el.end_date ? `${el.start_date} - ${el.end_date}` : `${el.start_date || el.end_date}`;
+		dates.innerHTML = range;
+		const details = tr.insertCell(-1);
+		details.innerHTML = el.details ? `<a href="${el.details}" target="_blank">Details</a>` : "";
+		el.registration ? details.innerHTML += ` | <a href="${el.registration}" target="_blank">Registration</a> `: '';
+	}
+}
+
+function filterTable(category){
+	const table = document.getElementById('event-data');
+	const trs = table.childNodes;
+	const filterAll = document.getElementById('filter-all');
+	// loop through button and reset classes
+	const filterButtons = document.getElementById("filter-buttons");
+	filterButtons.childNodes.forEach(el => {
+		el.classList = 'btn btn-pill btn-secondary';
+	})
+	// reset styles for all filter
+	if(category === 'all'){
+		filterAll.classList = 'btn btn-pill btn-primary';
+		trs.forEach(el => {
+			el.style.display = ''
+		})
+		return;
+	}
+	// set active button style
+	const button = document.getElementById(`filter-${category}`);
+	button.classList = 'btn btn-pill btn-primary';
+	filterAll.classList = 'btn btn-pill btn-secondary';
+
+	// loop through rows and set display style
+	trs.forEach(element => {
+		element.style.display = element.id === category ? "" : "none";
+	});
+	
+}
