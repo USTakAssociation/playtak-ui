@@ -253,10 +253,12 @@ var server = {
 		}
 	}
 	,logout:function(){
-		localStorage.removeItem('keeploggedin')
-		localStorage.removeItem('usr')
-		localStorage.removeItem('token')
+		localStorage.removeItem('keeploggedin');
+		localStorage.removeItem('usr');
+		localStorage.removeItem('token');
 		localStorage.removeItem('isLoggedIn');
+		localStorage.removeItem("guesttoken");
+		localStorage.removeItem("guesttokendecay");
 		resetToLoginState();
 		if(this.connection){
 			this.connection.close()
