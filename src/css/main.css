@@ -618,16 +618,11 @@ input:invalid {
 
 /* || Alerts */
 #alertbox {
-	position: fixed;
+	position: absolute;
 	bottom: 30px;
-	left: 0px;
-	width: 100%;
 	z-index: 999;
-}
-
-.alerts {
-	width: 60%;
-	margin: auto;
+	left: 20%;
+	right: 20%
 }
 
 .alert {
