@@ -416,354 +416,348 @@ var server = {
 		}
 	}
 	,msg:function(e){
-		console.log(e)
+		console.log('Message: ', e)
 		e = e.replace(/[\n\r]+$/,"")
-		if(startswith("Game Start",e)){
+		if (startswith("Game Start", e)) {
 			//Game Start no. size player_white vs player_black yourcolor time
-			infobaroff()
-			var spl = e.split(" ")
-			board.newgame(Number(spl[3]),spl[7],+spl[9],+spl[10],+spl[11])
-			board.gameno = Number(spl[2])
-			console.log("gno "+board.gameno)
+			infobaroff();
+			var spl = e.split(" ");
+			board.newgame(Number(spl[3]), spl[7], +spl[9], +spl[10], +spl[11]);
+			board.gameno = Number(spl[2]);
+			console.log("gno " + board.gameno);
 
-			$('#player-me-name').removeClass('player1-name')
-			$('#player-me-name').removeClass('player2-name')
-			$('#player-opp-name').removeClass('player1-name')
-			$('#player-opp-name').removeClass('player2-name')
+			$("#player-me-name").removeClass("player1-name");
+			$("#player-me-name").removeClass("player2-name");
+			$("#player-opp-name").removeClass("player1-name");
+			$("#player-opp-name").removeClass("player2-name");
 
-			$('#player-me-time').removeClass('player1-time')
-			$('#player-me-time').removeClass('player2-time')
-			$('#player-opp-time').removeClass('player1-time')
-			$('#player-opp-time').removeClass('player2-time')
+			$("#player-me-time").removeClass("player1-time");
+			$("#player-me-time").removeClass("player2-time");
+			$("#player-opp-time").removeClass("player1-time");
+			$("#player-opp-time").removeClass("player2-time");
 
-			$('#player-me').removeClass('selectplayer')
-			$('#player-opp').removeClass('selectplayer')
+			$("#player-me").removeClass("selectplayer");
+			$("#player-opp").removeClass("selectplayer");
 
-			if(spl[7] === "white"){//I am white
-				$('#player-me-name').addClass('player1-name')
-				$('#player-opp-name').addClass('player2-name')
+			if (spl[7] === "white") {
+				//I am white
+				$("#player-me-name").addClass("player1-name");
+				$("#player-opp-name").addClass("player2-name");
 
-				$('#player-me-time').addClass('player1-time')
-				$('#player-opp-time').addClass('player2-time')
+				$("#player-me-time").addClass("player1-time");
+				$("#player-opp-time").addClass("player2-time");
 
-				$('#player-me-img').addClass("iswhite")
-				$('#player-me-img').removeClass("isblack")
-				$('#player-opp-img').addClass("isblack")
-				$('#player-opp-img').removeClass("iswhite")
+				$("#player-me-img").addClass("iswhite");
+				$("#player-me-img").removeClass("isblack");
+				$("#player-opp-img").addClass("isblack");
+				$("#player-opp-img").removeClass("iswhite");
 
-				$('#player-me').addClass('selectplayer')
+				$("#player-me").addClass("selectplayer");
+			} else {
+				//I am black
+				$("#player-me-name").addClass("player2-name");
+				$("#player-opp-name").addClass("player1-name");
+
+				$("#player-me-time").addClass("player2-time");
+				$("#player-opp-time").addClass("player1-time");
+
+				$("#player-me-img").removeClass("iswhite");
+				$("#player-me-img").addClass("isblack");
+				$("#player-opp-img").removeClass("isblack");
+				$("#player-opp-img").addClass("iswhite");
+
+				$("#player-opp").addClass("selectplayer");
 			}
-			else{//I am black
-				$('#player-me-name').addClass('player2-name')
-				$('#player-opp-name').addClass('player1-name')
 
-				$('#player-me-time').addClass('player2-time')
-				$('#player-opp-time').addClass('player1-time')
+			$(".player1-name:first").html(spl[4]);
+			$(".player2-name:first").html(spl[6]);
+			document.title = "Tak: " + spl[4] + " vs " + spl[6];
 
-				$('#player-me-img').removeClass("iswhite")
-				$('#player-me-img').addClass("isblack")
-				$('#player-opp-img').removeClass("isblack")
-				$('#player-opp-img').addClass("iswhite")
+			var time = Number(spl[8]);
+			settimers(time * 1000, time * 1000);
 
-				$('#player-opp').addClass('selectplayer')
+			var opponentname;
+			if (spl[7] === "white") {
+				//I am white
+				opponentname = spl[6];
+			} else {
+				//I am black
+				opponentname = spl[4];
 			}
+			chathandler.createRoom("priv-" + opponentname, "<b>" + opponentname + "</b>");
+			chathandler.selectRoom("priv-" + opponentname);
 
-			$('.player1-name:first').html(spl[4])
-			$('.player2-name:first').html(spl[6])
-			document.title = "Tak: " + spl[4] + " vs " + spl[6]
-
-			var time = Number(spl[8])
-			settimers(time*1000,time*1000)
-
-			var opponentname
-			if(spl[7] === "white"){//I am white
-				opponentname=spl[6]
-			}
-			else{//I am black
-				opponentname=spl[4]
-			}
-			chathandler.createRoom("priv-"+opponentname,"<b>"+opponentname+"</b>")
-			chathandler.selectRoom("priv-"+opponentname)
-
-			var chimesound = document.getElementById("chime-sound")
+			var chimesound = document.getElementById("chime-sound");
 			//chimesound.pause()
-			chimesound.currentTime=0
-			chimesound.play()
-		}
-		else if(startswith("Observe ",e)){
+			chimesound.currentTime = 0;
+			chimesound.play();
+		} else if (startswith("Observe ", e)) {
 			//Observe Game#1 player1 vs player2, 4x4, 180, 7 half-moves played, player2 to move
-			infobaroff()
-			var spl = e.split(" ")
+			infobaroff();
+			var spl = e.split(" ");
 
-			var p1 = spl[2]
-			var p2 = spl[3]
+			var p1 = spl[2];
+			var p2 = spl[3];
 
-			board.clear()
-			board.create(+spl[4],"white",false,true,+spl[7],+spl[8],+spl[9])
-			board.initEmpty()
-			board.gameno = +spl[1]
-			$('.player1-name:first').html(p1)
-			$('.player2-name:first').html(p2)
-			document.title = "Tak: " + p1 + " vs " + p2
+			board.clear();
+			board.create(+spl[4], "white", false, true, +spl[7], +spl[8], +spl[9]);
+			board.initEmpty();
+			board.gameno = +spl[1];
+			$(".player1-name:first").html(p1);
+			$(".player2-name:first").html(p2);
+			document.title = "Tak: " + p1 + " vs " + p2;
 
-			var time = +spl[5]
-			settimers(time*1000,time*1000)
-		}
-		else if(startswith("GameList Add ",e)){
+			var time = +spl[5];
+			settimers(time * 1000, time * 1000);
+		} else if (startswith("GameList Add ", e)) {
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
-			var spl = e.split(" ")
+			var spl = e.split(" ");
 			this.gameslist.push({
-				id:+spl[2]
-				,time:+spl[6]
-				,increment:+spl[7]
-				,player1:spl[3]
-				,player2:spl[4]
-				,size:+spl[5]
-				,komi:+spl[8]
-				,pieces:+spl[9]
-				,capstones:+spl[10]
-				,unrated:spl[11]==1
-				,tournament:spl[12]==1
-			})
-			this.rendeergameslist()
-		}
-		else if(startswith("GameList Remove ",e)){
+				id: +spl[2],
+				time: +spl[6],
+				increment: +spl[7],
+				player1: spl[3],
+				player2: spl[4],
+				size: +spl[5],
+				komi: +spl[8],
+				pieces: +spl[9],
+				capstones: +spl[10],
+				unrated: spl[11] == 1,
+				tournament: spl[12] == 1,
+			});
+			this.rendeergameslist();
+		} else if (startswith("GameList Remove ", e)) {
 			//GameList Remove Game#1 player1 vs player2, 4x4, 180, 0 half-moves played, player1 to move
-			var spl = e.split(" ")
-			var id = +spl[2]
-			var newgameslist=[]
-			var a
-			for(a=0;a<this.gameslist.length;a++){
-				if(id!=this.gameslist[a].id){
-					newgameslist.push(this.gameslist[a])
+			var spl = e.split(" ");
+			var id = +spl[2];
+			var newgameslist = [];
+			var a;
+			for (a = 0; a < this.gameslist.length; a++) {
+				if (id != this.gameslist[a].id) {
+					newgameslist.push(this.gameslist[a]);
 				}
 			}
-			this.gameslist=newgameslist
-			this.rendeergameslist()
-		}
-		else if(startswith("Game#",e)){
-			var spl = e.split(" ")
-			var gameno = Number(e.split("Game#")[1].split(" ")[0])
+			this.gameslist = newgameslist;
+			this.rendeergameslist();
+		} else if (startswith("Game#", e)) {
+			var spl = e.split(" ");
+			var gameno = Number(e.split("Game#")[1].split(" ")[0]);
 			//Game#1 ...
-			if(gameno === board.gameno){
+			if (gameno === board.gameno) {
 				//Game#1 P A4 (C|W)
-				if(spl[1] === "P"){
-					board.serverPmove(spl[2].charAt(0),Number(spl[2].charAt(1)),spl[3])
+				if (spl[1] === "P") {
+					board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
 				}
 				//Game#1 M A2 A5 2 1
-				else if(spl[1] === "M"){
-					var nums = []
-					for(i = 4;i < spl.length;i++){nums.push(Number(spl[i]))}
+				else if (spl[1] === "M") {
+					var nums = [];
+					for (i = 4; i < spl.length; i++) {
+						nums.push(Number(spl[i]));
+					}
 					board.serverMmove(
 						spl[2].charAt(0),
 						Number(spl[2].charAt(1)),
 						spl[3].charAt(0),
 						Number(spl[3].charAt(1)),
 						nums
-					)
+					);
 				}
 				//Game#1 Time 170 200
-				else if(spl[1] === "Time"){
-					var wt = Math.max(+spl[2]||0,0)*1000
-					var bt = Math.max(+spl[3]||0,0)*1000
-					lastWt = wt
-					lastBt = bt
+				else if (spl[1] === "Time") {
+					var wt = Math.max(+spl[2] || 0, 0) * 1000;
+					var bt = Math.max(+spl[3] || 0, 0) * 1000;
+					lastWt = wt;
+					lastBt = bt;
 
-					lastTimeUpdate = invarianttime()
+					lastTimeUpdate = invarianttime();
 
-					board.timer_started = true
-					startTime(true)
+					board.timer_started = true;
+					startTime(true);
 				}
 				//Game#1 Timems 170000 200000
-				else if(spl[1] === "Timems"){
-					var wt = Math.max(+spl[2]||0,0)
-					var bt = Math.max(+spl[3]||0,0)
-					lastWt = wt
-					lastBt = bt
+				else if (spl[1] === "Timems") {
+					var wt = Math.max(+spl[2] || 0, 0);
+					var bt = Math.max(+spl[3] || 0, 0);
+					lastWt = wt;
+					lastBt = bt;
 
-					lastTimeUpdate = invarianttime()
+					lastTimeUpdate = invarianttime();
 
-					board.timer_started = true
-					startTime(true)
+					board.timer_started = true;
+					startTime(true);
 				}
 				//Game#1 RequestUndo
-				else if(spl[1] === "RequestUndo"){
-					alert("info","Your opponent requests to undo the last move")
-					$('#undo').toggleClass('opp-requested-undo request-undo')
+				else if (spl[1] === "RequestUndo") {
+					alert("info", "Your opponent requests to undo the last move");
+					$("#undo").toggleClass("opp-requested-undo request-undo");
 				}
 				//Game#1 RemoveUndo
-				else if(spl[1] === "RemoveUndo"){
-					alert("info","Your opponent removes undo request")
-					$('#undo').toggleClass('opp-requested-undo request-undo')
+				else if (spl[1] === "RemoveUndo") {
+					alert("info", "Your opponent removes undo request");
+					$("#undo").toggleClass("opp-requested-undo request-undo");
 				}
 				//Game#1 Undo
-				else if(spl[1] === "Undo"){
-					board.undo()
-					alert("info","Game has been UNDOed by 1 move")
-					$('#undo').removeClass('i-requested-undo').removeClass('opp-requested-undo').addClass('request-undo')
+				else if (spl[1] === "Undo") {
+					board.undo();
+					alert("info", "Game has been UNDOed by 1 move");
+					$("#undo").removeClass("i-requested-undo").removeClass("opp-requested-undo").addClass("request-undo");
 				}
 				//Game#1 OfferDraw
-				else if(spl[1] === "OfferDraw"){
-					$('#draw').toggleClass('opp-offered-draw offer-draw')
-					alert("info","Draw is offered by your opponent")
+				else if (spl[1] === "OfferDraw") {
+					$("#draw").toggleClass("opp-offered-draw offer-draw");
+					alert("info", "Draw is offered by your opponent");
 				}
 				//Game#1 RemoveDraw
-				else if(spl[1] === "RemoveDraw"){
-					$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw')
-					alert("info","Draw offer is taken back by your opponent")
+				else if (spl[1] === "RemoveDraw") {
+					$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw").addClass("offer-draw");
+					alert("info", "Draw offer is taken back by your opponent");
 				}
 				//Game#1 Over result
-				else if(spl[1] === "Over"){
-					document.title = "Play Tak"
-					board.result = spl[2]
+				else if (spl[1] === "Over") {
+					document.title = "Play Tak";
+					board.result = spl[2];
 
-					var msg = "Game over <span class='bold'>" + spl[2] + "</span><br>"
-					var res
-					var type
+					var msg = "Game over <span class='bold'>" + spl[2] + "</span><br>";
+					var res;
+					var type;
 
-					if(spl[2] === "R-0" || spl[2] === "0-R"){type = "making a road"}
-					else if(spl[2] === "F-0" || spl[2] === "0-F"){
-						var score=board.flatscore()
-						type = "having more top flats ("+score[0]+" to "+score[1]+"+"+Math.floor(board.komi/2)+(board.komi&1?".5":".0")+")"
+					if (spl[2] === "R-0" || spl[2] === "0-R") {
+						type = "making a road";
+					} else if (spl[2] === "F-0" || spl[2] === "0-F") {
+						var score = board.flatscore();
+						type = "having more top flats (" + score[0] + " to " + score[1] + "+" + Math.floor(board.komi / 2) + (board.komi & 1 ? ".5" : ".0") + ")";
+					} else if (spl[2] === "1-0" || spl[2] === "0-1") {
+						type = "resignation or time";
 					}
-					else if(spl[2] === "1-0" || spl[2] === "0-1"){type = "resignation or time"}
 
-					if(spl[2] === "R-0" || spl[2] === "F-0" || spl[2] === "1-0"){
-						if(board.observing === true){
-							msg += "White wins by "+type
+					if (spl[2] === "R-0" || spl[2] === "F-0" || spl[2] === "1-0") {
+						if (board.observing === true) {
+							msg += "White wins by " + type;
+						} else if (board.mycolor === "white") {
+							msg += "You win by " + type;
+						} else {
+							msg += "Your opponent wins by " + type;
 						}
-						else if(board.mycolor === "white"){
-							msg += "You win by "+type
-						}
-						else{
-							msg += "Your opponent wins by "+type
-						}
-					}
-					else if(spl[2] === "1/2-1/2"){
-						msg += "The game is a draw!"
-					}
-					else if(spl[2] === "0-0"){
-						msg += "The game is aborted!"
-					}
-					else{//black wins
-						if(board.observing === true){
-							msg += "Black wins by "+type
-						}
-						else if(board.mycolor === "white"){
-							msg += "Your opponent wins by "+type
-						}
-						else{
-							msg += "You win by "+type
+					} else if (spl[2] === "1/2-1/2") {
+						msg += "The game is a draw!";
+					} else if (spl[2] === "0-0") {
+						msg += "The game is aborted!";
+					} else {
+						//black wins
+						if (board.observing === true) {
+							msg += "Black wins by " + type;
+						} else if (board.mycolor === "white") {
+							msg += "Your opponent wins by " + type;
+						} else {
+							msg += "You win by " + type;
 						}
 					}
 
-					stopTime()
+					stopTime();
 
-					$('#gameoveralert-text').html(msg)
-					$('#gameoveralert').modal('show')
-					board.gameover()
+					$("#gameoveralert-text").html(msg);
+					$("#gameoveralert").modal("show");
+					board.gameover();
 				}
 				//Game#1 Abandoned
-				else if(spl[1] === "Abandoned."){
+				else if (spl[1] === "Abandoned.") {
 					//Game#1 Abandoned. name quit
-					document.title = "Play Tak"
+					document.title = "Play Tak";
 
-					if(board.mycolor === "white"){
-						board.result = "1-0"
+					if (board.mycolor === "white") {
+						board.result = "1-0";
+					} else {
+						board.result = "0-1";
 					}
-					else{
-						board.result = "0-1"
+
+					var msg = "Game abandoned by " + spl[2] + ".";
+					if (!board.observing) {
+						msg += " You win!";
 					}
 
-					var msg = "Game abandoned by " + spl[2] + "."
-					if(!board.observing){msg += " You win!"}
+					stopTime();
 
-					stopTime()
-
-					$('#gameoveralert-text').html(msg)
-					$('#gameoveralert').modal('show')
-					board.gameover()
+					$("#gameoveralert-text").html(msg);
+					$("#gameoveralert").modal("show");
+					board.gameover();
 				}
 			}
-		}
-		else if(startswith("Login or Register",e)){
-			server.stopLoginTimer()
-			clearInterval(this.timeoutvar)
-			this.timeoutvar = setInterval(this.keepalive,10000)
-			if(localStorage.getItem('keeploggedin')==='true' && this.tries<3){
-				var uname = localStorage.getItem('usr')
-				var token = localStorage.getItem('token')
-				server.sendClient()
-				server.send("Login " + uname + " " + token)
-				this.tries++
-			}
-			else{
-				localStorage.removeItem('keeploggedin');
-				localStorage.removeItem('usr');
-				localStorage.removeItem('token');
-				localStorage.removeItem('isLoggedIn');
+		} else if (startswith("Login or Register", e)) {
+			server.stopLoginTimer();
+			clearInterval(this.timeoutvar);
+			this.timeoutvar = setInterval(this.keepalive, 10000);
+			if (localStorage.getItem("keeploggedin") === "true" && this.tries < 3) {
+				var uname = localStorage.getItem("usr");
+				var token = localStorage.getItem("token");
+				server.sendClient();
+				server.send("Login " + uname + " " + token);
+				this.tries++;
+			} else {
+				localStorage.removeItem("keeploggedin");
+				localStorage.removeItem("usr");
+				localStorage.removeItem("token");
+				localStorage.removeItem("isLoggedIn");
 				resetToLoginState();
 			}
 		}
 		//Registered ...
-		else if(startswith("Registered",e)){
-			alert("success","You're registered! Check mail for password");
+		else if (startswith("Registered", e)) {
+			alert("success", "You're registered! Check mail for password");
 			hideElement("loading");
-			hideElement('sign-up');
+			hideElement("sign-up");
 			hideElement("hero-actions");
-			showElement('landing-login');
+			showElement("landing-login");
 		}
 		//Name already taken
-		else if(startswith("Name already taken",e)){
-			alert("danger","Name is already taken");
-			hideElement('loading');
-			hideElement('hero-actions');
-			showElement('sign-up');
+		else if (startswith("Name already taken", e)) {
+			alert("danger", "Name is already taken");
+			hideElement("loading");
+			hideElement("hero-actions");
+			showElement("sign-up");
 		}
 		//Can't register with guest in the name
-		else if(startswith("Can't register with guest in the name", e)){
-			alert("danger","Can't register with guest in the name");
+		else if (startswith("Can't register with guest in the name", e)) {
+			alert("danger", "Can't register with guest in the name");
 			hideElement("loading");
 			hideElement("hero-actions");
 			showElement("sign-up");
 		}
 		//Unknown format for username/email
-		else if(startswith("Unknown format for username/email", e)){
-			alert("danger",e);
-			hideElement('loading');
-			showElement('login')
+		else if (startswith("Unknown format for username/email", e)) {
+			alert("danger", e);
+			hideElement("loading");
+			showElement("login");
 		}
 		//Authentication failure
-		else if(startswith("Authentication failure",e)){
+		else if (startswith("Authentication failure", e)) {
 			localStorage.removeItem("keeploggedin");
 			localStorage.removeItem("usr");
 			localStorage.removeItem("token");
 			showElement("login-error");
-			alert("danger","Authentication failure")
-		}
-		else if(startswith("Wrong password",e)){
+			alert("danger", "Authentication failure");
+		} else if (startswith("Wrong password", e)) {
 			showElement("login-error");
 		}
 		//You're already logged in
-		else if(startswith("You're already logged in",e)){
-			alert("warning","You're already logged in from another window")
-			this.connection.close()
+		else if (startswith("You're already logged in", e)) {
+			alert("warning", "You're already logged in from another window");
+			this.connection.close();
 		}
 		//Welcome kaka!
-		else if(startswith("Welcome ",e)){
+		else if (startswith("Welcome ", e)) {
 			this.tries = 0;
 			hideElement("loading");
 			setLoggedInState();
-			// Guest logging back in 
-			if(localStorage.getItem('guesttoken') && !localStorage.getItem('usr')){
-				hideElement('landing');
+			// Guest logging back in
+			if (localStorage.getItem("guesttoken") && !localStorage.getItem("usr")) {
+				hideElement("landing");
 			} else if (localStorage.getItem("isLoggedIn")) {
 				// Logged in user
 				setLoggedInState();
 			} else {
 				hideElement("landing");
 			}
-			
+
 			this.myname = e.split("Welcome ")[1].split("!")[0];
 			server.updateplayerinfo();
 			alert("success", "You're logged in " + this.myname + "!");
@@ -781,127 +775,127 @@ var server = {
 				localStorage.setItem("token", token);
 			}
 			infobar();
-			hideElement('login-error');
-			localStorage.setItem('isLoggedIn', true);
-		}
-		else if(startswith("Password changed",e)){
-			$('#settings-modal').modal('hide')
-			alert("success","Password changed!")
-		}
-		else if(startswith("Message",e)){
-			var msg = e.split("Message ")
+			hideElement("login-error");
+			localStorage.setItem("isLoggedIn", true);
+		} else if (startswith("Password changed", e)) {
+			$("#settings-modal").modal("hide");
+			alert("success", "Password changed!");
+		} else if (startswith("Message", e)) {
+			var msg = e.split("Message ");
 
-			if(e.includes("You've logged in from another window. Disconnecting")){server.anotherlogin = true}
+			if (e.includes("You've logged in from another window. Disconnecting")) {
+				server.anotherlogin = true;
+			}
 
-			alert("info","Server says: " + msg[1])
-		}
-		else if(startswith("Error",e)){
-			var msg = e.split("Error:")[1]
-			alert("danger","Server says: "+msg)
+			alert("info", "Server says: " + msg[1]);
+		} else if (startswith("Error", e)) {
+			var msg = e.split("Error:")[1];
+			alert("danger", "Server says: " + msg);
 		}
 		//Shout <name> msg
-		else if(startswith("Shout ",e)){
-			var regex = /Shout <([^\s]*)> (.*)/g
-			var match = regex.exec(e)
-
-			chathandler.received('global','',match[1],match[2])
+		else if (startswith("Shout ", e)) {
+			var regex = /Shout <([^\s]*)> (.*)/g;
+			var match = regex.exec(e);
+			chathandler.received("global", "", match[1], match[2]);
 		}
 		//ShoutRoom name <name> msg
-		else if(startswith("ShoutRoom",e)){
-			var regex = /ShoutRoom ([^\s]*) <([^\s]*)> (.*)/g
-			var match = regex.exec(e)
+		else if (startswith("ShoutRoom", e)) {
+			var regex = /ShoutRoom ([^\s]*) <([^\s]*)> (.*)/g;
+			var match = regex.exec(e);
 
-			chathandler.received('room',match[1],match[2],match[3])
+			chathandler.received("room", match[1], match[2], match[3]);
 		}
 		//Tell <name> msg
-		else if(startswith("Tell",e)){
-			var regex = /Tell <([^\s]*)> (.*)/g
-			var match = regex.exec(e)
+		else if (startswith("Tell", e)) {
+			var regex = /Tell <([^\s]*)> (.*)/g;
+			var match = regex.exec(e);
 
-			chathandler.received('priv',match[1],match[1],match[2])
+			chathandler.received("priv", match[1], match[1], match[2]);
 		}
 		//Told <name> msg
-		else if(startswith("Told",e)){
-			var regex = /Told <([^\s]*)> (.*)/g
-			var match = regex.exec(e)
+		else if (startswith("Told", e)) {
+			var regex = /Told <([^\s]*)> (.*)/g;
+			var match = regex.exec(e);
 
-			chathandler.received('priv',match[1],this.myname,match[2])
+			chathandler.received("priv", match[1], this.myname, match[2]);
+		} else if (startswith("CmdReply", e)) {
+			var msg = e.split("CmdReply ")[1];
+			msg = '<span class="cmdreply">' + msg + "</span>";
 		}
-		else if(startswith("CmdReply",e)){
-			var msg = e.split("CmdReply ")[1]
-			msg = '<span class="cmdreply">' + msg + '</span>'
+		else if (startswith("sudoReply", e)) {
+			var msg = e.split("sudoReply ")[1];
 
-			chathandler.recieved("global","","&gt;",msg)
+			chathandler.received("admin", "admin", "&gt;", msg);
 		}
 		//new seek
-		else if(startswith("Seek new",e)){
+		else if (startswith("Seek new", e)) {
 			//Seek new 1 chaitu 5 180 15 W|B
-			var spl = e.split(" ")
+			var spl = e.split(" ");
 			this.seekslist.push({
-				id:+spl[2]
-				,player:spl[3]
-				,size:spl[4]+'x'+spl[4]
-				,time:Number(spl[5])
-				,increment:Number(spl[6])
-				,color:spl[7]
-				,komi:+spl[8]
-				,pieces:+spl[9]
-				,capstones:+spl[10]
-				,unrated:spl[11]==1
-				,tournament:spl[12]==1
-				,opponent:spl[13]
-			})
-			this.rendeerseekslist()
+				id: +spl[2],
+				player: spl[3],
+				size: spl[4] + "x" + spl[4],
+				time: Number(spl[5]),
+				increment: Number(spl[6]),
+				color: spl[7],
+				komi: +spl[8],
+				pieces: +spl[9],
+				capstones: +spl[10],
+				unrated: spl[11] == 1,
+				tournament: spl[12] == 1,
+				opponent: spl[13],
+			});
+			this.rendeerseekslist();
 		}
 		//remove seek
-		else if(startswith("Seek remove",e)){
+		else if (startswith("Seek remove", e)) {
 			//Seek remove 1 chaitu 5 15
-			var spl = e.split(" ")
-			var id = +spl[2]
-			var newseekslist=[]
-			var a
-			for(a=0;a<this.seekslist.length;a++){
-				if(id!=this.seekslist[a].id){
-					newseekslist.push(this.seekslist[a])
+			var spl = e.split(" ");
+			var id = +spl[2];
+			var newseekslist = [];
+			var a;
+			for (a = 0; a < this.seekslist.length; a++) {
+				if (id != this.seekslist[a].id) {
+					newseekslist.push(this.seekslist[a]);
 				}
 			}
-			this.seekslist=newseekslist
-			this.rendeerseekslist()
+			this.seekslist = newseekslist;
+			this.rendeerseekslist();
 		}
 		//Online players
-		else if(startswith("Online ",e)){
-			$('#onlineplayers').removeClass('hidden')
-			var op = document.getElementById("onlineplayersbadge")
-			op.innerHTML = Number(e.split("Online ")[1])
+		else if (startswith("Online ", e)) {
+			$("#onlineplayers").removeClass("hidden");
+			var op = document.getElementById("onlineplayersbadge");
+			op.innerHTML = Number(e.split("Online ")[1]);
 		}
 		//Reset token sent
-		else if(startswith("Reset token sent",e)){
+		else if (startswith("Reset token sent", e)) {
 			hideElement("loading");
 			showElement("reset-password");
 		}
 		//Wrong token
-		else if(startswith("Wrong token",e)){
-			alert("danger","Wrong token. Try again")
+		else if (startswith("Wrong token", e)) {
+			alert("danger", "Wrong token. Try again");
 		}
 		//Password is changed
-		else if(startswith("Password is changed",e)){
-			alert("danger","Password changed. Login with your new password.")
-			hideElement('reset-password');
-			hideElement('forgot-password');
-			showElement('landing-login');
-		}
-		else if(startswith("Joined room ",e)){
-			var spl = e.split(" ")
-			var roomname=spl[2]
-			var players=roomname.split("-")
-			var id="room-"+roomname
-			if(players.length==2){
-				chathandler.createRoom(id,"<div><b>"+players[0]+"</b> vs <b>"+players[1]+"</b></div>")
+		else if (startswith("Password is changed", e)) {
+			alert("danger", "Password changed. Login with your new password.");
+			hideElement("reset-password");
+			hideElement("forgot-password");
+			showElement("landing-login");
+		} else if (startswith("Joined room ", e)) {
+			var spl = e.split(" ");
+			var roomname = spl[2];
+			var players = roomname.split("-");
+			var id = "room-" + roomname;
+			if (players.length == 2) {
+				chathandler.createRoom(id, "<div><b>" + players[0] + "</b> vs <b>" + players[1] + "</b></div>");
+			} else {
+				chathandler.createRoom(id, roomname);
 			}
-			else{
-				chathandler.createRoom(id,roomname)
-			}
-			chathandler.selectRoom(id)
+			chathandler.selectRoom(id);
+		} else if (startswith("Is Mod", e)) {
+			chathandler.createRoom("admin-admin", "<b>Moderate Tak</b>");
 		}
 	}
 	,updateplayerinfo:function(){
@@ -1041,6 +1035,7 @@ var server = {
 		if(type === 'global'){this.send('Shout '+msg)}
 		else if(type == 'room'){this.send('ShoutRoom ' + name + ' ' + msg)}
 		else if(type === 'priv'){this.send('Tell ' + name + ' ' + msg)}
+		else if(type === 'admin'){this.send( msg )}
 		else{console.log('undefined chat type')}
 	}
 	,leaveroom:function(room){

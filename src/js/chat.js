@@ -144,11 +144,13 @@ var chathandler={
 		if(this.cur_room=="global-"){
 			server.chat('global','',msg)
 		}
-		else if(this.cur_room.split("-")[0]=="room"){
-			server.chat('room',this.cur_room.split('room-')[1],msg)
-		}
-		else{ //Assuming priv
-			server.chat('priv',this.cur_room.split('priv-')[1],msg)
+		else if (this.cur_room.split("-")[0] == "room") {
+			server.chat("room", this.cur_room.split("room-")[1], msg);
+		} else if (this.cur_room == "admin-admin") {
+			server.chat("admin", null, msg);
+		} else {
+			//Assuming priv
+			server.chat("priv", this.cur_room.split("priv-")[1], msg);
 		}
 		$('#chat-me').val('')
 		return false
