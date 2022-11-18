@@ -97,7 +97,7 @@ function decode_utf8(ar){
 waitinginterval=null
 function waitforreply(){
 	if(waitinginterval===null){
-		waitinginterval=setInterval(waitedtoolong,2000)
+		waitinginterval=setInterval(waitedtoolong,4000)
 	}
 }
 function gotreply(){
