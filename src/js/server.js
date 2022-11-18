@@ -871,6 +871,8 @@ var server = {
 		//Reset token sent
 		else if (startswith("Reset token sent", e)) {
 			hideElement("loading");
+			showElement("forgot-password");
+			hideElement("send-token");
 			showElement("reset-password");
 		}
 		//Wrong token
