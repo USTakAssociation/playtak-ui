@@ -80,7 +80,7 @@ function infobar(){
 			bar.innerHTML = messages[messageIndex].m;
 		}
 		messageIndex++;
-		messageIndex = (messageIndex + 1) % messages.length;
+		if (messageIndex == messages.length){ messageIndex = 0; }
 		if (!messages[messageIndex].c()) {
 			return changemessage();
 		}
