@@ -25,112 +25,73 @@ function alert2(type,msg) {
 	})
 }
 
-var infobartimer = 0;
-var currentinfomessage = 1;
-var infochangetime =- Infinity;
-var infodisplayweights = [];
 
 function infobar(){
-	var bar=document.getElementById("infobar")
+	let infobartimer = 0;
+	let bar = document.getElementById("infobar");
 	if(!bar){
-		bar=document.createElement("div")
-		bar.id="infobar"
-		document.body.appendChild(bar)
+		bar = document.createElement("div");
+		bar.id = "infobar";
+		document.body.appendChild(bar);
 	}
-	var cuttop = $('header').height()+10;
-	var cutleft = ($('#rmenu').hasClass('hidden')?0:209)+10;
-	var cutright = ($('#cmenu').hasClass('hidden')?0:24+(+localStorage.getItem('chat_size')||180))+10;
+	let cuttop = $('header').height()+10;
+	let cutleft = ($('#rmenu').hasClass('hidden')?0:209)+10;
+	let cutright = ($('#cmenu').hasClass('hidden')?0:24+(+localStorage.getItem('chat_size')||180))+10;
 	bar.style.top = (cuttop+2)+"px";
 	bar.style.left = (cutleft+20)+"px";
 	bar.style.right = (cutright+20)+"px";
 	
-	var messages=[
+	let messages = [
 		{
-			m:"You need to log in in order to play."
-			,c:function(){return !server.loggedin}
-			,t:20
-			,f:100
+			m: "You need to log in in order to play.",
+			c: () => { return !server.loggedin },
+		},
+		{
+			m: "Chess Master Anna Cramling will be streaming PlayTak games November 28th 2022 1pm EST on Twitch",
+			c: () => { return true; },
+		},
+		{
+			m: "Checkout the daily puzzle on <a target='_blank' href='https://ditaktic.blogspot.com/'>ditaktic.blogspot.com</a>.",
+			c: () => { return true },
+		},
+		{
+			m: "Visit <a href='https://greaterthangames.com/product/tak-a-beautiful-game-2nd-edition/' target='_blank'>Greater Than Games</a> in order to buy a physical Tak set.",
+			c: () => { return true },
+		},
+		{
+			m: "Have you read <a target='_blank' href='https://ustak.org/play-beautiful-game-tak/'>the rules</a>?",
+			c: () => { return server.loggedin },
+		},
+		{
+			m: "In settings (gear icon), you can set the perspective to 0 and fix the camera in order to get a 2D experience.",
+			c: () => { return server.loggedin && !(perspective === 0 && fixedcamera) },
+		},
+		{
+			m: "You can join the <a target='_blank' href='https://ustak.org/'>US Tak Association</a>.",
+			c: () => { return server.loggedin },
 		}
-		,{
-			m:"Join the <a target='_blank' href='https://discord.gg/2xEt42X'>Tak community on Discord</a>."
-			,c:function(){return true}
-			,t:20
-			,f:1
-		}
-		,{
-			m:"There is a daily puzzle on <a target='_blank' href='https://ditaktic.blogspot.com/'>ditaktic.blogspot.com</a>."
-			,c:function(){return true}
-			,t:20
-			,f:1
-		}
-		,{
-			m:"Visit <a target='_blank' href='https://worldbuildersmarket.com/collections/tak-a-beautiful-game'>worldbuildersmarket.com</a> in order to buy a physical Tak set."
-			,c:function(){return true}
-			,t:20
-			,f:1
-		}
-		,{
-			m:"Have you read <a target='_blank' href='https://ustak.org/play-beautiful-game-tak/'>the rules</a>?"
-			,c:function(){return server.loggedin}
-			,t:20
-			,f:1
-		}
-		,{
-			m:"In settings (gear icon), you can set the perspective to 0 and fix the camera in order to get a 2D experience."
-			,c:function(){return server.loggedin && !(perspective==0 && fixedcamera)}
-			,t:30
-			,f:1
-		}
-		,{
-			m:"You can join the <a target='_blank' href='https://ustak.org/'>US Tak Association</a>."
-			,c:function(){return server.loggedin}
-			,t:20
-			,f:1
-		}
-	]
+	];
+
+	let messageIndex = 0;
 	changemessage()
 	function changemessage(){
-		var now=invarianttime()
-		var a
-		var nextmessage=0
-		clearTimeout(infobartimer)
-		if(now>infochangetime || !(messages[currentinfomessage].c())){
-			var possibilities=[]
-			for(a=0;a<messages.length;a++){
-				infodisplayweights[a]=(infodisplayweights[a]||Math.random())+messages[a].f
-				if(messages[a].c()){
-					if(currentinfomessage!=a){
-						possibilities.push(a)
-					}
-				}
-				else{
-					infodisplayweights[a]=Math.min(infodisplayweights[a],messages[a].f*(10+Math.random()))
-				}
-			}
-
-			possibilities.sort(function(a,b){return infodisplayweights[b]-infodisplayweights[a]})
-			if(possibilities.length>=2){
-				nextmessage=possibilities[Math.random()>(infodisplayweights[possibilities[0]]/(infodisplayweights[possibilities[0]]+infodisplayweights[possibilities[1]]))?1:0]
-			}
-			else if(possibilities.length>=1){
-				nextmessage=possibilities[0]
-			}
-
-			currentinfomessage=nextmessage
-			infochangetime=now+1000*messages[nextmessage].t
-			bar.innerHTML=messages[nextmessage].m
-			infodisplayweights[nextmessage]*=.5
+		clearTimeout(infobartimer);
+		if (messages[messageIndex].c()) {
+			bar.innerHTML = messages[messageIndex].m;
 		}
-		infobartimer=setTimeout(changemessage,infochangetime-now)
+		messageIndex++;
+		if (messageIndex == messages.length){ messageIndex = 0; }
+		if (!messages[messageIndex].c()) {
+			return changemessage();
+		}
+		infobartimer = setTimeout(changemessage, 8000);
 	}
 }
 function infobaroff(){
 	try{
 		document.getElementById("infobar").style.display="none"
 	}
-	catch(e){
-		
-	}
+	catch(e){}
 }
 
 var camera,scene,renderer,light,canvas,controls = null
