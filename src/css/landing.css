@@ -18,7 +18,6 @@
 
 .landing .landing-wrapper {
 	width: 100vw;
-	height: -webkit-fill-available;
 	height: 100vh;
 	background: var(--primary-bg-color);
 	color: var(--primary-font-color);
@@ -231,5 +230,12 @@
 @media (max-width: 450px) {
 	.landing .scroll-mobile {
 		display: block;
+	}
+}
+
+/* CSS specific to iOS devices */ 
+@supports (-webkit-touch-callout: none) {
+	.landing .landing-wrapper {
+		height: -webkit-fill-available;
 	}
 }

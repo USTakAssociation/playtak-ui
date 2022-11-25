@@ -473,7 +473,6 @@ a.navitem, div.navitem{
 	background-color: var(--primary-bg-color);
 	border-right: 1px solid var(--primar-border-color);
 	width: 225px;
-	height: -webkit-fill-available;
 	height: 100vh;
 	overflow-y: scroll;
 	overflow-x: hidden;
@@ -984,5 +983,12 @@ input:invalid {
 
 	#scratchlist li {
 		width: 100vw;
+	}
+}
+
+/* CSS specific to iOS devices */ 
+@supports (-webkit-touch-callout: none) {
+	#settings-drawer {
+		height: -webkit-fill-available;
 	}
 }
