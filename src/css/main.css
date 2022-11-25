@@ -473,7 +473,7 @@ a.navitem, div.navitem{
 	background-color: var(--primary-bg-color);
 	border-right: 1px solid var(--primar-border-color);
 	width: 225px;
-	height: 100vh;
+	height: inherit;
 	overflow-y: scroll;
 	overflow-x: hidden;
 }
