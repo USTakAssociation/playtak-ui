@@ -18,8 +18,8 @@
 
 .landing .landing-wrapper {
 	width: 100vw;
-	height: 100vh;
 	height: -webkit-fill-available;
+	height: 100vh;
 	background: var(--primary-bg-color);
 	color: var(--primary-font-color);
 }
