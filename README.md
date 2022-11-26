@@ -69,6 +69,8 @@ Play tak is only possible due to the excellent work of the following contributor
 
 See also the list of contributors who participated in this project.
 
+This project is tested with BrowserStack.
+
 License
 MIT License © USTA see LICENSE.md file
 
