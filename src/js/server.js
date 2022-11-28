@@ -774,7 +774,6 @@ var server = {
 				localStorage.setItem("usr", name);
 				localStorage.setItem("token", token);
 			}
-			infobar();
 			hideElement("login-error");
 			localStorage.setItem("isLoggedIn", true);
 		} else if (startswith("Password changed", e)) {

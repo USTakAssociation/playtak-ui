@@ -25,21 +25,11 @@ function alert2(type,msg) {
 	})
 }
 
-
+let infoBarFlag = false;
+let infobartimer = 0;
 function infobar(){
-	let infobartimer = 0;
+	resizeInfoBar();
 	let bar = document.getElementById("infobar");
-	if(!bar){
-		bar = document.createElement("div");
-		bar.id = "infobar";
-		document.body.appendChild(bar);
-	}
-	let cuttop = $('header').height()+10;
-	let cutleft = ($('#rmenu').hasClass('hidden')?0:209)+10;
-	let cutright = ($('#cmenu').hasClass('hidden')?0:24+(+localStorage.getItem('chat_size')||180))+10;
-	bar.style.top = (cuttop+2)+"px";
-	bar.style.left = (cutleft+20)+"px";
-	bar.style.right = (cutright+20)+"px";
 	
 	let messages = [
 		{
@@ -73,7 +63,8 @@ function infobar(){
 	];
 
 	let messageIndex = 0;
-	changemessage()
+	clearTimeout(infobartimer);
+	changemessage();
 	function changemessage(){
 		clearTimeout(infobartimer);
 		if (messages[messageIndex].c()) {
@@ -92,6 +83,22 @@ function infobaroff(){
 		document.getElementById("infobar").style.display="none"
 	}
 	catch(e){}
+}
+
+function resizeInfoBar() {
+	let bar = document.getElementById("infobar");
+	console.log(bar);
+	if (!bar) {
+		bar = document.createElement("div");
+		bar.id = "infobar";
+		document.body.appendChild(bar);
+	}
+	let cuttop = $("header").height() + 10;
+	let cutleft = ($("#rmenu").hasClass("hidden") ? 0 : 209) + 10;
+	let cutright = ($("#cmenu").hasClass("hidden") ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + 10;
+	bar.style.top = cuttop + 2 + "px";
+	bar.style.left = cutleft + 20 + "px";
+	bar.style.right = cutright + 20 + "px";
 }
 
 var camera,scene,renderer,light,canvas,controls = null
@@ -603,7 +610,7 @@ function adjustsidemenu(notation,chat){
 		generateCamera()
 	}
 
-	infobar()
+	resizeInfoBar()
 }
 
 let settingsToggle = false;
@@ -1415,7 +1422,7 @@ $(document).ready(function() {
 		showElement("play-button");
 	}
 	fetchratings();
-	infobar()
+	infobar();
 	fetchEvents();
 })
 
