@@ -75,7 +75,7 @@ function infobar(){
 		if (!messages[messageIndex].c()) {
 			return changemessage();
 		}
-		infobartimer = setTimeout(changemessage, 8000);
+		infobartimer = setTimeout(changemessage, 10000);
 	}
 }
 function infobaroff(){
