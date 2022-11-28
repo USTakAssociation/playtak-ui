@@ -87,7 +87,6 @@ function infobaroff(){
 
 function resizeInfoBar() {
 	let bar = document.getElementById("infobar");
-	console.log(bar);
 	if (!bar) {
 		bar = document.createElement("div");
 		bar.id = "infobar";
