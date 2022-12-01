@@ -37,10 +37,6 @@ function infobar(){
 			c: () => { return !server.loggedin },
 		},
 		{
-			m: "Chess Master Anna Cramling will be streaming PlayTak games November 28th 2022 1pm EST on Twitch",
-			c: () => { return true; },
-		},
-		{
 			m: "Checkout the daily puzzle on <a target='_blank' href='https://ditaktic.blogspot.com/'>ditaktic.blogspot.com</a>.",
 			c: () => { return true },
 		},
