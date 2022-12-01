@@ -12,8 +12,8 @@ on:
 jobs:
     # This workflow contains a single job called "build"
     build:
-        # The type of runner that the job will run on
         runs-on: ubuntu-latest
+        
         strategy:
             matrix:
                 node-version: [14.x]
@@ -56,11 +56,8 @@ jobs:
                   cd
                   mkdir playtak-ui-beta-tmp
                   tar -xzf artifact-beta.tar.gz -C ./playtak-ui-beta-tmp
-                  sudo rm -rf /var/www/beta
-                  sudo mv playtak-ui-beta-tmp/src /var/www/beta
+                  sudo rsync -a playtak-ui-beta-tmp/src/ /var/www/beta
                   bash /gz-beta.sh
-                  sudo cp /var/www/html/games_anon.db.gz /var/www/beta
-                  sudo cp /static/ratinglist.json.gz /var/www/beta
                   sudo chown -R root:root /var/www/beta
                   rm -rf playtak-ui-beta-tmp
                   rm artifact-beta.tar.gz
