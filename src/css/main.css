@@ -157,29 +157,15 @@ a.navitem, div.navitem{
 	color: var(--primary-font-color);
 }
 
-#scratchlist{
-	position: fixed;
-	background-color: var(--primary-bg-color);
-	width: 70px;
-}
-
-#scratchlist ul {
-	list-style: none;
-	padding: 0;
-}
-
-#scratchlist li {
-	border-bottom: 1px solid var(--primary-border-color);
-}
-
-#scratchlist li:last-child {
-	border-bottom: none;
-}
-
-.scratchsize{
-	border: 1px solid var(--primary-border-color);
-	border-top: none;
-	line-height: 30px;
+.seek-badge {
+	content: " ";
+	position: absolute;
+	background-color: var(--alert-color);
+	width: 15px;
+	height: 15px;
+	border-radius: 13px;
+	margin-top: -8px;
+	margin-left: -15px;
 }
 
 .toggle-wrapper {
@@ -494,13 +480,6 @@ a.navitem, div.navitem{
 	user-select: text;
 }
 
-.modal:after {
-	display: inline-block;
-	vertical-align: middle;
-	content: "";
-	height: 100%;
-}
-
 .modal-dialog {
 	color: var(--primary-font-color);
 	display: inline-block;
@@ -677,7 +656,7 @@ input:invalid {
 }
 
 /* || Tabs */
-.active svg, [role=presentation]:hover svg{
+.active a svg, [role=presentation]:hover svg{
 	fill: var(--dark-fill-color);
 }
 
@@ -813,6 +792,16 @@ input:invalid {
 	color: var(--hover-font-color)
 }
 
+.fa-chevron-right {
+	transition: all 0.3s ease;
+ }
+.btn-nav-accordion[aria-expanded="true"] .fa-chevron-right {
+	transform: rotate(90deg);
+}
+
+.margin--0 {
+	margin: 0px;
+}
 .margin-top--8{
 	margin-top: 8px;
 }
@@ -927,6 +916,13 @@ input:invalid {
 	}
 }
 
+@media (max-width: 768px) {
+	.nav-tabs {
+		display: flex;
+		gap: 8px;
+	}
+}
+
 @media (max-width: 1055px) {
 	.menu-button-container {
 		display: flex;
@@ -973,16 +969,6 @@ input:invalid {
 	
 	.right-nav{
 		flex: 80%;
-	}
-	
-	#scratchlist {
-		position: relative;
-		background-color: var(--primary-bg-color);
-		width: 100vw;
-	}
-
-	#scratchlist li {
-		width: 100vw;
 	}
 }
 

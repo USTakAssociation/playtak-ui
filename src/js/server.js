@@ -947,6 +947,9 @@ var server = {
 		if(this.myname){
 			myrating=getrating(this.myname)||1000
 		}
+		// remove private seek badge
+		const seekBadge = document.getElementById("seekBadge");
+		seekBadge.classList.remove("seek-badge");
 		for(a=0;a<this.seekslist.length;a++){
 			var seek=this.seekslist[a]
 			if(seek.opponent!="" && seek.opponent.toLowerCase()!=this.myname.toLowerCase() && seek.player.toLowerCase()!=this.myname.toLowerCase()){
@@ -968,7 +971,10 @@ var server = {
 				.addClass('seek'+seek.id)
 				.click(seek.id,function(ev){server.acceptseek(ev.data)})
 			if(seek.opponent!=""){
-				row.addClass("privateseek")
+				row.addClass("privateseek");
+				if(!seekBadge.classList.contains("seek-badge")) {
+					seekBadge.classList.add("seek-badge")
+				}
 			}
 			if(isbot(seek.player)){
 				row.appendTo($('#seeklistbot'))
