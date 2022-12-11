@@ -145,6 +145,15 @@ a.navitem, div.navitem{
 	vertical-align: middle;
 }
 
+.usta-nav {
+	width: 30px;
+	height: 30px;
+}
+
+.dark-theme .inverse-line {
+	stroke: var(--primary-font-color-50) !important;
+}
+
 .navitemlogin{
 	width: 80px;
 	margin: 3px 4px;

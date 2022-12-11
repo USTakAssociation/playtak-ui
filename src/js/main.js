@@ -30,12 +30,7 @@ let infobartimer = 0;
 function infobar(){
 	resizeInfoBar();
 	let bar = document.getElementById("infobar");
-	
 	let messages = [
-		{
-			m: "You need to log in in order to play.",
-			c: () => { return !server.loggedin },
-		},
 		{
 			m: "Checkout the daily puzzle on <a target='_blank' href='https://ditaktic.blogspot.com/'>ditaktic.blogspot.com</a>.",
 			c: () => { return true },
