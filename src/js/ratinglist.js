@@ -39,13 +39,13 @@ function formatnames(names){
 	let a
 	for(a = 0;a < names.length;a++){
 		if(a === 0){
-			outarray.push(A({className:'firstname',href:"/games/search?playerw="+names[a]+"&mirror=on",target:'_blank'},names[a]))
+			outarray.push(A({className:'firstname',href:"/games/search?player-whitew="+names[a]+"&mirror=true",target:'_blank'},names[a]))
 		}
 		else{
 			outarray.push(' ')
 			outarray.push(A({
 				className:'secondname'
-				,href:"/games/search?playerw="+names[a]+"&mirror=on"
+				,href:"/games/search?player_white="+names[a]+"&mirror=true"
 				,target:'_blank'
 				,id:names[a]
 			},names[a]))
