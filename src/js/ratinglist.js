@@ -39,7 +39,7 @@ function formatnames(names){
 	let a
 	for(a = 0;a < names.length;a++){
 		if(a === 0){
-			outarray.push(A({className:'firstname',href:"/games/search?player-whitew="+names[a]+"&mirror=true",target:'_blank'},names[a]))
+			outarray.push(A({className:'firstname',href:"/games/search?player-white="+names[a]+"&mirror=true",target:'_blank'},names[a]))
 		}
 		else{
 			outarray.push(' ')
