@@ -1061,18 +1061,25 @@ var server = {
 		alert("danger",e)
 	}
 	,seek:function(){
-		var size=+document.getElementById("boardsize").value
-		var time=+document.getElementById("timeselect").value
-		var inc=+document.getElementById("incselect").value
-		var color=document.getElementById("colorselect").value
-		var komi=+document.getElementById("komiselect").value
-		var pieces=+document.getElementById("piececount").value
-		var capstones=+document.getElementById("capcount").value
-		var gametype=+document.getElementById("gametype").value
-		var opponent=document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"")
+		const size =+ document.getElementById("boardsize").value;
+		const time =+ document.getElementById("timeselect").value;
+		const inc =+ document.getElementById("incselect").value;
+		const color = document.getElementById("colorselect").value;
+		const komi =+ document.getElementById("komiselect").value;
+		const pieces =+ document.getElementById("piececount").value;
+		const capstones =+ document.getElementById("capcount").value;
+		const gametype =+ document.getElementById("gametype").value;
+		const opponent = document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"");
+		const triggerMove =+ document.getElementById("triggerMove").value;
+		const timeAmount =+ document.getElementById("timeAmount").value;
 
-		this.send("Seek "+size+" "+(time*60)+" "+inc+" "+color+" "+komi+" "+pieces+" "+capstones+" "+(gametype==2?1:0)+" "+(gametype==1?1:0)+" "+opponent)
-		$('#creategamemodal').modal('hide')
+		const timeCalc = (time*60);
+		const unrated = (gametype==2?1:0);
+		const tournament = (gametype==1?1:0);
+		const seekCMD =`Seek ${size} ${timeCalc} ${inc} ${color} ${komi} ${pieces} ${capstones} ${unrated} ${tournament} ${triggerMove} ${timeAmount} ${opponent}`;
+		// const seekStr = "Seek "+size+" "+(time*60)+" "+inc+" "+color+" "+komi+" "+pieces+" "+capstones+" "+(gametype==2?1:0)+" "+(gametype==1?1:0)+" "+opponent + " " + triggerMove + " " + timeAmount;
+		this.send(seekCMD);
+		$('#creategamemodal').modal('hide');
 	}
 	,removeseek:function(){
 		this.send("Seek 0 0 0 A 0 0 0 0 0 ")
