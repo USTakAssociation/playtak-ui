@@ -69,6 +69,11 @@ svg {
 	width: 15px;
 	height: 15px;
 }
+.action-icon{
+	height: 20px;
+	width: 20px;
+	vertical-align: middle;
+}
 #gamecanvas{
 	display: block;
 	position: fixed;
@@ -133,6 +138,13 @@ header{
 	stroke: var(--primary-stroke-color);
 }
 
+nav button {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	justify-content: center;
+}
+
 a.navitem, div.navitem{
 	line-height: 36px;
 	text-decoration: none;
@@ -140,14 +152,13 @@ a.navitem, div.navitem{
 }
 
 .navicon{
-	height: 20px;
-	width: 20px;
-	vertical-align: middle;
+	height: 16px;
+	width: 16px;
 }
 
 .usta-nav {
-	width: 30px;
-	height: 30px;
+	width: 25px;
+	height: 25px;
 }
 
 .dark-theme .inverse-line {
