@@ -654,7 +654,7 @@ var board = {
 	// the game has ended and play cannot continue,
 	isPlayEnded: false,
 
-	create:function(sz,color,isScratch,obs,komi,pieces,capstones){
+	create:function(sz,color,isScratch,obs,komi,pieces,capstones, triggerMove, timeAmount){
 		this.size = sz
 		this.komi=komi||0
 
@@ -692,7 +692,10 @@ var board = {
 		this.blackpiecesleft = this.tottiles + this.totcaps;
 		$("#komirule").html("+" + Math.floor(this.komi / 2) + (this.komi & 1 ? ".5" : ".0"));
 		$("#piecerule").html(this.tottiles + "/" + this.totcaps);
-
+		if(triggerMove > 0){
+			document.getElementById("extra-time").style.display = 'block';
+			document.getElementById("extra-time-rule").innerHTML = `${triggerMove}/+${timeAmount/60}`;
+		}
 		this.mycolor = color
 		this.sq = []
 		this.initCounters(0)
@@ -1295,9 +1298,9 @@ var board = {
 		this.scratch = true
 		this.isPlayEnded = true
 	}
-	,newgame:function(sz,col,komi,pieces,capstones){
+	,newgame:function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
 		this.clear()
-		this.create(sz,col,false,false,komi,pieces,capstones)
+		this.create(sz,col,false,false,komi,pieces,capstones, triggerMove, timeAmount)
 		this.initEmpty()
 	}
 	,flatscore:function(ply){
@@ -1781,6 +1784,8 @@ var board = {
 		}
 		var tbl = document.getElementById("moveslist")
 		while(tbl.rows.length > 0){tbl.deleteRow(0)}
+		document.getElementById("extra-time-rule").innerHTML = '';
+		document.getElementById("extra-time").style.display = "none";
 		$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw')
 		stopTime()
 

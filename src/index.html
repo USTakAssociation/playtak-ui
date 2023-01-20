@@ -185,7 +185,6 @@
 							data-hover="View Events">
 							<svg class="verticle-align--middle usta-nav" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="svg3485" version="1.1" inkscape:version="0.91 r13725" width="617.8125" height="508.125" viewBox="0 0 617.8125 508.125" sodipodi:docname="USTA Logo Vector.svg">
 								<defs id="defs3489" />
-								<sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1280" inkscape:window-height="751" id="namedview3487" showgrid="false" inkscape:zoom="1" inkscape:cx="233.69009" inkscape:cy="266.34118" inkscape:window-x="0" inkscape:window-y="1" inkscape:window-maximized="1" inkscape:current-layer="layer5" />
 								<g inkscape:groupmode="layer" id="layer3" inkscape:label="Board Trace" style="display:inline">
 									<path class="inverse-line" style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:7.19999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 5.5532787,216.57787 310.05806,4.6277322 611.7862,228.60997 301.72814,502.57172 Z" id="path3496" inkscape:connector-curvature="0" />
 									<path class="inverse-line" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 503.49727,148.08743 C 195.2903,396.13388 192.95054,396.66421 192.95054,396.66421" id="path4302" inkscape:connector-curvature="0" sodipodi:nodetypes="cc" />
@@ -289,6 +288,12 @@
 						class="rulebox"
 						data-hover="Stone count - The number of stones/capstones that each player has in this game"
 					></span>
+					<div id="extra-time" style="display: none;">
+						|
+						<span id="extra-time-rule" class="rulebox"
+						data-hover="Extra Time - The trigger move the player must reach and the amount of extra time to add"
+						></span>
+					</div>
 				</div>
 
 				<div class="optlist center">
@@ -886,7 +891,7 @@
 																	<option value="">Select</option>
 																	<option value="5">5</option>
 																	<option value="20">20</option>
-																	<option value="25">30</option>
+																	<option value="25">25</option>
 																	<option value="30">30</option>
 																	<option value="35">35</option>
 																	<option value="40">40</option>
@@ -1917,7 +1922,8 @@
 									<td class="right">Per move</td>
 									<td class="right">Komi</td>
 									<td class="right">Stones</td>
-									<td class="right"></td>
+									<td class="right">Type</td>
+									<td class="right">Extra Time</td>
 								</tr>
 							</tbody>
 							<tbody id="seeklist"></tbody>
@@ -1950,6 +1956,18 @@
 					</div>
 					<div class="modal-body">
 						<table class="linestable">
+							<thead>
+								<tr class="headerrow">
+									<td class="">&nbsp;</td>
+									<td class="right">Board</td>
+									<td class="right">Time</td>
+									<td class="right">Per move</td>
+									<td class="right">Komi</td>
+									<td class="right">Stones</td>
+									<td class="right">Type</td>
+									<td class="right">Extra</td>
+								</tr>
+							</thead>
 							<tbody id="gamelist"></tbody>
 						</table>
 					</div>

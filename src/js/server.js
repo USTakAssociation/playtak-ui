@@ -422,7 +422,7 @@ var server = {
 			//Game Start no. size player_white vs player_black yourcolor time
 			infobaroff();
 			var spl = e.split(" ");
-			board.newgame(Number(spl[3]), spl[7], +spl[9], +spl[10], +spl[11]);
+			board.newgame(Number(spl[3]), spl[7], +spl[9], +spl[10], +spl[11], +spl[12], +spl[13]);
 			board.gameno = Number(spl[2]);
 			console.log("gno " + board.gameno);
 
@@ -500,7 +500,7 @@ var server = {
 			var p2 = spl[3];
 
 			board.clear();
-			board.create(+spl[4], "white", false, true, +spl[7], +spl[8], +spl[9]);
+			board.create(+spl[4], "white", false, true, +spl[7], +spl[8], +spl[9], +spl[12], +spl[13]);
 			board.initEmpty();
 			board.gameno = +spl[1];
 			$(".player1-name:first").html(p1);
@@ -524,6 +524,8 @@ var server = {
 				capstones: +spl[10],
 				unrated: spl[11] == 1,
 				tournament: spl[12] == 1,
+				triggerMove: spl[13],
+				timeAmount: parseInt(spl[14]) / 60
 			});
 			this.rendeergameslist();
 		} else if (startswith("GameList Remove ", e)) {
@@ -766,7 +768,6 @@ var server = {
 
 			var rem = $("#keeploggedin").is(":checked");
 			if (rem === true && !startswith("Guest", this.myname)) {
-				console.log("storing");
 				var name = $("#login-username").val();
 				var token = $("#login-pwd").val();
 
@@ -842,7 +843,9 @@ var server = {
 				capstones: +spl[10],
 				unrated: spl[11] == 1,
 				tournament: spl[12] == 1,
-				opponent: spl[13],
+				trigger_move: spl[13],
+				time_amount: (parseInt(spl[14]) / 60).toString(),
+				opponent: spl[15],
 			});
 			this.rendeerseekslist();
 		}
@@ -913,22 +916,18 @@ var server = {
 			var p1 = game.player1
 			var p2 = game.player2
 			var sz = "<span class='badge'>"+game.size+"x"+game.size+"</span>"
-
-			var row = $('<tr/>')
-				.addClass('game'+game.id)
-				.click(game,function(ev){server.observegame(ev.data)})
-				.appendTo($('#gamelist'))
-			$('<td/>').append(getratingstring(game.player1)).attr("data-hover","Rating").appendTo(row)
-			$('<td class="playernamegame"/>').append(p1).addClass("right").appendTo(row)
-			$('<td/>').append('vs').addClass("center").appendTo(row)
-			$('<td class="playernamegame"/>').append(p2).appendTo(row)
-			$('<td/>').append(getratingstring(game.player2)).addClass("right").attr("data-hover","Rating").appendTo(row)
+			let p1Element = `<span data-hover="rating">${getratingstring(p1)}</span><span class="playernamegame">${p1}</span>`;
+			let p2Element = `<span class="playernamegame">${p2}</span><span data-hover="rating">${getratingstring(p2)}</span>`;
+			var row = $('<tr/>').addClass('game'+game.id).click(game,function(ev){server.observegame(ev.data)}).appendTo($('#gamelist'))
+			$('<td/>').append(p1Element + " vs " + p2Element).appendTo(row);
 			$('<td/>').append(sz).addClass("right").appendTo(row)
 			$('<td/>').append(minuteseconds(game.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
 			$('<td/>').append('+'+minuteseconds(game.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
 			$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").addClass("right").appendTo(row)
 			$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
 			$('<td/>').append((game.unrated?"P":"")+(game.tournament?"T":"")).addClass("right").attr("data-hover",(game.unrated?"Unrated game":"")+(game.tournament?"Tournament game":"")).appendTo(row)
+			$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right").attr("data-hover", "Trigger move and extra time to add in minutes").appendTo(row);
+			console.log(game.timeAmount);
 		}
 		document.getElementById("gamecount").innerHTML=this.gameslist.length
 	}
@@ -1029,6 +1028,7 @@ var server = {
 			$('<td/>').append('+'+Math.floor(seek.komi/2)+"."+(seek.komi&1?"5":"0")).addClass("right").attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row)
 			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
 			$('<td/>').append((seek.unrated?"P":"")+(seek.tournament?"T":"")).addClass("right").attr("data-hover",(seek.unrated?"Unrated game":"")+(seek.tournament?"Tournament game":"")).appendTo(row)
+			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right").attr("data-hover", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row)
 		}
 		if(!botcount){
 			$('<tr/>').append($('<td colspan="9"/>')).appendTo($('#seeklistbot'))
