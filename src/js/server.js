@@ -916,8 +916,8 @@ var server = {
 			var p1 = game.player1
 			var p2 = game.player2
 			var sz = "<span class='badge'>"+game.size+"x"+game.size+"</span>"
-			let p1Element = `<span data-hover="rating">${getratingstring(p1)}</span><span class="playernamegame">${p1}</span>`;
-			let p2Element = `<span class="playernamegame">${p2}</span><span data-hover="rating">${getratingstring(p2)}</span>`;
+			let p1Element = `<span data-hover="rating">${getratingstring(p1)}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
+			let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-hover="rating">${getratingstring(p2)}</span>`;
 			var row = $('<tr/>').addClass('game'+game.id).click(game,function(ev){server.observegame(ev.data)}).appendTo($('#gamelist'))
 			$('<td/>').append(p1Element + " vs " + p2Element).appendTo(row);
 			$('<td/>').append(sz).addClass("right").appendTo(row)
