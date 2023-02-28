@@ -659,8 +659,8 @@ function closeScratch() {
 }
 
 function changeScratchBoardSize() {
-	const  size = document.getElementById("scratchBoardSize").value;
-	const  piecescaps = {
+	const size = document.getElementById("scratchBoardSize").value;
+	const piecescaps = {
 		3: [10, 0],
 		4: [15, 0],
 		5: [21, 1],
@@ -679,11 +679,11 @@ function playScratch() {
 		server.send("Unobserve " + board.gameno);
 	}
 	if (board.scratch || board.observing) {
-		const size = document.getElementById("scratchBoardSize").value;
-		const pieces = document.getElementById("scratchPieceCount").value;
-		const capstones = document.getElementById("scratchCapCount").value
+		const size = parseInt(document.getElementById("scratchBoardSize").value);
+		const pieces = parseInt(document.getElementById("scratchPieceCount").value);
+		const capstones = parseInt(document.getElementById("scratchCapCount").value);
 		board.clear();
-		board.create(size, "white", true, false, 0, pieces, capstones);
+		board.create(size, "white", true, false, 0, pieces, capstones, 0, 0);
 		board.initEmpty();
 	}
 	$("#creategamemodal").modal("hide");
