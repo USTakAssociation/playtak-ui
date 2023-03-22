@@ -37,7 +37,7 @@
 		
 		<meta name="theme-color" content="#ffffff">
 		<link rel="icon" href="favicon.svg">
-		<link rel=”mask-icon” href=”mask-icon.svg” color="#000000">
+		<link rel="mask-icon" href="mask-icon.svg" color="#000000">
 		<link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 		<link rel="stylesheet" href="css/thirdparty/bootstrap.min.css" />
@@ -110,21 +110,21 @@
 					style="display: none"
 					data-hover="Sound is off"
 				>
-					<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+					<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
 						<path
 							d="M215.03 71.05L126.06 160H24c-13.26 0-24 10.74-24 24v144c0 13.25 10.74 24 24 24h102.06l88.97 88.95c15.03 15.03 40.97 4.47 40.97-16.97V88.02c0-21.46-25.96-31.98-40.97-16.97zM461.64 256l45.64-45.64c6.3-6.3 6.3-16.52 0-22.82l-22.82-22.82c-6.3-6.3-16.52-6.3-22.82 0L416 210.36l-45.64-45.64c-6.3-6.3-16.52-6.3-22.82 0l-22.82 22.82c-6.3 6.3-6.3 16.52 0 22.82L370.36 256l-45.63 45.63c-6.3 6.3-6.3 16.52 0 22.82l22.82 22.82c6.3 6.3 16.52 6.3 22.82 0L416 301.64l45.64 45.64c6.3 6.3 16.52 6.3 22.82 0l22.82-22.82c6.3-6.3 6.3-16.52 0-22.82L461.64 256z"
 						></path>
 					</svg>
 				</button>
 				<button class="navitem" id="soundon" onclick="turnsoundoff()" data-hover="Sound is on">
-					<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+					<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
 						<path
 							d="M215.03 71.05L126.06 160H24c-13.26 0-24 10.74-24 24v144c0 13.25 10.74 24 24 24h102.06l88.97 88.95c15.03 15.03 40.97 4.47 40.97-16.97V88.02c0-21.46-25.96-31.98-40.97-16.97zm233.32-51.08c-11.17-7.33-26.18-4.24-33.51 6.95-7.34 11.17-4.22 26.18 6.95 33.51 66.27 43.49 105.82 116.6 105.82 195.58 0 78.98-39.55 152.09-105.82 195.58-11.17 7.32-14.29 22.34-6.95 33.5 7.04 10.71 21.93 14.56 33.51 6.95C528.27 439.58 576 351.33 576 256S528.27 72.43 448.35 19.97zM480 256c0-63.53-32.06-121.94-85.77-156.24-11.19-7.14-26.03-3.82-33.12 7.46s-3.78 26.21 7.41 33.36C408.27 165.97 432 209.11 432 256s-23.73 90.03-63.48 115.42c-11.19 7.14-14.5 22.07-7.41 33.36 6.51 10.36 21.12 15.14 33.12 7.46C447.94 377.94 480 319.54 480 256zm-141.77-76.87c-11.58-6.33-26.19-2.16-32.61 9.45-6.39 11.61-2.16 26.2 9.45 32.61C327.98 228.28 336 241.63 336 256c0 14.38-8.02 27.72-20.92 34.81-11.61 6.41-15.84 21-9.45 32.61 6.43 11.66 21.05 15.8 32.61 9.45 28.23-15.55 45.77-45 45.77-76.88s-17.54-61.32-45.78-76.86z"
 						></path>
 					</svg>
 				</button>
 				<button class="navitem" onclick="toggleSettingsDrawer(true)" data-hover="Open settings menu">
-					<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+					<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 						<path
 							d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"
 						></path>
@@ -134,24 +134,32 @@
 					Log In
 				</button>
 				<button id="logout-button" class="navitem" onclick="server.loginbutton()" data-hover="Logout">
-					<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path d="M534.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L434.7 224 224 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM192 96c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-53 0-96 43-96 96l0 256c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z"/></svg>
+					<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M534.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L434.7 224 224 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM192 96c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-53 0-96 43-96 96l0 256c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z"/></svg>
 				</button>
 			</div>
 			<nav id="menu-wrapper" class="menu-wrapper">
 				<ul id="main-nav" class="menu flex">
 					<li>
-						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()">New Game</button>
+						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()">
+							<svg class="navicon verticle-align--middle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM232 344V280H168c-13.3 0-24-10.7-24-24s10.7-24 24-24h64V168c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24H280v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/></svg>
+							New Game
+						</button>
 					</li>
 					<li>
 						<button class="navitem" style="min-width: 124px" onclick="$('#joingame-modal').modal('show');  closeMobileMenu()">
+							<svg class="navicon verticle-align--middle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M352 128c0 70.7-57.3 128-128 128s-128-57.3-128-128S153.3 0 224 0s128 57.3 128 128zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3zM609.3 512H471.4c5.4-9.4 8.6-20.3 8.6-32v-8c0-60.7-27.1-115.2-69.8-151.8c2.4-.1 4.7-.2 7.1-.2h61.4C567.8 320 640 392.2 640 481.3c0 17-13.8 30.7-30.7 30.7zM432 256c-31 0-59-12.6-79.3-32.9C372.4 196.5 384 163.6 384 128c0-26.8-6.6-52.1-18.3-74.3C384.3 40.1 407.2 32 432 32c61.9 0 112 50.1 112 112s-50.1 112-112 112z"/></svg>
 							Join Game
-							<span class="badge" data-hover="Available humans + AIs to play against">
-								<span id="seekcount">0</span> + <span id="seekcountbot">0</span></span>
+							<span id="seeks" class="badge" data-hover="Available humans + AIs to play against">
+								<div id="seekBadge"></div>
+								<span id="seekcount">0</span> + <span id="seekcountbot">0</span>
+							</span>
 						</button>
 					</li>
 					<li>
 						<button class="navitem" style="min-width: 76px" onclick="$('#watchgame-modal').modal('show');  closeMobileMenu()">
-							Watch <span class="badge" id="gamecount" data-hover="Games in progress">0</span>
+							<svg class="navicon verticle-align--middle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M160 256C160 185.3 217.3 128 288 128C358.7 128 416 185.3 416 256C416 326.7 358.7 384 288 384C217.3 384 160 326.7 160 256zM288 336C332.2 336 368 300.2 368 256C368 211.8 332.2 176 288 176C287.3 176 286.7 176 285.1 176C287.3 181.1 288 186.5 288 192C288 227.3 259.3 256 224 256C218.5 256 213.1 255.3 208 253.1C208 254.7 208 255.3 208 255.1C208 300.2 243.8 336 288 336L288 336zM95.42 112.6C142.5 68.84 207.2 32 288 32C368.8 32 433.5 68.84 480.6 112.6C527.4 156 558.7 207.1 573.5 243.7C576.8 251.6 576.8 260.4 573.5 268.3C558.7 304 527.4 355.1 480.6 399.4C433.5 443.2 368.8 480 288 480C207.2 480 142.5 443.2 95.42 399.4C48.62 355.1 17.34 304 2.461 268.3C-.8205 260.4-.8205 251.6 2.461 243.7C17.34 207.1 48.62 156 95.42 112.6V112.6zM288 80C222.8 80 169.2 109.6 128.1 147.7C89.6 183.5 63.02 225.1 49.44 256C63.02 286 89.6 328.5 128.1 364.3C169.2 402.4 222.8 432 288 432C353.2 432 406.8 402.4 447.9 364.3C486.4 328.5 512.1 286 526.6 256C512.1 225.1 486.4 183.5 447.9 147.7C406.8 109.6 353.2 80 288 80V80z"/></svg>
+							Watch 
+							<span class="badge" id="gamecount" data-hover="Games in progress">0</span>
 						</button>
 					</li>
 					<li>
@@ -159,11 +167,15 @@
 						class="navitem"
 						onclick="$('#help-modal').modal('show'); closeMobileMenu();"
 						data-hover="Information on game rules and Tak communities">
+							<svg class="navicon verticle-align--middle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256s256-114.6 256-256S397.4 0 256 0zM256 464c-114.7 0-208-93.31-208-208S141.3 48 256 48s208 93.31 208 208S370.7 464 256 464zM256 336c-18 0-32 14-32 32s13.1 32 32 32c17.1 0 32-14 32-32S273.1 336 256 336zM289.1 128h-51.1C199 128 168 159 168 198c0 13 11 24 24 24s24-11 24-24C216 186 225.1 176 237.1 176h51.1C301.1 176 312 186 312 198c0 8-4 14.1-11 18.1L244 251C236 256 232 264 232 272V288c0 13 11 24 24 24S280 301 280 288V286l45.1-28c21-13 34-36 34-60C360 159 329 128 289.1 128z"/></svg>
 							Help
 						</button>
 					</li>
 					<li>
-						<a class="navitem" href="/games" target="_blank" data-hover="Find and review old games">Old Games</a>
+						<a class="navitem" href="/games" target="_blank" data-hover="Find and review old games">
+							<svg class="navicon verticle-align--middle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M0 80v48c0 17.7 14.3 32 32 32H48 96V80c0-26.5-21.5-48-48-48S0 53.5 0 80zM112 32c10 13.4 16 30 16 48V384c0 35.3 28.7 64 64 64s64-28.7 64-64v-5.3c0-32.4 26.3-58.7 58.7-58.7H480V128c0-53-43-96-96-96H112zM464 480c61.9 0 112-50.1 112-112c0-8.8-7.2-16-16-16H314.7c-14.7 0-26.7 11.9-26.7 26.7V384c0 53-43 96-96 96H368h96z"/></svg>
+							Old Games
+						</a>
 					</li>
 					<li>
 						<button
@@ -171,46 +183,49 @@
 							id="events-button"
 							onclick="showEvents(); closeMobileMenu();"
 							data-hover="View Events">
+							<svg class="navicon verticle-align--middle usta-nav" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="svg3485" version="1.1" inkscape:version="0.91 r13725" width="617.8125" height="508.125" viewBox="0 0 617.8125 508.125" sodipodi:docname="USTA Logo Vector.svg">
+								<defs id="defs3489" />
+								<g inkscape:groupmode="layer" id="layer3" inkscape:label="Board Trace" style="display:inline">
+									<path class="inverse-line" style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:7.19999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 5.5532787,216.57787 310.05806,4.6277322 611.7862,228.60997 301.72814,502.57172 Z" id="path3496" inkscape:connector-curvature="0" />
+									<path class="inverse-line" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 503.49727,148.08743 C 195.2903,396.13388 192.95054,396.66421 192.95054,396.66421" id="path4302" inkscape:connector-curvature="0" sodipodi:nodetypes="cc" />
+									<path class="inverse-line" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 95.331284,302.65369 C 400.76161,74.969262 400.76161,74.043716 400.76161,74.043716" id="path4304" inkscape:connector-curvature="0" />
+									<path class="inverse-line" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 114.76776,139.75751 C 411.86817,402.6127 414.64481,406.31489 414.64481,406.31489" id="path4306" inkscape:connector-curvature="0" sodipodi:nodetypes="cc" />
+									<path class="inverse-line" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.9000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 212.8716,71.267155 C 516.24124,315.03774 515.30779,314.10732 515.30779,314.10732" id="path4308" inkscape:connector-curvature="0" />
+									<path style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none" d="m 136.66901,339.01175 c -1.85923,-1.79557 -3.3918,-3.27607 -3.40572,-3.29001 l -0.0253,-0.0254 0.0404,0.002 0.0405,0.002 3.34358,3.22866 c 1.83897,1.77577 3.37124,3.25537 3.40504,3.28801 l 0.0615,0.0593 -0.0398,-1.2e-4 -0.0398,-1.2e-4 -3.38042,-3.26467 z" id="path4336" inkscape:connector-curvature="0" />
+									<path style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none" d="m 163.26198,178.11809 c -23.3007,-20.67411 -42.25127,-37.67763 -42.11237,-37.7856 0.1389,-0.10797 19.61961,-13.64168 43.29046,-30.07491 23.67085,-16.433234 44.35144,-30.85298 45.95686,-32.043883 l 2.91894,-2.165277 42.89561,34.31739 c 23.59258,18.87456 42.8956,34.67624 42.8956,35.11484 0,0.63628 -92.57794,70.35854 -93.28554,70.25517 -0.10706,-0.0156 -19.25886,-16.94362 -42.55956,-37.61773 z" id="path4348" inkscape:connector-curvature="0" />
+									<path style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none" d="M 360.72262,185.11801 C 336.00026,165.26896 314.77733,148.2851 313.56054,147.3761 l -2.21235,-1.65272 42.52808,-31.82611 c 23.39044,-17.504358 43.67866,-33.030317 45.08492,-34.502128 1.80225,-1.886272 2.89632,-2.409881 3.70719,-1.774221 0.63269,0.49599 21.58627,16.001998 46.56348,34.457799 24.97721,18.45579 47.55571,35.19427 48.39352,36.02681 1.41152,1.40267 -3.23527,3.20454 -44.93872,36.65292 -24.75268,19.85297 -45.45701,36.17561 -46.0096,36.27253 -0.55259,0.0969 -21.2321,-16.06391 -45.95444,-35.91297 z" id="path4350" inkscape:connector-curvature="0" sodipodi:nodetypes="sscsssssscs" />
+									<path style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none" d="m 401.85317,389.98279 c -6.06505,-5.46373 -28.95686,-25.89367 -50.87068,-45.39987 -21.91382,-19.50621 -39.84331,-35.88218 -39.84331,-36.39105 0,-1.63424 95.168,-77.59305 96.20898,-76.78967 18.26507,14.09616 102.31416,82.0029 102.1255,82.51142 -0.14714,0.39664 -20.88409,18.91704 -46.08209,41.15647 -25.198,22.23943 -46.87125,41.42789 -48.16279,42.64102 l -2.34824,2.2057 -11.02737,-9.93402 z" id="path4352" inkscape:connector-curvature="0" />
+									<path style="fill:#7fb2f0;fill-opacity:1;fill-rule:evenodd;stroke:#35478c;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 145.74841,347.96559 c -38.48321,-36.7744 -46.574565,-44.8303 -45.789839,-45.58916 0.524239,-0.50696 24.452049,-18.26175 53.172889,-39.45508 l 52.21972,-38.53332 2.58385,2.23671 c 1.42114,1.2302 22.16919,19.43193 46.10681,40.4483 23.9376,21.01636 44.2137,38.75134 45.05796,39.41104 0.84425,0.6597 1.37762,1.33228 1.18524,1.4946 -4.0873,3.44883 -107.35845,84.69177 -107.62585,84.66877 -0.0923,-0.008 -21.20214,-20.11477 -46.91078,-44.68186 z" id="path4591" inkscape:connector-curvature="0" />
+								</g>
+								<g inkscape:groupmode="layer" id="layer5" inkscape:label="Stack" style="display:inline">
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 179.55601,143.92247 117.5444,-54.607238 148.08743,44.888998 -1.38832,52.29338 -109.67725,64.78825 -153.64071,-53.68169 z" id="path4359" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.9000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 182.33265,143.92247 152.25239,51.36783 -1.38832,57.38388 0,0 0,0 0,0" id="path4361" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 445.65061,134.66701 -111.06557,61.54884 0,0" id="path4363" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 186.96038,199.91803 -0.46277,29.61749 108.75171,71.26708 0.92554,-50.44229 -39.33572,-26.37807" id="path4365" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 296.63764,250.82309 15.73429,-6.47883 0,0" id="path4369" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 295.71209,301.26537 149.47575,-51.36783 3.23941,-51.36783 -12.4535,-7.21957" id="path4371" inkscape:connector-curvature="0" sodipodi:nodetypes="cccc" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.30000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 436.39515,191.58811 11.56933,6.9416 0,0" id="path4373" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 245.96397,268.40847 -64.09409,-32.39413 2.31386,49.97951 127.26264,68.95321 127.26264,-64.32548 1.85109,-35.63353 0.16362,-3.43592" id="path4375" inkscape:connector-curvature="0" sodipodi:nodetypes="ccccccc" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 311.44638,355.87261 0.92555,-54.14447 55.07001,-25.45253" id="path4377" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 304.50478,298.48873 7.86715,3.70219 0,0" id="path4379" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:5.9000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 180.01878,235.55157 8.7927,-5.0905 0,0" id="path4403" inkscape:connector-curvature="0" />
+									<path `style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:3.70000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" `d="m 303.92632,303.46354 c -8.90839,3.35511 -8.90839,3.35511 -8.90839,3.35511 l 0,0 0,0" `id="path4441" `inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:3.0999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 181.63202,229.46796 c -6.36313,3.70219 -6.36313,3.70219 -6.36313,3.70219 l 0,0" id="path4443" inkscape:connector-curvature="0" />
+									<path style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 247.78784,316.85362 c -32.96001,-17.87657 -60.05939,-32.55035 -60.22084,-32.6084 -0.23051,-0.0829 -2.45702,-42.77279 -2.2374,-42.89875 0.0308,-0.0177 13.27526,6.66447 29.43205,14.84924 l 29.37599,14.8814 25.57091,16.77628 c 14.064,9.22696 25.82335,16.75645 26.13189,16.73221 0.30855,-0.0243 1.8137,-0.54665 3.34478,-1.16088 4.20907,-1.68858 4.8277,-1.71445 7.70552,-0.32226 l 2.46611,1.19303 -0.19204,1.95236 c -0.10562,1.0738 -0.28148,10.46416 -0.3908,20.86747 -0.19263,18.32998 -0.33981,22.29185 -0.82688,22.2575 -0.1276,-0.009 -27.19928,-14.64264 -60.15929,-32.5192 z" id="path4536" inkscape:connector-curvature="0" />
+									<path style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 314.73227,345.9967 c 0.12149,-2.12045 0.3256,-12.4183 0.45357,-22.88411 0.2303,-18.83431 0.24029,-19.03367 0.97718,-19.50925 0.40948,-0.26427 11.64279,-5.52103 24.96291,-11.68169 l 24.21841,-11.20121 35.85722,-12.33366 c 19.72148,-6.78351 35.91834,-12.27255 35.99303,-12.19786 0.17823,0.17824 -1.5007,32.34685 -1.6964,32.50327 -0.0827,0.0661 -18.84441,9.55605 -41.6928,21.08885 -22.84839,11.53281 -50.03661,25.26675 -60.41827,30.51988 l -18.87575,9.55113 0.2209,-3.85535 z" id="path4538" inkscape:connector-curvature="0" />
+									<path style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 262.19615,167.5467 c -39.81397,-13.45075 -72.3895,-24.5517 -72.39005,-24.66877 -5.6e-4,-0.11707 24.19918,-11.45565 53.7772,-25.19684 l 53.77822,-24.983994 69.52353,21.059824 c 38.23794,11.58291 69.87124,21.1714 70.29622,21.30776 0.61437,0.19712 -9.71981,6.06165 -50.43385,28.62058 -28.16361,15.60497 -51.42158,28.36022 -51.68439,28.34502 -0.26281,-0.0152 -33.0529,-11.03282 -72.86688,-24.48358 z" id="path4540" inkscape:connector-curvature="0" />
+									<path style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 336.65212,239.42097 c 0.12543,-3.78465 0.39875,-14.51794 0.60739,-23.85175 0.20863,-9.33381 0.40821,-17.08608 0.4435,-17.22726 0.0687,-0.27483 103.93805,-57.91472 104.09028,-57.76249 0.0498,0.0499 -0.14468,8.35159 -0.43229,18.44831 -0.28761,10.09673 -0.52519,19.97314 -0.52797,21.9476 l -0.005,3.58993 -51.35363,30.32506 c -28.2445,16.67879 -51.73538,30.56958 -52.20196,30.86842 l -0.84833,0.54337 0.22805,-6.88119 z" id="path4542" inkscape:connector-curvature="0" />
+									<path style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 295.51755,234.45216 c -18.76485,-6.58859 -35.47025,-12.44128 -37.12311,-13.00598 -1.65286,-0.56471 -17.88096,-6.23192 -36.06244,-12.59381 -18.18149,-6.36188 -34.33004,-12.00182 -35.88567,-12.53319 l -2.82843,-0.96613 -0.41681,-23.82871 c -0.22924,-13.10579 -0.37021,-23.87531 -0.31326,-23.93225 0.11432,-0.11432 148.07361,49.7441 148.30809,49.97596 0.16026,0.15846 -0.5512,33.97495 -0.9087,43.19185 -0.12256,3.15989 -0.31935,5.72865 -0.43731,5.70837 -0.11795,-0.0203 -15.56752,-5.42753 -34.33236,-12.01611 z" id="path4544" inkscape:connector-curvature="0" />
+									<path style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="" id="path4546" inkscape:connector-curvature="0" />
+									<path style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 192.42897,237.96165 c -3.0667,-1.5538 -5.59025,-2.83951 -5.60788,-2.85715 -0.0324,-0.0323 1.28441,-0.80586 1.37182,-0.80586 0.0453,0 9.74996,6.33796 9.87127,6.44675 0.0375,0.0336 0.0375,0.0511 0,0.0473 -0.0327,-0.003 -2.5685,-1.27724 -5.63521,-2.83104 z" id="path4548" inkscape:connector-curvature="0" />
+									<path style="fill:#b6b6b6;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 241.03605,261.37205 -51,-33.41488 0.0466,-11.5029 c 0.0256,-6.32659 0.14044,-11.59679 0.25519,-11.71154 0.11475,-0.11475 14.99894,4.96036 33.07597,11.27802 l 32.86733,11.48665 18.25248,12.25303 18.25248,12.25303 -0.0707,8.84884 c -0.0389,4.86686 -0.20762,14.49089 -0.375,21.38673 l -0.30434,12.5379 -51,-33.41488 z" id="path4550" inkscape:connector-curvature="0" />
+									<path style="fill:#b6b6b6;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 288.54854,241.53323 c -4.64507,-3.12042 -8.41461,-5.70447 -8.37675,-5.74233 0.0913,-0.0913 24.15641,8.31116 24.15763,8.4348 10e-4,0.10503 -6.97721,3.00284 -7.19866,2.98935 -0.0752,-0.005 -3.93714,-2.5614 -8.58222,-5.68182 z" id="path4552" inkscape:connector-curvature="0" />
+									<path style="fill:#dedede;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none" d="m 298.73903,288.48305 c 0.25211,-4.37522 0.45982,-14.04531 0.46159,-21.48908 l 0.003,-13.53413 7.04229,-2.97163 7.04229,-2.97163 10.44287,3.64119 c 7.84342,2.73482 10.79881,3.47851 11.87282,2.98766 0.78647,-0.35943 13.66556,-7.88744 28.62022,-16.7289 l 27.19027,-16.07539 26.76763,-9.10237 26.76764,-9.10236 -0.41251,4.75472 c -0.22688,2.6151 -0.89806,12.54039 -1.49151,22.05619 -0.59345,9.51581 -1.16705,17.38952 -1.27465,17.49713 -0.19052,0.19051 -16.43832,5.80387 -61.95719,21.40522 -12.25062,4.19883 -35.33085,12.12392 -51.2894,17.61129 -15.95854,5.48738 -29.29193,9.97705 -29.62974,9.97705 -0.33831,0 -0.40831,-3.57335 -0.15584,-7.95496 z" id="path4554" inkscape:connector-curvature="0" />
+									<path style="fill:#dedede;fill-opacity:1;fill-rule:evenodd;stroke:#35478c;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 418.4904,205.16886 c 0.26777,-0.30103 17.03021,-10.15772 17.27437,-10.15772 0.31534,0 4.68417,2.58489 4.69172,2.77593 0.005,0.11556 -9.91413,3.5045 -21.74403,7.42932 -0.20625,0.0684 -0.30618,0.047 -0.22206,-0.0475 z" id="path4556" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 295.78963,304.54454 c 7.71533,-2.67375 7.73823,-2.67375 7.73823,-2.67375" id="path4562" inkscape:connector-curvature="0" />
+									<path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.19999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 448.83603,198.58901 C 391.3836,217.85767 388.82034,219.1172 388.82034,219.1172" id="path4570" inkscape:connector-curvature="0" sodipodi:nodetypes="cc" /></g>
+							</svg>
 							Events
-						</button>
-					</li>
-					<li class="flex-wrap">
-						<button
-							class="navitem"
-							id="scratchbutton"
-							onclick="togglescratch();"
-							data-hover="Open a scratch board">
-							Board <span class="caret"></span>
-						</button>
-						<div id="scratchlist" style="display: none">
-							<ul class="flex flex-column flex-center flex-align-center">
-								<li>
-									<button class="navitem" onclick="scratchbutton(3); closeMobileMenu();">3 x 3</button>
-								</li>
-								<li>
-									<button class="navitem" onclick="scratchbutton(4); closeMobileMenu();">4 x 4</button>
-								</li>
-								<li>
-									<button class="navitem" onclick="scratchbutton(5); closeMobileMenu();">5 x 5</button>
-								</li>
-								<li>
-									<button class="navitem" onclick="scratchbutton(6); closeMobileMenu();">6 x 6</button>
-								</li>
-								<li>
-									<button class="navitem" onclick="scratchbutton(7); closeMobileMenu();">7 x 7</button>
-								</li>
-								<li>
-									<button class="navitem" onclick="scratchbutton(8); closeMobileMenu();">8 x 8</button>
-								</li>
-							</ul>
-						</div>
-					</li>
-					<li>
-						<button
-						class="navitem"
-						onclick="$('#loadmodal').modal('show'); closeMobileMenu()"
-						data-hover="Load a game state from a PTN or TPS file">
-							Load
 						</button>
 					</li>
 					<li>
@@ -220,8 +235,8 @@
 					</li>
 				</ul>
 			</nav>
-			
 		</header>
+
 		<div id="floating">
 			<div
 				id="notation-toggle-text"
@@ -251,7 +266,7 @@
 										id="head"
 										d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"
 									></path>
-									<clipPath id="insidehead"><use xlink:href="#head"></use></clipPath>
+									<clippath id="insidehead"><use xlink:href="#head"></use></clippath>
 								</defs>
 								<use xlink:href="#head" clip-path="url(#insidehead)"></use>
 							</svg>
@@ -273,6 +288,12 @@
 						class="rulebox"
 						data-hover="Stone count - The number of stones/capstones that each player has in this game"
 					></span>
+					<div id="extra-time" style="display: none;">
+						|
+						<span id="extra-time-rule" class="rulebox"
+						data-hover="Extra Time - The trigger move the player must reach and the amount of extra time to add"
+						></span>
+					</div>
 				</div>
 
 				<div class="optlist center">
@@ -281,7 +302,7 @@
 						onclick="undoButton()"
 						data-hover="Undo move - Only works if your opponent undoes as well"
 					>
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 							<path
 								id="undo"
 								d="M212.333 224.333H12c-6.627 0-12-5.373-12-12V12C0 5.373 5.373 0 12 0h48c6.627 0 12 5.373 12 12v78.112C117.773 39.279 184.26 7.47 258.175 8.007c136.906.994 246.448 111.623 246.157 248.532C504.041 393.258 393.12 504 256.333 504c-64.089 0-122.496-24.313-166.51-64.215-5.099-4.622-5.334-12.554-.467-17.42l33.967-33.967c4.474-4.474 11.662-4.717 16.401-.525C170.76 415.336 211.58 432 256.333 432c97.268 0 176-78.716 176-176 0-97.267-78.716-176-176-176-58.496 0-110.28 28.476-142.274 72.333h98.274c6.627 0 12 5.373 12 12v48c0 6.627-5.373 12-12 12z"
@@ -293,7 +314,7 @@
 						onclick="server.draw()"
 						data-hover="Request draw - Game is drawn if your opponent agrees"
 					>
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
 							<path
 								id="draw"
 								d="M519.2 127.9l-47.6-47.6A56.252 56.252 0 0 0 432 64H205.2c-14.8 0-29.1 5.9-39.6 16.3L118 127.9H0v255.7h64c17.6 0 31.8-14.2 31.9-31.7h9.1l84.6 76.4c30.9 25.1 73.8 25.7 105.6 3.8 12.5 10.8 26 15.9 41.1 15.9 18.2 0 35.3-7.4 48.8-24 22.1 8.7 48.2 2.6 64-16.8l26.2-32.3c5.6-6.9 9.1-14.8 10.9-23h57.9c.1 17.5 14.4 31.7 31.9 31.7h64V127.9H519.2zM48 351.6c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16c0 8.9-7.2 16-16 16zm390-6.9l-26.1 32.2c-2.8 3.4-7.8 4-11.3 1.2l-23.9-19.4-30 36.5c-6 7.3-15 4.8-18 2.4l-36.8-31.5-15.6 19.2c-13.9 17.1-39.2 19.7-55.3 6.6l-97.3-88H96V175.8h41.9l61.7-61.6c2-.8 3.7-1.5 5.7-2.3H262l-38.7 35.5c-29.4 26.9-31.1 72.3-4.4 101.3 14.8 16.2 61.2 41.2 101.5 4.4l8.2-7.5 108.2 87.8c3.4 2.8 3.9 7.9 1.2 11.3zm106-40.8h-69.2c-2.3-2.8-4.9-5.4-7.7-7.7l-102.7-83.4 12.5-11.4c6.5-6 7-16.1 1-22.6L367 167.1c-6-6.5-16.1-6.9-22.6-1l-55.2 50.6c-9.5 8.7-25.7 9.4-34.6 0-9.3-9.9-8.5-25.1 1.2-33.9l65.6-60.1c7.4-6.8 17-10.5 27-10.5l83.7-.2c2.1 0 4.1.8 5.5 2.3l61.7 61.6H544v128zm48 47.7c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16c0 8.9-7.2 16-16 16z"
@@ -305,7 +326,7 @@
 						onclick="server.resign()"
 						data-hover="Resign - You lose the game immediately"
 					>
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 							<path
 								d="M336.174 80c-49.132 0-93.305-32-161.913-32-31.301 0-58.303 6.482-80.721 15.168a48.04 48.04 0 0 0 2.142-20.727C93.067 19.575 74.167 1.594 51.201.104 23.242-1.71 0 20.431 0 48c0 17.764 9.657 33.262 24 41.562V496c0 8.837 7.163 16 16 16h16c8.837 0 16-7.163 16-16v-83.443C109.869 395.28 143.259 384 199.826 384c49.132 0 93.305 32 161.913 32 58.479 0 101.972-22.617 128.548-39.981C503.846 367.161 512 352.051 512 335.855V95.937c0-34.459-35.264-57.768-66.904-44.117C409.193 67.309 371.641 80 336.174 80zM464 336c-21.783 15.412-60.824 32-102.261 32-59.945 0-102.002-32-161.913-32-43.361 0-96.379 9.403-127.826 24V128c21.784-15.412 60.824-32 102.261-32 59.945 0 102.002 32 161.913 32 43.271 0 96.32-17.366 127.826-32v240z"
 							></path>
@@ -319,28 +340,28 @@
 
 				<div class="optlist center">
 					<button class="navitem" onclick="fastrewind()">
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 							<path
 								d="M0 436V76c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v151.9L235.5 71.4C256.1 54.3 288 68.6 288 96v131.9L459.5 71.4C480.1 54.3 512 68.6 512 96v320c0 27.4-31.9 41.7-52.5 24.6L288 285.3V416c0 27.4-31.9 41.7-52.5 24.6L64 285.3V436c0 6.6-5.4 12-12 12H12c-6.6 0-12-5.4-12-12z"
 							></path>
 						</svg>
 					</button>
 					<button class="navitem" onclick="stepback()">
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
 							<path
 								d="M64 468V44c0-6.6 5.4-12 12-12h48c6.6 0 12 5.4 12 12v176.4l195.5-181C352.1 22.3 384 36.6 384 64v384c0 27.4-31.9 41.7-52.5 24.6L136 292.7V468c0 6.6-5.4 12-12 12H76c-6.6 0-12-5.4-12-12z"
 							></path>
 						</svg>
 					</button>
 					<button class="navitem" onclick="stepforward()">
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
 							<path
 								d="M384 44v424c0 6.6-5.4 12-12 12h-48c-6.6 0-12-5.4-12-12V291.6l-195.5 181C95.9 489.7 64 475.4 64 448V64c0-27.4 31.9-41.7 52.5-24.6L312 219.3V44c0-6.6 5.4-12 12-12h48c6.6 0 12 5.4 12 12z"
 							></path>
 						</svg>
 					</button>
 					<button class="navitem" onclick="fastforward()">
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 							<path
 								d="M512 76v360c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12V284.1L276.5 440.6c-20.6 17.2-52.5 2.8-52.5-24.6V284.1L52.5 440.6C31.9 457.8 0 443.4 0 416V96c0-27.4 31.9-41.7 52.5-24.6L224 226.8V96c0-27.4 31.9-41.7 52.5-24.6L448 226.8V76c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12z"
 							></path>
@@ -356,7 +377,7 @@
 						data-hover="Download the game as a PTN-file"
 						href="#"
 					>
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
 							<path
 								d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"
 							></path>
@@ -367,7 +388,7 @@
 						onclick="copyNotationLink()"
 						data-hover="Copy a link to this game to your clipboard"
 					>
-						<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+						<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
 							<path
 								d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"
 							></path>
@@ -386,10 +407,9 @@
 							>
 								<defs>
 									<path
-										id="head"
 										d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"
 									></path>
-									<clipPath id="insidehead"><use xlink:href="#head"></use></clipPath>
+									<clippath><use xlink:href="#head"></use></clippath>
 								</defs>
 								<use xlink:href="#head" clip-path="url(#insidehead)"></use>
 							</svg>
@@ -416,7 +436,7 @@
 			</div>
 			<div id="cmenu" class="flex flex-column">
 				<div>
-					<a class="btn btn-pill btn-primary btn-slim margin-bottom--8 flex flex-align-center flex-center" href="https://discord.gg/2xEt42X" target="_blank"rel="noopener noreferrer">
+					<a class="btn btn-pill btn-primary btn-slim margin-bottom--8 flex flex-align-center flex-center" href="https://discord.gg/2xEt42X" target="_blank" rel="noopener noreferrer">
 						<svg
 							class="margin-right--8 verticle-align--middle"
 							xmlns="http://www.w3.org/2000/svg"
@@ -451,7 +471,7 @@
 				<div class="flex flex-space-between">
 					<h4 class="padding-left--8">Settings</h4>
 					<button class="btn btn-link" onclick="toggleSettingsDrawer(false)">
-						<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'><path d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z'/></svg>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"/></svg>
 					</button>
 				</div>
 				<ul class="nav nav-tabs">
@@ -685,172 +705,353 @@
 				</div>
 			</div>
 		</div>
-
+	
 		<div id="creategamemodal" class="modal fade" role="dialog">
-			<div class="modal-dialog modal-sm">
+			<div class="modal-dialog modal-md">
 				<div class="modal-content">
 					<div class="modal-header border-none">
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<ul class="nav nav-tabs" role="tablist">
+							<li class="nav-item active">
+								<a
+									class="active"
+									data-toggle="tab"
+									href="#create-game"
+									role="tab"
+									aria-controls="create-game"
+									aria-selected="true"
+								>
+									Create Game
+								</a>
+							</li>
+							<li class="nav-item">
+								<a
+									data-toggle="tab"
+									href="#play-scratch"
+									role="tab"
+									aria-controls="play-scratch"
+									aria-selected="false"
+								>
+									Play Scratch
+								</a>
+							</li>
+							<li class="nav-item">
+								<a
+									data-toggle="tab"
+									href="#load-game"
+									role="tab"
+									aria-controls="load-game"
+									aria-selected="false"
+								>
+									Load Game
+								</a>
+							</li>
+						</ul>
 					</div>
 					<div class="modal-body">
-						<div class="row">
-							<div class="col-sm-6">
-								<div class="form-group">
-									<label for="boardsize">Board Size</label>
-									<select class="form-control" id="boardsize" onchange="changeboardsize()">
-										<option value="3">3x3</option>
-										<option value="4">4x4</option>
-										<option value="5" selected="selected">5x5</option>
-										<option value="6">6x6</option>
-										<option value="7">7x7</option>
-										<option value="8">8x8</option>
-									</select>
+						<div class="tab-content">
+							<div
+								class="tab-pane fade active in"
+								id="create-game"
+								role="tabpanel"
+								aria-labelledby="create-game"
+							>
+								<div>
+									<div class="row">
+										<div class="col-sm-6">
+											<div class="form-group">
+												<label for="boardsize">Board Size</label>
+												<select class="form-control" id="boardsize" onchange="changeboardsize()">
+													<option value="3">3x3</option>
+													<option value="4">4x4</option>
+													<option value="5" selected="selected">5x5</option>
+													<option value="6">6x6</option>
+													<option value="7">7x7</option>
+													<option value="8">8x8</option>
+												</select>
+											</div>
+										</div>
+										<div class="col-sm-6">
+											<div class="form-group" data-hover="Select your color, white will move first">
+												<label for="colorselect">My Color</label>
+												<select class="form-control" id="colorselect">
+													<option value="A" selected="selected">Random</option>
+													<option value="W">White</option>
+													<option value="B">Black</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-sm-6">
+											<div
+												class="form-group"
+												data-hover="Enter the name of another player to allow only that player to join"
+											>
+												<label for="opname">Opponent</label>
+												<input class="form-control" type="text" id="opname" value="" />
+											</div>
+										</div>
+										<div class="col-sm-6">
+											<div
+												class="form-group"
+												data-hover="Game type - Tournament games will be marked as such in the database, they also allow greater time to reconnect if a player is disconnected during the game. Unrated games do not count towards the players' rating"
+											>
+												<label for="gametype">Game type</label>
+												<select class="form-control" id="gametype">
+													<option value="0" selected="selected">Normal</option>
+													<option value="1">Tournament</option>
+													<option value="2">Unrated</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-sm-6">
+											<div class="form-group">
+												<label for="timeselect">Time (minutes per player)</label>
+												<select class="form-control" id="timeselect">
+													<option>1</option>
+													<option>2</option>
+													<option>3</option>
+													<option>5</option>
+													<option>7</option>
+													<option selected="selected">10</option>
+													<option>15</option>
+													<option>20</option>
+													<option>30</option>
+													<option>45</option>
+													<option>60</option>
+													<option>90</option>
+													<option>120</option>
+													<option>180</option>
+												</select>
+											</div>
+										</div>
+										<div class="col-sm-6">
+											<div class="form-group">
+												<label for="incselect">Increment (seconds)</label>
+												<select class="form-control" id="incselect">
+													<option>0</option>
+													<option>1</option>
+													<option>2</option>
+													<option>3</option>
+													<option>5</option>
+													<option>7</option>
+													<option>10</option>
+													<option>15</option>
+													<option selected="selected">20</option>
+													<option>30</option>
+													<option>45</option>
+													<option>60</option>
+													<option>90</option>
+													<option>120</option>
+													<option>180</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									<div class="accordion" id="accordionExample">
+										<div class="card">
+											<div class="card-header" id="headingOne">
+												<h2 class="margin--0">
+													<button class="btn btn-link btn-block left btn-nav-accordion" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+														<svg class="verticle-align--middle fa-chevron-right" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg> Advanced Options
+													</button>
+												</h2>
+											</div>
+											<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+												<div class="card-body">
+													<div class="row">
+														<div class="col-sm-6">
+															<div
+																class="form-group"
+																data-hover="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined"
+															>
+																<label for="komiselect">Komi</label>
+																<select class="form-control" id="komiselect">
+																	<option value="0" selected="selected">0.0</option>
+																	<option value="1">0.5</option>
+																	<option value="2">1.0</option>
+																	<option value="3">1.5</option>
+																	<option value="4">2.0</option>
+																	<option value="5">2.5</option>
+																	<option value="6">3.0</option>
+																	<option value="7">3.5</option>
+																	<option value="8">4.0</option>
+																</select>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-6">
+															<div class="form-group">
+																<label for="triggerMove">Extra Time Trigger Move</label>
+																<select class="form-control" id="triggerMove">
+																	<option value="">Select</option>
+																	<option value="5">5</option>
+																	<option value="20">20</option>
+																	<option value="25">25</option>
+																	<option value="30">30</option>
+																	<option value="35">35</option>
+																	<option value="40">40</option>
+																	<option value="45">45</option>
+																	<option value="50">50</option>
+																	<option value="55">55</option>
+																	<option value="60">60</option>
+																</select>
+															</div>
+														</div>
+														<div class="col-sm-6">
+															<div class="form-group">
+																<label for="timeAmount">Extra Time Amount</label>
+																<select class="form-control" id="timeAmount">
+																	<option value="">Select</option>
+																	<option value="180">3 Minutes</option>
+																	<option value="500">5 Minutes</option>
+																	<option value="420">7 Minutes</option>
+																	<option value="600">10 Minutes</option>
+																	<option value="900">15 Minutes</option>
+																	<option value="1200">20 Minutes</option>
+																	<option value="1800">30 Minutes</option>
+																	<option value="2700">45 Minutes</option>
+																	<option value="3600">60 Minutes</option>
+																</select>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-6">
+															<div class="form-group">
+																<label for="piececount">Stones</label>
+																<input
+																	class="form-control"
+																	type="number"
+																	min="10"
+																	max="80"
+																	step="1"
+																	id="piececount"
+																	value="21"
+																/>
+															</div>
+														</div>
+														<div class="col-sm-6">
+															<div class="form-group">
+																<label for="capcount">Capstones</label>
+																<input
+																	class="form-control"
+																	type="number"
+																	min="0"
+																	max="5"
+																	step="1"
+																	id="capcount"
+																	value="1"
+																/>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="flex flex-end flex-wrap gap--8 margin-top--8">
+										<div>
+											<form role="form" onsubmit="server.seek(); return false;">
+												<button type="submit" class="btn btn-pill btn-primary">Create</button>
+											</form>
+										</div>
+										<div>
+											<button type="button" class="btn btn-pill btn-secondary" data-dismiss="modal">Cancel</button>
+										</div>
+										<div>
+											<form role="form" onsubmit="server.removeseek(); return false;">
+												<button type="submit" class="btn btn-pill btn-secondary">Remove Seeks</button>
+											</form>
+										</div>
+									</div>
 								</div>
 							</div>
-							<div class="col-sm-6">
-								<div
-									class="form-group"
-									data-hover="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined"
-								>
-									<label for="komiselect">Komi</label>
-									<select class="form-control" id="komiselect">
-										<option value="0" selected="selected">0.0</option>
-										<option value="1">0.5</option>
-										<option value="2">1.0</option>
-										<option value="3">1.5</option>
-										<option value="4">2.0</option>
-										<option value="5">2.5</option>
-										<option value="6">3.0</option>
-										<option value="7">3.5</option>
-										<option value="8">4.0</option>
-									</select>
+							<div class="tab-pane fade" id="play-scratch" role="tabpanel" aria-labelledby="play-scratch">
+								<div class="row">
+									<div class="col-sm-6">
+										<div class="form-group">
+											<label for="scratchBoardSize">Board Size</label>
+											<select class="form-control" id="scratchBoardSize" onchange="changeScratchBoardSize()">
+												<option value="3">3x3</option>
+												<option value="4">4x4</option>
+												<option value="5" selected="selected">5x5</option>
+												<option value="6">6x6</option>
+												<option value="7">7x7</option>
+												<option value="8">8x8</option>
+											</select>
+										</div>
+										
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-6">
+										<div class="form-group">
+											<label for="scratchPieceCount">Stones</label>
+											<input
+												class="form-control"
+												type="number"
+												min="10"
+												max="80"
+												step="1"
+												id="scratchPieceCount"
+												value="21"
+											/>
+										</div>
+									</div>
+									<div class="col-sm-6">
+										<div class="form-group">
+											<label for="scratchCapCount">Capstones</label>
+											<input
+												class="form-control"
+												type="number"
+												min="0"
+												max="5"
+												step="1"
+												id="scratchCapCount"
+												value="1"
+											/>
+										</div>
+										
+									</div>
+								</div>
+								<div class="flex flex-end gap--8 margin-top--8">
+									<div>
+										<form role="form" onsubmit="playScratch(); return false;">
+											<button type="submit" class="btn btn-pill btn-primary">Play Scratch</button>
+										</form>
+									</div>
+									<div>
+										<button type="button" class="btn btn-pill btn-secondary" data-dismiss="modal">Cancel</button>
+									</div>
 								</div>
 							</div>
-						</div>
-						<div class="row">
-							<div class="col-sm-6">
-								<div class="form-group">
-									<label for="piececount">Stones</label>
-									<input
-										class="form-control"
-										type="number"
-										min="10"
-										max="80"
-										step="1"
-										id="piececount"
-										value="21"
-									/>
+							<div
+								class="tab-pane fade third"
+								id="load-game"
+								role="tabpanel"
+								aria-labelledby="load-game"
+							>
+								<div>
+									<form role="form">
+										<div class="form-group">
+											<label>Paste PTN/TPS:</label>
+											<input type="text" class="form-control" id="loadptntext" />
+										</div>
+									</form>
 								</div>
-							</div>
-							<div class="col-sm-6">
-								<div class="form-group">
-									<label for="capcount">Capstones</label>
-									<input
-										class="form-control"
-										type="number"
-										min="0"
-										max="5"
-										step="1"
-										id="capcount"
-										value="1"
-									/>
+								<div class="flex flex-end gap--8 margin-top--8">
+									<div>
+										<button type="button" class="btn btn-pill btn-primary flex flex-center flex-align-center" onclick="load(); return false;">Load</button>
+									</div>
+									<div>
+										<button type="button" class="btn btn-pill btn-secondary" data-dismiss="modal">Cancel</button>
+									</div>
 								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-sm-6">
-								<div
-									class="form-group"
-									data-hover="Game type - Tournament games will be marked as such in the database, they also allow greater time to reconnect if a player is disconnected during the game. Unrated games do not count towards the players' rating"
-								>
-									<label for="gametype">Game type</label>
-									<select class="form-control" id="gametype">
-										<option value="0" selected="selected">Normal</option>
-										<option value="1">Tournament</option>
-										<option value="2">Unrated</option>
-									</select>
-								</div>
-							</div>
-							<div class="col-sm-6">
-								<div
-									class="form-group"
-									data-hover="Enter the name of another player to allow only that player to join"
-								>
-									<label for="opname">Opponent</label>
-									<input class="form-control" type="text" id="opname" value="" />
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-sm-6">
-								<div class="form-group">
-									<label for="timeselect">Time (minutes per player)</label>
-									<select class="form-control" id="timeselect">
-										<option>1</option>
-										<option>2</option>
-										<option>3</option>
-										<option>5</option>
-										<option>7</option>
-										<option selected="selected">10</option>
-										<option>15</option>
-										<option>20</option>
-										<option>30</option>
-										<option>45</option>
-										<option>60</option>
-										<option>90</option>
-										<option>120</option>
-										<option>180</option>
-									</select>
-								</div>
-							</div>
-							<div class="col-sm-6">
-								<div class="form-group">
-									<label for="incselect">Increment (seconds)</label>
-									<select class="form-control" id="incselect">
-										<option>0</option>
-										<option>1</option>
-										<option>2</option>
-										<option>3</option>
-										<option>5</option>
-										<option>7</option>
-										<option>10</option>
-										<option>15</option>
-										<option selected="selected">20</option>
-										<option>30</option>
-										<option>45</option>
-										<option>60</option>
-										<option>90</option>
-										<option>120</option>
-										<option>180</option>
-									</select>
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-sm-12">
-								<div class="form-group" data-hover="Select your color, white will move first">
-									<label for="colorselect">My Color</label>
-									<select class="form-control" id="colorselect">
-										<option value="A" selected="selected">Random</option>
-										<option value="W">White</option>
-										<option value="B">Black</option>
-									</select>
-								</div>
-							</div>
-						</div>
-						<div class="row center">
-							<div class="col-sm-12">
-								<form role="form" onsubmit="server.seek(); return false;">
-									<button type="submit" class="btn btn-pill btn-primary">Create</button>
-								</form>
-							</div>
-						</div>
-						<div class="row center">
-							<div class="col-sm-12">
-								<form role="form" onsubmit="server.removeseek(); return false;">
-									<br />
-									<button type="submit" class="btn btn-pill btn-secondary margin-bottom--8">Remove Seeks</button>
-								</form>
 							</div>
 						</div>
 					</div>
@@ -877,7 +1078,7 @@
 								data-hover="Download the game as a PTN-file"
 								href="#"
 							>
-								<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+								<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
 									<path
 										d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"
 									></path>
@@ -888,38 +1089,12 @@
 								onclick="copyNotationLink()"
 								data-hover="Copy a link to this game to your clipboard"
 							>
-								<svg class="navicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+								<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
 									<path
 										d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"
 									></path>
 								</svg>
 							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div id="loadmodal" class="modal fade" role="dialog">
-			<div class="modal-dialog modal-sm">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
-						<h4 class="modal-title">Load Game</h4>
-					</div>
-					<div class="modal-body">
-						<div class="row">
-							<div class="col-sm-12">
-								<form role="form">
-									<div class="form-group">
-										<label>Paste PTN/TPS:</label>
-										<input type="text" class="form-control" id="loadptntext" />
-									</div>
-								</form>
-							</div>
-						</div>
-						<div class="flex flex-center">
-							<button type="button" class="btn btn-pill btn-primary flex flex-center flex-align-center" onclick="load(); return false;">Load</button>
 						</div>
 					</div>
 				</div>
@@ -973,7 +1148,7 @@
 							</div>
 							<div class="hero-actions flex flex-column">
 								<div id="loading" class="loading flex flex-column flex-align-center flex-center" style="display: none;">
-									<svg id="eIZHlkQSopD1" width="100px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 322 333" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+									<svg width="100px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 322 333" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
 										<style>
 										#eIZHlkQSopD2_to {animation: eIZHlkQSopD2_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD2_to__to { 0% {transform: translate(156.137404px,-68.747306px)} 25% {transform: translate(158.448219px,236.280287px)} 100% {transform: translate(158.448219px,236.280287px)}} #eIZHlkQSopD10_to {animation: eIZHlkQSopD10_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD10_to__to { 0% {transform: translate(159.586113px,-65.806554px)} 33.333333% {transform: translate(159.586113px,-65.806554px)} 58.333333% {transform: translate(161.896928px,183.761477px)} 100% {transform: translate(161.896928px,183.761477px)}} #eIZHlkQSopD19_to {animation: eIZHlkQSopD19_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD19_to__to { 0% {transform: translate(158.408461px,-95.253131px)} 66.666667% {transform: translate(158.408461px,-95.253131px)} 91.666667% {transform: translate(157.253053px,102.899263px)} 100% {transform: translate(157.253053px,102.899263px)}}
 										</style>
@@ -1012,7 +1187,7 @@
 									<button id="play-button" class="btn btn-pill btn-secondary margin-bottom--8 flex flex-center flex-align-center" style="display: none;" onclick="hideElement('landing');">Play</button>
 									<button id="signup-button" class="btn btn-pill btn-primary margin-bottom--8 flex flex-center flex-align-center" onclick="hideElement('hero-actions'); showElement('sign-up')">Sign Up</button>
 									<button id="landing-login-button" class="btn btn-pill btn-secondary margin-bottom--8 flex flex-center flex-align-center" onclick="hideElement('hero-actions'); showElement('landing-login')">Login</button>
-									<a class="btn btn-pill btn-primary margin-bottom--8 flex flex-center flex-align-center" href="https://discord.gg/2xEt42X" target="_blank"rel="noopener noreferrer">
+									<a class="btn btn-pill btn-primary margin-bottom--8 flex flex-center flex-align-center" href="https://discord.gg/2xEt42X" target="_blank" rel="noopener noreferrer">
 										<svg
 											class="verticle-align--middle"
 											xmlns="http://www.w3.org/2000/svg"
@@ -1177,9 +1352,14 @@
 							<div id="loading-events" class="loading flex flex-column flex-align-center flex-center" style="display: none;">
 								<svg id="eIZHlkQSopD1" width="100px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 322 333" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
 									<style>
-									#eIZHlkQSopD2_to {animation: eIZHlkQSopD2_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD2_to__to { 0% {transform: translate(156.137404px,-68.747306px)} 25% {transform: translate(158.448219px,236.280287px)} 100% {transform: translate(158.448219px,236.280287px)}} #eIZHlkQSopD10_to {animation: eIZHlkQSopD10_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD10_to__to { 0% {transform: translate(159.586113px,-65.806554px)} 33.333333% {transform: translate(159.586113px,-65.806554px)} 58.333333% {transform: translate(161.896928px,183.761477px)} 100% {transform: translate(161.896928px,183.761477px)}} #eIZHlkQSopD19_to {animation: eIZHlkQSopD19_to__to 2400ms linear infinite normal forwards}@keyframes eIZHlkQSopD19_to__to { 0% {transform: translate(158.408461px,-95.253131px)} 66.666667% {transform: translate(158.408461px,-95.253131px)} 91.666667% {transform: translate(157.253053px,102.899263px)} 100% {transform: translate(157.253053px,102.899263px)}}
+										#eIZHlkQSopD21_to {animation: eIZHlkQSopD2_to__to 2400ms linear infinite normal forwards}
+										@keyframes eIZHlkQSopD2_to__to { 0% {transform: translate(156.137404px,-68.747306px)} 25% {transform: translate(158.448219px,236.280287px)} 100% {transform: translate(158.448219px,236.280287px)}} 
+										#eIZHlkQSopD101_to {animation: eIZHlkQSopD10_to__to 2400ms linear infinite normal forwards}
+										@keyframes eIZHlkQSopD10_to__to { 0% {transform: translate(159.586113px,-65.806554px)} 33.333333% {transform: translate(159.586113px,-65.806554px)} 58.333333% {transform: translate(161.896928px,183.761477px)} 100% {transform: translate(161.896928px,183.761477px)}} 
+										#eIZHlkQSopD191_to {animation: eIZHlkQSopD19_to__to 2400ms linear infinite normal forwards}
+										@keyframes eIZHlkQSopD19_to__to { 0% {transform: translate(158.408461px,-95.253131px)} 66.666667% {transform: translate(158.408461px,-95.253131px)} 91.666667% {transform: translate(157.253053px,102.899263px)} 100% {transform: translate(157.253053px,102.899263px)}}
 									</style>
-									<g id="eIZHlkQSopD2_to" transform="translate(156.137404,-68.747306)">
+									<g id="eIZHlkQSopD21_to" transform="translate(156.137404,-68.747306)">
 										<g transform="translate(-328.442978,-343.332138)">
 											<path d="M311.446381,301.72814L181.86988,236.01434l2.31386,49.97951l127.26264,68.95321l127.26264-64.32548l1.703388-49.275111-130.605587-61.511321" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
 											<path d="M311.44638,355.87261l.92555-54.14447l126.33709-60.38167" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
@@ -1187,7 +1367,11 @@
 											<path d="M179.36093,233.226908l133.011002-53.461463" transform="translate(18.07172 50.165292)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="5.9"/>
 											<path d="M187.338363,284.20992c-.23051-.0829-2.228383-42.73749-2.008763-42.86345q.0308-.0177,124.02725,62.94902-.936136,44.275504-.965667,45.250045" transform="translate(18.048442 50.165292)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
 											<path d="M314.73227,345.9967c.12149-2.12045,0-42.017209,0-42.89424c0-.50088,122.847671-57.824683,122.922361-57.749993.17823.17824-1.960741,43.183303-2.156441,43.339723-.0827.0661-18.84441,9.55605-41.6928,21.08885s-50.03661,25.26675-60.41827,30.51988l-18.87575,9.55113Z" transform="translate(18.07172 50.165292)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
-											<path d="M434.68067,364.075751c-.305236-.886472-128.722551-65.00629-127.707259-65.401108.669627-.260399,126.985102-50.461121,127.059792-50.386431.17823.17824,124.803949,58.488857,124.608249,58.645277" transform="translate(-105.162569-15.421729)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/></g></g><g id="eIZHlkQSopD10_to" transform="translate(159.586113,-65.806554)"><g transform="translate(-303.926314,-203.923043)">
+											<path d="M434.68067,364.075751c-.305236-.886472-128.722551-65.00629-127.707259-65.401108.669627-.260399,126.985102-50.461121,127.059792-50.386431.17823.17824,124.803949,58.488857,124.608249,58.645277" transform="translate(-105.162569-15.421729)" fill="#35478c" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+										</g>
+									</g>
+									<g id="eIZHlkQSopD101_to" transform="translate(159.586113,-65.806554)">
+										<g transform="translate(-303.926314,-203.923043)">
 											<path d="M187.014758,186.782838l-.517148,42.752682l108.109762,71.013532l1.567488-50.188742-108.701804-62.808993" transform="translate(-13.591378-42.513835)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
 											<path d="M167.171091,242.703479l128.427556-35.347092" transform="translate(3.765193-95.86076)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.6"/>
 											<path d="M296.63764,250.82309l148.5502-50.905058" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.7"/>
@@ -1195,7 +1379,11 @@
 											<path d="M311.115184,153.860341l138.646388,47.73442" transform="translate(-13.740499-42.364714)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.3"/>
 											<path d="M241.03605,261.37205l-51-33.41488.0466-11.5029c.0256-6.32659.21688-24.490052.33163-24.604802q.11475-.11475,102.685341,60.325599L292.03606,294.78693l-51-33.41488Z" transform="translate(-13.740499-42.364714)" fill="#b6b6b6" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
 											<path d="M300.290606,253.219412l145.564409-49.855916q-1.963433,44.134117-2.073831,44.241727c-.195474.19051-144.535863,51.095772-144.535863,51.095772" transform="translate(-14.656238-42.063856)" fill="#dedede" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
-											<path d="M201.758421,237.553578l116.800285-30.656019q123.670585,42.163322,123.560187,42.270932c-.195474.19051-138.328898,47.531833-138.328898,47.531833" transform="translate(-20.275769-91.851013)" fill="#dedede" fill-rule="evenodd" stroke="#fff" stroke-width="0"/></g></g><g id="eIZHlkQSopD19_to" transform="translate(158.408461,-95.253131)"><g transform="translate(-314.511369,-137.437729)">
+											<path d="M201.758421,237.553578l116.800285-30.656019q123.670585,42.163322,123.560187,42.270932c-.195474.19051-138.328898,47.531833-138.328898,47.531833" transform="translate(-20.275769-91.851013)" fill="#dedede" fill-rule="evenodd" stroke="#fff" stroke-width="0"/>
+										</g>
+									</g>
+									<g id="eIZHlkQSopD191_to" transform="translate(158.408461,-95.253131)">
+										<g transform="translate(-314.511369,-137.437729)">
 											<path d="M179.55601,143.92247l117.5444-54.607238L445.18784,134.20423l-1.38832,52.29338-109.67725,64.78825-153.64071-53.68169Z" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.8"/>
 											<path d="M182.33265,143.92247L334.58504,195.2903l-1.38832,57.38388v0v0v0" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.9"/>
 											<path d="M445.65061,134.66701L334.58504,196.21585v0" transform="translate(-6.104343-33.069716)" fill="none" fill-rule="evenodd" stroke="#000" stroke-width="6.8"/>
@@ -1225,242 +1413,172 @@
 								xmlns="http://www.w3.org/2000/svg"
 								xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
 								xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-								id="svg3485"
+								id="svg3485-1"
 								version="1.1"
 								inkscape:version="0.91 r13725"
 								width="617.8125"
 								height="508.125"
 								viewBox="0 0 617.8125 508.125"
 								sodipodi:docname="USTA Logo Vector.svg">
-								<metadata
-									id="metadata3491">
-									<rdf:RDF>
-									<cc:Work
-										rdf:about="">
-										<dc:format>image/svg+xml</dc:format>
-										<dc:type
-										rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-										<dc:title></dc:title>
-									</cc:Work>
-									</rdf:RDF>
-								</metadata>
-								<defs
-									id="defs3489" />
-								<sodipodi:namedview
-									pagecolor="#ffffff"
-									bordercolor="#666666"
-									borderopacity="1"
-									objecttolerance="10"
-									gridtolerance="10"
-									guidetolerance="10"
-									inkscape:pageopacity="0"
-									inkscape:pageshadow="2"
-									inkscape:window-width="1280"
-									inkscape:window-height="751"
-									id="namedview3487"
-									showgrid="false"
-									inkscape:zoom="1"
-									inkscape:cx="233.69009"
-									inkscape:cy="266.34118"
-									inkscape:window-x="0"
-									inkscape:window-y="1"
-									inkscape:window-maximized="1"
-									inkscape:current-layer="layer5" />
+								<defs id="defs3489-1" />
 								<g
 									inkscape:groupmode="layer"
-									id="layer3"
+									id="layer3-1"
 									inkscape:label="Board Trace"
 									style="display:inline">
 									<path
 									style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:7.19999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="M 5.5532787,216.57787 310.05806,4.6277322 611.7862,228.60997 301.72814,502.57172 Z"
-									id="path3496"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="M 503.49727,148.08743 C 195.2903,396.13388 192.95054,396.66421 192.95054,396.66421"
-									id="path4302"
 									inkscape:connector-curvature="0"
 									sodipodi:nodetypes="cc" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="M 95.331284,302.65369 C 400.76161,74.969262 400.76161,74.043716 400.76161,74.043716"
-									id="path4304"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="M 114.76776,139.75751 C 411.86817,402.6127 414.64481,406.31489 414.64481,406.31489"
-									id="path4306"
 									inkscape:connector-curvature="0"
 									sodipodi:nodetypes="cc" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.9000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="M 212.8716,71.267155 C 516.24124,315.03774 515.30779,314.10732 515.30779,314.10732"
-									id="path4308"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 136.66901,339.01175 c -1.85923,-1.79557 -3.3918,-3.27607 -3.40572,-3.29001 l -0.0253,-0.0254 0.0404,0.002 0.0405,0.002 3.34358,3.22866 c 1.83897,1.77577 3.37124,3.25537 3.40504,3.28801 l 0.0615,0.0593 -0.0398,-1.2e-4 -0.0398,-1.2e-4 -3.38042,-3.26467 z"
-									id="path4336"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 163.26198,178.11809 c -23.3007,-20.67411 -42.25127,-37.67763 -42.11237,-37.7856 0.1389,-0.10797 19.61961,-13.64168 43.29046,-30.07491 23.67085,-16.433234 44.35144,-30.85298 45.95686,-32.043883 l 2.91894,-2.165277 42.89561,34.31739 c 23.59258,18.87456 42.8956,34.67624 42.8956,35.11484 0,0.63628 -92.57794,70.35854 -93.28554,70.25517 -0.10706,-0.0156 -19.25886,-16.94362 -42.55956,-37.61773 z"
-									id="path4348"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none"
 									d="M 360.72262,185.11801 C 336.00026,165.26896 314.77733,148.2851 313.56054,147.3761 l -2.21235,-1.65272 42.52808,-31.82611 c 23.39044,-17.504358 43.67866,-33.030317 45.08492,-34.502128 1.80225,-1.886272 2.89632,-2.409881 3.70719,-1.774221 0.63269,0.49599 21.58627,16.001998 46.56348,34.457799 24.97721,18.45579 47.55571,35.19427 48.39352,36.02681 1.41152,1.40267 -3.23527,3.20454 -44.93872,36.65292 -24.75268,19.85297 -45.45701,36.17561 -46.0096,36.27253 -0.55259,0.0969 -21.2321,-16.06391 -45.95444,-35.91297 z"
-									id="path4350"
 									inkscape:connector-curvature="0"
 									sodipodi:nodetypes="sscsssssscs" />
 									<path
 									style="fill:#7fb2f0;fill-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 401.85317,389.98279 c -6.06505,-5.46373 -28.95686,-25.89367 -50.87068,-45.39987 -21.91382,-19.50621 -39.84331,-35.88218 -39.84331,-36.39105 0,-1.63424 95.168,-77.59305 96.20898,-76.78967 18.26507,14.09616 102.31416,82.0029 102.1255,82.51142 -0.14714,0.39664 -20.88409,18.91704 -46.08209,41.15647 -25.198,22.23943 -46.87125,41.42789 -48.16279,42.64102 l -2.34824,2.2057 -11.02737,-9.93402 z"
-									id="path4352"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#7fb2f0;fill-opacity:1;fill-rule:evenodd;stroke:#35478c;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 145.74841,347.96559 c -38.48321,-36.7744 -46.574565,-44.8303 -45.789839,-45.58916 0.524239,-0.50696 24.452049,-18.26175 53.172889,-39.45508 l 52.21972,-38.53332 2.58385,2.23671 c 1.42114,1.2302 22.16919,19.43193 46.10681,40.4483 23.9376,21.01636 44.2137,38.75134 45.05796,39.41104 0.84425,0.6597 1.37762,1.33228 1.18524,1.4946 -4.0873,3.44883 -107.35845,84.69177 -107.62585,84.66877 -0.0923,-0.008 -21.20214,-20.11477 -46.91078,-44.68186 z"
-									id="path4591"
 									inkscape:connector-curvature="0" />
 								</g>
 								<g
 									inkscape:groupmode="layer"
-									id="layer5"
 									inkscape:label="Stack"
 									style="display:inline">
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 179.55601,143.92247 117.5444,-54.607238 148.08743,44.888998 -1.38832,52.29338 -109.67725,64.78825 -153.64071,-53.68169 z"
-									id="path4359"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.9000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 182.33265,143.92247 152.25239,51.36783 -1.38832,57.38388 0,0 0,0 0,0"
-									id="path4361"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.80000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 445.65061,134.66701 -111.06557,61.54884 0,0"
-									id="path4363"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 186.96038,199.91803 -0.46277,29.61749 108.75171,71.26708 0.92554,-50.44229 -39.33572,-26.37807"
-									id="path4365"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 296.63764,250.82309 15.73429,-6.47883 0,0"
-									id="path4369"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 295.71209,301.26537 149.47575,-51.36783 3.23941,-51.36783 -12.4535,-7.21957"
-									id="path4371"
 									inkscape:connector-curvature="0"
 									sodipodi:nodetypes="cccc" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.30000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 436.39515,191.58811 11.56933,6.9416 0,0"
-									id="path4373"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 245.96397,268.40847 -64.09409,-32.39413 2.31386,49.97951 127.26264,68.95321 127.26264,-64.32548 1.85109,-35.63353 0.16362,-3.43592"
-									id="path4375"
 									inkscape:connector-curvature="0"
 									sodipodi:nodetypes="ccccccc" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.69999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 311.44638,355.87261 0.92555,-54.14447 55.07001,-25.45253"
-									id="path4377"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 304.50478,298.48873 7.86715,3.70219 0,0"
-									id="path4379"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:5.9000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 180.01878,235.55157 8.7927,-5.0905 0,0"
-									id="path4403"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:3.70000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 303.92632,303.46354 c -8.90839,3.35511 -8.90839,3.35511 -8.90839,3.35511 l 0,0 0,0"
-									id="path4441"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:3.0999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 181.63202,229.46796 c -6.36313,3.70219 -6.36313,3.70219 -6.36313,3.70219 l 0,0"
-									id="path4443"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 247.78784,316.85362 c -32.96001,-17.87657 -60.05939,-32.55035 -60.22084,-32.6084 -0.23051,-0.0829 -2.45702,-42.77279 -2.2374,-42.89875 0.0308,-0.0177 13.27526,6.66447 29.43205,14.84924 l 29.37599,14.8814 25.57091,16.77628 c 14.064,9.22696 25.82335,16.75645 26.13189,16.73221 0.30855,-0.0243 1.8137,-0.54665 3.34478,-1.16088 4.20907,-1.68858 4.8277,-1.71445 7.70552,-0.32226 l 2.46611,1.19303 -0.19204,1.95236 c -0.10562,1.0738 -0.28148,10.46416 -0.3908,20.86747 -0.19263,18.32998 -0.33981,22.29185 -0.82688,22.2575 -0.1276,-0.009 -27.19928,-14.64264 -60.15929,-32.5192 z"
-									id="path4536"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 314.73227,345.9967 c 0.12149,-2.12045 0.3256,-12.4183 0.45357,-22.88411 0.2303,-18.83431 0.24029,-19.03367 0.97718,-19.50925 0.40948,-0.26427 11.64279,-5.52103 24.96291,-11.68169 l 24.21841,-11.20121 35.85722,-12.33366 c 19.72148,-6.78351 35.91834,-12.27255 35.99303,-12.19786 0.17823,0.17824 -1.5007,32.34685 -1.6964,32.50327 -0.0827,0.0661 -18.84441,9.55605 -41.6928,21.08885 -22.84839,11.53281 -50.03661,25.26675 -60.41827,30.51988 l -18.87575,9.55113 0.2209,-3.85535 z"
-									id="path4538"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 262.19615,167.5467 c -39.81397,-13.45075 -72.3895,-24.5517 -72.39005,-24.66877 -5.6e-4,-0.11707 24.19918,-11.45565 53.7772,-25.19684 l 53.77822,-24.983994 69.52353,21.059824 c 38.23794,11.58291 69.87124,21.1714 70.29622,21.30776 0.61437,0.19712 -9.71981,6.06165 -50.43385,28.62058 -28.16361,15.60497 -51.42158,28.36022 -51.68439,28.34502 -0.26281,-0.0152 -33.0529,-11.03282 -72.86688,-24.48358 z"
-									id="path4540"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 336.65212,239.42097 c 0.12543,-3.78465 0.39875,-14.51794 0.60739,-23.85175 0.20863,-9.33381 0.40821,-17.08608 0.4435,-17.22726 0.0687,-0.27483 103.93805,-57.91472 104.09028,-57.76249 0.0498,0.0499 -0.14468,8.35159 -0.43229,18.44831 -0.28761,10.09673 -0.52519,19.97314 -0.52797,21.9476 l -0.005,3.58993 -51.35363,30.32506 c -28.2445,16.67879 -51.73538,30.56958 -52.20196,30.86842 l -0.84833,0.54337 0.22805,-6.88119 z"
-									id="path4542"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 295.51755,234.45216 c -18.76485,-6.58859 -35.47025,-12.44128 -37.12311,-13.00598 -1.65286,-0.56471 -17.88096,-6.23192 -36.06244,-12.59381 -18.18149,-6.36188 -34.33004,-12.00182 -35.88567,-12.53319 l -2.82843,-0.96613 -0.41681,-23.82871 c -0.22924,-13.10579 -0.37021,-23.87531 -0.31326,-23.93225 0.11432,-0.11432 148.07361,49.7441 148.30809,49.97596 0.16026,0.15846 -0.5512,33.97495 -0.9087,43.19185 -0.12256,3.15989 -0.31935,5.72865 -0.43731,5.70837 -0.11795,-0.0203 -15.56752,-5.42753 -34.33236,-12.01611 z"
-									id="path4544"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d=""
-									id="path4546"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#35478c;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 192.42897,237.96165 c -3.0667,-1.5538 -5.59025,-2.83951 -5.60788,-2.85715 -0.0324,-0.0323 1.28441,-0.80586 1.37182,-0.80586 0.0453,0 9.74996,6.33796 9.87127,6.44675 0.0375,0.0336 0.0375,0.0511 0,0.0473 -0.0327,-0.003 -2.5685,-1.27724 -5.63521,-2.83104 z"
-									id="path4548"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#b6b6b6;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 241.03605,261.37205 -51,-33.41488 0.0466,-11.5029 c 0.0256,-6.32659 0.14044,-11.59679 0.25519,-11.71154 0.11475,-0.11475 14.99894,4.96036 33.07597,11.27802 l 32.86733,11.48665 18.25248,12.25303 18.25248,12.25303 -0.0707,8.84884 c -0.0389,4.86686 -0.20762,14.49089 -0.375,21.38673 l -0.30434,12.5379 -51,-33.41488 z"
-									id="path4550"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#b6b6b6;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 288.54854,241.53323 c -4.64507,-3.12042 -8.41461,-5.70447 -8.37675,-5.74233 0.0913,-0.0913 24.15641,8.31116 24.15763,8.4348 10e-4,0.10503 -6.97721,3.00284 -7.19866,2.98935 -0.0752,-0.005 -3.93714,-2.5614 -8.58222,-5.68182 z"
-									id="path4552"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#dedede;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
 									d="m 298.73903,288.48305 c 0.25211,-4.37522 0.45982,-14.04531 0.46159,-21.48908 l 0.003,-13.53413 7.04229,-2.97163 7.04229,-2.97163 10.44287,3.64119 c 7.84342,2.73482 10.79881,3.47851 11.87282,2.98766 0.78647,-0.35943 13.66556,-7.88744 28.62022,-16.7289 l 27.19027,-16.07539 26.76763,-9.10237 26.76764,-9.10236 -0.41251,4.75472 c -0.22688,2.6151 -0.89806,12.54039 -1.49151,22.05619 -0.59345,9.51581 -1.16705,17.38952 -1.27465,17.49713 -0.19052,0.19051 -16.43832,5.80387 -61.95719,21.40522 -12.25062,4.19883 -35.33085,12.12392 -51.2894,17.61129 -15.95854,5.48738 -29.29193,9.97705 -29.62974,9.97705 -0.33831,0 -0.40831,-3.57335 -0.15584,-7.95496 z"
-									id="path4554"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:#dedede;fill-opacity:1;fill-rule:evenodd;stroke:#35478c;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 418.4904,205.16886 c 0.26777,-0.30103 17.03021,-10.15772 17.27437,-10.15772 0.31534,0 4.68417,2.58489 4.69172,2.77593 0.005,0.11556 -9.91413,3.5045 -21.74403,7.42932 -0.20625,0.0684 -0.30618,0.047 -0.22206,-0.0475 z"
-									id="path4556"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="m 295.78963,304.54454 c 7.71533,-2.67375 7.73823,-2.67375 7.73823,-2.67375"
-									id="path4562"
 									inkscape:connector-curvature="0" />
 									<path
 									style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6.19999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
 									d="M 448.83603,198.58901 C 391.3836,217.85767 388.82034,219.1172 388.82034,219.1172"
-									id="path4570"
 									inkscape:connector-curvature="0"
 									sodipodi:nodetypes="cc" />
 								</g>
@@ -1762,14 +1880,14 @@
 									<h4>Play Locally</h4>
 									<ul>
 										<li>
-											Select board size to create a new empty board on which you can play locally.
+											Select "New Game" and navigate to the "Play Scratch" tab. From there, select your board size and hit "Play Scratch"
 										</li>
 									</ul>
 									<h4>Play Online</h4>
 									<ul>
 										<li>Login to server by clicking "Login" button, signup and then login.</li>
 										<li>
-											Click on "New Seek" in the menu to start a new game or accept another
+											Click on "New Game" in the menu to start a new game or accept another
 											player's seek by selecting it in "Join game" menu.
 										</li>
 										<li>
@@ -1804,7 +1922,8 @@
 									<td class="right">Per move</td>
 									<td class="right">Komi</td>
 									<td class="right">Stones</td>
-									<td class="right"></td>
+									<td class="right">Type</td>
+									<td class="right">Extra Time</td>
 								</tr>
 							</tbody>
 							<tbody id="seeklist"></tbody>
@@ -1829,7 +1948,7 @@
 		</div>
 
 		<div id="watchgame-modal" class="modal fade">
-			<div class="modal-dialog modal-md">
+			<div class="modal-dialog modal-md modal-auto-width">
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -1837,6 +1956,18 @@
 					</div>
 					<div class="modal-body">
 						<table class="linestable">
+							<thead>
+								<tr class="headerrow">
+									<td class="">&nbsp;</td>
+									<td class="right">Board</td>
+									<td class="right">Time</td>
+									<td class="right">Per move</td>
+									<td class="right">Komi</td>
+									<td class="right">Stones</td>
+									<td class="right">Type</td>
+									<td class="right">Extra</td>
+								</tr>
+							</thead>
 							<tbody id="gamelist"></tbody>
 						</table>
 					</div>

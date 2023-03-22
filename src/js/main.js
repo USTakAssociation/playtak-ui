@@ -30,12 +30,7 @@ let infobartimer = 0;
 function infobar(){
 	resizeInfoBar();
 	let bar = document.getElementById("infobar");
-	
 	let messages = [
-		{
-			m: "You need to log in in order to play.",
-			c: () => { return !server.loggedin },
-		},
 		{
 			m: "Checkout the daily puzzle on <a target='_blank' href='https://ditaktic.blogspot.com/'>ditaktic.blogspot.com</a>.",
 			c: () => { return true },
@@ -634,7 +629,6 @@ function toggleMobileMenu(){
 		hideElement("mobile-close");
 		showElement("mobile-open", 'block');
 		menuToggle = false;
-		closeScratch();
 	}
 }
 
@@ -664,52 +658,58 @@ function closeScratch() {
 	scratchToggle = false;
 }
 
-function scratchbutton(size) {
+function changeScratchBoardSize() {
+	const size = document.getElementById("scratchBoardSize").value;
+	const piecescaps = {
+		3: [10, 0],
+		4: [15, 0],
+		5: [21, 1],
+		6: [30, 1],
+		7: [40, 2],
+		8: [50, 2],
+	}[size];
+	if (piecescaps) {
+		document.getElementById("scratchPieceCount").value = piecescaps[0];
+		document.getElementById("scratchCapCount").value = piecescaps[1];
+	}
+}
+
+function playScratch() {
 	if (board.observing) {
 		server.send("Unobserve " + board.gameno);
 	}
 	if (board.scratch || board.observing) {
+		const size = parseInt(document.getElementById("scratchBoardSize").value);
+		const pieces = parseInt(document.getElementById("scratchPieceCount").value);
+		const capstones = parseInt(document.getElementById("scratchCapCount").value);
 		board.clear();
-		board.create(size, "white", true);
+		board.create(size, "white", true, false, 0, pieces, capstones, 0, 0);
 		board.initEmpty();
 	}
-	hideElement("scratchlist");
+	$("#creategamemodal").modal("hide");
 }
 
 function load() {
-	$('#loadmodal').modal('hide')
+	$("#creategamemodal").modal("hide");
 	if(!board.scratch && !board.observing) {
-		alert('warning',"TPS/PTN won't be displayed in the middle of an online game")
-		return
+		alert('warning',"TPS/PTN won't be displayed in the middle of an online game");
+		return;
 	}
 
-	server.unobserve()
+	server.unobserve();
 
-	var text = $('#loadptntext').val()
+	const text = document.getElementById("loadptntext").value;
 
-	var tpsRE = /\[(TPS\s*)?\"?\s*([,x12345678SC\/]+)(\s+([\d+]))?(\s+(\d+|-))?\s*\"?\s*\]/
-	var tps = tpsRE.exec(text)
+	const tpsRE = /\[(TPS\s*)?\"?\s*([,x12345678SC\/]+)(\s+([\d+]))?(\s+(\d+|-))?\s*\"?\s*\]/;
+	const tps = tpsRE.exec(text);
 
-	dontanimate = true
+	dontanimate = true;
 
 	if(!tps) {board.loadptn(text)}
-	else{board.loadtps(text)}
+	else{board.loadtps(text)};
 
-	dontanimate = false
-
-	$('#loadptntext').val('')
-}
-
-function loadptn(text) {
-	$('#loadmodal').modal('hide')
-	var files = $('#loadptnfile')[0].files
-	if(files.length == 0) {return}
-	var reader = new FileReader()
-	reader.onload = function(txt) {
-		server.unobserve()
-		board.loadptn(reader.result)
-	}
-	reader.readAsText(files[0])
+	dontanimate = false;
+ 	document.getElementById("loadptntext").value = "";
 }
 
 function turnsoundon(){
