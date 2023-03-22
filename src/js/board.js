@@ -639,7 +639,7 @@ var board = {
 	selected: null,
 	selectedStack: null,
 	ismymove: false,
-	gameno: 0,
+	gameno: null,
 	boardside: "white",
 	result: "",
 	observing: false,
@@ -656,7 +656,7 @@ var board = {
 
 	create:function(sz,color,isScratch,obs,komi,pieces,capstones, triggerMove, timeAmount){
 		this.size = sz
-		this.komi=komi||0
+		this.komi = komi || 0
 
 		if(sz === 3){
 			this.totcaps = 0
@@ -706,7 +706,7 @@ var board = {
 		this.lastMoveHighlighted = null;
 		this.selected = null
 		this.selectedStack = null
-		this.gameno = 0
+		this.gameno = null
 		this.move = {start:null,end:null,dir:'U',squares:[]}
 		this.result = ""
 		this.observing = typeof obs !== 'undefined' ? obs : false
