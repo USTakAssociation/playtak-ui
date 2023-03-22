@@ -684,6 +684,7 @@ function playScratch() {
 		const capstones = parseInt(document.getElementById("scratchCapCount").value);
 		board.clear();
 		board.create(size, "white", true, false, 0, pieces, capstones, 0, 0);
+		board.gameno = null;
 		board.initEmpty();
 	}
 	$("#creategamemodal").modal("hide");
