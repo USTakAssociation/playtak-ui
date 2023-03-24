@@ -87,13 +87,13 @@ function make_style_selector(){
 		"white_simple":0,
 		"white_marble":1,
 		"red_marble":1,
-		"white_Craig_Laparo": 1,
-		"blossom_Levi_Huillet":1, 
-		"hummingbird_Levi_Huillet": 1,
 		"black_pietersite":0,
 		"black_simple":0,
 		"black_marble":1,
-		"black_Craig_Laparo": 1
+		"white_Craig_Laparo": 1,
+		"black_Craig_Laparo": 1,
+		"blossom_Levi_Huillet":1, 
+		"hummingbird_Levi_Huillet": 1,
 	}
 	if(localStorage.piecetexture0){
 		piece_styles.piecetexture0=2
