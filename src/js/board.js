@@ -115,8 +115,8 @@ var materials = {
 		var loader = new THREE.TextureLoader()
 		this.piecesLoaded = 0
 
-		this.white_piece = new THREE.MeshBasicMaterial({map:loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn)})
 		this.black_piece = new THREE.MeshBasicMaterial({map:loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn)})
+		this.white_piece = new THREE.MeshBasicMaterial({map:loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn)})
 		this.white_cap = new THREE.MeshBasicMaterial({map:loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn)})
 		this.black_cap = new THREE.MeshBasicMaterial({map:loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn)})
 		var an=Math.min(maxaniso,anisolevel)
