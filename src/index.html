@@ -1060,7 +1060,7 @@
 		</div>
 
 		<div id="gameoveralert" class="modal fade" role="dialog">
-			<div class="modal-dialog modal-sm">
+			<div class="modal-dialog modal-md">
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -1070,30 +1070,29 @@
 						<div class="row">
 							<div class="col-sm-12 center" id="gameoveralert-text"></div>
 						</div>
-						<div class="flex flex-center">
-							<a
-								id="download_notation_go"
-								class="navitem"
-								onclick="downloadNotation('download_notation_go')"
-								data-hover="Download the game as a PTN-file"
-								href="#"
-							>
-								<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-									<path
-										d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"
-									></path>
+						<div class="flex flex-center flex-wrap gap--8 margin-top--8 margin-bottom--8">
+							<button onclick="copyNotationToCliopboard()" data-hover="Copy PTN output of this game to your clipboard" class="navitem btn btn-pill btn-secondary">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="action-icon">
+									<path d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"></path>
 								</svg>
+								Copy PTN Text
+							</button>
+							<a href="#" onclick="openInPtnNinja()" data-hover="Open this game in PTN Ninja" class="navitem btn btn-pill btn-secondary">
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" style="stroke: none" class="action-icon"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"></path></svg>							
+								Open in PTN Ninja
 							</a>
-							<button
-								class="navitem"
-								onclick="copyNotationLink()"
-								data-hover="Copy a link to this game to your clipboard"
-							>
-								<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-									<path
-										d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"
-									></path>
+						</div>
+						<div class="flex flex-wrap gap--8 flex-center">
+							<a id="download_notation_go" onclick="downloadNotation('download_notation_go')" data-hover="Download the game as a PTN file" href="#" class="navitem btn btn-pill btn-secondary">
+								<svg class="action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+									<path d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path>
 								</svg>
+								Download PTN
+							</a>
+							<button onclick="copyNotationLink()" data-hover="Copy play tak link to this game to your clipboard" class="navitem btn btn-pill btn-secondary">
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" class="action-icon" style="transform: rotate(-45deg)">
+									<path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>
+								Copy Play Tak Link
 							</button>
 						</div>
 					</div>

@@ -1279,25 +1279,28 @@ function downloadNotation(id) {
 	$(`#${id}`).attr('href','data:text/plain;charset=utf-8,'+encodeURIComponent(getNotation(id)))
 }
 
+function copyNotationToCliopboard() {
+	var ptn = getNotation()
+	navigator.clipboard.writeText(ptn).then(() => {
+		alert('success','Copied!')
+	}, () => {
+		alert('danger','Unable to copy!')
+	});
+}
+
+function openInPtnNinja() {
+	var link = 'http://ptn.ninja/' + encodeURIComponent(getNotation())
+	window.open(link,'_blank');
+}
+
 function copyNotationLink() {
 	var link = 'http://www.playtak.com/?load=' + encodeURIComponent(getNotation())
 
-	var dummy = document.createElement("input")
-	document.body.appendChild(dummy)
-
-	dummy.value = link
-	dummy.select()
-
-	try{
-		var successful = document.execCommand('copy')
-		if(successful) {alert('success','Copied!')}
-		else{alert('danger','Unable to copy!')}
-	}
-	catch(err) {
+	navigator.clipboard.writeText(link).then(() => {
+		alert('success','Copied!')
+	}, () => {
 		alert('danger','Unable to copy!')
-	}
-
-	document.body.removeChild(dummy)
+	});
 }
 
 function sliderChatSize(newSize) {
