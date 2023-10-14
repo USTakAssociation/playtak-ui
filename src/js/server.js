@@ -418,7 +418,9 @@ var server = {
 	,msg:function(e){
 		console.log('Message: ', e)
 		e = e.replace(/[\n\r]+$/,"")
-		if (startswith("Game Start", e)) {
+		if(startswith("OK", e) || startswith("Welcome!", e)){
+			// welcome or ok message from the server nothing to do here
+		}else if (startswith("Game Start", e)) {
 			//Game Start no. size player_white vs player_black yourcolor time
 			infobaroff();
 			var spl = e.split(" ");
@@ -710,25 +712,19 @@ var server = {
 			hideElement("hero-actions");
 			showElement("landing-login");
 		}
-		//Name already taken
-		else if (startswith("Name already taken", e)) {
-			alert("danger", "Name is already taken");
-			hideElement("loading");
-			hideElement("hero-actions");
-			showElement("sign-up");
-		}
-		//Can't register with guest in the name
-		else if (startswith("Can't register with guest in the name", e)) {
-			alert("danger", "Can't register with guest in the name");
-			hideElement("loading");
-			hideElement("hero-actions");
-			showElement("sign-up");
-		}
-		//Unknown format for username/email
-		else if (startswith("Unknown format for username/email", e)) {
+		// Registration Error
+		else if (startswith("Registration Error: ", e)) {
+			console.error("Registration Error: ", e);
 			alert("danger", e);
 			hideElement("loading");
-			showElement("login");
+			hideElement("hero-actions");
+			showElement("sign-up");
+		}
+		else if (startswith("Reset Token Error:", e)){
+			alert("danger", e);
+			hideElement("loading");
+			hideElement("hero-actions");
+			showElement("send-token");
 		}
 		//Authentication failure
 		else if (startswith("Authentication failure", e)) {
@@ -829,7 +825,7 @@ var server = {
 		}
 		//new seek
 		else if (startswith("Seek new", e)) {
-			//Seek new 1 chaitu 5 180 15 W|B
+			// Seek new 1 {player} 5 900 20 A 0 21 1 0 0 0 0 {oppoenent}
 			var spl = e.split(" ");
 			this.seekslist.push({
 				id: +spl[2],
@@ -900,6 +896,8 @@ var server = {
 			chathandler.selectRoom(id);
 		} else if (startswith("Is Mod", e)) {
 			chathandler.createRoom("admin-admin", "<b>Moderate Tak</b>");
+		} else {
+			console.error("Unknown message from server: " + e);	
 		}
 	}
 	,updateplayerinfo:function(){
@@ -942,7 +940,6 @@ var server = {
 		var botcount=0
 		var myrating=1000
 		var levelgap=150
-		var maxlevels=3
 		if(this.myname){
 			myrating=getrating(this.myname)||1000
 		}
@@ -951,8 +948,8 @@ var server = {
 		seekBadge.classList.remove("seek-badge");
 		for(a=0;a<this.seekslist.length;a++){
 			var seek=this.seekslist[a]
-			if(seek.opponent!="" && seek.opponent.toLowerCase()!=this.myname.toLowerCase() && seek.player.toLowerCase()!=this.myname.toLowerCase()){
-				continue
+			if(seek.opponent != "" && seek.opponent.toLowerCase() != this.myname.toLowerCase() &&  seek.player.toLowerCase() != this.myname.toLowerCase()){
+				continue;
 			}
 			var colourleft="white"
 			var colourright="black"
