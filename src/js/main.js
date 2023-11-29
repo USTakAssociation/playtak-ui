@@ -1483,7 +1483,7 @@ async function fetchEvents(){
 			window.location.host.indexOf("127.0.0.1") > -1 ||
 			window.location.host.indexOf("192.168.") == 0
 		) {
-			url = "http://localhost:3003";
+			url = "http://localhost:3004";
 		}
 		const results = await fetch(url + path, {
 			method: 'GET'
@@ -1530,6 +1530,7 @@ function createEventTable(data){
 		const details = tr.insertCell(-1);
 		details.innerHTML = el.details ? `<a href="${el.details}" target="_blank">Details</a>` : "";
 		el.registration ? details.innerHTML += ` | <a href="${el.registration}" target="_blank">Registration</a> `: '';
+		el.standings ? details.innerHTML += ` | <a href="${el.standings}" target="_blank">Standings</a> `: '';
 	}
 }
 
