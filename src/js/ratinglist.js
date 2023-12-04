@@ -29,9 +29,9 @@ function makeratinglist(data){
 		TBODY(rows)
 	)))
 	if(window.location.hash){
-		let hash = window.location.hash;
-		window.location.hash = "";
-		window.location.hash = hash;
+		let row = document.getElementById(location.hash.substr(1));
+		row.className = "selected";
+		row.scrollIntoView({ block: "center" });
 	}
 }
 
