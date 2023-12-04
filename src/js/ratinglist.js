@@ -7,6 +7,23 @@ xhttp.onreadystatechange = function(){
 xhttp.open("GET",'/ratinglist.json',true)
 xhttp.send()
 
+let row;
+function selectRow(event){		
+	let newRow = document.getElementById(location.hash.substr(1));
+	if(newRow){
+		newRow.className = "selected";
+		newRow.scrollIntoView({ block: "center" });
+		if (row && row !== newRow) {
+			row.className = "";
+		}
+		row = newRow;
+	}
+	if(event) {
+		event.preventDefault();
+	}
+}
+addEventListener("hashchange", selectRow, true);
+
 function makeratinglist(data){
 	let a
 	const rows = []
@@ -29,9 +46,7 @@ function makeratinglist(data){
 		TBODY(rows)
 	)))
 	if(window.location.hash){
-		let row = document.getElementById(location.hash.substr(1));
-		row.className = "selected";
-		row.scrollIntoView({ block: "center" });
+		selectRow();
 	}
 }
 
