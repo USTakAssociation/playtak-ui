@@ -2,6 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Tak rating</title>
 		<link rel="icon" href="/favicon.svg">
 		<script src="js/thirdparty/dom.js"></script>
@@ -12,6 +13,9 @@
 			th{
 				font-weight:bold;
 				border-bottom:2px solid #ddd;
+				position:sticky;
+				top:0;
+				background:#fff;
 			}
 			td{
 				height:24px;
@@ -44,6 +48,7 @@
 			table {
 				border-spacing:0;
 				border-collapse:collapse;
+				table-layout:fixed;
 			}
 			tbody > tr:nth-of-type(2n+1){
 				background-color:#f9f9f9;
@@ -58,14 +63,5 @@
 		<p id="|content">
 		</p>
 		<script src="js/ratinglist.js"></script>
-		<!-- Google tag (gtag.js) -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=G-70K8FVMRFS"></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
-
-			gtag('config', 'G-70K8FVMRFS');
-		</script>
 	</body>
 </html>

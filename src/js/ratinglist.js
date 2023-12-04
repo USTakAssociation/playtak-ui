@@ -29,7 +29,9 @@ function makeratinglist(data){
 		TBODY(rows)
 	)))
 	if(window.location.hash){
-		window.location.hash = window.location.hash
+		let hash = window.location.hash;
+		window.location.hash = "";
+		window.location.hash = hash;
 	}
 }
 
