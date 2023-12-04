@@ -7,22 +7,22 @@ xhttp.onreadystatechange = function(){
 xhttp.open("GET",'/ratinglist.json',true)
 xhttp.send()
 
-let row;
+let row
 function selectRow(event){		
-	let newRow = document.getElementById(location.hash.substr(1));
+	let newRow = document.getElementById(location.hash.substring(1))
 	if(newRow){
-		newRow.className = "selected";
-		newRow.scrollIntoView({ block: "center" });
+		newRow.className = "selected"
+		newRow.scrollIntoView({ block: "center" })
 		if (row && row !== newRow) {
-			row.className = "";
+			row.className = ""
 		}
-		row = newRow;
+		row = newRow
 	}
 	if(event) {
-		event.preventDefault();
+		event.preventDefault()
 	}
 }
-addEventListener("hashchange", selectRow, true);
+addEventListener("hashchange", selectRow, true)
 
 function makeratinglist(data){
 	let a
@@ -41,13 +41,17 @@ function makeratinglist(data){
 			))
 		}
 	}
-	document.getElementById('|content').appendChild(DIV({style:{display:'inline-block'}},TABLE(
+	let table = TABLE(
 		THEAD(TR({style:{textAlign:'left'}},TH('Rank'),TH('Player'),TH('Rating'),TH('Active rating'),TH('Games'))),
 		TBODY(rows)
-	)))
-	if(window.location.hash){
-		selectRow();
-	}
+	)
+	table.onclick = event => {
+    if(event.target.tagName === "TD" && !event.target.previousSibling){
+      location.hash = event.target.parentNode.id
+		}
+  }
+	document.getElementById('|content').appendChild(DIV({style:{display:'inline-block'}},table))
+	if(window.location.hash) selectRow()
 }
 
 function formatnames(names){
