@@ -1,11 +1,40 @@
-var xhttp = new XMLHttpRequest()
-xhttp.onreadystatechange = function(){
-	if(this.readyState == 4 && this.status == 200){
-		makeratinglist(JSON.parse(xhttp.responseText))
+// Default to true (so when deployed, will use the API).
+// To override to false, access ratings.html as "/ratings.html#uselegacy"
+// (This would only be used to compare things on beta.playtak.com.)
+const shouldUseApi = window.location.toString().match('uselegacy') ? false : true;
+
+const convertApiResponseItemToSimpleList = (item) => [
+	item.name, item.fatiguerating, item.rating, item.ratedgames, item.isbot ? 1 : 0
+];
+
+const getApiUrl = (endpoint) => {
+	if (window.location.host.match('playtak.com')) {
+		return `https://api.${window.location.host}${endpoint}`;
 	}
+	return endpoint;
+};
+
+if (shouldUseApi) {
+	// Note: using fetch() out of preference, not any real reason.
+	// Fetching as many as we got from the previous ratinglist.json.
+	fetch(getApiUrl('/v1/ratings?limit=10000')).then((response) => {
+		response.json().then((data) => {
+			console.log(data.items);
+			const results = data.items?.map(convertApiResponseItemToSimpleList);
+			console.log(results);
+			if (results) { makeratinglist(results); }
+		});
+	});
+} else {
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function(){
+		if(this.readyState == 4 && this.status == 200){
+			makeratinglist(JSON.parse(xhttp.responseText))
+		}
+	};
+	xhttp.open("GET",'/ratinglist.json',true);
+	xhttp.send();
 }
-xhttp.open("GET",'/ratinglist.json',true)
-xhttp.send()
 
 let row
 function selectRow(event){		
