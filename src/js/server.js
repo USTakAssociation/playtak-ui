@@ -422,7 +422,6 @@ var server = {
 			// welcome or ok message from the server nothing to do here
 		}else if (startswith("Game Start", e)) {
 			//Game Start no. size player_white vs player_black yourcolor time
-			infobaroff();
 			var spl = e.split(" ");
 			board.newgame(Number(spl[3]), spl[7], +spl[9], +spl[10], +spl[11], +spl[12], +spl[13]);
 			board.gameno = Number(spl[2]);
@@ -495,7 +494,6 @@ var server = {
 			chimesound.play();
 		} else if (startswith("Observe ", e)) {
 			//Observe Game#1 player1 vs player2, 4x4, 180, 7 half-moves played, player2 to move
-			infobaroff();
 			var spl = e.split(" ");
 
 			var p1 = spl[2];

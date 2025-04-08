@@ -1458,7 +1458,6 @@ var board = {
 		}
 	}
 	,notate:function(txt){
-		infobaroff()
 		var res=false
 		if(txt==='R-0'||txt==='0-R'||txt==='F-0'||txt==='0-F'||txt==='1-0'||txt==='0-1'||txt==='1/2-1/2'){
 			var ol = document.getElementById("moveslist")
