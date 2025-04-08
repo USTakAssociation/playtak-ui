@@ -899,6 +899,11 @@ input:invalid {
 	height: 30px;
 }
 
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+	cursor: not-allowed !important;
+	opacity: 0.45;
+}
+
 /* || Responsive CSS */
 @media (min-width: 768px){
 	.navbar-nav > li > a{
