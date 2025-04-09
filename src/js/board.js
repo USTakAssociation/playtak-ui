@@ -9,6 +9,7 @@ var capstone_height = 70;
 var capstone_radius = 30;
 var stack_selection_height = 60;
 var border_size = 30;
+let borderOffset = 27;
 var stackOffsetFromBorder = 50;
 var letter_size = 12;
 var diagonal_walls = false;
@@ -36,12 +37,25 @@ var materials = {
 	white_cap_style_name: "white_coral",
 	black_cap_style_name: "black_pietersite",
 	table_texture_path: 'images/wooden_table.png',
+	boardOverlayPath: 'images/board/overlay.png',
+	borderColor: 0x6f4734,
+	borders: [],
+	letters: [],
 	white_piece: new THREE.MeshBasicMaterial({color: 0xd4b375}),
 	black_piece: new THREE.MeshBasicMaterial({color: 0x573312}),
 	white_cap: new THREE.MeshBasicMaterial({color: 0xd4b375}),
 	black_cap: new THREE.MeshBasicMaterial({color: 0x573312}),
 	white_sqr: new THREE.MeshBasicMaterial({color: 0xe6d4a7}),
 	black_sqr: new THREE.MeshBasicMaterial({color: 0xba6639}),
+	boardOverlay: new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(this.boardOverlayPath)}),
+	overlayMap: {
+		3: { "size": 270, "offset": { "x": 0.5333, "y": 0.0556 }, "repeat": { "x": 0.2, "y": 0.1667 } },
+		4: { "size": 360, "offset": { "x": 0, "y": 0 }, "repeat": { "x": 0.2667, "y": 0.2222 } },
+		5: { "size": 450, "offset": { "x": 0.5333, "y": 0.2778 }, "repeat": { "x": 0.3333, "y": 0.2778 } },
+		6: { "size": 540, "offset": { "x": 0, "y": 0.2222 }, "repeat": { "x": 0.4, "y": 0.3333 } },
+		7: { "size": 630, "offset": { "x": 0.5333, "y": 0.6111 }, "repeat": { "x": 0.4667, "y": 0.3889 } },
+		8: { "size": 720, "offset": { "x": 0.0007, "y": 0.5556 }, "repeat": { "x": 0.5333, "y": 0.4444 } },
+	},
 	border: new THREE.MeshBasicMaterial({color: 0x6f4734}),
 	letter: new THREE.MeshBasicMaterial({color: 0xFFF5B5}),
 	highlighter: new THREE.LineBasicMaterial({color: 0x0000f0}),
@@ -102,13 +116,54 @@ var materials = {
 		var loader = new THREE.TextureLoader()
 		this.boardLoaded = 0
 
-		this.white_sqr = new THREE.MeshBasicMaterial({map:loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn)})
-		this.black_sqr = new THREE.MeshBasicMaterial({map:loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn)})
+		this.white_sqr = new THREE.MeshBasicMaterial({map:loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn), transparent: true})
+		this.black_sqr = new THREE.MeshBasicMaterial({map:loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn), transparent: true})
 		var an=Math.min(maxaniso,anisolevel)
 		if(an>1){
 			this.white_sqr.map.anisotropy=an
 			this.black_sqr.map.anisotropy=an
 		}
+	},
+	updateBorderColor: function(val){
+		// format val to hex
+		if(val.startsWith("#")){
+			val = val.substring(1);
+			val = '0x' + val;
+		}
+		for (let i = 0; i < this.borders.length; i++) {
+			this.borders[i].material.color.setHex(val);
+		}
+	},
+	updateBorderTexture: function(val){
+		const loader = new THREE.TextureLoader()
+		let mesh = new THREE.MeshBasicMaterial({ map:loader.load(val), transparent: true});
+		for (let i = 0; i < this.borders.length; i++) {
+			this.borders[i].material = mesh;
+		}
+	},
+	removeBorderTexture: function(){
+		let color = 0x6f4734;
+		if (localStorage.getItem('borderColor')) {
+			let colorVal = localStorage.getItem('borderColor');
+			if(colorVal.startsWith("#")){
+				colorVal = colorVal.substring(1);
+				colorVal = '0x' + colorVal;
+			}
+			color = colorVal;
+		}
+		const mesh = new THREE.MeshBasicMaterial({color: color})
+		mesh.color.setHex(color);
+		for (let i = 0; i < this.borders.length; i++) {
+			this.borders[i].material = mesh;
+		}
+	},
+	// for some reason this is not working 100% need to look into it more
+	updateBorderSize: function(value){
+		for (let i = 0; i < this.borders.length; i++) {
+			scene.remove(this.borders[i]);
+		}
+		border_size = parseInt(value) * 0.1;
+		boardFactory.makeBorders(scene);
 	}
 	// updatePieceMaterials after the user changes the piece styles
 	,updatePieceMaterials:function(){
@@ -125,6 +180,11 @@ var materials = {
 			this.black_piece.map.anisotropy=an
 			this.white_cap.map.anisotropy=an
 			this.black_cap.map.anisotropy=an
+		}
+	}
+	,updateLetterVisibility(val){
+		for (let i = 0; i < this.letters.length; i++) {
+			this.letters[i].visible = val;
 		}
 	}
 
@@ -187,33 +247,55 @@ var boardFactory = {
 		return square
 	},
 	makeBorders:function(scene){
+		materials.borders = [];
+		if (localStorage.getItem('borderTexture')) {
+			const loader = new THREE.TextureLoader();
+			materials.border = new THREE.MeshBasicMaterial({ map:loader.load(localStorage.getItem('borderTexture')), transparent: true}, materials.boardLoadedFn());
+		}
 		// We use the same geometry for all 4 borders. This means the borders
 		// overlap each other at the corners. Probably OK at this point, but
 		// maybe there are cases where that would not be good.
-		var geometry = new THREE.BoxGeometry(board.length,piece_height,border_size)
-		geometry.center()
-		var border
-
+		let geometry = new THREE.BoxGeometry(board.length,piece_height,border_size)
+		geometry.center();
+		let border
+		if (localStorage["borderColor"] && !localStorage.getItem('borderTexture')) {
+			let color = localStorage["borderColor"]
+			if(color.startsWith("#")){
+				color = color.substring(1);
+				color = '0x' + color;
+			}
+			materials.border.color.setHex(color);
+		}
 		// Top border
 		border = new THREE.Mesh(geometry,materials.border)
 		border.position.set(0,0,board.corner_position.z + border_size/2)
-		scene.add(border)
+		materials.borders.push(border);
 		// Bottom border
 		border = new THREE.Mesh(geometry,materials.border)
 		border.position.set(0,0,board.corner_position.endz - border_size/2)
 		border.rotateY(Math.PI)
-		scene.add(border)
+		materials.borders.push(border);
 		// Left border
 		border = new THREE.Mesh(geometry,materials.border)
 		border.position.set(board.corner_position.x + border_size/2,0,0)
 		border.rotateY(Math.PI/2)
-		scene.add(border)
+		materials.borders.push(border);
 		// Right border
 		border = new THREE.Mesh(geometry,materials.border)
 		border.position.set(board.corner_position.endx - border_size/2,0,0)
 		border.rotateY(-Math.PI / 2)
-		scene.add(border)
-
+		materials.borders.push(border);
+		
+		for (let i = 0; i < materials.borders.length; i++) {
+			scene.add(materials.borders[i]);
+		}
+	},
+	makeBorderText: function(scene) {
+		materials.letters = [];
+		let visible = true;
+		if (localStorage.getItem('hideBorderText') === 'true') {
+			visible = false;
+		}
 		if(boardFactory.boardfont){
 			gotfont(boardFactory.boardfont)
 		}
@@ -227,21 +309,22 @@ var boardFactory = {
 			// add the letters and numbers around the border
 			for(var i = 0;i < board.size;i++){
 				var geometry,letter
-
+				
 				// Top letters
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('A'.charCodeAt(0) + i),
 					{size:letter_size,height:1,font:font,weight:'normal'}
 				)
 				letter = new THREE.Mesh(geometry,materials.letter)
+				letter.visible = visible;
 				letter.rotateX(Math.PI / 2)
 				letter.rotateY(Math.PI)
 				letter.position.set(
 					board.sq_position.startx + letter_size/2 + i*sq_size,
 					sq_height/2,
-					board.corner_position.z + border_size/2 - letter_size/2
+					board.sq_position.startz - borderOffset * 2 - letter_size
 				)
-				scene.add(letter)
+				materials.letters.push(letter);
 				// Bottom letters
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('A'.charCodeAt(0) + i),
@@ -249,12 +332,13 @@ var boardFactory = {
 				)
 				letter = new THREE.Mesh(geometry,materials.letter)
 				letter.rotateX(-Math.PI / 2)
+				letter.visible = visible;
 				letter.position.set(
 					board.sq_position.startx - letter_size/2 + i*sq_size,
 					sq_height/2,
-					board.corner_position.endz - border_size/2 + letter_size/2
+					board.sq_position.endz + borderOffset * 2 + letter_size
 				)
-				scene.add(letter)
+				materials.letters.push(letter);
 				// Left side numbers
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('1'.charCodeAt(0) + i),
@@ -262,12 +346,13 @@ var boardFactory = {
 				)
 				letter = new THREE.Mesh(geometry,materials.letter)
 				letter.rotateX(-Math.PI / 2)
+				letter.visible = visible;
 				letter.position.set(
-					board.corner_position.x + letter_size,
+					board.sq_position.startx - borderOffset * 2 - letter_size,
 					sq_height / 2,
 					board.sq_position.endz + letter_size/2 - i*sq_size
 				)
-				scene.add(letter)
+				materials.letters.push(letter);
 				// Right side numbers
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('1'.charCodeAt(0) + i),
@@ -276,12 +361,16 @@ var boardFactory = {
 				letter = new THREE.Mesh(geometry,materials.letter)
 				letter.rotateX(-Math.PI / 2)
 				letter.rotateZ(Math.PI)
+				letter.visible = visible;
 				letter.position.set(
-					board.corner_position.endx - letter_size,
+					board.sq_position.endx + borderOffset * 2 + letter_size,
 					sq_height / 2,
 					board.sq_position.endz - letter_size/2 - i*sq_size
 				)
-				scene.add(letter)
+				materials.letters.push(letter);
+			}
+			for (let i = 0; i < materials.letters.length; i++) {
+				scene.add(materials.letters[i]);
 			}
 			settingscounter=(settingscounter+1)&15
 		}
@@ -643,6 +732,7 @@ var board = {
 	boardside: "white",
 	result: "",
 	observing: false,
+	overlay: null,
 
 	// Keep track of some important positions
 	sq_position: {startx: 0,startz: 0,endx: 0,endz: 0},
@@ -751,7 +841,6 @@ var board = {
 	// All these elements are drawn as centered at their x,y,z position
 	,addboard:function(){
 		this.calculateBoardPositions()
-
 		// draw the squares
 		for(i = 0;i < this.size;i++){
 			for(j = 0;j < this.size;j++){
@@ -764,7 +853,38 @@ var board = {
 		}
 
 		// draw the border around the squares
-		boardFactory.makeBorders(scene)
+		boardFactory.makeBorders(scene);
+		// draw the text around the board
+		boardFactory.makeBorderText(scene);
+		if (localStorage.getItem('boardOverlay')) {
+			this.addOverlay(localStorage.getItem('boardOverlay'))
+		}
+	},
+	addOverlay: function(value) {
+		var overlay_texture = new THREE.TextureLoader().load(value ?? materials.boardOverlayPath);
+		overlay_texture.wrapS = overlay_texture.wrapT = THREE.ClampToEdgeWrapping;
+		overlay_texture.offset.set(materials.overlayMap[this.size].offset.x, materials.overlayMap[this.size].offset.y);
+		overlay_texture.repeat.set(materials.overlayMap[this.size].repeat.x, materials.overlayMap[this.size].repeat.y);
+		var overlay_material = new THREE.MeshLambertMaterial({map: overlay_texture});
+		overlay_texture.magFilter = THREE.LinearFilter;
+		overlay_texture.minFilter = THREE.LinearFilter;
+		overlay_texture.generateMipmaps = true; 
+		overlay_texture.anisotropy = 4;
+		var geometry = new THREE.BoxGeometry(materials.overlayMap[this.size].size, 2, materials.overlayMap[this.size].size);
+		this.overlay = new THREE.Mesh(geometry, overlay_material);
+		this.overlay.position.set(
+			0,
+			7,
+			0
+		)
+		this.overlay.ispassive = true;
+		scene.add(this.overlay);
+	},
+	removeOverlay: function() {
+		if (this.overlay) {
+			scene.remove(this.overlay);
+			this.overlay = null;
+		}
 	}
 	// Add the table
 	,addtable: function() {
@@ -821,6 +941,21 @@ var board = {
 	// called if the user changes the texture of the board
 	,updateboard:function(){
 		materials.updateBoardMaterials()
+	},
+	updateBorderColor: function(val) {
+		materials.updateBorderColor(val);
+	},
+	updateBorderTexture: function(value) {
+		materials.updateBorderTexture(value);
+	},
+	removeBorderTexture: function() {
+		materials.removeBorderTexture();
+	},
+	updateBorderSize: function (val) {
+		materials.updateBorderSize(val);
+	},
+	updateLetterVisibility: function(val){
+		materials.updateLetterVisibility(val);
 	}
 	// called if the user changes the texture or size of the pieces
 	,updatepieces:function(){
