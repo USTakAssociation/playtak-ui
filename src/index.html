@@ -565,6 +565,58 @@
 					<form id="white_squares_form">White squares<br /></form>
 					<br />
 					<form id="black_squares_form">Black squares<br /></form>
+					<br />
+					<form>
+						<span data-hover="Examples: #000000, #ffffff, #606060">
+							Border color
+							<input
+								type="color"
+								id="borderColor"
+								class="form-control"
+								oninput="notifyBorderColorChange()"
+								maxlength="7"
+								minlength="7"
+							/>
+						</span>
+					</form>
+					<br />
+					<!-- border texture -->
+					Border Texture
+					<div id="remove-border-texture" style="display:none;">
+						<button type="button" class="btn btn-pill btn-secondary" onclick="removeBorderTexture();">Remove Texture</button>
+					</div>
+					<br />
+					<form id="border-texture-form">
+						<input type="file" id="border-texture" />
+					</form>
+					<br />
+					<form>
+						<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
+						Hide Border Text
+					</form>
+					<br />
+					Board Overlay
+					<div id="remove-overlay" style="display:none;">
+						<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove overlay</button>
+					</div>
+					<br />
+					<form id="board-overlay-form">
+						<input type="file" id="board-overlay" />
+					</form>
+					<br />
+					<!-- <form>
+						Border Size
+						<input
+							id="border-size-slider"
+							type="range"
+							value="40"
+							min="1"
+							max="80"
+							oninput="notifyBorderSizeChange(this.value);"
+						/>
+						<span id="border-size-display">10</span>
+					</form>
+					<br /> -->
 				</div>
 				<!-- Interface Settings -->
 				<div class="tab-pane settings-pane" id="interface">
@@ -1917,6 +1969,14 @@
 											Click on one of any ongoing games from "Watch" menu to watch an ongoing
 											game.
 										</li>
+									</ul>
+									<h4>Board Settings</h4>
+									<ul>
+										<li>
+											Click on the "Settings" Icon to change the board style, piece styles and other options.
+										</li>
+										<li>You can set a board overlay to customize the look of the board. You can download the template here. <a href="/images/board/overlay.png" target="_blank">Board Overlay Template</a></li>
+										<li>You can also change the color and the texture of the border, the border texture can use any image but may need to be adjusted to fit correctly.</li>
 									</ul>
 								</div>
 							</div>

@@ -906,6 +906,27 @@ function loadSettings() {
 		document.getElementById("auto-rotate-checkbox").checked = false;
 	}
 
+	// add the ability to remove border texture
+	if (localStorage["borderColor"]) {
+		document.getElementById("borderColor").value = localStorage["borderColor"];
+	}
+
+	// load border texture settings state
+	if (localStorage.getItem("borderTexture")) {
+		document.getElementById("remove-border-texture").style.display = "inline-block";
+		document.getElementById('border-texture-form').style.display = "none";
+	}
+	
+	if (localStorage.getItem('hideBorderText') === 'true') {
+		board.updateLetterVisibility(false);
+		document.getElementById('hide-border-text').checked = true;
+	}
+
+	// load overlay settings state
+	if (localStorage.getItem("boardOverlay")) {
+		document.getElementById("remove-overlay").style.display = "inline-block";
+		document.getElementById('board-overlay-form').style.display = "none";
+	}
 	document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
 	clearcolorchange();
 }
@@ -1088,6 +1109,95 @@ function checkboxAntialiasing() {
 	else{
 		localStorage.setItem('antialiasing_mode','false')
 	}
+}
+
+/*
+*
+*/
+function notifyBorderColorChange(){
+	var val = document.getElementById("borderColor").value;
+	if( val && val.length < 7){ return; }
+	localStorage["borderColor"] = val;
+	board.updateBorderColor(val);
+	removeBorderTexture()
+}
+
+// Border texture change
+document.getElementById("border-texture").onchange = setBorderTexture;
+function setBorderTexture(){
+	var reader = new FileReader()
+	if(this.files.length){
+		reader.addEventListener("load",fileloaded,false)
+		reader.readAsDataURL(this.files[0])
+	}
+	function fileloaded(){
+		localStorage.borderTexture=reader.result||0
+		board.updateBorderTexture(localStorage.borderTexture)
+	}
+	// update the state to hide the upload and show the button
+	document.getElementById('border-texture-form').style.display = "none";
+	document.getElementById('remove-border-texture').style.display = "inline-block";
+}
+
+function removeBorderTexture() {
+	if (!localStorage.getItem('borderTexture')) {
+		return;
+	}
+	// update the settings state to hide the button and show the upload
+	localStorage.removeItem('borderTexture')
+	board.removeBorderTexture();
+	document.getElementById('border-texture-form').style.display = "inline-block";
+	document.getElementById('remove-border-texture').style.display = "none";
+}
+
+
+/*
+*
+*/
+function notifyBorderSizeChange(value){
+	document.getElementById("border-size-display").innerHTML = value;
+	localStorage["borderColor"] = value;
+	board.updateBorderSize(value)
+}
+
+/*
+ * Notify checkbox change for checkbox:
+ *	 Show or hide border text
+ */
+ function hideBorderText(event) {
+	localStorage.setItem('hideBorderText', event.target.checked);
+	board.updateLetterVisibility(!event.target.checked);
+}
+
+document.getElementById("board-overlay").onchange = setNewOverlay;
+function setNewOverlay(){
+	var reader = new FileReader()
+	if(this.files.length){
+		reader.addEventListener("load",fileloaded,false)
+		reader.readAsDataURL(this.files[0])
+	}
+	function fileloaded(){
+		localStorage.boardOverlay=reader.result||0
+		board.addOverlay(localStorage.boardOverlay)
+	}
+	// update the state to hide the upload and show the button
+	document.getElementById('board-overlay-form').style.display = "none";
+	document.getElementById('remove-overlay').style.display = "inline-block";
+}
+
+function removeOverlay() {
+	// update the settings state to hide the button and show the upload
+	localStorage.removeItem('boardOverlay')
+	board.removeOverlay();
+	document.getElementById('board-overlay-form').style.display = "inline-block";
+	document.getElementById('remove-overlay').style.display = "none";
+}
+
+/* 
+ * Notify checkbox change for checkbox: 
+*/
+function addBoardOverlay(event) {
+	board.addOverlay();
 }
 
 function checkboxFixCamera() {

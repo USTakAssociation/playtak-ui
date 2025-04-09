@@ -1,6 +1,6 @@
 var piece_styles
-var white_square_styles = ["sand-velvet","sand-velvet-diamonds","sand-velvet-diamonds2","ornate","white-velvet","simple"]
-var black_square_styles = ["sand-velvet","sand-velvet-diamonds","sand-velvet-diamonds2","ornate","blue-velvet","simple"]
+var white_square_styles = ["sand-velvet","sand-velvet-diamonds","sand-velvet-diamonds2","ornate","white-velvet","simple","none"]
+var black_square_styles = ["sand-velvet","sand-velvet-diamonds","sand-velvet-diamonds2","ornate","blue-velvet","simple","none"]
 
 function make_board_selector(color){
 	var form = $('#'+color+'_squares_form')
