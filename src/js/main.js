@@ -25,72 +25,6 @@ function alert2(type,msg) {
 	})
 }
 
-let infoBarFlag = false;
-let infobartimer = 0;
-function infobar(){
-	resizeInfoBar();
-	let bar = document.getElementById("infobar");
-	let messages = [
-		{
-			m: "Checkout the daily puzzle on <a target='_blank' href='https://ditaktic.blogspot.com/'>ditaktic.blogspot.com</a>.",
-			c: () => { return true },
-		},
-		{
-			m: "Visit <a href='https://greaterthangames.com/product/tak-a-beautiful-game-2nd-edition/' target='_blank'>Greater Than Games</a> in order to buy a physical Tak set.",
-			c: () => { return true },
-		},
-		{
-			m: "Have you read <a target='_blank' href='https://ustak.org/play-beautiful-game-tak/'>the rules</a>?",
-			c: () => { return server.loggedin },
-		},
-		{
-			m: "In settings (gear icon), you can set the perspective to 0 and fix the camera in order to get a 2D experience.",
-			c: () => { return server.loggedin && !(perspective === 0 && fixedcamera) },
-		},
-		{
-			m: "You can join the <a target='_blank' href='https://ustak.org/'>US Tak Association</a>.",
-			c: () => { return server.loggedin },
-		}
-	];
-
-	let messageIndex = 0;
-	clearTimeout(infobartimer);
-	changemessage();
-	function changemessage(){
-		clearTimeout(infobartimer);
-		if (messages[messageIndex].c()) {
-			bar.innerHTML = messages[messageIndex].m;
-		}
-		messageIndex++;
-		if (messageIndex == messages.length){ messageIndex = 0; }
-		if (!messages[messageIndex].c()) {
-			return changemessage();
-		}
-		infobartimer = setTimeout(changemessage, 10000);
-	}
-}
-function infobaroff(){
-	try{
-		document.getElementById("infobar").style.display="none"
-	}
-	catch(e){}
-}
-
-function resizeInfoBar() {
-	let bar = document.getElementById("infobar");
-	if (!bar) {
-		bar = document.createElement("div");
-		bar.id = "infobar";
-		document.body.appendChild(bar);
-	}
-	let cuttop = $("header").height() + 10;
-	let cutleft = ($("#rmenu").hasClass("hidden") ? 0 : 209) + 10;
-	let cutright = ($("#cmenu").hasClass("hidden") ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + 10;
-	bar.style.top = cuttop + 2 + "px";
-	bar.style.left = cutleft + 20 + "px";
-	bar.style.right = cutright + 20 + "px";
-}
-
 var camera,scene,renderer,light,canvas,controls = null
 var perspective
 var ismobile=false
@@ -599,8 +533,6 @@ function adjustsidemenu(notation,chat){
 		document.getElementById("cmenu").classList.add('hidden');
 		generateCamera()
 	}
-
-	resizeInfoBar()
 }
 
 let settingsToggle = false;
@@ -1421,7 +1353,6 @@ $(document).ready(function() {
 		showElement("play-button");
 	}
 	fetchratings();
-	infobar();
 	fetchEvents();
 })
 

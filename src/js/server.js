@@ -190,6 +190,7 @@ var server = {
 	,seekslist:[]
 	,gameslist:[]
 	,changeseektime:0
+	,newSeek:false
 
 	,connect:function(){
 		if(this.connection && this.connection.readyState>1){
@@ -416,13 +417,12 @@ var server = {
 		}
 	}
 	,msg:function(e){
-		console.log('Message: ', e)
 		e = e.replace(/[\n\r]+$/,"")
 		if(startswith("OK", e) || startswith("Welcome!", e)){
 			// welcome or ok message from the server nothing to do here
 		}else if (startswith("Game Start", e)) {
+			console.log("Game Start: " + e);
 			//Game Start no. size player_white vs player_black yourcolor time
-			infobaroff();
 			var spl = e.split(" ");
 			board.newgame(Number(spl[3]), spl[7], +spl[9], +spl[10], +spl[11], +spl[12], +spl[13]);
 			board.gameno = Number(spl[2]);
@@ -493,9 +493,10 @@ var server = {
 			//chimesound.pause()
 			chimesound.currentTime = 0;
 			chimesound.play();
+			document.getElementById("createSeek").setAttribute("disabled", "disabled");
+			document.getElementById("removeSeek").setAttribute("disabled", "disabled");
 		} else if (startswith("Observe ", e)) {
 			//Observe Game#1 player1 vs player2, 4x4, 180, 7 half-moves played, player2 to move
-			infobaroff();
 			var spl = e.split(" ");
 
 			var p1 = spl[2];
@@ -662,6 +663,9 @@ var server = {
 					$("#gameoveralert-text").html(msg);
 					$("#gameoveralert").modal("show");
 					board.gameover();
+					server.newSeek = false;
+					document.getElementById('createSeek').removeAttribute("disabled");
+					document.getElementById("removeSeek").removeAttribute("disabled");
 				}
 				//Game#1 Abandoned
 				else if (spl[1] === "Abandoned.") {
@@ -925,7 +929,6 @@ var server = {
 			$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
 			$('<td/>').append((game.unrated?"P":"")+(game.tournament?"T":"")).addClass("right").attr("data-hover",(game.unrated?"Unrated game":"")+(game.tournament?"Tournament game":"")).appendTo(row)
 			$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right").attr("data-hover", "Trigger move and extra time to add in minutes").appendTo(row);
-			console.log(game.timeAmount);
 		}
 		document.getElementById("gamecount").innerHTML=this.gameslist.length
 	}
@@ -1058,6 +1061,10 @@ var server = {
 		alert("danger",e)
 	}
 	,seek:function(){
+		// check if user already has an active seek
+		if (server.newSeek) {
+			return;
+		}
 		const size =+ document.getElementById("boardsize").value;
 		const time =+ document.getElementById("timeselect").value;
 		const inc =+ document.getElementById("incselect").value;
@@ -1074,13 +1081,17 @@ var server = {
 		const unrated = (gametype==2?1:0);
 		const tournament = (gametype==1?1:0);
 		const seekCMD =`Seek ${size} ${timeCalc} ${inc} ${color} ${komi} ${pieces} ${capstones} ${unrated} ${tournament} ${triggerMove} ${timeAmount} ${opponent}`;
-		// const seekStr = "Seek "+size+" "+(time*60)+" "+inc+" "+color+" "+komi+" "+pieces+" "+capstones+" "+(gametype==2?1:0)+" "+(gametype==1?1:0)+" "+opponent + " " + triggerMove + " " + timeAmount;
 		this.send(seekCMD);
 		$('#creategamemodal').modal('hide');
+		server.newSeek = true;
+		document.getElementById('createSeek').setAttribute("disabled", "disabled");
 	}
 	,removeseek:function(){
 		this.send("Seek 0 0 0 A 0 0 0 0 0 ")
 		$('#creategamemodal').modal('hide')
+		document.getElementById('createSeek').removeAttribute("disabled");
+		// remove seek state
+		server.newSeek = false;
 	}
 	,draw:function(){
 		if(board.scratch){return}
