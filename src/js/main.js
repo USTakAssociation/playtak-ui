@@ -1119,12 +1119,18 @@ function notifyBorderColorChange(){
 	if( val && val.length < 7){ return; }
 	localStorage["borderColor"] = val;
 	board.updateBorderColor(val);
-	removeBorderTexture()
+	removeBorderTexture();
+	document.getElementById("border-texture").value = '';
 }
 
 // Border texture change
 document.getElementById("border-texture").onchange = setBorderTexture;
 function setBorderTexture(){
+	if(this.files[0].size > 2097152) {
+		alert("danger", "File is too big! must be less than 2MB");
+		this.value = "";
+		return;
+	}
 	var reader = new FileReader()
 	if(this.files.length){
 		reader.addEventListener("load",fileloaded,false)
@@ -1143,10 +1149,11 @@ function removeBorderTexture() {
 	if (!localStorage.getItem('borderTexture')) {
 		return;
 	}
+	document.getElementById("border-texture").value = '';
 	// update the settings state to hide the button and show the upload
 	localStorage.removeItem('borderTexture')
 	board.removeBorderTexture();
-	document.getElementById('border-texture-form').style.display = "inline-block";
+	document.getElementById('border-texture-form').style.display = "block";
 	document.getElementById('remove-border-texture').style.display = "none";
 }
 
@@ -1171,6 +1178,12 @@ function notifyBorderSizeChange(value){
 
 document.getElementById("board-overlay").onchange = setNewOverlay;
 function setNewOverlay(){
+	if(this.files[0].size > 2097152) {
+		console.warn('overlay too big');
+		alert('danger', "File is too big! Must be less than 2MB");
+		this.value = "";
+		return;
+	 }
 	var reader = new FileReader()
 	if(this.files.length){
 		reader.addEventListener("load",fileloaded,false)
@@ -1187,9 +1200,10 @@ function setNewOverlay(){
 
 function removeOverlay() {
 	// update the settings state to hide the button and show the upload
+	document.getElementById("board-overlay").value = '';
 	localStorage.removeItem('boardOverlay')
 	board.removeOverlay();
-	document.getElementById('board-overlay-form').style.display = "inline-block";
+	document.getElementById('board-overlay-form').style.display = "block";
 	document.getElementById('remove-overlay').style.display = "none";
 }
 
