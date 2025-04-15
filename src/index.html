@@ -528,7 +528,7 @@
 					<br />
 					<form>
 						<input id="wall-orientation" type="checkbox" onClick="checkboxDiagonalWalls()" />
-						Diagonal walls
+						<label for="wall-orientation">Diagonal walls</label>
 					</form>
 					<br />
 					<form>
@@ -548,12 +548,12 @@
 					<br />
 					<form>
 						<input id="show-table" type="checkbox" onChange="showTable(event)" />
-						Show table
+						<label for="show-table">Show table</label>
 					</form>
 					<br />
 					<form>
 						<input id="show-last-move" type="checkbox" onChange="showLastMoveHighlighter(event)" />
-						Show last move highlighter
+						<label for="show-last-move">Show last move highlighter</label>
 					</form>
 					<br />
 					<form id="white_pieces_form">White pieces<br /></form>
@@ -592,7 +592,7 @@
 					<br />
 					<form>
 						<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
-						Hide Border Text
+						<label for="hide-border-text">Hide Border Text</label>
 					</form>
 					<br />
 					Board Overlay
@@ -624,13 +624,13 @@
 					<form>
 						<span data-hover="">
 							<input id="show-landing" type="checkbox" onClick="disableLanding()" checked/>
-							Always show the landing/events page.
+							<label for="show-landing">Always show the landing/events page.</label>
 						</span>
 						<br>
 						<br>
 						<span>
 							<input id="dark-mode" type="checkbox" onClick="checkboxDarkMode()" />
-							Dark mode
+							<label for="dark-mode">Dark mode</label>
 						</span>
 						<br>
 						<br>
@@ -641,7 +641,7 @@
 								onClick="checkboxAntialiasing()"
 								checked
 							/>
-							Browser default antialiasing
+							<label for="antialiasing-checkbox">Browser default antialiasing</label>
 						</span>
 						<br />
 						<br />
@@ -678,15 +678,15 @@
 						<br />
 						<br />
 						<input id="hide-chat-time" type="checkbox" onClick="chathandler.hideChatTime()" />
-						Hide chat timestamps
+						<label for="hide-chat-time">Hide chat timestamps</label>
 						<br />
 						<br />
 						<input id="hide-send-checkbox" type="checkbox" onClick="checkboxHideSend()" />
-						Hide 'Send' button
+						<label for="hide-send-checkbox">Hide 'Send' button</label>
 						<br />
 						<br />
 						<input id="auto-rotate-checkbox" type="checkbox" onClick="checkboxAutoRotate()" checked />
-						Rotate board when player 2
+						<label for="auto-rotate-checkbox">Rotate board when player 2</label>
 						<br />
 						<br />
 						Chat size
@@ -721,7 +721,7 @@
 						<br />
 						<span data-hover="Make the camera immoveable, makes moving easier, especially on touch screens">
 							<input id="fix-camera-checkbox" type="checkbox" onClick="checkboxFixCamera()" />
-							Fix camera
+							<label for="fix-camera-checkbox">Fix camera</label>
 						</span>
 						<br />
 						<br />
@@ -729,13 +729,13 @@
 							data-hover="Register clicks on the board instead of piece stacks, makes every stack selectable, even if it is obscured"
 						>
 							<input id="click-checkbox" type="checkbox" onClick="checkboxClick()" />
-							Click through stacks
+							<label for="click-checkbox">Click through stacks</label>
 						</span>
 						<br />
 						<br />
 						<span data-hover="Enable help texts like these">
 							<input id="hover-checkbox" type="checkbox" onClick="checkboxHover()" />
-							Help texts
+							<label for="hover-checkbox">Help texts</label>
 						</span>
 					</form>
 				</div>
