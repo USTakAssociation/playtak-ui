@@ -24,7 +24,7 @@ jobs:
             - uses: actions/checkout@v2
             # Caches NPM and the node_modules folder for faster builds
             - name: Cache node modules
-              uses: actions/cache@v1
+              uses: actions/cache@v4
               with:
                   path: ~/.npm
                   key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -58,7 +58,7 @@ jobs:
                   tar -xzf artifact.tar.gz -C ./playtak-ui-tmp
                   sudo rsync -a playtak-ui-tmp/src/ /var/www/html/
                   bash /gz-html.sh
-                  sudo chown -R root:root /var/www/html
+                  sudo chown -R ubuntu:ubuntu /var/www/html
                   rm -rf playtak-ui-tmp
                   rm artifact.tar.gz
                 '

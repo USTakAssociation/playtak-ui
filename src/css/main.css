@@ -220,20 +220,6 @@ a.navitem, div.navitem{
 	border-bottom-left-radius: 6px;
 }
 
-/* || Info bar */
-#infobar{
-	position:absolute;
-	min-height:20px;
-	background-color: var(--primary-bg-color);
-	border:1px solid var(--primary-border-color);
-	border-radius:6px;
-	padding:8px;
-	text-align:center;
-	font-size:110%;
-	box-shadow: 0px 1px 4px var(--box-shadow-color);
-	user-select: text;
-}
-
 /* || Notation */
 #floating {
 	position: fixed;
@@ -911,6 +897,11 @@ input:invalid {
 
 .btn-slim {
 	height: 30px;
+}
+
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+	cursor: not-allowed !important;
+	opacity: 0.45;
 }
 
 /* || Responsive CSS */

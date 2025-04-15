@@ -24,7 +24,7 @@ jobs:
             - uses: actions/checkout@v2
             # Caches NPM and the node_modules folder for faster builds
             - name: Cache node modules
-              uses: actions/cache@v1
+              uses: actions/cache@v4
               with:
                   path: ~/.npm
                   key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -58,7 +58,7 @@ jobs:
                   tar -xzf artifact-beta.tar.gz -C ./playtak-ui-beta-tmp
                   sudo rsync -a playtak-ui-beta-tmp/src/ /var/www/beta
                   bash /gz-beta.sh
-                  sudo chown -R root:root /var/www/beta
+                  sudo chown -R ubuntu:ubuntu /var/www/beta
                   rm -rf playtak-ui-beta-tmp
                   rm artifact-beta.tar.gz
                 '

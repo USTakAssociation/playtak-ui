@@ -233,6 +233,21 @@
 							Online <span class="badge" id="onlineplayersbadge">0</span>
 						</div>
 					</li>
+					<li>
+						<a class="navitem" data-hover="Find players on discord" href="https://discord.gg/2xEt42X" target="_blank" rel="noopener noreferrer">
+							<svg
+								class="verticle-align--middle"
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 640 512"
+							>
+								<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
+								<path
+									d="M524.531,69.836a1.5,1.5,0,0,0-.764-.7A485.065,485.065,0,0,0,404.081,32.03a1.816,1.816,0,0,0-1.923.91,337.461,337.461,0,0,0-14.9,30.6,447.848,447.848,0,0,0-134.426,0,309.541,309.541,0,0,0-15.135-30.6,1.89,1.89,0,0,0-1.924-.91A483.689,483.689,0,0,0,116.085,69.137a1.712,1.712,0,0,0-.788.676C39.068,183.651,18.186,294.69,28.43,404.354a2.016,2.016,0,0,0,.765,1.375A487.666,487.666,0,0,0,176.02,479.918a1.9,1.9,0,0,0,2.063-.676A348.2,348.2,0,0,0,208.12,430.4a1.86,1.86,0,0,0-1.019-2.588,321.173,321.173,0,0,1-45.868-21.853,1.885,1.885,0,0,1-.185-3.126c3.082-2.309,6.166-4.711,9.109-7.137a1.819,1.819,0,0,1,1.9-.256c96.229,43.917,200.41,43.917,295.5,0a1.812,1.812,0,0,1,1.924.233c2.944,2.426,6.027,4.851,9.132,7.16a1.884,1.884,0,0,1-.162,3.126,301.407,301.407,0,0,1-45.89,21.83,1.875,1.875,0,0,0-1,2.611,391.055,391.055,0,0,0,30.014,48.815,1.864,1.864,0,0,0,2.063.7A486.048,486.048,0,0,0,610.7,405.729a1.882,1.882,0,0,0,.765-1.352C623.729,277.594,590.933,167.465,524.531,69.836ZM222.491,337.58c-28.972,0-52.844-26.587-52.844-59.239S193.056,219.1,222.491,219.1c29.665,0,53.306,26.82,52.843,59.239C275.334,310.993,251.924,337.58,222.491,337.58Zm195.38,0c-28.971,0-52.843-26.587-52.843-59.239S388.437,219.1,417.871,219.1c29.667,0,53.307,26.82,52.844,59.239C470.715,310.993,447.538,337.58,417.871,337.58Z"
+								/>
+							</svg>
+							Find Players
+						</a>
+					</li>
 				</ul>
 			</nav>
 		</header>
@@ -513,7 +528,7 @@
 					<br />
 					<form>
 						<input id="wall-orientation" type="checkbox" onClick="checkboxDiagonalWalls()" />
-						Diagonal walls
+						<label for="wall-orientation">Diagonal walls</label>
 					</form>
 					<br />
 					<form>
@@ -533,12 +548,12 @@
 					<br />
 					<form>
 						<input id="show-table" type="checkbox" onChange="showTable(event)" />
-						Show table
+						<label for="show-table">Show table</label>
 					</form>
 					<br />
 					<form>
 						<input id="show-last-move" type="checkbox" onChange="showLastMoveHighlighter(event)" />
-						Show last move highlighter
+						<label for="show-last-move">Show last move highlighter</label>
 					</form>
 					<br />
 					<form id="white_pieces_form">White pieces<br /></form>
@@ -550,6 +565,58 @@
 					<form id="white_squares_form">White squares<br /></form>
 					<br />
 					<form id="black_squares_form">Black squares<br /></form>
+					<br />
+					<form>
+						<span data-hover="Examples: #000000, #ffffff, #606060">
+							Border color
+							<input
+								type="color"
+								id="borderColor"
+								class="form-control"
+								oninput="notifyBorderColorChange()"
+								maxlength="7"
+								minlength="7"
+							/>
+						</span>
+					</form>
+					<br />
+					<!-- border texture -->
+					Border Texture
+					<div id="remove-border-texture" style="display:none;">
+						<button type="button" class="btn btn-pill btn-secondary" onclick="removeBorderTexture();">Remove Texture</button>
+					</div>
+					<br />
+					<form id="border-texture-form">
+						<input type="file" id="border-texture" accept="image/*" />
+					</form>
+					<br />
+					<form>
+						<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
+						<label for="hide-border-text">Hide Border Text</label>
+					</form>
+					<br />
+					Board Overlay
+					<div id="remove-overlay" style="display:none;">
+						<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove overlay</button>
+					</div>
+					<br />
+					<form id="board-overlay-form">
+						<input type="file" id="board-overlay" accept="image/*" />
+					</form>
+					<br />
+					<!-- <form>
+						Border Size
+						<input
+							id="border-size-slider"
+							type="range"
+							value="40"
+							min="1"
+							max="80"
+							oninput="notifyBorderSizeChange(this.value);"
+						/>
+						<span id="border-size-display">10</span>
+					</form>
+					<br /> -->
 				</div>
 				<!-- Interface Settings -->
 				<div class="tab-pane settings-pane" id="interface">
@@ -557,13 +624,13 @@
 					<form>
 						<span data-hover="">
 							<input id="show-landing" type="checkbox" onClick="disableLanding()" checked/>
-							Always show the landing/events page.
+							<label for="show-landing">Always show the landing/events page.</label>
 						</span>
 						<br>
 						<br>
 						<span>
 							<input id="dark-mode" type="checkbox" onClick="checkboxDarkMode()" />
-							Dark mode
+							<label for="dark-mode">Dark mode</label>
 						</span>
 						<br>
 						<br>
@@ -574,7 +641,7 @@
 								onClick="checkboxAntialiasing()"
 								checked
 							/>
-							Browser default antialiasing
+							<label for="antialiasing-checkbox">Browser default antialiasing</label>
 						</span>
 						<br />
 						<br />
@@ -611,15 +678,15 @@
 						<br />
 						<br />
 						<input id="hide-chat-time" type="checkbox" onClick="chathandler.hideChatTime()" />
-						Hide chat timestamps
+						<label for="hide-chat-time">Hide chat timestamps</label>
 						<br />
 						<br />
 						<input id="hide-send-checkbox" type="checkbox" onClick="checkboxHideSend()" />
-						Hide 'Send' button
+						<label for="hide-send-checkbox">Hide 'Send' button</label>
 						<br />
 						<br />
 						<input id="auto-rotate-checkbox" type="checkbox" onClick="checkboxAutoRotate()" checked />
-						Rotate board when player 2
+						<label for="auto-rotate-checkbox">Rotate board when player 2</label>
 						<br />
 						<br />
 						Chat size
@@ -654,7 +721,7 @@
 						<br />
 						<span data-hover="Make the camera immoveable, makes moving easier, especially on touch screens">
 							<input id="fix-camera-checkbox" type="checkbox" onClick="checkboxFixCamera()" />
-							Fix camera
+							<label for="fix-camera-checkbox">Fix camera</label>
 						</span>
 						<br />
 						<br />
@@ -662,13 +729,13 @@
 							data-hover="Register clicks on the board instead of piece stacks, makes every stack selectable, even if it is obscured"
 						>
 							<input id="click-checkbox" type="checkbox" onClick="checkboxClick()" />
-							Click through stacks
+							<label for="click-checkbox">Click through stacks</label>
 						</span>
 						<br />
 						<br />
 						<span data-hover="Enable help texts like these">
 							<input id="hover-checkbox" type="checkbox" onClick="checkboxHover()" />
-							Help texts
+							<label for="hover-checkbox">Help texts</label>
 						</span>
 					</form>
 				</div>
@@ -957,7 +1024,7 @@
 									<div class="flex flex-end flex-wrap gap--8 margin-top--8">
 										<div>
 											<form role="form" onsubmit="server.seek(); return false;">
-												<button type="submit" class="btn btn-pill btn-primary">Create</button>
+												<button id="createSeek" type="submit" class="btn btn-pill btn-primary">Create</button>
 											</form>
 										</div>
 										<div>
@@ -965,7 +1032,7 @@
 										</div>
 										<div>
 											<form role="form" onsubmit="server.removeseek(); return false;">
-												<button type="submit" class="btn btn-pill btn-secondary">Remove Seeks</button>
+												<button id="removeSeek" type="submit" class="btn btn-pill btn-secondary">Remove Seek</button>
 											</form>
 										</div>
 									</div>
@@ -1902,6 +1969,14 @@
 											Click on one of any ongoing games from "Watch" menu to watch an ongoing
 											game.
 										</li>
+									</ul>
+									<h4>Board Settings</h4>
+									<ul>
+										<li>
+											Click on the "Settings" Icon to change the board style, piece styles and other options.
+										</li>
+										<li>You can set a board overlay to customize the look of the board. You can download the template here. <a href="/images/board/overlay.png" target="_blank">Board Overlay Template</a></li>
+										<li>You can also change the color and the texture of the border, the border texture can use any image but may need to be adjusted to fit correctly.</li>
 									</ul>
 								</div>
 							</div>
