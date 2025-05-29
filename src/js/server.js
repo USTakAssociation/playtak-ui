@@ -966,7 +966,9 @@ var server = {
 			if(!p2Rating){
 				p2Rating = "";
 			}
-			const players = document.createElement("div");
+			const players = document.createElement("button");
+			players.className = "btn btn-transparent";
+			players.setAttribute("data-hover", "Watch game");
 			let p1Element = `<span data-hover="rating">${p1Rating}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
 			let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-hover="rating">${p2Rating}</span>`;
 			players.innerHTML = p1Element + " vs " + p2Element;
