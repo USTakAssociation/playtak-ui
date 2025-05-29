@@ -42,23 +42,6 @@ var anisolevel=16
 
 var settingscounter=0
 
-var botlist = {
-	"Tiltak_Bot":[0,"Very&nbsp;Hard"]
-	,"TakticianBot":[2,"Very&nbsp;Hard"]
-	,"TakkerusBot":[5,"Very&nbsp;Hard"]
-	,"alphatak_bot":[10,"Hard"]
-	,"AaaarghBot":[15,"Hard"]
-	,"ShlktBot":[20,"Intermediate"]
-	,"IntuitionBot":[25,"Intermediate"]
-	,"takkybot":[30,"Easy"]
-	,"BeginnerBot":[40,"Beginner"]
-	,"FriendlyBot":[50,"Adjustable"]
-	,"TakticianBotDev":[60,"Experimental"]
-	,"FPABot":[65,"Experimental"]
-	,"alphabot":[70,"Experimental"]
-	,"cutak_bot":[80,"Experimental"]
-}
-
 init()
 $(window).on("load",animate)
 
@@ -607,6 +590,7 @@ function changeScratchBoardSize() {
 }
 
 function playScratch() {
+	document.getElementById("open-game-over").classList.add("hidden");
 	if (board.observing) {
 		server.send("Unobserve " + board.gameno);
 	}
@@ -623,6 +607,7 @@ function playScratch() {
 }
 
 function load() {
+	document.getElementById("open-game-over").classList.add("hidden");
 	$("#creategamemodal").modal("hide");
 	if(!board.scratch && !board.observing) {
 		alert('warning',"TPS/PTN won't be displayed in the middle of an online game");
@@ -1296,6 +1281,18 @@ function getHeader(key,val) {
 	return'['+key+' "'+val+'"]\r\n'
 }
 
+function openGameOverModal() {
+	$('#gameoveralert').modal('show');
+}
+
+function copyGameIdToClipboard (){
+	var gameId = board.gameno || "";
+	navigator.clipboard.writeText(gameId).then(() => {
+		alert('success','Copied Game ID: ' + gameId)
+	}, () => {
+		alert('danger','Unable to copy Game ID!')
+	});
+}
 function getNotation(id) {
 	var p1 = $('.player1-name:first').html()
 	var p2 = $('.player2-name:first').html()
@@ -1335,10 +1332,10 @@ function downloadNotation(id) {
 	$(`#${id}`).attr('href','data:text/plain;charset=utf-8,'+encodeURIComponent(getNotation(id)))
 }
 
-function copyNotationToCliopboard() {
+function copyNotationToClipboard() {
 	var ptn = getNotation()
 	navigator.clipboard.writeText(ptn).then(() => {
-		alert('success','Copied!')
+		alert('success','Copied PTN!')
 	}, () => {
 		alert('danger','Unable to copy!')
 	});
@@ -1353,7 +1350,7 @@ function copyNotationLink() {
 	var link = 'http://www.playtak.com/?load=' + encodeURIComponent(getNotation())
 
 	navigator.clipboard.writeText(link).then(() => {
-		alert('success','Copied!')
+		alert('success','Copied PTN Link!')
 	}, () => {
 		alert('danger','Unable to copy!')
 	});
@@ -1476,7 +1473,6 @@ $(document).ready(function() {
 		hideElement("action-links");
 		showElement("play-button");
 	}
-	fetchratings();
 	fetchEvents();
 })
 

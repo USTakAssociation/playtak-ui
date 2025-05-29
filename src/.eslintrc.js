@@ -47,7 +47,6 @@ module.exports = {
 		stopTime: 'readonly',
 		getZero: 'readonly',
 		chathandler: 'readonly',
-		botlist: 'readonly',
 		startTime: 'readonly',
 		lastWt: 'writable',
 		lastBt: 'writable',
