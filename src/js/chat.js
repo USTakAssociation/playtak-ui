@@ -180,11 +180,11 @@ $(function(){
 				}
 			},
 			Games:{
-				name:"Games"
+				name:"Past Games"
 				,callback:function(key,opt){
 					var name = opt.$trigger[0].innerText.split(':')[0].replace(/[^a-zA-Z0-9_]/g,"")
 					//yuck.. but we don't need any more sophistication
-					var url="https://www.playtak.com/games/search?playerw="+name+"&mirror=on"
+					var url="https://www.playtak.com/games/search?player_white="+name+"&mirror=true"
 					window.open(url)
 				}
 			}
