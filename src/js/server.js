@@ -128,69 +128,57 @@ function startswith(start,str){
 	return str.slice(0,start.length)===start
 }
 
-var ratinglist={}
-function fetchratings(){
-	var xhttp = new XMLHttpRequest()
-	xhttp.onreadystatechange = function(){
-		if(this.readyState == 4 && this.status == 200){
-			var rawratings=JSON.parse(xhttp.responseText)
-			var a,b
-			for(a=0;a<rawratings.length;a++){
-				var pl=rawratings[a]
-				var names=pl[0].split(" ")
-				for(b=0;b<names.length;b++){
-					ratinglist["!"+names[b]]=pl
-				}
-			}
-			server.rendeergameslist()
-			server.rendeerseekslist()
-			server.updateplayerinfo()
+async function getPlayersRating(playerName) {
+	if (!playerName) {
+		return null;
+	}
+	// if player name is guest then return
+	if (playerName.startsWith("Guest")) {
+		return null;
+	}
+	// set the url based on the current host
+	let url = '';
+	// if localhost, use the local server
+	if (window.location.host.indexOf("localhost") > -1 || window.location.host.indexOf("127.0.0.1") > -1) {
+		url = 'http://localhost:3004/v1/ratings/' + playerName;
+	}
+	// if in beta use the beta api url
+	else if (window.location.host.indexOf("beta") > -1) {
+		url = 'https://api.beta.playtak.com/v1/ratings/' + playerName;
+	} else  {
+		url = 'https://api.playtak.com/v1/ratings/' + playerName;
+	}
+	// fetch the data from the server
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`Response status: ${response.status}`);
 		}
+		const json = await response.json();
+		if (json.rating) {
+			return json.rating;
+		} 
+	} catch (error) {
+		console.error(error.message);
+		return null;
 	}
-	xhttp.open("GET",'/ratinglist.json',true)
-	xhttp.send()
-	//Run shortly after ratings have been generated, random time within 3 minute window, in order to not DDoS the server.
-	setTimeout(fetchratings,(Math.ceil(Date.now()/3600000+0.16)-Math.random()*0.05-0.1)*3600000-Date.now())
-}
-
-function getratingstring(player){
-	var pl=ratinglist["!"+player]
-	if(!pl || pl[1]<100){
-		return "&numsp;&numsp;&numsp;&numsp;"
-	}
-	if(pl[1]<1000){
-		return "&numsp;"+pl[1]
-	}
-	return pl[1]+""
-}
-function getrating(player){
-	var pl=ratinglist["!"+player]
-	if(pl){
-		return pl[1]
-	}
-	return 0
-}
-function isbot(player){
-	var pl=ratinglist["!"+player]
-	if(pl){
-		return !!pl[4]
-	}
-	return false
 }
 
 var server = {
-	connection:null
-	,timeoutvar:null
-	,myname:null
-	,tries:0
-	,timervar:null
-	,lastTimeUpdate:null
-	,anotherlogin:false
-	,loggedin:false
-	,seekslist:[]
-	,gameslist:[]
-	,changeseektime:0
-	,newSeek:false
+	connection: null,
+	timeoutvar: null,
+	myname: null,
+	myRating: 0,
+	tries: 0,
+	timervar: null,
+	lastTimeUpdate: null,
+	anotherlogin: false,
+	loggedin: false,
+	seekslist: [],
+	gameslist: [],
+	onlinePlayers: [],
+	changeseektime: 0,
+	newSeek: false
 
 	,connect:function(){
 		if(this.connection && this.connection.readyState>1){
@@ -297,7 +285,7 @@ var server = {
 	
 	,sendClient:function(){
 		server.send("Client TakWeb-22.04.12")
-		server.send("Protocol 1")
+		server.send("Protocol 2")
 	}
 
 	,login:function(){
@@ -416,15 +404,41 @@ var server = {
 			server.send("PING")
 		}
 	}
-	,msg:function(e){
+	,msg: async function(e){
 		e = e.replace(/[\n\r]+$/,"")
 		if(startswith("OK", e) || startswith("Welcome!", e)){
 			// welcome or ok message from the server nothing to do here
 		}else if (startswith("Game Start", e)) {
+			localStorage.removeItem("current-game-data");
 			console.log("Game Start: " + e);
-			//Game Start no. size player_white vs player_black yourcolor time
+			document.getElementById("rematch").removeAttribute("disabled");
+			document.getElementById("open-game-over").classList.add("hidden");
+			document.getElementById("rematch").classList.add("hidden");
+			$('#joingame-modal').modal('hide');
+			//Game Start no. size player_white vs player_black your color time
 			var spl = e.split(" ");
-			board.newgame(Number(spl[3]), spl[7], +spl[9], +spl[10], +spl[11], +spl[12], +spl[13]);
+			const p1 = spl[3];
+			const p2 = spl[5];
+			const opponent = (p1 === this.myname) ? p2 : p1;
+			board.newgame(Number(spl[7]), spl[6], +spl[10], +spl[11], +spl[12], +spl[15], +spl[16]);
+			const gameData = {
+				id: +spl[2],
+				opponent,
+				color: spl[6],
+				size: spl[7], 
+				time: +spl[8],
+				increment: +spl[9],
+				komi: +spl[10],
+				pieces: +spl[11],
+				capstones: +spl[12],
+				unrated: +spl[13],
+				tournament: +spl[14],
+				triggerMove: +spl[15],
+				timeAmount: +spl[16],
+				bot: +spl[17],
+			}
+			// store the game object in local storage
+			localStorage.setItem("current-game-data", JSON.stringify(gameData));
 			board.gameno = Number(spl[2]);
 			console.log("gno " + board.gameno);
 
@@ -441,7 +455,7 @@ var server = {
 			$("#player-me").removeClass("selectplayer");
 			$("#player-opp").removeClass("selectplayer");
 
-			if (spl[7] === "white") {
+			if (spl[6] === "white") {
 				//I am white
 				$("#player-me-name").addClass("player1-name");
 				$("#player-opp-name").addClass("player2-name");
@@ -471,28 +485,27 @@ var server = {
 				$("#player-opp").addClass("selectplayer");
 			}
 
-			$(".player1-name:first").html(spl[4]);
-			$(".player2-name:first").html(spl[6]);
-			document.title = "Tak: " + spl[4] + " vs " + spl[6];
+			$(".player1-name:first").html(p1);
+			$(".player2-name:first").html(p2);
+			document.title = "Tak: " + p1 + " vs " + p2;
 
 			var time = Number(spl[8]);
 			settimers(time * 1000, time * 1000);
 
 			var opponentname;
-			if (spl[7] === "white") {
+			if (spl[6] === "white") {
 				//I am white
-				opponentname = spl[6];
+				opponentname = p2;
 			} else {
 				//I am black
-				opponentname = spl[4];
+				opponentname = p1;
 			}
 			chathandler.createRoom("priv-" + opponentname, "<b>" + opponentname + "</b>");
 			chathandler.selectRoom("priv-" + opponentname);
 
-			var chimesound = document.getElementById("chime-sound");
-			//chimesound.pause()
-			chimesound.currentTime = 0;
-			chimesound.play();
+			document.getElementById("chime-sound").currentTime = 0;
+			document.getElementById("chime-sound").play();
+
 			document.getElementById("createSeek").setAttribute("disabled", "disabled");
 			document.getElementById("removeSeek").setAttribute("disabled", "disabled");
 		} else if (startswith("Observe ", e)) {
@@ -619,11 +632,11 @@ var server = {
 				}
 				//Game#1 Over result
 				else if (spl[1] === "Over") {
+					document.getElementById("open-game-over").classList.remove("hidden");
 					document.title = "Play Tak";
 					board.result = spl[2];
 
 					var msg = "Game over <span class='bold'>" + spl[2] + "</span><br>";
-					var res;
 					var type;
 
 					if (spl[2] === "R-0" || spl[2] === "0-R") {
@@ -656,6 +669,11 @@ var server = {
 						} else {
 							msg += "You win by " + type;
 						}
+					}
+					// get the game object and check if it's a bot game
+					const gameData = JSON.parse(localStorage.getItem("current-game-data"));
+					if (!board.observing && (gameData && !gameData.bot)) {
+						document.getElementById("rematch").classList.remove("hidden");
 					}
 
 					stopTime();
@@ -765,7 +783,7 @@ var server = {
 			alert("success", "You're logged in " + this.myname + "!");
 			document.title = "Play Tak";
 			server.loggedin = true;
-
+			this.updatePlayerRatingInfo(await getPlayersRating(this.myname));
 			var rem = $("#keeploggedin").is(":checked");
 			if (rem === true && !startswith("Guest", this.myname)) {
 				var name = $("#login-username").val();
@@ -831,6 +849,7 @@ var server = {
 		else if (startswith("Seek new", e)) {
 			// Seek new 1 {player} 5 900 20 A 0 21 1 0 0 0 0 {oppoenent}
 			var spl = e.split(" ");
+			const playerRating = await getPlayersRating(spl[3]);
 			this.seekslist.push({
 				id: +spl[2],
 				player: spl[3],
@@ -846,6 +865,8 @@ var server = {
 				trigger_move: spl[13],
 				time_amount: (parseInt(spl[14]) / 60).toString(),
 				opponent: spl[15],
+				bot: spl[16],
+				player_rating: playerRating
 			});
 			this.rendeerseekslist();
 		}
@@ -864,11 +885,24 @@ var server = {
 			this.seekslist = newseekslist;
 			this.rendeerseekslist();
 		}
-		//Online players
+		// accept rematch
+		else if (startswith("Accept Rematch", e)) {
+			const spl = e.split(" ");
+			const gameId = +spl[2];
+			this.acceptseek(gameId);
+		}
+		else if (startswith("Rematch", e)) {
+			alert("info", "Rematch seek created!");
+		}
+		//Online count
 		else if (startswith("Online ", e)) {
-			$("#onlineplayers").removeClass("hidden");
-			var op = document.getElementById("onlineplayersbadge");
-			op.innerHTML = Number(e.split("Online ")[1]);
+		}
+		else if (startswith("OnlinePlayers ", e)) {
+			const msgArray = e.split("OnlinePlayers ");
+			this.onlinePlayers = JSON.parse(msgArray[1]) 
+			document.getElementById("onlineplayers").classList.remove("hidden");
+			document.getElementById("onlineplayersbadge").innerHTML = this.onlinePlayers.length;
+			this.renderOnlinePlayers();
 		}
 		//Reset token sent
 		else if (startswith("Reset token sent", e)) {
@@ -905,24 +939,46 @@ var server = {
 		}
 	}
 	,updateplayerinfo:function(){
-		document.getElementById("playerinfo").innerHTML=""
-		$("#playerinfo").append((this.myname||"")+" ("+getratingstring(this.myname)+")")
+		document.getElementById("player-name").innerText = this.myname || "";
+		// if myname starts with guest then return
+		if (this.myname && this.myname.startsWith("Guest")) {
+			return;
+		}
 		document.getElementById("playerinfo").href="ratings.html"+(this.myname?"#"+this.myname:"")
+	},
+	updatePlayerRatingInfo: function (rating) {
+		this.myRating = rating;
+		document.getElementById("player-rating").innerText = `(${rating || 'ratings'})`;
 	}
-	,rendeergameslist:function(){
+	,rendeergameslist:async function(){
 		var listtable=document.getElementById("gamelist")
 		listtable.innerHTML=""
 		var a
 		for(a=0;a<this.gameslist.length;a++){
 			var game=this.gameslist[a]
 			var p1 = game.player1
+			let p1Rating = await getPlayersRating(p1);
+			if(!p1Rating){
+				p1Rating = "";
+			}
 			var p2 = game.player2
-			var sz = "<span class='badge'>"+game.size+"x"+game.size+"</span>"
-			let p1Element = `<span data-hover="rating">${getratingstring(p1)}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
-			let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-hover="rating">${getratingstring(p2)}</span>`;
-			var row = $('<tr/>').addClass('game'+game.id).click(game,function(ev){server.observegame(ev.data)}).appendTo($('#gamelist'))
-			$('<td/>').append(p1Element + " vs " + p2Element).appendTo(row);
-			$('<td/>').append(sz).addClass("right").appendTo(row)
+			let p2Rating = await getPlayersRating(p2);
+			if(!p2Rating){
+				p2Rating = "";
+			}
+			const players = document.createElement("button");
+			players.className = "btn btn-transparent";
+			players.setAttribute("data-hover", "Watch game");
+			let p1Element = `<span data-hover="rating">${p1Rating}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
+			let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-hover="rating">${p2Rating}</span>`;
+			players.innerHTML = p1Element + " vs " + p2Element;
+			const actionButton = document.createElement("button");
+			actionButton.className = "btn btn-transparent";
+			actionButton.innerHTML = `<svg viewBox="0 0 576 512"><path d="M160 256C160 185.3 217.3 128 288 128C358.7 128 416 185.3 416 256C416 326.7 358.7 384 288 384C217.3 384 160 326.7 160 256zM288 336C332.2 336 368 300.2 368 256C368 211.8 332.2 176 288 176C287.3 176 286.7 176 285.1 176C287.3 181.1 288 186.5 288 192C288 227.3 259.3 256 224 256C218.5 256 213.1 255.3 208 253.1C208 254.7 208 255.3 208 255.1C208 300.2 243.8 336 288 336L288 336zM95.42 112.6C142.5 68.84 207.2 32 288 32C368.8 32 433.5 68.84 480.6 112.6C527.4 156 558.7 207.1 573.5 243.7C576.8 251.6 576.8 260.4 573.5 268.3C558.7 304 527.4 355.1 480.6 399.4C433.5 443.2 368.8 480 288 480C207.2 480 142.5 443.2 95.42 399.4C48.62 355.1 17.34 304 2.461 268.3C-.8205 260.4-.8205 251.6 2.461 243.7C17.34 207.1 48.62 156 95.42 112.6V112.6zM288 80C222.8 80 169.2 109.6 128.1 147.7C89.6 183.5 63.02 225.1 49.44 256C63.02 286 89.6 328.5 128.1 364.3C169.2 402.4 222.8 432 288 432C353.2 432 406.8 402.4 447.9 364.3C486.4 328.5 512.1 286 526.6 256C512.1 225.1 486.4 183.5 447.9 147.7C406.8 109.6 353.2 80 288 80V80z"/></svg>`;
+			var row = $('<tr/>').addClass('game'+game.id).appendTo($('#gamelist'))
+			$('<td/>').append(actionButton).attr("data-hover", "Watch game").click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
+			$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
+			$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row)
 			$('<td/>').append(minuteseconds(game.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
 			$('<td/>').append('+'+minuteseconds(game.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
 			$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").addClass("right").appendTo(row)
@@ -932,50 +988,55 @@ var server = {
 		}
 		document.getElementById("gamecount").innerHTML=this.gameslist.length
 	}
-	,rendeerseekslist:function(){
-		var humanlisttable=document.getElementById("seeklist")
-		humanlisttable.innerHTML=""
-		var botlisttable=document.getElementById("seeklistbot")
-		botlisttable.innerHTML=""
-		this.seekslist.sort(function(a,b){return getrating(b.player)-getrating(a.player) || ((a.player.toLowerCase()+" "+a.player)>(b.player.toLowerCase()+" "+b.player)?1:-1)})
+	,rendeerseekslist: async function(){
+		document.getElementById("seeklist").innerHTML = "";
+		document.getElementById("seeklistbot").innerHTML = "";
+		this.seekslist.sort(function(a,b){return b.player_rating - a.player_rating || ((a.player.toLowerCase()+" "+a.player)>(b.player.toLowerCase()+" "+b.player)?1:-1)})
 		var a
 		var playercount=0
 		var botcount=0
 		var myrating=1000
 		var levelgap=150
-		if(this.myname){
-			myrating=getrating(this.myname)||1000
+		if(this.myname && this.myRating){
+			myrating=this.myRating || 1000;
 		}
 		// remove private seek badge
 		const seekBadge = document.getElementById("seekBadge");
 		seekBadge.classList.remove("seek-badge");
 		for(a=0;a<this.seekslist.length;a++){
 			var seek=this.seekslist[a]
-			if(seek.opponent != "" && seek.opponent.toLowerCase() != this.myname.toLowerCase() &&  seek.player.toLowerCase() != this.myname.toLowerCase()){
+			const mySeek = seek.player.toLowerCase() == this.myname.toLowerCase();
+			if(seek.opponent != "0" && seek.opponent != "" && seek.opponent.toLowerCase() != this.myname.toLowerCase() && seek.player.toLowerCase() != this.myname.toLowerCase()){
 				continue;
 			}
 			var colourleft="white"
 			var colourright="black"
+			let yourColor = 'random';
 			if(seek.color=="W"){
 				colourright="white"
+				yourColor = "black";
+				if(mySeek) {
+					yourColor = colourleft;
+				}
 			}
 			if(seek.color=="B"){
 				colourleft="black"
+				yourColor = "white";
+				if(mySeek) {
+					yourColor = colourleft;
+				}
 			}
-			var imgstring='<svg class="colourcircle" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourleft+'"></circle><clipPath id="g-clip"><rect height="16" width="8" x="8" y="0"></rect></clipPath><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourright+'" clip-path="url(#g-clip)"></circle></svg>'
-
-			var pspan = "<span class='playername'>"+seek.player+"</span>"
+			var imgstring='<svg class="colourcircle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourleft+'"></circle><clipPath id="g-clip"><rect height="16" width="8" x="8" y="0"></rect></clipPath><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourright+'" clip-path="url(#g-clip)"></circle></svg>'
 			var sizespan = "<span class='badge'>"+seek.size+"</span>"
 			var row = $('<tr/>')
 				.addClass('seek'+seek.id)
-				.click(seek.id,function(ev){server.acceptseek(ev.data)})
-			if(seek.opponent!=""){
+			if(seek.opponent != "" && seek.opponent != "0"){
 				row.addClass("privateseek");
 				if(!seekBadge.classList.contains("seek-badge")) {
 					seekBadge.classList.add("seek-badge")
 				}
 			}
-			if(isbot(seek.player)){
+			if(seek.bot === "1"){
 				row.appendTo($('#seeklistbot'))
 				botcount++
 			}
@@ -983,7 +1044,7 @@ var server = {
 				row.appendTo($('#seeklist'))
 				playercount++
 			}
-			var rating=getrating(seek.player)
+			const rating = seek.player_rating
 			var ratingdecoration=""
 			var ratingtext=""
 			if(rating){
@@ -1019,9 +1080,28 @@ var server = {
 					ratingtext="This player is approximately your level"
 				}
 			}
-			$('<td/>').append(imgstring).appendTo(row)
-			$('<td/>').append(pspan).appendTo(row)
-			$('<td/>').append(ratingdecoration+getratingstring(seek.player)).addClass("right").attr("data-hover",ratingtext).appendTo(row)
+			const challengePlayerButton = document.createElement("button");
+			challengePlayerButton.className = "btn btn-transparent";
+			challengePlayerButton.innerHTML = `<span class='playername'>${seek.player}</span>`;
+			const deleteIcon = '<svg viewBox="0 0 24 24"><path d="M17,4V5H15V4H9V5H7V4A2,2,0,0,1,9,2h6A2,2,0,0,1,17,4Z"/><path d="M20,6H4A1,1,0,0,0,4,8H5V20a2,2,0,0,0,2,2H17a2,2,0,0,0,2-2V8h1a1,1,0,0,0,0-2ZM11,17a1,1,0,0,1-2,0V11a1,1,0,0,1,2,0Zm4,0a1,1,0,0,1-2,0V11a1,1,0,0,1,2,0Z"/></svg>'
+			const challengeIcon = `<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414 l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586 L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>`;
+			const actionButton = document.createElement("button");
+			actionButton.className = "btn btn-transparent";
+			actionButton.innerHTML = mySeek ? deleteIcon : challengeIcon;
+			$('<td/>').append(actionButton).click(seek.id,function(ev){
+					if (mySeek) { 
+						return server.removeseek(ev.data);
+					 }
+					return server.acceptseek(ev.data)
+				}).attr("data-hover", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row)
+			$('<td/>').append(imgstring).attr("data-hover","Your color will be " + yourColor).appendTo(row)
+			$('<td/>').append(challengePlayerButton).click(seek.id,function(ev){
+					if (mySeek) { 
+						return server.removeseek(ev.data);
+					 }
+					return server.acceptseek(ev.data)
+				}).attr("data-hover", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row)
+			$('<td/>').append(ratingdecoration+seek.player_rating).addClass("right").attr("data-hover",ratingtext).appendTo(row)
 			$('<td/>').append(sizespan).addClass("right").appendTo(row)
 			$('<td/>').append(minuteseconds(seek.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
 			$('<td/>').append('+'+minuteseconds(seek.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
@@ -1031,12 +1111,67 @@ var server = {
 			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right").attr("data-hover", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row)
 		}
 		if(!botcount){
-			$('<tr/>').append($('<td colspan="9"/>')).appendTo($('#seeklistbot'))
+			$('<tr/>').append($('<td colspan="9">No Bot Games Currently Available</td>')).appendTo($('#seeklistbot'))
 		}
-		$('<tr/>').append($('<td colspan="9"/>')).appendTo($('#seeklist'))
+		if (!playercount){
+			$('<tr/>').append($('<td colspan="9">No Player Games Currently</td>')).appendTo($('#seeklist'))
+		}
 		document.getElementById("seekcount").innerHTML=playercount
 		document.getElementById("seekcountbot").innerHTML=botcount
 		this.changeseektime=Date.now()
+	},
+	renderOnlinePlayers:function(){
+		const onlineTable = document.getElementById("online-list");
+		onlineTable.innerHTML = "";
+		for (let i = 0; i < this.onlinePlayers.length; i++) {
+			// if the name is the current loggedin player, skip
+			if (this.onlinePlayers[i]=== this.myname) {
+				continue;
+			}
+			const player = this.onlinePlayers[i];
+			const row = document.createElement("tr");
+			// create a player link to the rantings page
+			const playerLink = document.createElement("a");
+			playerLink.href = "ratings.html#" + player;
+			// target="_blank" to open in new tab
+			playerLink.target = "_blank";
+			playerLink.setAttribute("data-hover", "Click to see " + player + "'s rating");
+			playerLink.innerText = player;
+			row.innerHTML += `<td>${playerLink.outerHTML}</td><td>`
+			// createa challenge button
+			const challengeButton = document.createElement("button");
+			challengeButton.className = "btn btn-transparent";
+			challengeButton.setAttribute("data-hover", "Challenge " + player);
+			challengeButton.innerHTML = `<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414  l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586  L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>`;
+			challengeButton.setAttribute("onclick", `server.challengePlayer('${player}')`);
+			row.innerHTML += `${challengeButton.outerHTML}`;
+			// create a message button
+			const messageButton = document.createElement("button");
+			messageButton.className = "btn btn-transparent";
+			messageButton.setAttribute("data-hover", "Message " + player);
+			messageButton.innerHTML = `<svg viewBox="0 0 24 24"><g><path d="M12 14V11M12 11V8M12 11H9M12 11H15M7.12357 18.7012L5.59961 19.9203C4.76744 20.5861 4.35115 20.9191 4.00098 20.9195C3.69644 20.9198 3.40845 20.7813 3.21846 20.5433C3 20.2696 3 19.7369 3 18.6712V7.2002C3 6.08009 3 5.51962 3.21799 5.0918C3.40973 4.71547 3.71547 4.40973 4.0918 4.21799C4.51962 4 5.08009 4 6.2002 4H17.8002C18.9203 4 19.4801 4 19.9079 4.21799C20.2842 4.40973 20.5905 4.71547 20.7822 5.0918C21 5.5192 21 6.07899 21 7.19691V14.8036C21 15.9215 21 16.4805 20.7822 16.9079C20.5905 17.2842 20.2843 17.5905 19.908 17.7822C19.4806 18 18.9215 18 17.8036 18H9.12256C8.70652 18 8.49829 18 8.29932 18.0408C8.12279 18.0771 7.95216 18.1368 7.79168 18.2188C7.61149 18.3108 7.44964 18.4403 7.12722 18.6982L7.12357 18.7012Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
+			messageButton.setAttribute("onclick", `server.messagePlayer('${player}')`);
+			row.innerHTML += `${messageButton.outerHTML}`;
+			row.innerHTML += `</td>`;
+			onlineTable.appendChild(row);
+		}
+	},
+	challengePlayer: function(player) {
+		// close online player modal
+		$('#online-players-modal').modal('hide');
+		// open new game modal
+		$('#creategamemodal').modal('show');
+		// set the opponent name in the new game modal
+		document.getElementById("opname").value = player;
+	},
+	messagePlayer: function(player) {
+		// close online player modal
+		$('#online-players-modal').modal('hide');
+		// force shwo the chat panel
+		adjustsidemenu(null, "show");
+		const id="priv-" + player;
+		chathandler.createRoom(id,"<b>" + player + "</b>");
+		chathandler.selectRoom(id);
 	}
 	,chat:function(type,name,msg){
 		if(type === 'global'){this.send('Shout '+msg)}
@@ -1090,6 +1225,7 @@ var server = {
 		this.send("Seek 0 0 0 A 0 0 0 0 0 ")
 		$('#creategamemodal').modal('hide')
 		document.getElementById('createSeek').removeAttribute("disabled");
+		document.getElementById("rematch").removeAttribute("disabled");
 		// remove seek state
 		server.newSeek = false;
 	}
@@ -1139,12 +1275,16 @@ var server = {
 			return
 		}
 		this.send("Accept " + e)
-		$('#joingame-modal').modal('hide')
+		$('#joingame-modal').modal('hide');
+		$('#game-over-modal').modal('hide');
+		document.getElementById("open-game-over").classList.add("hidden");
 	}
 	,unobserve:function(){
-		if(board.gameno !== 0){this.send("Unobserve " + board.gameno)}
+		if(board.gameno !== 0 && board.gameno !== null){this.send("Unobserve " + board.gameno)}
 	}
 	,observegame:function(game){
+		document.getElementById("open-game-over").classList.add("hidden");
+		document.getElementById("rematch").removeAttribute("disabled");
 		$('#watchgame-modal').modal('hide')
 		if(board.observing === false && board.scratch === false){ //don't observe game while playing another
 			return
@@ -1155,5 +1295,26 @@ var server = {
 		var players=[game.player1,game.player2]
 		players.sort()
 		this.send("JoinRoom "+players.join("-"))
+	},
+	rematch: function() {
+		// send a request to the server to start a rematch
+		//check the locall storage for the gameobject
+		const gameData = localStorage.getItem("current-game-data");
+		if (gameData) {
+			const game = JSON.parse(gameData);
+			// check the seek list for the game id and accept it
+			const seekIndex = this.seekslist.findIndex(seek => seek.id === game.id);
+			if (seekIndex !== -1) {
+				this.acceptseek(this.seekslist[seekIndex].id);
+				return
+			}
+			// swap the player color for the new seek
+			const newColor = game.color === "black" ? "W" : "B";
+			this.send(`Rematch ${game.id} ${game.size} ${game.time} ${game.increment} ${newColor} ${game.komi} ${game.pieces} ${game.capstones} ${game.unrated} ${game.tournament} ${game.triggerMove} ${game.timeAmount} ${game.opponent}`);
+			document.getElementById("rematch").setAttribute("disabled", "disabled");
+			document.getElementById('createSeek').setAttribute("disabled", "disabled");
+		} else {
+			alert("danger", "No previous game found for rematch.");
+		}
 	}
 }
