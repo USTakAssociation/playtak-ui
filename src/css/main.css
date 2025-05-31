@@ -902,12 +902,19 @@ input:invalid {
 a.btn {
 	color: var(--primary-font-color);
 }
+a.btn.btn-primary {
+	color: var(--primary-font-color-50);
+}
 .btn-primary {
 	background-color: var(--secondary-color);
 	color: var(--primary-font-color-50);
 }
 .btn svg {
 	fill: var(--primary-fill-color);
+	vertical-align: middle;
+}
+.btn.btn-primary svg {
+	fill: var(--secondary-fill-color);
 	vertical-align: middle;
 }
 .btn-primary:hover, .btn-primary:focus {
@@ -934,6 +941,10 @@ a.btn {
 .btn.disabled, .btn[disabled], fieldset[disabled] .btn {
 	cursor: not-allowed !important;
 	opacity: 0.45;
+}
+
+.seek-button {
+	padding: 6px 0px;
 }
 
 /* || Responsive CSS */

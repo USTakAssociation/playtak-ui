@@ -130,11 +130,11 @@ function startswith(start,str){
 
 async function getPlayersRating(playerName) {
 	if (!playerName) {
-		return null;
+		return 0;
 	}
 	// if player name is guest then return
 	if (playerName.startsWith("Guest")) {
-		return null;
+		return 0;
 	}
 	// set the url based on the current host
 	let url = '';
@@ -157,7 +157,9 @@ async function getPlayersRating(playerName) {
 		const json = await response.json();
 		if (json.rating) {
 			return json.rating;
-		} 
+		} else {
+			return 0;
+		}
 	} catch (error) {
 		console.error(error.message);
 		return null;
@@ -230,6 +232,8 @@ var server = {
 				server.rendeerseekslist()
 				server.updateplayerinfo()
 				stopTime()
+				document.getElementById("removeSeek").removeAttribute("disabled");
+				document.getElementById("createSeek").removeAttribute("disabled");
 
 				if(localStorage.getItem('keeploggedin')==='true' && !server.anotherlogin){
 					alert("info","Connection lost. Trying to reconnect...")
@@ -248,6 +252,12 @@ var server = {
 		localStorage.removeItem('isLoggedIn');
 		localStorage.removeItem("guesttoken");
 		localStorage.removeItem("guesttokendecay");
+		this.seekslist = [];
+		this.gameslist = [];
+		this.myname = null;
+		this.myRating = 0;
+		document.getElementById("removeSeek").removeAttribute("disabled");
+		document.getElementById("createSeek").removeAttribute("disabled");
 		resetToLoginState();
 		if(this.connection){
 			this.connection.close()
@@ -1080,8 +1090,21 @@ var server = {
 					ratingtext="This player is approximately your level"
 				}
 			}
+			let gameType = "";
+			let gameTypeText = "";
+			if (!seek.unrated && !seek.tournament) {
+				gameType = "N";
+				gameTypeText = "Normal game";
+			} else if (seek.unrated && !seek.tournament) {
+				gameType = "U";
+				gameTypeText = "Unrated game";
+			} else if (!seek.unrated && seek.tournament) {
+				gameType = "T";
+				gameTypeText = "Tournament game";
+			}
+			
 			const challengePlayerButton = document.createElement("button");
-			challengePlayerButton.className = "btn btn-transparent";
+			challengePlayerButton.className = "btn btn-transparent seek-button";
 			challengePlayerButton.innerHTML = `<span class='playername'>${seek.player}</span>`;
 			const deleteIcon = '<svg viewBox="0 0 24 24"><path d="M17,4V5H15V4H9V5H7V4A2,2,0,0,1,9,2h6A2,2,0,0,1,17,4Z"/><path d="M20,6H4A1,1,0,0,0,4,8H5V20a2,2,0,0,0,2,2H17a2,2,0,0,0,2-2V8h1a1,1,0,0,0,0-2ZM11,17a1,1,0,0,1-2,0V11a1,1,0,0,1,2,0Zm4,0a1,1,0,0,1-2,0V11a1,1,0,0,1,2,0Z"/></svg>'
 			const challengeIcon = `<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414 l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586 L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>`;
@@ -1101,20 +1124,20 @@ var server = {
 					 }
 					return server.acceptseek(ev.data)
 				}).attr("data-hover", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row)
-			$('<td/>').append(ratingdecoration+seek.player_rating).addClass("right").attr("data-hover",ratingtext).appendTo(row)
+			$('<td/>').append(ratingdecoration + " " + (seek.player_rating || "")).addClass("right").attr("data-hover",ratingtext).appendTo(row)
 			$('<td/>').append(sizespan).addClass("right").appendTo(row)
 			$('<td/>').append(minuteseconds(seek.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
 			$('<td/>').append('+'+minuteseconds(seek.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
 			$('<td/>').append('+'+Math.floor(seek.komi/2)+"."+(seek.komi&1?"5":"0")).addClass("right").attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row)
 			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
-			$('<td/>').append((seek.unrated?"P":"")+(seek.tournament?"T":"")).addClass("right").attr("data-hover",(seek.unrated?"Unrated game":"")+(seek.tournament?"Tournament game":"")).appendTo(row)
+			$('<td/>').append(gameType).addClass("right").attr("data-hover",gameTypeText).appendTo(row)
 			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right").attr("data-hover", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row)
 		}
 		if(!botcount){
 			$('<tr/>').append($('<td colspan="9">No Bot Games Currently Available</td>')).appendTo($('#seeklistbot'))
 		}
 		if (!playercount){
-			$('<tr/>').append($('<td colspan="9">No Player Games Currently</td>')).appendTo($('#seeklist'))
+			$('<tr/>').append($('<td colspan="9">No Player Games Currently Available</td>')).appendTo($('#seeklist'))
 		}
 		document.getElementById("seekcount").innerHTML=playercount
 		document.getElementById("seekcountbot").innerHTML=botcount
