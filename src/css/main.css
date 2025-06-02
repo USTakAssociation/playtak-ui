@@ -62,8 +62,14 @@ a {
 }
 svg {
 	fill: var(--primary-fill-color);
-	width: 20px;
-	height: 20px;
+	width: 24px;
+	height: 24px;
+}
+.fill-primary {
+	fill: var(--primary-fill-color);
+}
+.stroke-primary {
+	stroke: var(--primary-fill-color);
 }
 .svg-small {
 	width: 15px;
@@ -540,10 +546,6 @@ a.navitem, div.navitem{
 	font-weight: normal;
 }
 
-#seeklistbot tr, #seeklist tr, #gamelist tr{
-	cursor: pointer;
-}
-
 .playername {
 	font-weight: bold;
 }
@@ -628,6 +630,26 @@ input:invalid {
 	display: inline-block;
 }
 
+#open-game-over {
+	top: 70px;
+	position: relative;
+	z-index: 9;
+	display: flex;
+	justify-content: center;
+}
+
+#open-game-over button {
+	height: auto;
+	background-color: var(--secondary-bg-color);
+}
+
+.game-over-action-button {
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
+}
+
 /* || Alerts */
 #alertbox {
 	position: absolute;
@@ -649,7 +671,10 @@ input:invalid {
 .linestable{
 	width: 100%;
 }
-
+.table-overflow {
+	max-height: 300px;
+	overflow-y: scroll;
+}
 .linestable tr.headerrow{
 	border-top: 2px solid var(--primary-border-color);
 	border-bottom: 2px solid var(--primary-border-color);
@@ -874,13 +899,23 @@ input:invalid {
 	color: var(--primary-font-color);
 	background-color: var(--secondary-bg-color);
 }
-
+a.btn {
+	color: var(--primary-font-color);
+}
+a.btn.btn-primary {
+	color: var(--primary-font-color-50);
+}
 .btn-primary {
 	background-color: var(--secondary-color);
 	color: var(--primary-font-color-50);
 }
-.btn-primary svg {
-	fill: var(--primary-font-color-50);
+.btn svg {
+	fill: var(--primary-fill-color);
+	vertical-align: middle;
+}
+.btn.btn-primary svg {
+	fill: var(--secondary-fill-color);
+	vertical-align: middle;
 }
 .btn-primary:hover, .btn-primary:focus {
 	color: var(--primary-font-color-50);
@@ -894,6 +929,10 @@ input:invalid {
 	color: var(--primary-font-color);
 	background-color: var(--secondary-bg-color);
 }
+.btn-transparent {
+	background-color: transparent;
+	border: none;
+}
 
 .btn-slim {
 	height: 30px;
@@ -902,6 +941,10 @@ input:invalid {
 .btn.disabled, .btn[disabled], fieldset[disabled] .btn {
 	cursor: not-allowed !important;
 	opacity: 0.45;
+}
+
+.seek-button {
+	padding: 6px 0px;
 }
 
 /* || Responsive CSS */

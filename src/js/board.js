@@ -47,7 +47,7 @@ var materials = {
 	black_cap: new THREE.MeshBasicMaterial({color: 0x573312}),
 	white_sqr: new THREE.MeshBasicMaterial({color: 0xe6d4a7}),
 	black_sqr: new THREE.MeshBasicMaterial({color: 0xba6639}),
-	boardOverlay: new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(this.boardOverlayPath)}),
+	boardOverlay: new THREE.MeshBasicMaterial({map: {}}),
 	overlayMap: {
 		3: { "size": 270, "offset": { "x": 0.5333, "y": 0.0556 }, "repeat": { "x": 0.2, "y": 0.1667 } },
 		4: { "size": 360, "offset": { "x": 0, "y": 0 }, "repeat": { "x": 0.2667, "y": 0.2222 } },
@@ -733,6 +733,7 @@ var board = {
 	result: "",
 	observing: false,
 	overlay: null,
+	isBot: false,
 
 	// Keep track of some important positions
 	sq_position: {startx: 0,startz: 0,endx: 0,endz: 0},
@@ -744,7 +745,7 @@ var board = {
 	// the game has ended and play cannot continue,
 	isPlayEnded: false,
 
-	create:function(sz,color,isScratch,obs,komi,pieces,capstones, triggerMove, timeAmount){
+	create:function(sz,color,isScratch,obs,komi,pieces,capstones, triggerMove, timeAmount, isBot){
 		this.size = sz
 		this.komi = komi || 0
 
@@ -803,6 +804,7 @@ var board = {
 		this.ismymove = this.checkifmymove()
 		this.board_history = []
 		this.timer_started = false
+		this.isBot = isBot || false;
 		generateCamera()
 	}
 	,initEmpty:function(){
