@@ -644,10 +644,10 @@ input:invalid {
 }
 
 .game-over-action-button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
 }
 
 /* || Alerts */
