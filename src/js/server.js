@@ -960,6 +960,8 @@ var server = {
 	clearGamesList:function(){
 		const listtable = document.getElementById("gamelist");
 		listtable.innerHTML = "";
+		this.gameslist = [];
+		document.getElementById("gamecount").innerHTML = this.gameslist.length;
 	},
 	addGameToWatchList: async function(game){
 		if(!game || !game.id){return}
@@ -999,6 +1001,7 @@ var server = {
 		var gameRow = document.getElementById("game-" + gameId);
 		if(gameRow){
 			gameRow.remove();
+			document.getElementById("gamecount").innerHTML = this.gameslist.length;
 		}
 	}
 	,rendeerseekslist: async function(){
