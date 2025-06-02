@@ -228,7 +228,7 @@ var server = {
 				server.myname=null
 				server.seekslist=[]
 				server.gameslist=[]
-				server.rendeergameslist()
+				server.clearGamesList();
 				server.rendeerseekslist()
 				server.updateplayerinfo()
 				stopTime()
@@ -538,7 +538,7 @@ var server = {
 		} else if (startswith("GameList Add ", e)) {
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
 			var spl = e.split(" ");
-			this.gameslist.push({
+			const game = {
 				id: +spl[2],
 				time: +spl[6],
 				increment: +spl[7],
@@ -552,21 +552,18 @@ var server = {
 				tournament: spl[12] == 1,
 				triggerMove: spl[13],
 				timeAmount: parseInt(spl[14]) / 60
-			});
-			this.rendeergameslist();
+			};
+			this.gameslist.push(game);
+			this.addGameToWatchList(game);
 		} else if (startswith("GameList Remove ", e)) {
 			//GameList Remove Game#1 player1 vs player2, 4x4, 180, 0 half-moves played, player1 to move
 			var spl = e.split(" ");
 			var id = +spl[2];
-			var newgameslist = [];
-			var a;
-			for (a = 0; a < this.gameslist.length; a++) {
-				if (id != this.gameslist[a].id) {
-					newgameslist.push(this.gameslist[a]);
-				}
+			const index = this.gameslist.findIndex(game => game.id === id);
+			if (index !== -1) {
+				this.gameslist.splice(index, 1);
 			}
-			this.gameslist = newgameslist;
-			this.rendeergameslist();
+			this.removeGameFromWatchList(id);
 		} else if (startswith("Game#", e)) {
 			var spl = e.split(" ");
 			var gameno = Number(e.split("Game#")[1].split(" ")[0]);
@@ -959,44 +956,50 @@ var server = {
 	updatePlayerRatingInfo: function (rating) {
 		this.myRating = rating;
 		document.getElementById("player-rating").innerText = `(${rating || 'ratings'})`;
-	}
-	,rendeergameslist:async function(){
-		var listtable=document.getElementById("gamelist")
-		listtable.innerHTML=""
-		var a
-		for(a=0;a<this.gameslist.length;a++){
-			var game=this.gameslist[a]
-			var p1 = game.player1
-			let p1Rating = await getPlayersRating(p1);
-			if(!p1Rating){
-				p1Rating = "";
-			}
-			var p2 = game.player2
-			let p2Rating = await getPlayersRating(p2);
-			if(!p2Rating){
-				p2Rating = "";
-			}
-			const players = document.createElement("button");
-			players.className = "btn btn-transparent";
-			players.setAttribute("data-hover", "Watch game");
-			let p1Element = `<span data-hover="rating">${p1Rating}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
-			let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-hover="rating">${p2Rating}</span>`;
-			players.innerHTML = p1Element + " vs " + p2Element;
-			const actionButton = document.createElement("button");
-			actionButton.className = "btn btn-transparent";
-			actionButton.innerHTML = `<svg viewBox="0 0 576 512"><path d="M160 256C160 185.3 217.3 128 288 128C358.7 128 416 185.3 416 256C416 326.7 358.7 384 288 384C217.3 384 160 326.7 160 256zM288 336C332.2 336 368 300.2 368 256C368 211.8 332.2 176 288 176C287.3 176 286.7 176 285.1 176C287.3 181.1 288 186.5 288 192C288 227.3 259.3 256 224 256C218.5 256 213.1 255.3 208 253.1C208 254.7 208 255.3 208 255.1C208 300.2 243.8 336 288 336L288 336zM95.42 112.6C142.5 68.84 207.2 32 288 32C368.8 32 433.5 68.84 480.6 112.6C527.4 156 558.7 207.1 573.5 243.7C576.8 251.6 576.8 260.4 573.5 268.3C558.7 304 527.4 355.1 480.6 399.4C433.5 443.2 368.8 480 288 480C207.2 480 142.5 443.2 95.42 399.4C48.62 355.1 17.34 304 2.461 268.3C-.8205 260.4-.8205 251.6 2.461 243.7C17.34 207.1 48.62 156 95.42 112.6V112.6zM288 80C222.8 80 169.2 109.6 128.1 147.7C89.6 183.5 63.02 225.1 49.44 256C63.02 286 89.6 328.5 128.1 364.3C169.2 402.4 222.8 432 288 432C353.2 432 406.8 402.4 447.9 364.3C486.4 328.5 512.1 286 526.6 256C512.1 225.1 486.4 183.5 447.9 147.7C406.8 109.6 353.2 80 288 80V80z"/></svg>`;
-			var row = $('<tr/>').addClass('game'+game.id).appendTo($('#gamelist'))
-			$('<td/>').append(actionButton).attr("data-hover", "Watch game").click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
-			$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
-			$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row)
-			$('<td/>').append(minuteseconds(game.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
-			$('<td/>').append('+'+minuteseconds(game.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
-			$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").addClass("right").appendTo(row)
-			$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
-			$('<td/>').append((game.unrated?"P":"")+(game.tournament?"T":"")).addClass("right").attr("data-hover",(game.unrated?"Unrated game":"")+(game.tournament?"Tournament game":"")).appendTo(row)
-			$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right").attr("data-hover", "Trigger move and extra time to add in minutes").appendTo(row);
+	},
+	clearGamesList:function(){
+		const listtable = document.getElementById("gamelist");
+		listtable.innerHTML = "";
+	},
+	addGameToWatchList: async function(game){
+		if(!game || !game.id){return}
+		var p1 = game.player1
+		let p1Rating = await getPlayersRating(p1);
+		if(!p1Rating){
+			p1Rating = "";
 		}
-		document.getElementById("gamecount").innerHTML=this.gameslist.length
+		var p2 = game.player2
+		let p2Rating = await getPlayersRating(p2);
+		if(!p2Rating){
+			p2Rating = "";
+		}
+		const players = document.createElement("button");
+		players.className = "btn btn-transparent";
+		players.setAttribute("data-hover", "Watch game");
+		let p1Element = `<span data-hover="rating">${p1Rating}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
+		let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-hover="rating">${p2Rating}</span>`;
+		players.innerHTML = p1Element + " vs " + p2Element;
+		const actionButton = document.createElement("button");
+		actionButton.className = "btn btn-transparent";
+		actionButton.innerHTML = `<svg viewBox="0 0 576 512"><path d="M160 256C160 185.3 217.3 128 288 128C358.7 128 416 185.3 416 256C416 326.7 358.7 384 288 384C217.3 384 160 326.7 160 256zM288 336C332.2 336 368 300.2 368 256C368 211.8 332.2 176 288 176C287.3 176 286.7 176 285.1 176C287.3 181.1 288 186.5 288 192C288 227.3 259.3 256 224 256C218.5 256 213.1 255.3 208 253.1C208 254.7 208 255.3 208 255.1C208 300.2 243.8 336 288 336L288 336zM95.42 112.6C142.5 68.84 207.2 32 288 32C368.8 32 433.5 68.84 480.6 112.6C527.4 156 558.7 207.1 573.5 243.7C576.8 251.6 576.8 260.4 573.5 268.3C558.7 304 527.4 355.1 480.6 399.4C433.5 443.2 368.8 480 288 480C207.2 480 142.5 443.2 95.42 399.4C48.62 355.1 17.34 304 2.461 268.3C-.8205 260.4-.8205 251.6 2.461 243.7C17.34 207.1 48.62 156 95.42 112.6V112.6zM288 80C222.8 80 169.2 109.6 128.1 147.7C89.6 183.5 63.02 225.1 49.44 256C63.02 286 89.6 328.5 128.1 364.3C169.2 402.4 222.8 432 288 432C353.2 432 406.8 402.4 447.9 364.3C486.4 328.5 512.1 286 526.6 256C512.1 225.1 486.4 183.5 447.9 147.7C406.8 109.6 353.2 80 288 80V80z"/></svg>`;
+		var row = $('<tr/>').attr("id", "game-" + game.id).addClass('game'+game.id).appendTo($('#gamelist'))
+		$('<td/>').append(actionButton).attr("data-hover", "Watch game").click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
+		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
+		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row)
+		$('<td/>').append(minuteseconds(game.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
+		$('<td/>').append('+'+minuteseconds(game.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
+		$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").addClass("right").appendTo(row)
+		$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
+		$('<td/>').append((game.unrated?"P":"")+(game.tournament?"T":"")).addClass("right").attr("data-hover",(game.unrated?"Unrated game":"")+(game.tournament?"Tournament game":"")).appendTo(row)
+		$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right").attr("data-hover", "Trigger move and extra time to add in minutes").appendTo(row);
+		document.getElementById("gamecount").innerHTML = this.gameslist.length;
+	},
+	removeGameFromWatchList: function(gameId){
+		if(!gameId){return}
+		var gameRow = document.getElementById("game-" + gameId);
+		if(gameRow){
+			gameRow.remove();
+		}
 	}
 	,rendeerseekslist: async function(){
 		document.getElementById("seeklist").innerHTML = "";
