@@ -86,12 +86,10 @@ var chathandler={
 			var cls = 'chattime'
 			var timenow = getZero(hours) + ':' + getZero(mins)
 
-			if(localStorage.getItem('hide-chat-time') === 'true'){
-				cls = cls + ' hidden'
-			}
-
+			// add check to include chat time
 			if(timenow !== this.rooms[id][2]){
-				$cs.append('<div class="' + cls + '">' + timenow + '</div>')
+				let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
+				$cs.append('<div class="' + cls + '"' + hiddenAttr + '>' + timenow + '</div>')
 				this.rooms[id][2] = timenow
 			}
 			$cs.append('<span class="chatname context-player">' + name + ':</span>')
@@ -129,13 +127,13 @@ var chathandler={
 		if(document.getElementById('hide-chat-time').checked){
 			localStorage.setItem('hide-chat-time','true')
 			$('.chattime').each(function(index){
-				$(this).addClass('hidden')
+				$(this).attr('hidden', "true")
 			})
 		}
 		else{
 			localStorage.setItem('hide-chat-time','false')
 			$('.chattime').each(function(index){
-				$(this).removeClass('hidden')
+				$(this).removeAttr('hidden')
 			})
 		}
 	}

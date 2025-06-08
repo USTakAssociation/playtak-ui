@@ -4,24 +4,10 @@ function alert(type,msg) {
 	$alert.removeClass("alert-success alert-info alert-warning alert-danger")
 
 	$alert.addClass("alert-"+type)
-	$alert.removeClass('hidden')
+	$alert.removeAttr('style');
 	$alert.stop(true,true)
 	$alert.fadeTo(7000,500).slideUp(500,function() {
-		$alert.addClass('hidden')
-	})
-	alert2(type,msg)
-}
-
-function alert2(type,msg) {
-	$('#alert-text2').text(msg)
-	var $alert = $('#alert2')
-	$alert.removeClass("alert-success alert-info alert-warning alert-danger")
-
-	$alert.addClass("alert-"+type)
-	$alert.removeClass('hidden')
-	$alert.stop(true,true)
-	$alert.fadeTo(4000,500).slideUp(500,function() {
-		$alert.addClass('hidden')
+		$alert.css("display","none")
 	})
 }
 
@@ -475,12 +461,14 @@ function adjustsidemenu(notation,chat){
 		if(notationstate=="show"){
 			document.getElementById('notation-arrow').classList.add('rotate-arrow');
 			$('#notation-toggle-text').css("left","200px")
-			$('#rmenu').removeClass('hidden')
+			document.getElementById("rmenu").classList.remove("hidden");
+			document.getElementById("rmenu").style = ""
 			generateCamera()
 		}
 	}
 	else if(notationstate=="hide"){
-		$('#rmenu').addClass('hidden')
+		document.getElementById("rmenu").classList.add("hidden");
+		document.getElementById("rmenu").style.display = 'none';
 		document.getElementById("notation-arrow").classList.remove("rotate-arrow");
 		$('#notation-toggle-text').css("left","0px")
 		generateCamera()
@@ -507,6 +495,7 @@ function adjustsidemenu(notation,chat){
 			$('#chat-toggle-button').css('right',chathandler.chat_width + 12 )
 			document.getElementById("chat-arrow").classList.remove("rotate-arrow");
 			document.getElementById("cmenu").classList.remove("hidden");
+			document.getElementById("cmenu").style.display = '';
 			generateCamera()
 		}
 	}
@@ -514,6 +503,7 @@ function adjustsidemenu(notation,chat){
 		$('#chat-toggle-button').css('right',"0px")
 		document.getElementById("chat-arrow").classList.add("rotate-arrow");
 		document.getElementById("cmenu").classList.add('hidden');
+		document.getElementById("cmenu").style.display = 'none';
 		generateCamera()
 	}
 }
@@ -522,10 +512,12 @@ let settingsToggle = false;
 function toggleSettingsDrawer(){
 	const el = document.getElementById("settings-drawer");
 	if (!settingsToggle) {
-		el.classList.remove('hidden')
+		el.classList.remove('hidden');
+		el.style.display = 'block';
 		settingsToggle = true;
 	} else {
-		el.classList.add('hidden')
+		el.classList.add('hidden');
+		el.style.display = 'none';
 		settingsToggle = false;
 	}
 	generateCamera();
@@ -590,7 +582,7 @@ function changeScratchBoardSize() {
 }
 
 function playScratch() {
-	document.getElementById("open-game-over").classList.add("hidden");
+	document.getElementById("open-game-over").style.display = "none";
 	if (board.observing) {
 		server.send("Unobserve " + board.gameno);
 	}
@@ -607,7 +599,7 @@ function playScratch() {
 }
 
 function load() {
-	document.getElementById("open-game-over").classList.add("hidden");
+	document.getElementById("open-game-over").style.display = "none";
 	$("#creategamemodal").modal("hide");
 	if(!board.scratch && !board.observing) {
 		alert('warning',"TPS/PTN won't be displayed in the middle of an online game");
@@ -854,10 +846,15 @@ function loadSettings() {
 
 	if (localStorage.getItem("hovertext") === "false") {
 		hovertext = false;
+		$('[data-toggle="tooltip"]').tooltip('dispose');
 	} else if (localStorage.getItem("hovertext") === "true") {
 		hovertext = true;
+		$('[data-toggle="tooltip"]').tooltip({
+			container: 'body'
+		});
 	} else {
 		hovertext = !ismobile;
+		localStorage.setItem("hovertext", `${!ismobile}`);
 	}
 	document.getElementById("hover-checkbox").checked = hovertext;
 
@@ -1226,10 +1223,12 @@ function checkboxHover() {
 	if(document.getElementById('hover-checkbox').checked) {
 		localStorage.setItem('hovertext','true')
 		hovertext=true
+		$('[data-toggle="tooltip"]').tooltip();
 	}
 	else{
 		localStorage.setItem('hovertext','false')
 		hovertext=false
+		$('[data-toggle="tooltip"]').tooltip('dispose');
 	}
 }
 
@@ -1422,30 +1421,6 @@ function changeboardsize(){
 	}
 }
 
-function dohovertext(ev){
-	var el=document.getElementById("hovertext")
-	el.style.left=ev.clientX+"px"
-	el.style.top=(ev.clientY+25)+"px"
-	var target=ev.target
-	var hoverstring=""
-	while(target){
-		if(target.dataset && target.dataset.hasOwnProperty("hover")){
-			hoverstring=target.dataset.hover
-			break
-		}
-		target=target.parentNode
-	}
-	if(hoverstring && hovertext){
-		el.style.display="block"
-		el.textContent=hoverstring
-	}
-	else{
-		el.style.display="none"
-	}
-}
-
-document.body.onmousemove=dohovertext
-
 $(document).ready(function() {
 	if(localStorage.getItem('sound')==='false') {
 		turnsoundoff()
@@ -1473,6 +1448,10 @@ $(document).ready(function() {
 		hideElement("action-links");
 		showElement("play-button");
 	}
+	// init tooltips
+	// $('[data-toggle="tooltip"]').tooltip({
+	// 	container: 'body'
+	// })
 	fetchEvents();
 })
 
