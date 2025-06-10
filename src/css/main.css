@@ -989,7 +989,7 @@ a.btn.btn-primary {
 }
 
 /* mobile menu  */
-@media (max-width: 1190px) {
+@media (max-width: 1250px) {
 	.menu-button-container {
 		display: flex;
 	}
