@@ -44,6 +44,7 @@
 		<link rel="stylesheet" href="css/thirdparty/jquery.contextMenu.min.css" />
 		<link rel="stylesheet" href="css/landing.css">
 		<link rel="stylesheet" href="css/main.css" />
+		<link rel="stylesheet" href="css/2d-board.css">
 	</head>
 
 	<body>
@@ -2079,8 +2080,23 @@
 			</div>
 		</div>
 
-		<canvas id="gamecanvas"></canvas>
-
+		<canvas id="gamecanvas" style="visibility: hidden;"></canvas>
+		<div class="flex justify-content-center align-items-center" style="height: 100vh;">
+			<div id="board-2d-container">
+				<div id="row-2d">
+					<div id="y-axis"></div>
+					<div id="board-2d">
+						<!-- squares -->
+						 <div id="squares-2d"></div>
+						<!-- pieces -->
+						<div id="pieces-2d"></div>
+					</div>
+					<div id="unplayed-2d"></div>
+				</div>
+				<div id="x-axis"></div>
+			</div>
+		</div>
+		
 		<script src="js/thirdparty/jquery.min.js"></script>
 		<script src="js/thirdparty/three.min.js"></script>
 		<script src="js/thirdparty/OrbitControlsNPD.min.js"></script>
@@ -2094,6 +2110,7 @@
 		<script src="js/style_selector.js"></script>
 		<script src="js/board.js"></script>
 		<script src="js/ptn.js"></script>
+		<script src="js/2d-board.js"></script>
 		
 		<script src="js/main.js"></script>
 

@@ -273,6 +273,15 @@ function init() {
 	}
 
 	loadSettings();
+	
+	// load 2d or 3d board based on settings
+	const defaultBoard = {
+		size: 5
+	}
+	if (localStorage.getItem("board_2d") === "true" || ismobile) {
+		render2DBoard(defaultBoard, "2d-squares");
+	}
+	render2DBoard(defaultBoard, "squares-2d");
 
 	canvas = document.getElementById("gamecanvas");
 
