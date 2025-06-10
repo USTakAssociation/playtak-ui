@@ -216,7 +216,7 @@ var server = {
 			this.connection.onclose = function(e){
 				server.loggedin=false
 				resetToLoginState();
-				$('#onlineplayers').addClass('hidden')
+				document.getElementById("onlineplayers").style.display = "none";
 				document.getElementById("onlineplayersbadge").innerHTML = "0"
 				document.getElementById("seekcount").innerHTML = "0"
 				document.getElementById("seekcountbot").innerHTML = "0"
@@ -422,8 +422,8 @@ var server = {
 			localStorage.removeItem("current-game-data");
 			console.log("Game Start: " + e);
 			document.getElementById("rematch").removeAttribute("disabled");
-			document.getElementById("open-game-over").classList.add("hidden");
-			document.getElementById("rematch").classList.add("hidden");
+			document.getElementById("open-game-over").style.display = "none";
+			document.getElementById("rematch").style.display = "none";
 			$('#joingame-modal').modal('hide');
 			//Game Start no. size player_white vs player_black your color time
 			var spl = e.split(" ");
@@ -639,7 +639,7 @@ var server = {
 				}
 				//Game#1 Over result
 				else if (spl[1] === "Over") {
-					document.getElementById("open-game-over").classList.remove("hidden");
+					document.getElementById("open-game-over").style.display = "flex";
 					document.title = "Play Tak";
 					board.result = spl[2];
 
@@ -680,7 +680,7 @@ var server = {
 					// get the game object and check if it's a bot game
 					const gameData = JSON.parse(localStorage.getItem("current-game-data"));
 					if (!board.observing && (gameData && !gameData.bot)) {
-						document.getElementById("rematch").classList.remove("hidden");
+						document.getElementById("rematch").style.display = "block";
 					}
 
 					stopTime();
@@ -907,7 +907,7 @@ var server = {
 		else if (startswith("OnlinePlayers ", e)) {
 			const msgArray = e.split("OnlinePlayers ");
 			this.onlinePlayers = JSON.parse(msgArray[1]) 
-			document.getElementById("onlineplayers").classList.remove("hidden");
+			document.getElementById("onlineplayers").style.display = "block";
 			document.getElementById("onlineplayersbadge").innerHTML = this.onlinePlayers.length;
 			this.renderOnlinePlayers();
 		}
@@ -975,25 +975,110 @@ var server = {
 		if(!p2Rating){
 			p2Rating = "";
 		}
+		let gameType = "";
+		let gameTypeText = "";
+		if (!game.unrated && !game.tournament) {
+			gameType = "N";
+			gameTypeText = "Normal game";
+		} else if (game.unrated && !game.tournament) {
+			gameType = "U";
+			gameTypeText = "Unrated game";
+		} else if (!game.unrated && game.tournament) {
+			gameType = "T";
+			gameTypeText = "Tournament game";
+		}
 		const players = document.createElement("button");
 		players.className = "btn btn-transparent";
-		players.setAttribute("data-hover", "Watch game");
-		let p1Element = `<span data-hover="rating">${p1Rating}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
-		let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-hover="rating">${p2Rating}</span>`;
+		players.setAttribute("data-toggle", "tooltip");
+		players.setAttribute("title", "Watch game");
+		let p1Element = `<span data-toggle="tooltip" title="rating">${p1Rating}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
+		let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-toggle="tooltip" title="rating">${p2Rating}</span>`;
 		players.innerHTML = p1Element + " vs " + p2Element;
 		const actionButton = document.createElement("button");
 		actionButton.className = "btn btn-transparent";
 		actionButton.innerHTML = `<svg viewBox="0 0 576 512"><path d="M160 256C160 185.3 217.3 128 288 128C358.7 128 416 185.3 416 256C416 326.7 358.7 384 288 384C217.3 384 160 326.7 160 256zM288 336C332.2 336 368 300.2 368 256C368 211.8 332.2 176 288 176C287.3 176 286.7 176 285.1 176C287.3 181.1 288 186.5 288 192C288 227.3 259.3 256 224 256C218.5 256 213.1 255.3 208 253.1C208 254.7 208 255.3 208 255.1C208 300.2 243.8 336 288 336L288 336zM95.42 112.6C142.5 68.84 207.2 32 288 32C368.8 32 433.5 68.84 480.6 112.6C527.4 156 558.7 207.1 573.5 243.7C576.8 251.6 576.8 260.4 573.5 268.3C558.7 304 527.4 355.1 480.6 399.4C433.5 443.2 368.8 480 288 480C207.2 480 142.5 443.2 95.42 399.4C48.62 355.1 17.34 304 2.461 268.3C-.8205 260.4-.8205 251.6 2.461 243.7C17.34 207.1 48.62 156 95.42 112.6V112.6zM288 80C222.8 80 169.2 109.6 128.1 147.7C89.6 183.5 63.02 225.1 49.44 256C63.02 286 89.6 328.5 128.1 364.3C169.2 402.4 222.8 432 288 432C353.2 432 406.8 402.4 447.9 364.3C486.4 328.5 512.1 286 526.6 256C512.1 225.1 486.4 183.5 447.9 147.7C406.8 109.6 353.2 80 288 80V80z"/></svg>`;
 		var row = $('<tr/>').attr("id", "game-" + game.id).addClass('game'+game.id).appendTo($('#gamelist'))
-		$('<td/>').append(actionButton).attr("data-hover", "Watch game").click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
+		$('<td/>').append(actionButton).attr("data-toggle", "tooltip").attr("title", "Watch game").click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
 		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data)}).appendTo(row);
+		// game details
 		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row)
-		$('<td/>').append(minuteseconds(game.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
-		$('<td/>').append('+'+minuteseconds(game.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
-		$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").addClass("right").appendTo(row)
-		$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
-		$('<td/>').append((game.unrated?"P":"")+(game.tournament?"T":"")).addClass("right").attr("data-hover",(game.unrated?"Unrated game":"")+(game.tournament?"Tournament game":"")).appendTo(row)
-		$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right").attr("data-hover", "Trigger move and extra time to add in minutes").appendTo(row);
+		$('<td/>').append(minuteseconds(game.time) + ' +'+minuteseconds(game.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control adn increment").appendTo(row)
+		$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row)
+		$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
+		$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", gameTypeText).appendTo(row)
+		$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", "Trigger move and extra time to add in minutes").appendTo(row);
+		
+		const dropdownButton = document.createElement("button");
+		dropdownButton.className = "btn btn-transparent dropdown-toggle";
+		// vertical elipse svg icon
+		dropdownButton.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12,8A2,2 0 1,1 10,6A2,2 0 0,1 12,8M12,14A2,2 0 1,1 10,12A2,2 0 0,1 12,14M12,20A2,2 0 1,1 10,18A2,2 0 0,1 12,20Z"/></svg>`;
+		dropdownButton.setAttribute("data-toggle", "dropdown");
+		dropdownButton.setAttribute("aria-haspopup", "true");
+		dropdownButton.setAttribute("aria-expanded", "false");
+		// set the button id to the game id
+		dropdownButton.id = "game-" + game.id;
+		const dropdownMenu = document.createElement("div");
+		dropdownMenu.className = "dropdown-menu";
+		dropdownMenu.id = "game-" + game.id + "-menu";
+		// aria-label by
+		dropdownMenu.setAttribute("aria-labelledby", "game-" + game.id);
+		// add the drop down items
+		// time
+		const timeItem = document.createElement("span");
+		timeItem.className = "dropdown-item time-rule-menu";
+		timeItem.style.display = "none";
+		timeItem.innerHTML = `<strong>Time Control:</strong> ${minuteseconds(game.time)}`;
+		dropdownMenu.appendChild(timeItem);
+		// increment
+		const incrementItem = document.createElement("span");
+		incrementItem.className = "dropdown-item time-rule-menu";
+		incrementItem.style.display = "none";
+		incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(game.increment)}`;
+		dropdownMenu.appendChild(incrementItem);
+		// komi
+		const komiItem = document.createElement("span");
+		komiItem.className = "dropdown-item komi-rule-menu";
+		komiItem.style.display = "none";
+		komiItem.innerHTML = `<strong>Komi:</strong> +${Math.floor(game.komi/2)}.${(game.komi&1)?"5":"0"}`;
+		dropdownMenu.appendChild(komiItem);
+		// pieces
+		const piecesItem = document.createElement("span");
+		piecesItem.className = "dropdown-item";
+		piecesItem.innerHTML = `<strong>Pieces:</strong> ${game.pieces}/${game.capstones}`;
+		dropdownMenu.appendChild(piecesItem);
+		// capstones
+		const capstonesItem = document.createElement("span");
+		capstonesItem.className = "dropdown-item";
+		capstonesItem.innerHTML = `<strong>Capstones:</strong> ${game.capstones}`;
+		dropdownMenu.appendChild(capstonesItem);
+		// game type
+		const gameTypeItem = document.createElement("span");
+		gameTypeItem.className = "dropdown-item";
+		gameTypeItem.innerHTML = `<strong>Game Type:</strong> ${gameTypeText}`;
+		dropdownMenu.appendChild(gameTypeItem);
+		// trigger move
+		const triggerMoveItem = document.createElement("span");
+		triggerMoveItem.className = "dropdown-item";
+		triggerMoveItem.innerHTML = `<strong>Trigger Move:</strong> ${game.triggerMove}`;
+		dropdownMenu.appendChild(triggerMoveItem);
+		// extra time
+		const extraTimeItem = document.createElement("span");
+		extraTimeItem.className = "dropdown-item";
+		extraTimeItem.innerHTML = `<strong>Extra Time:</strong> +${game.timeAmount} minutes`;
+		dropdownMenu.appendChild(extraTimeItem);
+		// create  dropdown div with dropdown class
+		const dropdownDiv = document.createElement("div");
+		dropdownDiv.className = "dropdown";
+		// append the dropdown button and menu to the dropdown div
+		dropdownDiv.appendChild(dropdownButton);
+		dropdownDiv.appendChild(dropdownMenu);
+		// add the dropdown button and menu to the row
+		$('<td/>').append(dropdownDiv).css("width", "40px").addClass("right hide-md").attr("data-toggle", "tooltip").attr("data-placement", "left").attr("title", "Game details").appendTo(row);
+
+		// add check of help text settings to rerender tooltip
+		if (localStorage.getItem("hovertext") === "true") {
+			$('[data-toggle="tooltip"]').tooltip('enable');
+		} 
 		document.getElementById("gamecount").innerHTML = this.gameslist.length;
 	},
 	removeGameFromWatchList: function(gameId){
@@ -1017,7 +1102,7 @@ var server = {
 			myrating=this.myRating || 1000;
 		}
 		// remove private seek badge
-		const seekBadge = document.getElementById("seekBadge");
+		const seekBadge = document.getElementById("seekcount");
 		seekBadge.classList.remove("seek-badge");
 		for(a=0;a<this.seekslist.length;a++){
 			var seek=this.seekslist[a]
@@ -1065,10 +1150,10 @@ var server = {
 			var ratingtext=""
 			if(rating){
 				if(rating>=myrating+levelgap){
-					ratingdecoration="<span class='ratingup'>"+("↑↑↑".slice(0,Math.min(Math.floor((rating-myrating)/levelgap),3)))+"</span>"
+					ratingdecoration="<span class='ratingup'>"+("↑".slice(0,Math.min(Math.floor((rating-myrating)/levelgap),3)))+"</span>"
 				}
 				else if(rating<=myrating-levelgap){
-					ratingdecoration="<span class='ratingdown'>"+("↓↓↓".slice(0,Math.min(Math.floor((myrating-rating)/levelgap),3)))+"</span>"
+					ratingdecoration="<span class='ratingdown'>"+("↓".slice(0,Math.min(Math.floor((myrating-rating)/levelgap),3)))+"</span>"
 				}
 				else{
 					ratingdecoration="<span class='ratingequal'>≈</span>"
@@ -1122,22 +1207,92 @@ var server = {
 						return server.removeseek(ev.data);
 					 }
 					return server.acceptseek(ev.data)
-				}).attr("data-hover", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row)
-			$('<td/>').append(imgstring).attr("data-hover","Your color will be " + yourColor).appendTo(row)
+				}).attr("data-toggle", "tooltip").attr("title", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row)
+			$('<td/>').append(imgstring).attr("data-toggle", "tooltip").attr("title","Your color will be " + yourColor).appendTo(row)
 			$('<td/>').append(challengePlayerButton).click(seek.id,function(ev){
 					if (mySeek) { 
 						return server.removeseek(ev.data);
 					 }
 					return server.acceptseek(ev.data)
-				}).attr("data-hover", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row)
-			$('<td/>').append(ratingdecoration + " " + (seek.player_rating || "")).addClass("right").attr("data-hover",ratingtext).appendTo(row)
+				}).attr("data-toggle", "tooltip").attr("title", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row)
+			$('<td/>').append(ratingdecoration + " " + (seek.player_rating || "")).addClass("right").attr("data-toggle", "tooltip").attr("title",ratingtext).appendTo(row)
+			// game details
 			$('<td/>').append(sizespan).addClass("right").appendTo(row)
-			$('<td/>').append(minuteseconds(seek.time)).addClass("right").attr("data-hover","Time control").appendTo(row)
-			$('<td/>').append('+'+minuteseconds(seek.increment)).addClass("right").attr("data-hover","Time increment per move").appendTo(row)
-			$('<td/>').append('+'+Math.floor(seek.komi/2)+"."+(seek.komi&1?"5":"0")).addClass("right").attr("data-hover","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row)
-			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right").attr("data-hover","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
-			$('<td/>').append(gameType).addClass("right").attr("data-hover",gameTypeText).appendTo(row)
-			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right").attr("data-hover", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row)
+			$('<td/>').append(minuteseconds(seek.time) + ' +'+minuteseconds(seek.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control and increment").appendTo(row)
+			$('<td/>').append(Math.floor(seek.komi/2)+"."+(seek.komi&1?"5":"0")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row)
+			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row)
+			$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title",gameTypeText).appendTo(row)
+			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row)
+			// add the same deetails to a dropdown on mobile
+			const dropdownButton = document.createElement("button");
+			dropdownButton.className = "btn btn-transparent dropdown-toggle";
+			// vertical elipse svg icon
+			dropdownButton.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12,8A2,2 0 1,1 10,6A2,2 0 0,1 12,8M12,14A2,2 0 1,1 10,12A2,2 0 0,1 12,14M12,20A2,2 0 1,1 10,18A2,2 0 0,1 12,20Z"/></svg>`;
+			dropdownButton.setAttribute("data-toggle", "dropdown");
+			dropdownButton.setAttribute("aria-haspopup", "true");
+			dropdownButton.setAttribute("aria-expanded", "false");
+			// set the button id to the seek id
+			dropdownButton.id = "seek-" + seek.id;
+			const dropdownMenu = document.createElement("div");
+			dropdownMenu.className = "dropdown-menu";
+			dropdownMenu.id = "seek-" + seek.id + "-menu";
+			// aria-label by
+			dropdownMenu.setAttribute("aria-labelledby", "seek-" + seek.id);
+			// add the drop down items
+			// time
+			const timeItem = document.createElement("span");
+			timeItem.className = "dropdown-item time-rule-menu";
+			// set default display none
+			timeItem.style.display = "none";
+			timeItem.innerHTML = `<strong>Time Control:</strong> ${minuteseconds(seek.time)}`;
+			dropdownMenu.appendChild(timeItem);
+			// increment
+			const incrementItem = document.createElement("span");
+			incrementItem.className = "dropdown-item time-rule-menu";
+			// set default display none
+			incrementItem.style.display = "none";
+			incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(seek.increment)}`;
+			dropdownMenu.appendChild(incrementItem);
+			// komi
+			const komiItem = document.createElement("span");
+			komiItem.className = "dropdown-item komi-rule-menu";
+			// set default display none
+			komiItem.style.display = "none";
+			komiItem.innerHTML = `<strong>Komi:</strong> +${Math.floor(seek.komi/2)}.${(seek.komi&1)?"5":"0"}`;
+			dropdownMenu.appendChild(komiItem);
+			// pieces
+			const piecesItem = document.createElement("span");
+			piecesItem.className = "dropdown-item";
+			piecesItem.innerHTML = `<strong>Pieces:</strong> ${seek.pieces}/${seek.capstones}`;
+			dropdownMenu.appendChild(piecesItem);
+			// capstones
+			const capstonesItem = document.createElement("span");
+			capstonesItem.className = "dropdown-item";
+			capstonesItem.innerHTML = `<strong>Capstones:</strong> ${seek.capstones}`;
+			dropdownMenu.appendChild(capstonesItem);
+			// game type
+			const gameTypeItem = document.createElement("span");
+			gameTypeItem.className = "dropdown-item";
+			gameTypeItem.innerHTML = `<strong>Game Type:</strong> ${gameTypeText}`;
+			dropdownMenu.appendChild(gameTypeItem);
+			// trigger move
+			const triggerMoveItem = document.createElement("span");
+			triggerMoveItem.className = "dropdown-item";
+			triggerMoveItem.innerHTML = `<strong>Trigger Move:</strong> ${seek.trigger_move}`;
+			dropdownMenu.appendChild(triggerMoveItem);
+			// extra time
+			const extraTimeItem = document.createElement("span");
+			extraTimeItem.className = "dropdown-item";
+			extraTimeItem.innerHTML = `<strong>Extra Time:</strong> +${seek.time_amount} minutes`;
+			dropdownMenu.appendChild(extraTimeItem);
+			// create  dropdown div with dropdown class
+			const dropdownDiv = document.createElement("div");
+			dropdownDiv.className = "dropdown";
+			// append the dropdown button and menu to the dropdown div
+			dropdownDiv.appendChild(dropdownButton);
+			dropdownDiv.appendChild(dropdownMenu);
+			// add the dropdown button and menu to the row
+			$('<td/>').append(dropdownDiv).css("width", "40px").addClass("right hide-md").attr("data-toggle", "tooltip").attr("data-placement", "left").attr("title", "Game details").appendTo(row);
 		}
 		if(!botcount){
 			$('<tr/>').append($('<td colspan="9">No Bot Games Currently Available</td>')).appendTo($('#seeklistbot'))
@@ -1148,6 +1303,9 @@ var server = {
 		document.getElementById("seekcount").innerHTML=playercount
 		document.getElementById("seekcountbot").innerHTML=botcount
 		this.changeseektime=Date.now()
+		if (localStorage.getItem("hovertext") === "true") {
+			$('[data-toggle="tooltip"]').tooltip('enable');
+		} 
 	},
 	renderOnlinePlayers:function(){
 		const onlineTable = document.getElementById("online-list");
@@ -1164,26 +1322,33 @@ var server = {
 			playerLink.href = "ratings.html#" + player;
 			// target="_blank" to open in new tab
 			playerLink.target = "_blank";
-			playerLink.setAttribute("data-hover", "Click to see " + player + "'s rating");
 			playerLink.innerText = player;
-			row.innerHTML += `<td>${playerLink.outerHTML}</td><td>`
+			playerLink.setAttribute("data-toggle", "tooltip");
+			playerLink.setAttribute("title", "Click to see " + player + "'s rating");
+			row.innerHTML += `<td>${playerLink.outerHTML}</td><td>`;
 			// createa challenge button
 			const challengeButton = document.createElement("button");
 			challengeButton.className = "btn btn-transparent";
-			challengeButton.setAttribute("data-hover", "Challenge " + player);
+			challengeButton.setAttribute("data-toggle", "tooltip");
+			challengeButton.setAttribute("title", "Challenge " + player);
 			challengeButton.innerHTML = `<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414  l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586  L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>`;
 			challengeButton.setAttribute("onclick", `server.challengePlayer('${player}')`);
 			row.innerHTML += `${challengeButton.outerHTML}`;
 			// create a message button
 			const messageButton = document.createElement("button");
 			messageButton.className = "btn btn-transparent";
-			messageButton.setAttribute("data-hover", "Message " + player);
-			messageButton.innerHTML = `<svg viewBox="0 0 24 24"><g><path d="M12 14V11M12 11V8M12 11H9M12 11H15M7.12357 18.7012L5.59961 19.9203C4.76744 20.5861 4.35115 20.9191 4.00098 20.9195C3.69644 20.9198 3.40845 20.7813 3.21846 20.5433C3 20.2696 3 19.7369 3 18.6712V7.2002C3 6.08009 3 5.51962 3.21799 5.0918C3.40973 4.71547 3.71547 4.40973 4.0918 4.21799C4.51962 4 5.08009 4 6.2002 4H17.8002C18.9203 4 19.4801 4 19.9079 4.21799C20.2842 4.40973 20.5905 4.71547 20.7822 5.0918C21 5.5192 21 6.07899 21 7.19691V14.8036C21 15.9215 21 16.4805 20.7822 16.9079C20.5905 17.2842 20.2843 17.5905 19.908 17.7822C19.4806 18 18.9215 18 17.8036 18H9.12256C8.70652 18 8.49829 18 8.29932 18.0408C8.12279 18.0771 7.95216 18.1368 7.79168 18.2188C7.61149 18.3108 7.44964 18.4403 7.12722 18.6982L7.12357 18.7012Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
+			messageButton.setAttribute("data-toggle", "tooltip");
+			messageButton.setAttribute("title", "Message " + player);
+			messageButton.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20,2A2,2 0 0,1 22,4V16A2,2 0 0,1 20,18H6L2,22V4C2,2.89 2.9,2 4,2H20M11,6V9H8V11H11V14H13V11H16V9H13V6H11Z"></path></svg>`;
 			messageButton.setAttribute("onclick", `server.messagePlayer('${player}')`);
 			row.innerHTML += `${messageButton.outerHTML}`;
 			row.innerHTML += `</td>`;
 			onlineTable.appendChild(row);
 		}
+		// add check of help text settings to rerender tooltip
+		if (localStorage.getItem("hovertext") === "true") {
+			$('[data-toggle="tooltip"]').tooltip('enable');
+		} 
 	},
 	challengePlayer: function(player) {
 		// close online player modal
@@ -1306,13 +1471,13 @@ var server = {
 		this.send("Accept " + e)
 		$('#joingame-modal').modal('hide');
 		$('#game-over-modal').modal('hide');
-		document.getElementById("open-game-over").classList.add("hidden");
+		document.getElementById("open-game-over").style.display = "none";
 	}
 	,unobserve:function(){
 		if(board.gameno !== 0 && board.gameno !== null){this.send("Unobserve " + board.gameno)}
 	}
 	,observegame:function(game){
-		document.getElementById("open-game-over").classList.add("hidden");
+		document.getElementById("open-game-over").style.display = "none";
 		document.getElementById("rematch").removeAttribute("disabled");
 		$('#watchgame-modal').modal('hide')
 		if(board.observing === false && board.scratch === false){ //don't observe game while playing another
