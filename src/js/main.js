@@ -54,11 +54,20 @@ function generateCamera(){
 	settingscounter = (settingscounter+1) & 15;
 	const PADDING = 10;
 	var cuttop = $('header').height() + PADDING;
-	var cutleft = ($("#rmenu").hasClass("hidden") ? 0 : 209) + PADDING;
-	if (!$("#settings-drawer").hasClass("hidden") && $("#rmenu").hasClass("hidden")){
+	const notation = document.getElementById("rmenu");
+	const notationAttr = notation.hasAttribute("hidden");
+	const notationHiddenState = (typeof notationAttr !== undefined && notationAttr !== false);
+	const settingsDrawer = document.getElementById("settings-drawer");
+	const settingsAttr = settingsDrawer.hasAttribute("hidden");
+	const settingsDrawerHiddenState = (typeof settingsAttr !== undefined && settingsAttr !== false);
+	const chat = document.getElementById("cmenu");
+	const chatAttr = chat.hasAttribute("hidden");
+	const chatHiddenState = (typeof chatAttr !== undefined && chatAttr !== false);
+	var cutleft = (notationHiddenState ? 0 : 209) + PADDING;
+	if (!settingsDrawerHiddenState && notationHiddenState){
 		cutleft = 209 + PADDING;
 	}
-	var cutright = ($("#cmenu").hasClass("hidden") ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + PADDING;
+	var cutright = (chatHiddenState ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + PADDING;
 	var cutbottom = 0 + PADDING;
 
 	var pointlist = [];
@@ -457,20 +466,21 @@ function adjustsidemenu(notation,chat){
 		}
 	}
 	localStorage[notationstore]=notationstate
-	if($('#rmenu').hasClass('hidden')){
+	const rmenu = document.getElementById("rmenu");
+	// check is the rmenu has the hidden attribute
+	const rmenuHidden = rmenu.hasAttribute("hidden");
+	if(typeof rmenuHidden !== 'undefined' && rmenuHidden !== false){
 		if(notationstate=="show"){
 			document.getElementById('notation-arrow').classList.add('rotate-arrow');
-			$('#notation-toggle-text').css("left","200px")
-			document.getElementById("rmenu").classList.remove("hidden");
-			document.getElementById("rmenu").style = ""
+			document.getElementById("notation-toggle-text").style.left = "200px";
+			rmenu.removeAttribute("hidden")
 			generateCamera()
 		}
 	}
 	else if(notationstate=="hide"){
-		document.getElementById("rmenu").classList.add("hidden");
-		document.getElementById("rmenu").style.display = 'none';
+		rmenu.setAttribute("hidden", "true");
 		document.getElementById("notation-arrow").classList.remove("rotate-arrow");
-		$('#notation-toggle-text').css("left","0px")
+		document.getElementById("notation-toggle-text").style.left = "0px";
 		generateCamera()
 	}
 	
@@ -490,34 +500,32 @@ function adjustsidemenu(notation,chat){
 		}
 	}
 	localStorage[chatstore]=chatstate
-	if($('#cmenu').hasClass('hidden')){
+	const cmenu = document.getElementById("cmenu");
+	const cmenuHidden = cmenu.hasAttribute("hidden");
+	if(typeof cmenuHidden !== 'undefined' && cmenuHidden !== false){
 		if(chatstate=="show"){
-			$('#chat-toggle-button').css('right',chathandler.chat_width + 12 )
+			document.getElementById('chat-toggle-text').style.right = (chathandler.chat_width + 12) + "px";
 			document.getElementById("chat-arrow").classList.remove("rotate-arrow");
-			document.getElementById("cmenu").classList.remove("hidden");
-			document.getElementById("cmenu").style.display = '';
+			cmenu.removeAttribute("hidden");
 			generateCamera()
 		}
 	}
 	else if(chatstate=="hide"){
-		$('#chat-toggle-button').css('right',"0px")
+		document.getElementById("chat-toggle-text").style.right = "0px";
 		document.getElementById("chat-arrow").classList.add("rotate-arrow");
-		document.getElementById("cmenu").classList.add('hidden');
-		document.getElementById("cmenu").style.display = 'none';
+		cmenu.setAttribute("hidden", "true");
 		generateCamera()
 	}
 }
 
 let settingsToggle = false;
 function toggleSettingsDrawer(){
-	const el = document.getElementById("settings-drawer");
+	const settings = document.getElementById("settings-drawer");
 	if (!settingsToggle) {
-		el.classList.remove('hidden');
-		el.style.display = 'block';
+		settings.removeAttribute("hidden");
 		settingsToggle = true;
 	} else {
-		el.classList.add('hidden');
-		el.style.display = 'none';
+		settings.setAttribute("hidden", "true");
 		settingsToggle = false;
 	}
 	generateCamera();
