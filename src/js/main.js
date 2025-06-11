@@ -504,14 +504,14 @@ function adjustsidemenu(notation,chat){
 	const cmenuHidden = cmenu.hasAttribute("hidden");
 	if(typeof cmenuHidden !== 'undefined' && cmenuHidden !== false){
 		if(chatstate=="show"){
-			document.getElementById('chat-toggle-text').style.right = (chathandler.chat_width + 12) + "px";
+			document.getElementById('chat-toggle-button').style.right = (chathandler.chat_width + 12) + "px";
 			document.getElementById("chat-arrow").classList.remove("rotate-arrow");
 			cmenu.removeAttribute("hidden");
 			generateCamera()
 		}
 	}
 	else if(chatstate=="hide"){
-		document.getElementById("chat-toggle-text").style.right = "0px";
+		document.getElementById("chat-toggle-button").style.right = "0px";
 		document.getElementById("chat-arrow").classList.add("rotate-arrow");
 		cmenu.setAttribute("hidden", "true");
 		generateCamera()
