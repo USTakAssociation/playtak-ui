@@ -804,19 +804,32 @@
 								<div>
 									<div class="row">
 										<div class="col-sm-6">
-											<div class="form-group">
-												<label for="boardsize">Board Size</label>
-												<select class="form-control" id="boardsize" onchange="changeboardsize()">
-													<option value="3">3x3</option>
-													<option value="4">4x4</option>
-													<option value="5" selected="selected">5x5</option>
-													<option value="6">6x6</option>
-													<option value="7">7x7</option>
-													<option value="8">8x8</option>
+											<!-- opponent -->
+											<div
+												class="form-group"
+												data-toggle="tooltip" data-placement="auto" title="Enter the name of another player to allow only that player to join"
+											>
+												<label for="opname">Opponent</label>
+												<input class="form-control" type="text" id="opname" value="" />
+											</div>
+											
+										</div>
+										<div class="col-sm-6">
+											<!-- default -->
+											 <div class="form-group">
+												<label for="default">Presets</label>
+												<select class="form-control" id="default" onchange="changeboardsize()">
+													<option value="" selected="selected">Custom</option>
+													<option value="3">Beginner Tournament</option>
+													<option value="4">PlayTak League</option>
+													<option value="4">7s Tournament</option>
 												</select>
 											</div>
 										</div>
+									</div>
+									<div class="row">
 										<div class="col-sm-6">
+											<!-- color select -->
 											<div class="form-group" data-toggle="tooltip" data-placement="auto" title="Select your color, white will move first">
 												<label for="colorselect">My Color</label>
 												<select class="form-control" id="colorselect">
@@ -826,18 +839,8 @@
 												</select>
 											</div>
 										</div>
-									</div>
-									<div class="row">
 										<div class="col-sm-6">
-											<div
-												class="form-group"
-												data-toggle="tooltip" data-placement="auto" title="Enter the name of another player to allow only that player to join"
-											>
-												<label for="opname">Opponent</label>
-												<input class="form-control" type="text" id="opname" value="" />
-											</div>
-										</div>
-										<div class="col-sm-6">
+											<!-- game type -->
 											<div
 												class="form-group"
 												data-toggle="tooltip" data-placement="auto" title="Game type - Tournament games will be marked as such in the database, they also allow greater time to reconnect if a player is disconnected during the game. Unrated games do not count towards the players' rating"
@@ -853,6 +856,43 @@
 									</div>
 									<div class="row">
 										<div class="col-sm-6">
+											<!-- board size -->
+											<div class="form-group">
+												<label for="boardsize">Board Size</label>
+												<select class="form-control" id="boardsize" onchange="changeboardsize()">
+													<option value="3">3x3</option>
+													<option value="4">4x4</option>
+													<option value="5" selected="selected">5x5</option>
+													<option value="6">6x6</option>
+													<option value="7">7x7</option>
+													<option value="8">8x8</option>
+												</select>
+											</div>
+										</div>
+										<div class="col-sm-6">
+											<!-- komi -->
+											<div
+												class="form-group"
+												data-toggle="tooltip" data-placement="auto" title="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined"
+											>
+												<label for="komiselect">Komi</label>
+												<select class="form-control" id="komiselect">
+													<option value="0" selected="selected">0.0</option>
+													<option value="1">0.5</option>
+													<option value="2">1.0</option>
+													<option value="3">1.5</option>
+													<option value="4">2.0</option>
+													<option value="5">2.5</option>
+													<option value="6">3.0</option>
+													<option value="7">3.5</option>
+													<option value="8">4.0</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-sm-6">
+											<!-- time -->
 											<div class="form-group">
 												<label for="timeselect">Time (minutes per player)</label>
 												<select class="form-control" id="timeselect">
@@ -874,6 +914,7 @@
 											</div>
 										</div>
 										<div class="col-sm-6">
+											<!-- time inc -->
 											<div class="form-group">
 												<label for="incselect">Increment (seconds)</label>
 												<select class="form-control" id="incselect">
@@ -909,27 +950,7 @@
 												<div class="card-body">
 													<div class="row">
 														<div class="col-sm-6">
-															<div
-																class="form-group"
-																data-toggle="tooltip" data-placement="auto" title="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined"
-															>
-																<label for="komiselect">Komi</label>
-																<select class="form-control" id="komiselect">
-																	<option value="0" selected="selected">0.0</option>
-																	<option value="1">0.5</option>
-																	<option value="2">1.0</option>
-																	<option value="3">1.5</option>
-																	<option value="4">2.0</option>
-																	<option value="5">2.5</option>
-																	<option value="6">3.0</option>
-																	<option value="7">3.5</option>
-																	<option value="8">4.0</option>
-																</select>
-															</div>
-														</div>
-													</div>
-													<div class="row">
-														<div class="col-sm-6">
+															<!-- extra time trigger move -->
 															<div class="form-group">
 																<label for="triggerMove">Extra Time Trigger Move</label>
 																<select class="form-control" id="triggerMove">
@@ -948,6 +969,7 @@
 															</div>
 														</div>
 														<div class="col-sm-6">
+															<!-- extra time amount -->
 															<div class="form-group">
 																<label for="timeAmount">Extra Time Amount</label>
 																<select class="form-control" id="timeAmount">
@@ -967,6 +989,7 @@
 													</div>
 													<div class="row">
 														<div class="col-sm-6">
+															<!-- stones -->
 															<div class="form-group">
 																<label for="piececount">Stones</label>
 																<input
@@ -981,6 +1004,7 @@
 															</div>
 														</div>
 														<div class="col-sm-6">
+															<!-- capstones -->
 															<div class="form-group">
 																<label for="capcount">Capstones</label>
 																<input
