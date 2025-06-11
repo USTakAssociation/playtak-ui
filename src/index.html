@@ -1121,35 +1121,35 @@
 						</div>
 						<div class="flex flex-column gap--8 fullw">
 							<div class="flex flex-center flex-wrap gap--8">
-								<button onclick="copyGameIdToClipboard()" data-toggle="tooltip" data-placement="auto" title="Copy game ID to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
+								<button onclick="copyGameIdToClipboard()" data-toggle="tooltip" data-placement="top" title="Copy game ID to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"></path></svg>
 									Copy Game ID
 								</button>
-								<button id="rematch" onclick="server.rematch()" data-toggle="tooltip" data-placement="auto" title="Copy game ID to your clipboard" class="game-over-action-button btn btn-pill btn-secondary hidden">
+								<button id="rematch" onclick="server.rematch()" data-toggle="tooltip" data-placement="top" title="Request a rematch to the other player" class="game-over-action-button btn btn-pill btn-secondary hidden">
 									<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414  l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586  L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>
 									Request Rematch 
 								</button>
 							</div>
 							<div class="flex flex-center flex-wrap gap--8">
-								<button onclick="copyNotationToClipboard()" data-toggle="tooltip" data-placement="auto" title="Copy PTN output of this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
+								<button onclick="copyNotationToClipboard()" data-toggle="tooltip" data-placement="top" title="Copy PTN output of this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 448 512">
 										<path d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"></path>
 									</svg>
 									Copy PTN Text
 								</button>
-								<a href="#" onclick="openInPtnNinja()" data-toggle="tooltip" data-placement="auto" title="Open this game in PTN Ninja" class="game-over-action-button btn btn-pill btn-secondary">
+								<a href="#" onclick="openInPtnNinja()" data-toggle="tooltip" data-placement="top" title="Open this game in PTN Ninja" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 24 24" width="24px" style="stroke: none"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"></path></svg>							
 									Open in PTN Ninja
 								</a>
 							</div>
 							<div class="flex flex-wrap gap--8 flex-center">
-								<a id="download_notation_go" onclick="downloadNotation('download_notation_go')" data-toggle="tooltip" data-placement="auto" title="Download the game as a PTN file" href="#" class="game-over-action-button btn btn-pill btn-secondary">
+								<a id="download_notation_go" onclick="downloadNotation('download_notation_go')" data-toggle="tooltip" data-placement="top" title="Download the game as a PTN file" href="#" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 384 512">
 										<path d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path>
 									</svg>
 									Download PTN
 								</a>
-								<button onclick="copyNotationLink()" data-toggle="tooltip" data-placement="auto" title="Copy play tak link to this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
+								<button onclick="copyNotationLink()" data-toggle="tooltip" data-placement="top" title="Copy play tak link to this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 24 24" width="24px" style="transform: rotate(-45deg)">
 										<path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>
 									Copy Play Tak Link
