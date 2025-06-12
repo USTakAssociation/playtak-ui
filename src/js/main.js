@@ -10,7 +10,56 @@ function alert(type,msg) {
 		$alert.css("display","none")
 	})
 }
-
+const gamePresets = {
+	"beginner": {
+		size: 6,
+		komi: 0,
+		type: 1, // 1 for tournament, 0 for normal, 2 for unrated
+		pieces: 30,
+		capstones: 1,
+		time: 900,
+		increment: 10,
+		trigger_move: "",
+		time_amount: "",
+		required_fields: ['opname']
+	},
+	"intermediate": {
+		size: 6,
+		komi: 2,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 900,
+		increment: 10,
+		trigger_move: "",
+		time_amount: "",
+		required_fields: ['opname']
+	},
+	"league": {
+		size: 6,
+		komi: 2,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 900, // seconds
+		increment: 10,
+		trigger_move: 35,
+		time_amount: 300, // seconds
+		required_fields: ['opname']
+	},
+	"7_open": {
+		size: 7,
+		komi: 2,
+		type: 1,
+		pieces: 42,
+		capstones: 2,
+		time: 1200, // seconds
+		increment: 15,
+		trigger_move: 40,
+		time_amount: 600, // seconds
+		required_fields: ['opname']
+	}
+}
 var camera,scene,renderer,light,canvas,controls = null
 var perspective
 var ismobile=false
@@ -1412,6 +1461,79 @@ function stepforward() {
 function fastforward() {
 	board.showmove(board.movecount)
 }
+function resetFormFieldAttributes() {
+	const form = document.getElementById("create-game-form");
+	// remove the required attribute from all elements
+	const allFields = form.querySelectorAll("input, select")
+	allFields.forEach(field => {
+		field.removeAttribute("required")
+		field.removeAttribute("disabled");
+	});
+}
+function changePreset(event) {
+	resetFormFieldAttributes();
+	const presetValue = event.target.value;
+	
+	const preset = gamePresets[presetValue];
+
+	if (presetValue === "none") {
+		const storedValues = JSON.parse(localStorage.getItem("current-game-settings") || '{}');
+		if (!Object.keys(storedValues).length) { return;}
+		// get the stored values
+		document.getElementById("boardsize").value = storedValues.size;
+		document.getElementById("piececount").value = storedValues.pieces;
+		document.getElementById("capcount").value = storedValues.capstones;
+		document.getElementById("komiselect").value = storedValues.komi;
+		document.getElementById("gametype").value = storedValues.type;
+		document.getElementById("timeselect").value = storedValues.time;
+		document.getElementById("incselect").value = storedValues.increment;
+		document.getElementById("triggerMove").value = storedValues.trigger_move;
+		document.getElementById("timeAmount").value = storedValues.time_amount;
+		return;
+	} else if (preset) {
+		// store the current values if user changes back to the noen preset
+		const currentValues = {
+			size: document.getElementById("boardsize").value,
+			pieces: document.getElementById("piececount").value,
+			capstones: document.getElementById("capcount").value,
+			komi: document.getElementById("komiselect").value,
+			type: document.getElementById("gametype").value,
+			time: document.getElementById("timeselect").value,
+			increment: document.getElementById("incselect").value,
+			trigger_move: document.getElementById("triggerMove").value,
+			time_amount: document.getElementById("timeAmount").value,
+		};
+		localStorage.setItem("current-game-settings", JSON.stringify(currentValues));
+		document.getElementById("boardsize").value = preset.size;
+		document.getElementById("boardsize").setAttribute("disabled", "true");
+		document.getElementById("piececount").value = preset.pieces;
+		document.getElementById("piececount").setAttribute("disabled", "true");
+		document.getElementById("capcount").value = preset.capstones;
+		document.getElementById("capcount").setAttribute("disabled", "true");
+		document.getElementById("komiselect").value = preset.komi;
+		document.getElementById("komiselect").setAttribute("disabled", "true");
+		document.getElementById("gametype").value = preset.type;
+		document.getElementById("gametype").setAttribute("disabled", "true");
+		document.getElementById("timeselect").value = preset.time;
+		document.getElementById("timeselect").setAttribute("disabled", "true");
+		document.getElementById("incselect").value = preset.increment;
+		document.getElementById("incselect").setAttribute("disabled", "true");
+		document.getElementById("triggerMove").value = preset.trigger_move;
+		document.getElementById("triggerMove").setAttribute("disabled", "true");
+		document.getElementById("timeAmount").value = preset.time_amount;
+		document.getElementById("timeAmount").setAttribute("disabled", "true");
+		// set the required attributes for the fields that are required in the preset
+		for (let i = 0; i < preset.required_fields.length; i++) {
+			const element = document.getElementById(preset.required_fields[i]);
+			if (element) {
+				element.setAttribute("required", "true");
+			}
+		}
+		return;
+	} else {
+		alert('danger', 'Invalid game preset selected');
+	}
+}
 
 function changeboardsize(){
 	var size=document.getElementById("boardsize").value
@@ -1427,6 +1549,38 @@ function changeboardsize(){
 		document.getElementById("piececount").value=piecescaps[0]
 		document.getElementById("capcount").value=piecescaps[1]
 	}
+}
+
+function resetGameSettings() {
+	resetFormFieldAttributes();
+	// remove the stored values from localStorage
+	localStorage.removeItem("current-game-settings");
+	// reset the game settings to default values
+	document.getElementById("boardsize").value = "5";
+	document.getElementById("piececount").value = "21";
+	document.getElementById("capcount").value = "1";
+	document.getElementById("komiselect").value = "0";
+	document.getElementById("gametype").value = "0";
+	document.getElementById("timeselect").value = "600";
+	document.getElementById("incselect").value = "20";
+	document.getElementById("triggerMove").value = "";
+	document.getElementById("timeAmount").value = "";
+	document.getElementById("colorselect").value = "A";
+	document.getElementById("opname").value = "";
+	document.getElementById("preset").value = "none";
+}
+function loadGameSettings() {
+	const storedValues = JSON.parse(localStorage.getItem("current-game-settings") || '{}');
+	if (!Object.keys(storedValues).length) { return; }
+	document.getElementById("boardsize").value = storedValues.size;
+	document.getElementById("piececount").value = storedValues.pieces;
+	document.getElementById("capcount").value = storedValues.capstones;
+	document.getElementById("komiselect").value = storedValues.komi;
+	document.getElementById("gametype").value = storedValues.type;
+	document.getElementById("timeselect").value = storedValues.time;
+	document.getElementById("incselect").value = storedValues.increment;
+	document.getElementById("triggerMove").value = storedValues.trigger_move;
+	document.getElementById("colorselect").value = storedValues.color || "A";
 }
 
 $(document).ready(function() {
@@ -1456,10 +1610,8 @@ $(document).ready(function() {
 		hideElement("action-links");
 		showElement("play-button");
 	}
-	// init tooltips
-	// $('[data-toggle="tooltip"]').tooltip({
-	// 	container: 'body'
-	// })
+	loadGameSettings();
+	// get current game settings
 	fetchEvents();
 })
 
