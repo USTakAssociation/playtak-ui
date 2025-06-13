@@ -946,7 +946,12 @@ a.btn.btn-primary {
 	background-color: transparent;
 	border: none;
 }
-
+.btn-error {
+	border-color: var(--alert-color);
+}
+.btn-error:hover{
+	background-color: rgba(255, 0, 0, 0.5);
+}
 .btn-slim {
 	height: 30px;
 }
@@ -1085,6 +1090,12 @@ a.btn.btn-primary {
 	.modal-dialog-centered {
 		min-height: calc(100vh - 3.5rem);
 	}
+}
+
+.form-control:disabled, .form-control[readonly] {
+	background-color: var(--primary-bg-color);
+	opacity: .4;
+	cursor: not-allowed;
 }
 
 .dropdown-toggle::after {
