@@ -424,6 +424,7 @@ var server = {
 			document.getElementById("rematch").removeAttribute("disabled");
 			document.getElementById("open-game-over").style.display = "none";
 			document.getElementById("rematch").style.display = "none";
+			document.getElementById("removeSeek").setAttribute("hidden", "true");
 			$('#joingame-modal').modal('hide');
 			//Game Start no. size player_white vs player_black your color time
 			var spl = e.split(" ");
@@ -690,7 +691,7 @@ var server = {
 					board.gameover();
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
-					document.getElementById("removeSeek").removeAttribute("disabled");
+					document.getElementById("removeSeek").setAttribute("hidden", "true");
 				}
 				//Game#1 Abandoned
 				else if (spl[1] === "Abandoned.") {
@@ -856,7 +857,12 @@ var server = {
 		else if (startswith("Seek new", e)) {
 			// Seek new 1 {player} 5 900 20 A 0 21 1 0 0 0 0 {oppoenent}
 			var spl = e.split(" ");
-			const playerRating = await getPlayersRating(spl[3]);
+			let playerRating;
+			if (spl[3] === this.myname) {
+				playerRating = "~";
+			} else {
+				playerRating = await getPlayersRating(spl[3]);
+			}
 			this.seekslist.push({
 				id: +spl[2],
 				player: spl[3],
@@ -1402,7 +1408,7 @@ var server = {
 		const game = {
 			size: document.getElementById("boardsize").value,
 			time: document.getElementById("timeselect").value,
-			inc: document.getElementById("incselect").value,
+			increment: document.getElementById("incselect").value,
 			color: document.getElementById("colorselect").value,
 			komi: document.getElementById("komiselect").value,
 			pieces: document.getElementById("piececount").value,
@@ -1416,7 +1422,7 @@ var server = {
 		const opponent = document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"");
 		const unrated = (game.type==2?1:0);
 		const tournament = (game.type==1?1:0);
-		const seekCMD =`Seek ${game.size} ${game.time} ${game.inc} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move} ${game.time_amount} ${opponent}`;
+		const seekCMD =`Seek ${game.size} ${game.time} ${game.increment} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move} ${game.time_amount} ${opponent}`;
 		this.send(seekCMD);
 		$('#creategamemodal').modal('hide');
 		server.newSeek = true;
@@ -1483,6 +1489,9 @@ var server = {
 		document.getElementById('createSeek').removeAttribute("disabled");
 		document.getElementById("removeSeek").setAttribute("hidden", "true");
 		document.getElementById("open-game-over").style.display = "none";
+		// remove disabled on create button 
+		document.getElementById("createSeek").removeAttribute("disabled");
+		document.getElementById("removeSeek").setAttribute("hidden", "true");
 	}
 	,unobserve:function(){
 		if(board.gameno !== 0 && board.gameno !== null){this.send("Unobserve " + board.gameno)}
