@@ -1422,7 +1422,7 @@ var server = {
 		const opponent = document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"");
 		const unrated = (game.type==2?1:0);
 		const tournament = (game.type==1?1:0);
-		const seekCMD =`Seek ${game.size} ${game.time} ${game.increment} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move} ${game.time_amount} ${opponent}`;
+		const seekCMD =`Seek ${game.size} ${game.time} ${game.increment} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opponent}`;
 		this.send(seekCMD);
 		$('#creategamemodal').modal('hide');
 		server.newSeek = true;
