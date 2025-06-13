@@ -213,7 +213,7 @@ a.navitem, div.navitem{
 	background-color: var(--secondary);
 	border-radius: 16px;
 	padding: 0px 7px;
-	font-size: .8em;
+	font-size: 1em;
 	min-width: 24px;
 	font-weight: bold;
 	line-height: inherit;
