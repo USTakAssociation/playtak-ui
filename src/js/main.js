@@ -907,7 +907,8 @@ function loadSettings() {
 	} else if (localStorage.getItem("hovertext") === "true") {
 		hovertext = true;
 		$('[data-toggle="tooltip"]').tooltip({
-			container: 'body'
+			container: 'body',
+			trigger: 'hover'
 		});
 	} else {
 		hovertext = !ismobile;
@@ -1280,7 +1281,10 @@ function checkboxHover() {
 	if(document.getElementById('hover-checkbox').checked) {
 		localStorage.setItem('hovertext','true')
 		hovertext=true
-		$('[data-toggle="tooltip"]').tooltip();
+		$('[data-toggle="tooltip"]').tooltip({
+			container: 'body',
+			trigger: 'hover'
+		});
 	}
 	else{
 		localStorage.setItem('hovertext','false')

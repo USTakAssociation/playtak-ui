@@ -122,7 +122,7 @@
 			<nav id="menu-wrapper" class="menu-wrapper">
 				<ul id="main-nav" class="menu flex">
 					<li>
-						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()">
+						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()" data-toggle="tooltip" data-placement="auto" title="Create an online game, a scratch board, or load from PTN/TPS">
 							<svg class="navicon" viewBox="0 0 24 24"><path d="M19 17H22V19H19V22H17V19H14V17H17V14H19V17M8 16H12V12H8V16M12 12H16V8H12V12M2 2V22H13.54C13 21.42 12.63 20.74 12.36 20H8V16H4V12H8V8H4V4H8V8H12V4H16V8H20V12.36C20.74 12.63 21.42 13 22 13.54V2H2Z"></path></svg>
 							New Game
 						</button>
@@ -217,9 +217,9 @@
 						class="navitem"
 						onclick="$('#online-players-modal').modal('show'); closeMobileMenu();"
 						data-toggle="tooltip"
-						title="Show active online players">
+						title="Show active online players, and total number of online players">
 							<svg class="navicon verticle-align--middle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M352 128c0 70.7-57.3 128-128 128s-128-57.3-128-128S153.3 0 224 0s128 57.3 128 128zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3zM609.3 512H471.4c5.4-9.4 8.6-20.3 8.6-32v-8c0-60.7-27.1-115.2-69.8-151.8c2.4-.1 4.7-.2 7.1-.2h61.4C567.8 320 640 392.2 640 481.3c0 17-13.8 30.7-30.7 30.7zM432 256c-31 0-59-12.6-79.3-32.9C372.4 196.5 384 163.6 384 128c0-26.8-6.6-52.1-18.3-74.3C384.3 40.1 407.2 32 432 32c61.9 0 112 50.1 112 112s-50.1 112-112 112z"/></svg>
-							Online <span class="badge" id="onlineplayersbadge" data-toggle="tooltip" data-placement="auto" title="Number of players currently logged in">0</span>
+							Online <span class="badge" id="onlineplayersbadge">0</span>
 						</button>
 					</li>
 					<li>
@@ -508,47 +508,53 @@
 						<div data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
 							<label for="clearcolorbox">
 								Background color
+								<input
+									type="color"
+									id="clearcolorbox"
+									class="form-control"
+									oninput="clearcolorchange(this.value)"
+									maxlength="7"
+									minlength="7"
+								/>
 							</label>
-							<input
-								type="color"
-								id="clearcolorbox"
-								class="form-control"
-								oninput="clearcolorchange(this.value)"
-								maxlength="7"
-								minlength="7"
-							/>
 						</div>
 					<br />
 					<div>
-						<input id="wall-orientation" type="checkbox" onClick="checkboxDiagonalWalls()" />
-						<label for="wall-orientation">Diagonal walls</label>
-					</div>
-					<br />
-					<div>
-						<label for="piece-size-slider">
-							Piece size
+						<label>
+							<input id="wall-orientation" type="checkbox" onClick="checkboxDiagonalWalls()" />
+							Diagonal walls
 						</label>
-						<input
-							id="piece-size-slider"
-							type="range"
-							value="60"
-							step="2"
-							min="40"
-							max="80"
-							oninput="sliderPieceSize(this.value);board.updatepieces()"
-							onChange="sliderPieceSize(this.value);board.updatepieces()"
-						/>
-						<span id="piece-size-display">60</span>
 					</div>
 					<br />
 					<div>
-						<input id="show-table" type="checkbox" onChange="showTable(event)" />
-						<label for="show-table">Show table</label>
+						<label>
+							Piece size <br />
+							<input
+								id="piece-size-slider"
+								type="range"
+								value="60"
+								step="2"
+								min="40"
+								max="80"
+								oninput="sliderPieceSize(this.value);board.updatepieces()"
+								onChange="sliderPieceSize(this.value);board.updatepieces()"
+							/>
+							<span id="piece-size-display">60</span>
+						</label>
 					</div>
 					<br />
 					<div>
-						<input id="show-last-move" type="checkbox" onChange="showLastMoveHighlighter(event)" />
-						<label for="show-last-move">Show last move highlighter</label>
+						<label>
+							<input id="show-table" type="checkbox" onChange="showTable(event)" />
+							Show table
+						</label>
+					</div>
+					<br />
+					<div>
+						<label>
+							<input id="show-last-move" type="checkbox" onChange="showLastMoveHighlighter(event)" />
+							Show last move highlighter
+						</label>
 					</div>
 					<br />
 					<div id="white_pieces_form">White pieces<br /></div>
@@ -565,7 +571,7 @@
 					<br />
 					<div id="black_squares_form">Black squares<br /></div>
 					<br />
-						<span data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
+						<label>
 							Border color
 							<input
 								type="color"
@@ -575,7 +581,7 @@
 								maxlength="7"
 								minlength="7"
 							/>
-						</span>
+						</label>
 					<br />
 					<!-- border texture -->
 					Border Texture
@@ -587,8 +593,10 @@
 						<input type="file" id="border-texture" accept="image/*" />
 					</div>
 					<br />
+					<label>
 						<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
-						<label for="hide-border-text">Hide Border Text</label>
+						Hide Border Text
+					</label>
 					<br />
 					Board Overlay
 					<div id="remove-overlay" style="display:none;">
@@ -605,106 +613,86 @@
 					<h4>Interface</h4>
 					<form class="flex flex-column gap--8">
 						<div data-toggle="tooltip" data-placement="top" title="When the page loads display the events/landing page">
-							<input id="show-landing" type="checkbox" onClick="disableLanding()" checked/>
-							<label for="show-landing">Always show the landing/events page.</label>
+							<label>
+								<input id="show-landing" type="checkbox" onClick="disableLanding()" checked/>
+								Always show the landing/events page.
+							</label>
 						</div>
 						<div>
-							<input id="dark-mode" type="checkbox" onClick="checkboxDarkMode()" />
-							<label for="dark-mode">Dark mode</label>
+							<label>
+								<input id="dark-mode" type="checkbox" onClick="checkboxDarkMode()" />
+								Dark mode
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Makes edges less jaggy, requires page reload to take effect">
-							<input
-								id="antialiasing-checkbox"
-								type="checkbox"
-								onClick="checkboxAntialiasing()"
-								checked
-							/>
-							<label for="antialiasing-checkbox">Browser default antialiasing</label>
+							<label for="antialiasing-checkbox">
+								<input id="antialiasing-checkbox" type="checkbox" onClick="checkboxAntialiasing()" checked/>
+								Browser default anti-aliasing
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Makes textures sharper">
-							Anisotropic filtering
-							<input
-								id="aniso-slider"
-								type="range"
-								value="3"
-								step="1"
-								min="0"
-								max="3"
-								oninput="sliderAniso(this.value,true)"
-								onchange="sliderAniso(this.value,true)"
-							/>
-							<label for="ansio-slider" id="aniso-display">16x</label>
+							<label>
+								Anisotropic filtering
+								<input id="aniso-slider" type="range" value="3" step="1" min="0" max="3" oninput="sliderAniso(this.value,true)" onchange="sliderAniso(this.value,true)"/>
+								<span id="aniso-display">16x</span>
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Additional antialiasing, high performance impact">
-							Rendering scale
-							<input
-								id="scale-slider"
-								type="range"
-								value="2"
-								step="1"
-								min="0"
-								max="4"
-								oninput="sliderScale(this.value,true)"
-								onchange="sliderScale(this.value,true)"
-							/>
-							<span id="scale-display">1x</span>
+							<label>
+								Rendering scale
+								<input id="scale-slider" type="range" value="2" step="1" min="0" max="4" oninput="sliderScale(this.value,true)" onchange="sliderScale(this.value,true)"/>
+								<span id="scale-display">1x</span>
+							</label>
 						</div>
 						<div>
-							<input id="hide-chat-time" type="checkbox" onClick="chathandler.hideChatTime()" />
-							<label for="hide-chat-time">Hide chat timestamps</label>
+							<label>
+								<input id="hide-chat-time" type="checkbox" onClick="chathandler.hideChatTime()" />
+								Hide chat timestamps
+							</label>
 						</div>
 						<div>
-							<input id="hide-send-checkbox" type="checkbox" onClick="checkboxHideSend()" />
-							<label for="hide-send-checkbox">Hide 'Send' button</label>
+							<label>
+								<input id="hide-send-checkbox" type="checkbox" onClick="checkboxHideSend()" />
+								Hide 'Send' button
+							</label>
 						</div>
 						<div>
-							<input id="auto-rotate-checkbox" type="checkbox" onClick="checkboxAutoRotate()" checked />
-							<label for="auto-rotate-checkbox">Rotate board when player 2</label>
+							<label>
+								<input id="auto-rotate-checkbox" type="checkbox" onClick="checkboxAutoRotate()" checked />
+								Rotate board when player 2
+							</label>
 						</div>
 						<div>
-							<label for="chat-size-slider">Chat size</label> 
-							<input
-								id="chat-size-slider"
-								type="range"
-								value="180"
-								step="2"
-								min="100"
-								max="500"
-								oninput="sliderChatSize(this.value)"
-								onchange="sliderChatSize(this.value)"
-							/>
-							<span id="chat-size-display">180</span>
+							<label>
+								Chat size <br />
+								<input id="chat-size-slider" type="range" value="180" step="2" min="100" max="500" oninput="sliderChatSize(this.value)" onchange="sliderChatSize(this.value)"/>
+								<span id="chat-size-display">180</span>
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="How much objects grow smaller with distance">
-							<label for="perspective-slider">
-								Perspective
+							<label>
+								Perspective <br />
+								<input id="perspective-slider" type="range" value="90" step="10" min="0" max="150" oninput="perspectiveChange(this.value)" onchange="perspectiveChange(this.value)"/>
+								<span id="perspective-display">90</span>
 							</label>
-							<input
-								id="perspective-slider"
-								type="range"
-								value="90"
-								step="10"
-								min="0"
-								max="150"
-								oninput="perspectiveChange(this.value)"
-								onchange="perspectiveChange(this.value)"
-							/>
-							<span id="perspective-display">90</span>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Make the camera immoveable, makes moving easier, especially on touch screens">
-							<input id="fix-camera-checkbox" type="checkbox" onClick="checkboxFixCamera()" />
-							<label for="fix-camera-checkbox">Fix camera</label>
+							<label>
+								<input id="fix-camera-checkbox" type="checkbox" onClick="checkboxFixCamera()" />
+								Fix camera
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Makes every stack selectable, even if it is obscured">
-							<div >
+							<label>
 								<input id="click-checkbox" type="checkbox" onClick="checkboxClick()" />
-								<label for="click-checkbox">Click through stacks</label>
-							</div>
-							
+								Click through stacks
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Enable help texts like these">
-							<input id="hover-checkbox" type="checkbox" onClick="checkboxHover()" />
-							<label for="hover-checkbox">Help texts</label>
+							<label>
+								<input id="hover-checkbox" type="checkbox" onClick="checkboxHover()" />
+								Help texts
+							</label>
 						</div>
 					</form>
 				</div>
@@ -714,16 +702,22 @@
 						<h4>Change Password</h4>
 						<br />
 						<div class="form-group">
-							<label for="pwd">Current password:</label>
-							<input type="password" class="form-control" id="cur-pwd" />
+							<label>
+								Current password:
+								<input type="password" class="form-control" id="cur-pwd" />
+							</label>
 						</div>
 						<div class="form-group">
-							<label for="pwd">New password:</label>
-							<input type="password" class="form-control" id="new-pwd" />
+							<label>
+								New password:
+								<input type="password" class="form-control" id="new-pwd" />
+							</label>
 						</div>
 						<div class="form-group">
-							<label for="pwd">Retype new password:</label>
-							<input type="password" class="form-control" id="retype-new-pwd" />
+							<label>
+								Retype new password:
+								<input type="password" class="form-control" id="retype-new-pwd" />
+							</label>
 						</div>
 						<button type="submit" class="btn btn-primary">Change Password</button>
 					</form>
@@ -1027,7 +1021,7 @@
 										</div>
 										<div class="flex flex-space-between flex-wrap gap--8 margin-top--8">
 											<div>
-												<button id="reset-game-settings" type="button" class="btn btn-pill btn-error" onclick="resetGameSettings();">
+												<button id="reset-game-settings" type="button" class="btn btn-pill btn-secondary" onclick="resetGameSettings();">
 													Reset
 												</button>
 											</div>

@@ -602,12 +602,6 @@ a.navitem, div.navitem{
 	border: 1px solid var(--secondary-border-color);
 }
 
-input[type=checkbox] {
-	vertical-align: middle;
-	line-height: 14px;
-	margin: 0px;
-}
-
 input[type=range] {
 	vertical-align: middle;
 	margin: 0px;

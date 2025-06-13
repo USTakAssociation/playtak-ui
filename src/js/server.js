@@ -1083,7 +1083,10 @@ var server = {
 
 		// add check of help text settings to rerender tooltip
 		if (localStorage.getItem("hovertext") === "true") {
-			$('[data-toggle="tooltip"]').tooltip('enable');
+			$('[data-toggle="tooltip"]').tooltip({
+				container: 'body',
+				trigger: 'hover'
+			});
 		} 
 		document.getElementById("gamecount").innerHTML = this.gameslist.length;
 	},
@@ -1310,7 +1313,10 @@ var server = {
 		document.getElementById("seekcountbot").innerHTML=botcount
 		this.changeseektime=Date.now()
 		if (localStorage.getItem("hovertext") === "true") {
-			$('[data-toggle="tooltip"]').tooltip('enable');
+			$('[data-toggle="tooltip"]').tooltip({
+				container: 'body',
+				trigger: 'hover'
+			});
 		} 
 	},
 	renderOnlinePlayers:function(){
@@ -1353,7 +1359,10 @@ var server = {
 		}
 		// add check of help text settings to rerender tooltip
 		if (localStorage.getItem("hovertext") === "true") {
-			$('[data-toggle="tooltip"]').tooltip('enable');
+			$('[data-toggle="tooltip"]').tooltip({
+				container: 'body',
+				trigger: 'hover'
+			});
 		} 
 	},
 	challengePlayer: function(player) {
