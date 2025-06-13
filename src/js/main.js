@@ -25,7 +25,7 @@ const gamePresets = {
 	},
 	"intermediate": {
 		size: 6,
-		komi: 2,
+		komi: 4,
 		type: 1,
 		pieces: 30,
 		capstones: 1,
@@ -37,7 +37,7 @@ const gamePresets = {
 	},
 	"league": {
 		size: 6,
-		komi: 2,
+		komi: 4,
 		type: 1,
 		pieces: 30,
 		capstones: 1,
@@ -49,7 +49,7 @@ const gamePresets = {
 	},
 	"7_open": {
 		size: 7,
-		komi: 2,
+		komi: 4,
 		type: 1,
 		pieces: 42,
 		capstones: 2,
