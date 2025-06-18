@@ -51,7 +51,7 @@ const gamePresets = {
 		size: 7,
 		komi: 4,
 		type: 1,
-		pieces: 42,
+		pieces: 40,
 		capstones: 2,
 		time: 1200, // seconds
 		increment: 15,
