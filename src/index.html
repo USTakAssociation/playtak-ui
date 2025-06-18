@@ -123,7 +123,7 @@
 			<nav id="menu-wrapper" class="menu-wrapper">
 				<ul id="main-nav" class="menu flex">
 					<li>
-						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()">
+						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()" data-toggle="tooltip" data-placement="auto" title="Create an online game, a scratch board, or load from PTN/TPS">
 							<svg class="navicon" viewBox="0 0 24 24"><path d="M19 17H22V19H19V22H17V19H14V17H17V14H19V17M8 16H12V12H8V16M12 12H16V8H12V12M2 2V22H13.54C13 21.42 12.63 20.74 12.36 20H8V16H4V12H8V8H4V4H8V8H12V4H16V8H20V12.36C20.74 12.63 21.42 13 22 13.54V2H2Z"></path></svg>
 							New Game
 						</button>
@@ -218,9 +218,9 @@
 						class="navitem"
 						onclick="$('#online-players-modal').modal('show'); closeMobileMenu();"
 						data-toggle="tooltip"
-						title="Show active online players">
+						title="Show active online players, and total number of online players">
 							<svg class="navicon verticle-align--middle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M352 128c0 70.7-57.3 128-128 128s-128-57.3-128-128S153.3 0 224 0s128 57.3 128 128zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3zM609.3 512H471.4c5.4-9.4 8.6-20.3 8.6-32v-8c0-60.7-27.1-115.2-69.8-151.8c2.4-.1 4.7-.2 7.1-.2h61.4C567.8 320 640 392.2 640 481.3c0 17-13.8 30.7-30.7 30.7zM432 256c-31 0-59-12.6-79.3-32.9C372.4 196.5 384 163.6 384 128c0-26.8-6.6-52.1-18.3-74.3C384.3 40.1 407.2 32 432 32c61.9 0 112 50.1 112 112s-50.1 112-112 112z"/></svg>
-							Online <span class="badge" id="onlineplayersbadge" data-toggle="tooltip" data-placement="auto" title="Number of players currently logged in">0</span>
+							Online <span class="badge" id="onlineplayersbadge">0</span>
 						</button>
 					</li>
 					<li>
@@ -470,7 +470,7 @@
 			</div>
 		</div>
 
-		<div id="settings-drawer" style="display: none;">
+		<div id="settings-drawer" hidden="true">
 			<div class="settings-header">
 				<div class="flex flex-space-between">
 					<h4 class="padding-left--8">Settings</h4>
@@ -509,47 +509,53 @@
 						<div data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
 							<label for="clearcolorbox">
 								Background color
+								<input
+									type="color"
+									id="clearcolorbox"
+									class="form-control"
+									oninput="clearcolorchange(this.value)"
+									maxlength="7"
+									minlength="7"
+								/>
 							</label>
-							<input
-								type="color"
-								id="clearcolorbox"
-								class="form-control"
-								oninput="clearcolorchange(this.value)"
-								maxlength="7"
-								minlength="7"
-							/>
 						</div>
 					<br />
 					<div>
-						<input id="wall-orientation" type="checkbox" onClick="checkboxDiagonalWalls()" />
-						<label for="wall-orientation">Diagonal walls</label>
-					</div>
-					<br />
-					<div>
-						<label for="piece-size-slider">
-							Piece size
+						<label>
+							<input id="wall-orientation" type="checkbox" onClick="checkboxDiagonalWalls()" />
+							Diagonal walls
 						</label>
-						<input
-							id="piece-size-slider"
-							type="range"
-							value="60"
-							step="2"
-							min="40"
-							max="80"
-							oninput="sliderPieceSize(this.value);board.updatepieces()"
-							onChange="sliderPieceSize(this.value);board.updatepieces()"
-						/>
-						<span id="piece-size-display">60</span>
 					</div>
 					<br />
 					<div>
-						<input id="show-table" type="checkbox" onChange="showTable(event)" />
-						<label for="show-table">Show table</label>
+						<label>
+							Piece size <br />
+							<input
+								id="piece-size-slider"
+								type="range"
+								value="60"
+								step="2"
+								min="40"
+								max="80"
+								oninput="sliderPieceSize(this.value);board.updatepieces()"
+								onChange="sliderPieceSize(this.value);board.updatepieces()"
+							/>
+							<span id="piece-size-display">60</span>
+						</label>
 					</div>
 					<br />
 					<div>
-						<input id="show-last-move" type="checkbox" onChange="showLastMoveHighlighter(event)" />
-						<label for="show-last-move">Show last move highlighter</label>
+						<label>
+							<input id="show-table" type="checkbox" onChange="showTable(event)" />
+							Show table
+						</label>
+					</div>
+					<br />
+					<div>
+						<label>
+							<input id="show-last-move" type="checkbox" onChange="showLastMoveHighlighter(event)" />
+							Show last move highlighter
+						</label>
 					</div>
 					<br />
 					<div id="white_pieces_form">White pieces<br /></div>
@@ -566,7 +572,7 @@
 					<br />
 					<div id="black_squares_form">Black squares<br /></div>
 					<br />
-						<span data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
+						<label>
 							Border color
 							<input
 								type="color"
@@ -576,7 +582,7 @@
 								maxlength="7"
 								minlength="7"
 							/>
-						</span>
+						</label>
 					<br />
 					<!-- border texture -->
 					Border Texture
@@ -588,8 +594,10 @@
 						<input type="file" id="border-texture" accept="image/*" />
 					</div>
 					<br />
+					<label>
 						<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
-						<label for="hide-border-text">Hide Border Text</label>
+						Hide Border Text
+					</label>
 					<br />
 					Board Overlay
 					<div id="remove-overlay" style="display:none;">
@@ -606,106 +614,86 @@
 					<h4>Interface</h4>
 					<form class="flex flex-column gap--8">
 						<div data-toggle="tooltip" data-placement="top" title="When the page loads display the events/landing page">
-							<input id="show-landing" type="checkbox" onClick="disableLanding()" checked/>
-							<label for="show-landing">Always show the landing/events page.</label>
+							<label>
+								<input id="show-landing" type="checkbox" onClick="disableLanding()" checked/>
+								Always show the landing/events page.
+							</label>
 						</div>
 						<div>
-							<input id="dark-mode" type="checkbox" onClick="checkboxDarkMode()" />
-							<label for="dark-mode">Dark mode</label>
+							<label>
+								<input id="dark-mode" type="checkbox" onClick="checkboxDarkMode()" />
+								Dark mode
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Makes edges less jaggy, requires page reload to take effect">
-							<input
-								id="antialiasing-checkbox"
-								type="checkbox"
-								onClick="checkboxAntialiasing()"
-								checked
-							/>
-							<label for="antialiasing-checkbox">Browser default antialiasing</label>
+							<label for="antialiasing-checkbox">
+								<input id="antialiasing-checkbox" type="checkbox" onClick="checkboxAntialiasing()" checked/>
+								Browser default anti-aliasing
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Makes textures sharper">
-							Anisotropic filtering
-							<input
-								id="aniso-slider"
-								type="range"
-								value="3"
-								step="1"
-								min="0"
-								max="3"
-								oninput="sliderAniso(this.value,true)"
-								onchange="sliderAniso(this.value,true)"
-							/>
-							<label for="ansio-slider" id="aniso-display">16x</label>
+							<label>
+								Anisotropic filtering
+								<input id="aniso-slider" type="range" value="3" step="1" min="0" max="3" oninput="sliderAniso(this.value,true)" onchange="sliderAniso(this.value,true)"/>
+								<span id="aniso-display">16x</span>
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Additional antialiasing, high performance impact">
-							Rendering scale
-							<input
-								id="scale-slider"
-								type="range"
-								value="2"
-								step="1"
-								min="0"
-								max="4"
-								oninput="sliderScale(this.value,true)"
-								onchange="sliderScale(this.value,true)"
-							/>
-							<span id="scale-display">1x</span>
+							<label>
+								Rendering scale
+								<input id="scale-slider" type="range" value="2" step="1" min="0" max="4" oninput="sliderScale(this.value,true)" onchange="sliderScale(this.value,true)"/>
+								<span id="scale-display">1x</span>
+							</label>
 						</div>
 						<div>
-							<input id="hide-chat-time" type="checkbox" onClick="chathandler.hideChatTime()" />
-							<label for="hide-chat-time">Hide chat timestamps</label>
+							<label>
+								<input id="hide-chat-time" type="checkbox" onClick="chathandler.hideChatTime()" />
+								Hide chat timestamps
+							</label>
 						</div>
 						<div>
-							<input id="hide-send-checkbox" type="checkbox" onClick="checkboxHideSend()" />
-							<label for="hide-send-checkbox">Hide 'Send' button</label>
+							<label>
+								<input id="hide-send-checkbox" type="checkbox" onClick="checkboxHideSend()" />
+								Hide 'Send' button
+							</label>
 						</div>
 						<div>
-							<input id="auto-rotate-checkbox" type="checkbox" onClick="checkboxAutoRotate()" checked />
-							<label for="auto-rotate-checkbox">Rotate board when player 2</label>
+							<label>
+								<input id="auto-rotate-checkbox" type="checkbox" onClick="checkboxAutoRotate()" checked />
+								Rotate board when player 2
+							</label>
 						</div>
 						<div>
-							<label for="chat-size-slider">Chat size</label> 
-							<input
-								id="chat-size-slider"
-								type="range"
-								value="180"
-								step="2"
-								min="100"
-								max="500"
-								oninput="sliderChatSize(this.value)"
-								onchange="sliderChatSize(this.value)"
-							/>
-							<span id="chat-size-display">180</span>
+							<label>
+								Chat size <br />
+								<input id="chat-size-slider" type="range" value="180" step="2" min="100" max="500" oninput="sliderChatSize(this.value)" onchange="sliderChatSize(this.value)"/>
+								<span id="chat-size-display">180</span>
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="How much objects grow smaller with distance">
-							<label for="perspective-slider">
-								Perspective
+							<label>
+								Perspective <br />
+								<input id="perspective-slider" type="range" value="90" step="10" min="0" max="150" oninput="perspectiveChange(this.value)" onchange="perspectiveChange(this.value)"/>
+								<span id="perspective-display">90</span>
 							</label>
-							<input
-								id="perspective-slider"
-								type="range"
-								value="90"
-								step="10"
-								min="0"
-								max="150"
-								oninput="perspectiveChange(this.value)"
-								onchange="perspectiveChange(this.value)"
-							/>
-							<span id="perspective-display">90</span>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Make the camera immoveable, makes moving easier, especially on touch screens">
-							<input id="fix-camera-checkbox" type="checkbox" onClick="checkboxFixCamera()" />
-							<label for="fix-camera-checkbox">Fix camera</label>
+							<label>
+								<input id="fix-camera-checkbox" type="checkbox" onClick="checkboxFixCamera()" />
+								Fix camera
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Makes every stack selectable, even if it is obscured">
-							<div >
+							<label>
 								<input id="click-checkbox" type="checkbox" onClick="checkboxClick()" />
-								<label for="click-checkbox">Click through stacks</label>
-							</div>
-							
+								Click through stacks
+							</label>
 						</div>
 						<div data-toggle="tooltip" data-placement="top" title="Enable help texts like these">
-							<input id="hover-checkbox" type="checkbox" onClick="checkboxHover()" />
-							<label for="hover-checkbox">Help texts</label>
+							<label>
+								<input id="hover-checkbox" type="checkbox" onClick="checkboxHover()" />
+								Help texts
+							</label>
 						</div>
 					</form>
 				</div>
@@ -715,16 +703,22 @@
 						<h4>Change Password</h4>
 						<br />
 						<div class="form-group">
-							<label for="pwd">Current password:</label>
-							<input type="password" class="form-control" id="cur-pwd" />
+							<label>
+								Current password:
+								<input type="password" class="form-control" id="cur-pwd" />
+							</label>
 						</div>
 						<div class="form-group">
-							<label for="pwd">New password:</label>
-							<input type="password" class="form-control" id="new-pwd" />
+							<label>
+								New password:
+								<input type="password" class="form-control" id="new-pwd" />
+							</label>
 						</div>
 						<div class="form-group">
-							<label for="pwd">Retype new password:</label>
-							<input type="password" class="form-control" id="retype-new-pwd" />
+							<label>
+								Retype new password:
+								<input type="password" class="form-control" id="retype-new-pwd" />
+							</label>
 						</div>
 						<button type="submit" class="btn btn-primary">Change Password</button>
 					</form>
@@ -803,218 +797,248 @@
 								aria-labelledby="create-game"
 							>
 								<div>
-									<div class="row">
-										<div class="col-sm-6">
-											<div class="form-group">
-												<label for="boardsize">Board Size</label>
-												<select class="form-control" id="boardsize" onchange="changeboardsize()">
-													<option value="3">3x3</option>
-													<option value="4">4x4</option>
-													<option value="5" selected="selected">5x5</option>
-													<option value="6">6x6</option>
-													<option value="7">7x7</option>
-													<option value="8">8x8</option>
-												</select>
+									<form id="create-game-form" role="form">
+										<div class="row">
+											<div class="col-sm-6">
+												<!-- opponent -->
+												<div
+													class="form-group"
+													data-toggle="tooltip" data-placement="auto" title="Enter the name of another player to allow only that player to join"
+												>
+													<label for="opname">Opponent</label>
+													<input class="form-control" type="text" id="opname" value="" />
+												</div>
+												
+											</div>
+											<div class="col-sm-6">
+												<!-- preset -->
+												 <div class="form-group">
+													<label for="preset">Presets</label>
+													<select class="form-control" id="preset" onchange="changePreset(event)">
+														<option value="none" selected="selected">None</option>
+														<option value="beginner">Beginner Tournament</option>
+														<option value="intermediate">Intermediate Tournament</option>
+														<option value="league">PlayTak League</option>
+														<option value="7_open">7s Tournament</option>
+													</select>
+												</div>
 											</div>
 										</div>
-										<div class="col-sm-6">
-											<div class="form-group" data-toggle="tooltip" data-placement="auto" title="Select your color, white will move first">
-												<label for="colorselect">My Color</label>
-												<select class="form-control" id="colorselect">
-													<option value="A" selected="selected">Random</option>
-													<option value="W">White</option>
-													<option value="B">Black</option>
-												</select>
+										<div class="row">
+											<div class="col-sm-6">
+												<!-- color select -->
+												<div class="form-group" data-toggle="tooltip" data-placement="auto" title="Select your color, white will move first">
+													<label for="colorselect">My Color</label>
+													<select class="form-control" id="colorselect">
+														<option value="A" selected="selected">Random</option>
+														<option value="W">White</option>
+														<option value="B">Black</option>
+													</select>
+												</div>
+											</div>
+											<div class="col-sm-6">
+												<!-- game type -->
+												<div
+													class="form-group"
+													data-toggle="tooltip" data-placement="auto" title="Game type - Tournament games will be marked as such in the database, they also allow greater time to reconnect if a player is disconnected during the game. Unrated games do not count towards the players' rating"
+												>
+													<label for="gametype">Game type</label>
+													<select class="form-control" id="gametype">
+														<option value="0" selected="selected">Normal</option>
+														<option value="1">Tournament</option>
+														<option value="2">Unrated</option>
+													</select>
+												</div>
 											</div>
 										</div>
-									</div>
-									<div class="row">
-										<div class="col-sm-6">
-											<div
-												class="form-group"
-												data-toggle="tooltip" data-placement="auto" title="Enter the name of another player to allow only that player to join"
-											>
-												<label for="opname">Opponent</label>
-												<input class="form-control" type="text" id="opname" value="" />
+										<div class="row">
+											<div class="col-sm-6">
+												<!-- board size -->
+												<div class="form-group">
+													<label for="boardsize">Board Size</label>
+													<select class="form-control" id="boardsize" onchange="changeboardsize()">
+														<option value="3">3x3</option>
+														<option value="4">4x4</option>
+														<option value="5" selected="selected">5x5</option>
+														<option value="6">6x6</option>
+														<option value="7">7x7</option>
+														<option value="8">8x8</option>
+													</select>
+												</div>
+											</div>
+											<div class="col-sm-6">
+												<!-- komi -->
+												<div
+													class="form-group"
+													data-toggle="tooltip" data-placement="auto" title="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined. 2 is the generally agreed-upon value"
+												>
+													<label for="komiselect">Komi</label>
+													<select class="form-control" id="komiselect">
+														<option value="0" selected="selected">0.0</option>
+														<option value="1">0.5</option>
+														<option value="2">1.0</option>
+														<option value="3">1.5</option>
+														<option value="4">2.0</option>
+														<option value="5">2.5</option>
+														<option value="6">3.0</option>
+														<option value="7">3.5</option>
+														<option value="8">4.0</option>
+													</select>
+												</div>
 											</div>
 										</div>
-										<div class="col-sm-6">
-											<div
-												class="form-group"
-												data-toggle="tooltip" data-placement="auto" title="Game type - Tournament games will be marked as such in the database, they also allow greater time to reconnect if a player is disconnected during the game. Unrated games do not count towards the players' rating"
-											>
-												<label for="gametype">Game type</label>
-												<select class="form-control" id="gametype">
-													<option value="0" selected="selected">Normal</option>
-													<option value="1">Tournament</option>
-													<option value="2">Unrated</option>
-												</select>
+										<div class="row">
+											<div class="col-sm-6">
+												<!-- time -->
+												<div class="form-group">
+													<label for="timeselect">Time (minutes per player)</label>
+													<select class="form-control" id="timeselect">
+														<option value="60">1</option>
+														<option value="120">2</option>
+														<option value="180">3</option>
+														<option value="300">5</option>
+														<option value="420">7</option>
+														<option value="600" selected="selected">10</option>
+														<option value="900">15</option>
+														<option value="1200">20</option>
+														<option value="1800">30</option>
+														<option value="2700">45</option>
+														<option value="3600">60</option>
+														<option value="5400">90</option>
+														<option value="7200">120</option>
+														<option value="10800">180</option>
+													</select>
+												</div>
+											</div>
+											<div class="col-sm-6">
+												<!-- time inc -->
+												<div class="form-group">
+													<label for="incselect">Increment (seconds)</label>
+													<select class="form-control" id="incselect">
+														<option value="0">0</option>
+														<option value="1">1</option>
+														<option value="2">2</option>
+														<option value="3">3</option>
+														<option value="5">5</option>
+														<option value="7">7</option>
+														<option value="10">10</option>
+														<option value="15">15</option>
+														<option value="20" selected="selected">20</option>
+														<option value="30">30</option>
+														<option value="45">45</option>
+														<option value="60">60</option>
+														<option value="90">90</option>
+														<option value="120">120</option>
+														<option value="180">180</option>
+													</select>
+												</div>
 											</div>
 										</div>
-									</div>
-									<div class="row">
-										<div class="col-sm-6">
-											<div class="form-group">
-												<label for="timeselect">Time (minutes per player)</label>
-												<select class="form-control" id="timeselect">
-													<option>1</option>
-													<option>2</option>
-													<option>3</option>
-													<option>5</option>
-													<option>7</option>
-													<option selected="selected">10</option>
-													<option>15</option>
-													<option>20</option>
-													<option>30</option>
-													<option>45</option>
-													<option>60</option>
-													<option>90</option>
-													<option>120</option>
-													<option>180</option>
-												</select>
-											</div>
-										</div>
-										<div class="col-sm-6">
-											<div class="form-group">
-												<label for="incselect">Increment (seconds)</label>
-												<select class="form-control" id="incselect">
-													<option>0</option>
-													<option>1</option>
-													<option>2</option>
-													<option>3</option>
-													<option>5</option>
-													<option>7</option>
-													<option>10</option>
-													<option>15</option>
-													<option selected="selected">20</option>
-													<option>30</option>
-													<option>45</option>
-													<option>60</option>
-													<option>90</option>
-													<option>120</option>
-													<option>180</option>
-												</select>
-											</div>
-										</div>
-									</div>
-									<div class="accordion" id="accordionExample">
-										<div class="card">
-											<div class="card-header" id="headingOne">
-												<h2 class="margin--0">
-													<button class="btn btn-link btn-block left btn-nav-accordion" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-														<svg class="verticle-align--middle fa-chevron-right fill-primary" viewBox="0 0 320 512"><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg> Advanced Options
-													</button>
-												</h2>
-											</div>
-											<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
-												<div class="card-body">
-													<div class="row">
-														<div class="col-sm-6">
-															<div
-																class="form-group"
-																data-toggle="tooltip" data-placement="auto" title="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined"
-															>
-																<label for="komiselect">Komi</label>
-																<select class="form-control" id="komiselect">
-																	<option value="0" selected="selected">0.0</option>
-																	<option value="1">0.5</option>
-																	<option value="2">1.0</option>
-																	<option value="3">1.5</option>
-																	<option value="4">2.0</option>
-																	<option value="5">2.5</option>
-																	<option value="6">3.0</option>
-																	<option value="7">3.5</option>
-																	<option value="8">4.0</option>
-																</select>
+										<div class="accordion" id="accordionExample">
+											<div class="card">
+												<div class="card-header" id="headingOne">
+													<h2 class="margin--0">
+														<button class="btn btn-link btn-block left btn-nav-accordion" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+															<svg class="verticle-align--middle fa-chevron-right fill-primary" viewBox="0 0 320 512"><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg> Advanced Options
+														</button>
+													</h2>
+												</div>
+												<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+													<div class="card-body">
+														<div class="row">
+															<div class="col-sm-6">
+																<!-- extra time trigger move -->
+																<div class="form-group">
+																	<label for="triggerMove">Extra Time Trigger Move</label>
+																	<select class="form-control" id="triggerMove">
+																		<option value="">Select</option>
+																		<option value="5">5</option>
+																		<option value="20">20</option>
+																		<option value="25">25</option>
+																		<option value="30">30</option>
+																		<option value="35">35</option>
+																		<option value="40">40</option>
+																		<option value="45">45</option>
+																		<option value="50">50</option>
+																		<option value="55">55</option>
+																		<option value="60">60</option>
+																	</select>
+																</div>
+															</div>
+															<div class="col-sm-6">
+																<!-- extra time amount -->
+																<div class="form-group">
+																	<label for="timeAmount">Extra Time Amount</label>
+																	<select class="form-control" id="timeAmount">
+																		<option value="">Select</option>
+																		<option value="180">3 Minutes</option>
+																		<option value="300">5 Minutes</option>
+																		<option value="420">7 Minutes</option>
+																		<option value="600">10 Minutes</option>
+																		<option value="900">15 Minutes</option>
+																		<option value="1200">20 Minutes</option>
+																		<option value="1800">30 Minutes</option>
+																		<option value="2700">45 Minutes</option>
+																		<option value="3600">60 Minutes</option>
+																	</select>
+																</div>
 															</div>
 														</div>
-													</div>
-													<div class="row">
-														<div class="col-sm-6">
-															<div class="form-group">
-																<label for="triggerMove">Extra Time Trigger Move</label>
-																<select class="form-control" id="triggerMove">
-																	<option value="">Select</option>
-																	<option value="5">5</option>
-																	<option value="20">20</option>
-																	<option value="25">25</option>
-																	<option value="30">30</option>
-																	<option value="35">35</option>
-																	<option value="40">40</option>
-																	<option value="45">45</option>
-																	<option value="50">50</option>
-																	<option value="55">55</option>
-																	<option value="60">60</option>
-																</select>
+														<div class="row">
+															<div class="col-sm-6">
+																<!-- stones -->
+																<div class="form-group">
+																	<label for="piececount">Stones</label>
+																	<input
+																		class="form-control"
+																		type="number"
+																		min="10"
+																		max="80"
+																		step="1"
+																		id="piececount"
+																		value="21"
+																	/>
+																</div>
 															</div>
-														</div>
-														<div class="col-sm-6">
-															<div class="form-group">
-																<label for="timeAmount">Extra Time Amount</label>
-																<select class="form-control" id="timeAmount">
-																	<option value="">Select</option>
-																	<option value="180">3 Minutes</option>
-																	<option value="300">5 Minutes</option>
-																	<option value="420">7 Minutes</option>
-																	<option value="600">10 Minutes</option>
-																	<option value="900">15 Minutes</option>
-																	<option value="1200">20 Minutes</option>
-																	<option value="1800">30 Minutes</option>
-																	<option value="2700">45 Minutes</option>
-																	<option value="3600">60 Minutes</option>
-																</select>
-															</div>
-														</div>
-													</div>
-													<div class="row">
-														<div class="col-sm-6">
-															<div class="form-group">
-																<label for="piececount">Stones</label>
-																<input
-																	class="form-control"
-																	type="number"
-																	min="10"
-																	max="80"
-																	step="1"
-																	id="piececount"
-																	value="21"
-																/>
-															</div>
-														</div>
-														<div class="col-sm-6">
-															<div class="form-group">
-																<label for="capcount">Capstones</label>
-																<input
-																	class="form-control"
-																	type="number"
-																	min="0"
-																	max="5"
-																	step="1"
-																	id="capcount"
-																	value="1"
-																/>
+															<div class="col-sm-6">
+																<!-- capstones -->
+																<div class="form-group">
+																	<label for="capcount">Capstones</label>
+																	<input
+																		class="form-control"
+																		type="number"
+																		min="0"
+																		max="5"
+																		step="1"
+																		id="capcount"
+																		value="1"
+																	/>
+																</div>
 															</div>
 														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
-									<div class="flex flex-end flex-wrap gap--8 margin-top--8">
-										<div>
-											<form role="form" onsubmit="server.seek(); return false;">
-												<button id="createSeek" type="submit" class="btn btn-pill btn-primary">Create</button>
-											</form>
+										<div class="flex flex-space-between flex-wrap gap--8 margin-top--8">
+											<div>
+												<button id="reset-game-settings" type="button" class="btn btn-pill btn-secondary" onclick="resetGameSettings();">
+													Reset
+												</button>
+											</div>
+											<div class="flex flex-end gap--8">
+												<div>
+													<button id="createSeek" type="button" class="btn btn-pill btn-primary" onclick="server.seek();">Create</button>
+												</div>
+												<div>
+													<button type="button" class="btn btn-pill btn-secondary" data-dismiss="modal">Cancel</button>
+												</div>
+												<div>
+													<button id="removeSeek" type="button" class="btn btn-pill btn-secondary" hidden="true" onclick="server.removeseek();">Remove Seek</button>
+												</div>
+											</div>
 										</div>
-										<div>
-											<button type="button" class="btn btn-pill btn-secondary" data-dismiss="modal">Cancel</button>
-										</div>
-										<div>
-											<form role="form" onsubmit="server.removeseek(); return false;">
-												<button id="removeSeek" type="submit" class="btn btn-pill btn-secondary">Remove Seek</button>
-											</form>
-										</div>
-									</div>
+									</form>
 								</div>
 							</div>
 							<div class="tab-pane fade" id="play-scratch" role="tabpanel" aria-labelledby="play-scratch">
@@ -1122,35 +1146,35 @@
 						</div>
 						<div class="flex flex-column gap--8 fullw">
 							<div class="flex flex-center flex-wrap gap--8">
-								<button onclick="copyGameIdToClipboard()" data-toggle="tooltip" data-placement="auto" title="Copy game ID to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
+								<button onclick="copyGameIdToClipboard()" data-toggle="tooltip" data-placement="top" title="Copy game ID to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"></path></svg>
 									Copy Game ID
 								</button>
-								<button id="rematch" onclick="server.rematch()" data-toggle="tooltip" data-placement="auto" title="Copy game ID to your clipboard" class="game-over-action-button btn btn-pill btn-secondary hidden">
+								<button id="rematch" onclick="server.rematch()" data-toggle="tooltip" data-placement="top" title="Request a rematch to the other player" class="game-over-action-button btn btn-pill btn-secondary hidden">
 									<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414  l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586  L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>
 									Request Rematch 
 								</button>
 							</div>
 							<div class="flex flex-center flex-wrap gap--8">
-								<button onclick="copyNotationToClipboard()" data-toggle="tooltip" data-placement="auto" title="Copy PTN output of this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
+								<button onclick="copyNotationToClipboard()" data-toggle="tooltip" data-placement="top" title="Copy PTN output of this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 448 512">
 										<path d="M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z"></path>
 									</svg>
 									Copy PTN Text
 								</button>
-								<a href="#" onclick="openInPtnNinja()" data-toggle="tooltip" data-placement="auto" title="Open this game in PTN Ninja" class="game-over-action-button btn btn-pill btn-secondary">
+								<a href="#" onclick="openInPtnNinja()" data-toggle="tooltip" data-placement="top" title="Open this game in PTN Ninja" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 24 24" width="24px" style="stroke: none"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"></path></svg>							
 									Open in PTN Ninja
 								</a>
 							</div>
 							<div class="flex flex-wrap gap--8 flex-center">
-								<a id="download_notation_go" onclick="downloadNotation('download_notation_go')" data-toggle="tooltip" data-placement="auto" title="Download the game as a PTN file" href="#" class="game-over-action-button btn btn-pill btn-secondary">
+								<a id="download_notation_go" onclick="downloadNotation('download_notation_go')" data-toggle="tooltip" data-placement="top" title="Download the game as a PTN file" href="#" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 384 512">
 										<path d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path>
 									</svg>
 									Download PTN
 								</a>
-								<button onclick="copyNotationLink()" data-toggle="tooltip" data-placement="auto" title="Copy play tak link to this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
+								<button onclick="copyNotationLink()" data-toggle="tooltip" data-placement="top" title="Copy play tak link to this game to your clipboard" class="game-over-action-button btn btn-pill btn-secondary">
 									<svg viewBox="0 0 24 24" width="24px" style="transform: rotate(-45deg)">
 										<path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>
 									Copy Play Tak Link

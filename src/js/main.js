@@ -10,7 +10,56 @@ function alert(type,msg) {
 		$alert.css("display","none")
 	})
 }
-
+const gamePresets = {
+	"beginner": {
+		size: 6,
+		komi: 0,
+		type: 1, // 1 for tournament, 0 for normal, 2 for unrated
+		pieces: 30,
+		capstones: 1,
+		time: 900,
+		increment: 10,
+		trigger_move: "",
+		time_amount: "",
+		required_fields: ['opname']
+	},
+	"intermediate": {
+		size: 6,
+		komi: 4,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 900,
+		increment: 10,
+		trigger_move: "",
+		time_amount: "",
+		required_fields: ['opname']
+	},
+	"league": {
+		size: 6,
+		komi: 4,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 900, // seconds
+		increment: 10,
+		trigger_move: 35,
+		time_amount: 300, // seconds
+		required_fields: ['opname']
+	},
+	"7_open": {
+		size: 7,
+		komi: 4,
+		type: 1,
+		pieces: 40,
+		capstones: 2,
+		time: 1200, // seconds
+		increment: 15,
+		trigger_move: 40,
+		time_amount: 600, // seconds
+		required_fields: ['opname']
+	}
+}
 var camera,scene,renderer,light,canvas,controls = null
 var perspective
 var ismobile=false
@@ -54,11 +103,20 @@ function generateCamera(){
 	settingscounter = (settingscounter+1) & 15;
 	const PADDING = 10;
 	var cuttop = $('header').height() + PADDING;
-	var cutleft = ($("#rmenu").hasClass("hidden") ? 0 : 209) + PADDING;
-	if (!$("#settings-drawer").hasClass("hidden") && $("#rmenu").hasClass("hidden")){
+	const notation = document.getElementById("rmenu");
+	const notationAttr = notation.hasAttribute("hidden");
+	const notationHiddenState = (typeof notationAttr !== undefined && notationAttr !== false);
+	const settingsDrawer = document.getElementById("settings-drawer");
+	const settingsAttr = settingsDrawer.hasAttribute("hidden");
+	const settingsDrawerHiddenState = (typeof settingsAttr !== undefined && settingsAttr !== false);
+	const chat = document.getElementById("cmenu");
+	const chatAttr = chat.hasAttribute("hidden");
+	const chatHiddenState = (typeof chatAttr !== undefined && chatAttr !== false);
+	var cutleft = (notationHiddenState ? 0 : 209) + PADDING;
+	if (!settingsDrawerHiddenState && notationHiddenState){
 		cutleft = 209 + PADDING;
 	}
-	var cutright = ($("#cmenu").hasClass("hidden") ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + PADDING;
+	var cutright = (chatHiddenState ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + PADDING;
 	var cutbottom = 0 + PADDING;
 
 	var pointlist = [];
@@ -466,20 +524,21 @@ function adjustsidemenu(notation,chat){
 		}
 	}
 	localStorage[notationstore]=notationstate
-	if($('#rmenu').hasClass('hidden')){
+	const rmenu = document.getElementById("rmenu");
+	// check is the rmenu has the hidden attribute
+	const rmenuHidden = rmenu.hasAttribute("hidden");
+	if(typeof rmenuHidden !== 'undefined' && rmenuHidden !== false){
 		if(notationstate=="show"){
 			document.getElementById('notation-arrow').classList.add('rotate-arrow');
-			$('#notation-toggle-text').css("left","200px")
-			document.getElementById("rmenu").classList.remove("hidden");
-			document.getElementById("rmenu").style = ""
+			document.getElementById("notation-toggle-text").style.left = "200px";
+			rmenu.removeAttribute("hidden")
 			generateCamera()
 		}
 	}
 	else if(notationstate=="hide"){
-		document.getElementById("rmenu").classList.add("hidden");
-		document.getElementById("rmenu").style.display = 'none';
+		rmenu.setAttribute("hidden", "true");
 		document.getElementById("notation-arrow").classList.remove("rotate-arrow");
-		$('#notation-toggle-text').css("left","0px")
+		document.getElementById("notation-toggle-text").style.left = "0px";
 		generateCamera()
 	}
 	
@@ -499,34 +558,32 @@ function adjustsidemenu(notation,chat){
 		}
 	}
 	localStorage[chatstore]=chatstate
-	if($('#cmenu').hasClass('hidden')){
+	const cmenu = document.getElementById("cmenu");
+	const cmenuHidden = cmenu.hasAttribute("hidden");
+	if(typeof cmenuHidden !== 'undefined' && cmenuHidden !== false){
 		if(chatstate=="show"){
-			$('#chat-toggle-button').css('right',chathandler.chat_width + 12 )
+			document.getElementById('chat-toggle-button').style.right = (chathandler.chat_width + 12) + "px";
 			document.getElementById("chat-arrow").classList.remove("rotate-arrow");
-			document.getElementById("cmenu").classList.remove("hidden");
-			document.getElementById("cmenu").style.display = '';
+			cmenu.removeAttribute("hidden");
 			generateCamera()
 		}
 	}
 	else if(chatstate=="hide"){
-		$('#chat-toggle-button').css('right',"0px")
+		document.getElementById("chat-toggle-button").style.right = "0px";
 		document.getElementById("chat-arrow").classList.add("rotate-arrow");
-		document.getElementById("cmenu").classList.add('hidden');
-		document.getElementById("cmenu").style.display = 'none';
+		cmenu.setAttribute("hidden", "true");
 		generateCamera()
 	}
 }
 
 let settingsToggle = false;
 function toggleSettingsDrawer(){
-	const el = document.getElementById("settings-drawer");
+	const settings = document.getElementById("settings-drawer");
 	if (!settingsToggle) {
-		el.classList.remove('hidden');
-		el.style.display = 'block';
+		settings.removeAttribute("hidden");
 		settingsToggle = true;
 	} else {
-		el.classList.add('hidden');
-		el.style.display = 'none';
+		settings.setAttribute("hidden", "true");
 		settingsToggle = false;
 	}
 	generateCamera();
@@ -859,7 +916,8 @@ function loadSettings() {
 	} else if (localStorage.getItem("hovertext") === "true") {
 		hovertext = true;
 		$('[data-toggle="tooltip"]').tooltip({
-			container: 'body'
+			container: 'body',
+			trigger: 'hover'
 		});
 	} else {
 		hovertext = !ismobile;
@@ -1232,7 +1290,10 @@ function checkboxHover() {
 	if(document.getElementById('hover-checkbox').checked) {
 		localStorage.setItem('hovertext','true')
 		hovertext=true
-		$('[data-toggle="tooltip"]').tooltip();
+		$('[data-toggle="tooltip"]').tooltip({
+			container: 'body',
+			trigger: 'hover'
+		});
 	}
 	else{
 		localStorage.setItem('hovertext','false')
@@ -1413,6 +1474,79 @@ function stepforward() {
 function fastforward() {
 	board.showmove(board.movecount)
 }
+function resetFormFieldAttributes() {
+	const form = document.getElementById("create-game-form");
+	// remove the required attribute from all elements
+	const allFields = form.querySelectorAll("input, select")
+	allFields.forEach(field => {
+		field.removeAttribute("required")
+		field.removeAttribute("disabled");
+	});
+}
+function changePreset(event) {
+	resetFormFieldAttributes();
+	const presetValue = event.target.value;
+	
+	const preset = gamePresets[presetValue];
+
+	if (presetValue === "none") {
+		const storedValues = JSON.parse(localStorage.getItem("current-game-settings") || '{}');
+		if (!Object.keys(storedValues).length) { return;}
+		// get the stored values
+		document.getElementById("boardsize").value = storedValues.size;
+		document.getElementById("piececount").value = storedValues.pieces;
+		document.getElementById("capcount").value = storedValues.capstones;
+		document.getElementById("komiselect").value = storedValues.komi;
+		document.getElementById("gametype").value = storedValues.type;
+		document.getElementById("timeselect").value = storedValues.time;
+		document.getElementById("incselect").value = storedValues.increment;
+		document.getElementById("triggerMove").value = storedValues.trigger_move;
+		document.getElementById("timeAmount").value = storedValues.time_amount;
+		return;
+	} else if (preset) {
+		// store the current values if user changes back to the noen preset
+		const currentValues = {
+			size: document.getElementById("boardsize").value,
+			pieces: document.getElementById("piececount").value,
+			capstones: document.getElementById("capcount").value,
+			komi: document.getElementById("komiselect").value,
+			type: document.getElementById("gametype").value,
+			time: document.getElementById("timeselect").value,
+			increment: document.getElementById("incselect").value,
+			trigger_move: document.getElementById("triggerMove").value,
+			time_amount: document.getElementById("timeAmount").value,
+		};
+		localStorage.setItem("current-game-settings", JSON.stringify(currentValues));
+		document.getElementById("boardsize").value = preset.size;
+		document.getElementById("boardsize").setAttribute("disabled", "true");
+		document.getElementById("piececount").value = preset.pieces;
+		document.getElementById("piececount").setAttribute("disabled", "true");
+		document.getElementById("capcount").value = preset.capstones;
+		document.getElementById("capcount").setAttribute("disabled", "true");
+		document.getElementById("komiselect").value = preset.komi;
+		document.getElementById("komiselect").setAttribute("disabled", "true");
+		document.getElementById("gametype").value = preset.type;
+		document.getElementById("gametype").setAttribute("disabled", "true");
+		document.getElementById("timeselect").value = preset.time;
+		document.getElementById("timeselect").setAttribute("disabled", "true");
+		document.getElementById("incselect").value = preset.increment;
+		document.getElementById("incselect").setAttribute("disabled", "true");
+		document.getElementById("triggerMove").value = preset.trigger_move;
+		document.getElementById("triggerMove").setAttribute("disabled", "true");
+		document.getElementById("timeAmount").value = preset.time_amount;
+		document.getElementById("timeAmount").setAttribute("disabled", "true");
+		// set the required attributes for the fields that are required in the preset
+		for (let i = 0; i < preset.required_fields.length; i++) {
+			const element = document.getElementById(preset.required_fields[i]);
+			if (element) {
+				element.setAttribute("required", "true");
+			}
+		}
+		return;
+	} else {
+		alert('danger', 'Invalid game preset selected');
+	}
+}
 
 function changeboardsize(){
 	var size=document.getElementById("boardsize").value
@@ -1428,6 +1562,38 @@ function changeboardsize(){
 		document.getElementById("piececount").value=piecescaps[0]
 		document.getElementById("capcount").value=piecescaps[1]
 	}
+}
+
+function resetGameSettings() {
+	resetFormFieldAttributes();
+	// remove the stored values from localStorage
+	localStorage.removeItem("current-game-settings");
+	// reset the game settings to default values
+	document.getElementById("boardsize").value = "5";
+	document.getElementById("piececount").value = "21";
+	document.getElementById("capcount").value = "1";
+	document.getElementById("komiselect").value = "0";
+	document.getElementById("gametype").value = "0";
+	document.getElementById("timeselect").value = "600";
+	document.getElementById("incselect").value = "20";
+	document.getElementById("triggerMove").value = "";
+	document.getElementById("timeAmount").value = "";
+	document.getElementById("colorselect").value = "A";
+	document.getElementById("opname").value = "";
+	document.getElementById("preset").value = "none";
+}
+function loadGameSettings() {
+	const storedValues = JSON.parse(localStorage.getItem("current-game-settings") || '{}');
+	if (!Object.keys(storedValues).length) { return; }
+	document.getElementById("boardsize").value = storedValues.size;
+	document.getElementById("piececount").value = storedValues.pieces;
+	document.getElementById("capcount").value = storedValues.capstones;
+	document.getElementById("komiselect").value = storedValues.komi;
+	document.getElementById("gametype").value = storedValues.type;
+	document.getElementById("timeselect").value = storedValues.time;
+	document.getElementById("incselect").value = storedValues.increment;
+	document.getElementById("triggerMove").value = storedValues.trigger_move;
+	document.getElementById("colorselect").value = storedValues.color || "A";
 }
 
 $(document).ready(function() {
@@ -1457,10 +1623,8 @@ $(document).ready(function() {
 		hideElement("action-links");
 		showElement("play-button");
 	}
-	// init tooltips
-	// $('[data-toggle="tooltip"]').tooltip({
-	// 	container: 'body'
-	// })
+	loadGameSettings();
+	// get current game settings
 	fetchEvents();
 })
 

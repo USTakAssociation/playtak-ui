@@ -424,6 +424,7 @@ var server = {
 			document.getElementById("rematch").removeAttribute("disabled");
 			document.getElementById("open-game-over").style.display = "none";
 			document.getElementById("rematch").style.display = "none";
+			document.getElementById("removeSeek").setAttribute("hidden", "true");
 			$('#joingame-modal').modal('hide');
 			//Game Start no. size player_white vs player_black your color time
 			var spl = e.split(" ");
@@ -690,7 +691,7 @@ var server = {
 					board.gameover();
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
-					document.getElementById("removeSeek").removeAttribute("disabled");
+					document.getElementById("removeSeek").setAttribute("hidden", "true");
 				}
 				//Game#1 Abandoned
 				else if (spl[1] === "Abandoned.") {
@@ -856,7 +857,12 @@ var server = {
 		else if (startswith("Seek new", e)) {
 			// Seek new 1 {player} 5 900 20 A 0 21 1 0 0 0 0 {oppoenent}
 			var spl = e.split(" ");
-			const playerRating = await getPlayersRating(spl[3]);
+			let playerRating;
+			if (spl[3] === this.myname) {
+				playerRating = "~";
+			} else {
+				playerRating = await getPlayersRating(spl[3]);
+			}
 			this.seekslist.push({
 				id: +spl[2],
 				player: spl[3],
@@ -1077,7 +1083,10 @@ var server = {
 
 		// add check of help text settings to rerender tooltip
 		if (localStorage.getItem("hovertext") === "true") {
-			$('[data-toggle="tooltip"]').tooltip('enable');
+			$('[data-toggle="tooltip"]').tooltip({
+				container: 'body',
+				trigger: 'hover'
+			});
 		} 
 		document.getElementById("gamecount").innerHTML = this.gameslist.length;
 	},
@@ -1304,7 +1313,10 @@ var server = {
 		document.getElementById("seekcountbot").innerHTML=botcount
 		this.changeseektime=Date.now()
 		if (localStorage.getItem("hovertext") === "true") {
-			$('[data-toggle="tooltip"]').tooltip('enable');
+			$('[data-toggle="tooltip"]').tooltip({
+				container: 'body',
+				trigger: 'hover'
+			});
 		} 
 	},
 	renderOnlinePlayers:function(){
@@ -1347,7 +1359,10 @@ var server = {
 		}
 		// add check of help text settings to rerender tooltip
 		if (localStorage.getItem("hovertext") === "true") {
-			$('[data-toggle="tooltip"]').tooltip('enable');
+			$('[data-toggle="tooltip"]').tooltip({
+				container: 'body',
+				trigger: 'hover'
+			});
 		} 
 	},
 	challengePlayer: function(player) {
@@ -1394,32 +1409,41 @@ var server = {
 		if (server.newSeek) {
 			return;
 		}
-		const size =+ document.getElementById("boardsize").value;
-		const time =+ document.getElementById("timeselect").value;
-		const inc =+ document.getElementById("incselect").value;
-		const color = document.getElementById("colorselect").value;
-		const komi =+ document.getElementById("komiselect").value;
-		const pieces =+ document.getElementById("piececount").value;
-		const capstones =+ document.getElementById("capcount").value;
-		const gametype =+ document.getElementById("gametype").value;
+		// check form validity
+		if (document.forms["create-game-form"].reportValidity() === false) {
+			alert("danger", "Please fill in all required fields before creating a seek.");
+			return;
+		}
+		const game = {
+			size: document.getElementById("boardsize").value,
+			time: document.getElementById("timeselect").value,
+			increment: document.getElementById("incselect").value,
+			color: document.getElementById("colorselect").value,
+			komi: document.getElementById("komiselect").value,
+			pieces: document.getElementById("piececount").value,
+			capstones: document.getElementById("capcount").value,
+			type: document.getElementById("gametype").value,
+			trigger_move: document.getElementById("triggerMove").value,
+			time_amount: document.getElementById("timeAmount").value
+		};
+		// save the current game seetings to local storage
+		localStorage.setItem("current-game-settings", JSON.stringify(game));
 		const opponent = document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"");
-		const triggerMove =+ document.getElementById("triggerMove").value;
-		const timeAmount =+ document.getElementById("timeAmount").value;
-
-		const timeCalc = (time*60);
-		const unrated = (gametype==2?1:0);
-		const tournament = (gametype==1?1:0);
-		const seekCMD =`Seek ${size} ${timeCalc} ${inc} ${color} ${komi} ${pieces} ${capstones} ${unrated} ${tournament} ${triggerMove} ${timeAmount} ${opponent}`;
+		const unrated = (game.type==2?1:0);
+		const tournament = (game.type==1?1:0);
+		const seekCMD =`Seek ${game.size} ${game.time} ${game.increment} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opponent}`;
 		this.send(seekCMD);
 		$('#creategamemodal').modal('hide');
 		server.newSeek = true;
 		document.getElementById('createSeek').setAttribute("disabled", "disabled");
+		document.getElementById("removeSeek").removeAttribute("hidden");
 	}
 	,removeseek:function(){
 		this.send("Seek 0 0 0 A 0 0 0 0 0 ")
 		$('#creategamemodal').modal('hide')
 		document.getElementById('createSeek').removeAttribute("disabled");
 		document.getElementById("rematch").removeAttribute("disabled");
+		document.getElementById("removeSeek").setAttribute("hidden", "true");
 		// remove seek state
 		server.newSeek = false;
 	}
@@ -1471,7 +1495,12 @@ var server = {
 		this.send("Accept " + e)
 		$('#joingame-modal').modal('hide');
 		$('#game-over-modal').modal('hide');
+		document.getElementById('createSeek').removeAttribute("disabled");
+		document.getElementById("removeSeek").setAttribute("hidden", "true");
 		document.getElementById("open-game-over").style.display = "none";
+		// remove disabled on create button 
+		document.getElementById("createSeek").removeAttribute("disabled");
+		document.getElementById("removeSeek").setAttribute("hidden", "true");
 	}
 	,unobserve:function(){
 		if(board.gameno !== 0 && board.gameno !== null){this.send("Unobserve " + board.gameno)}
@@ -1507,6 +1536,7 @@ var server = {
 			this.send(`Rematch ${game.id} ${game.size} ${game.time} ${game.increment} ${newColor} ${game.komi} ${game.pieces} ${game.capstones} ${game.unrated} ${game.tournament} ${game.triggerMove} ${game.timeAmount} ${game.opponent}`);
 			document.getElementById("rematch").setAttribute("disabled", "disabled");
 			document.getElementById('createSeek').setAttribute("disabled", "disabled");
+			document.getElementById("removeSeek").setAttribute("hidden", "true");
 		} else {
 			alert("danger", "No previous game found for rematch.");
 		}
