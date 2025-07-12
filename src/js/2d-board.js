@@ -1,116 +1,148 @@
-// based on passed in settings, create a 2D board for the game
-const defaultBoardSizeSettings = {
-	3: {
-		stones: 10,
-		capstones: 0
-	},
-	4: {
-		stones: 15,
-		capstones: 0
-	},
-	5: {
-		stones: 21,
-		capstones: 1
-	},
-	6: {
-		stones: 30,
-		capstones: 1
-	},
-	7: {
-		stones: 40,
-		capstones: 2
-	},
-	8: {
-		stones: 50,
-		capstones: 2
-	}
-}
-// function create2DBoard(settings) {
-// 	const board = [];
-// 	const rows = settings.rows || 8; // default to 8 rows
-// 	const cols = settings.cols || 8; // default to 8 columns
+let ptnNinjaHasLoaded = false;
+const ninja = document.getElementById("ninja");
+let plyID = 0;
 
-// 	for (let i = 0; i < rows; i++) {
-// 		const row = [];
-// 		for (let j = 0; j < cols; j++) {
-// 		row.push(null); // initialize each cell as empty
-// 		}
-// 		board.push(row);
-// 	}
-
-// 	return board;
-// }
-
-// render board to the Dom on the 2dCanvas element
-function render2DBoard(board, boardID) {
-	const canvas = document.getElementById("board-2d-container");
-	const squares = document.getElementById("squares-2d");
-	if (!canvas) {
-		console.error(`Canvas with id ${boardID} not found.`);
-		return;
+async function messageHandler(event) {
+	if (event.source !== ninja.contentWindow) {
+		return
 	}
-	const yAxisElement = document.getElementById("y-axis");
-	canvas.classList.add("size-" + board.size);
-	// set letter on the x axis
-	const xAxisElement = document.getElementById("x-axis");
-	
-	// render y axis
-	for (let i = 0; i < board.size; i++) {
-		const divElement = document.createElement("div");
-		divElement.innerHTML = `${i + 1}`;
-		yAxisElement.appendChild(divElement);
-	}
-	//render x axis
-	for (let i = 0; i < board.size; i++) {
-		const divElement = document.createElement("div");
-		const letter = String.fromCharCode(65 + i); // A, B, C, ...
-		divElement.innerHTML = letter;
-		xAxisElement.appendChild(divElement);
-	}
-	let row = board.size;
-	for (let i = 0; i < board.size * board.size; i++) {
-		const squareElement = document.createElement("div");
-		squareElement.className = "square";
-		if (i % 2 === 0) {
-			squareElement.classList.add("black");
+	console.log(event.data)
+	// Consider the PTN ninja embed loaded after first GAME_STATE message
+	// Only initialize puzzles after this point
+	if (!ptnNinjaHasLoaded) {
+		if (event.data.action === "GAME_STATE") {
+			ptnNinjaHasLoaded = true;
+			load2DSettings();
+			initBoard();
+			server.connect();
+			if (localStorage.getItem("currentGame")) {
+				loadCurrentGameState();
+			}
 		} else {
-			squareElement.classList.add("white");
+			return; // Ignore other messages until ptn.ninja is fully loaded
 		}
-		if (i % board.size === 0 && i !== 0) {
-			row--;
+	}
+	if (event.data.action === "SET_UI") {
+	}
+	if (event.data.action === "PREV") {
+	}
+	if (event.data.action === "FIRST") {
+	}
+	if (event.data.action === "NEXT") {
+	}
+	if (event.data.action === "GAME_STATE") {
+		if (gameData.is_scratch) {
+			if (!event.data.value.isFirstMove && plyID === event.data.value.plyID) {
+				// reset the notation to match the piece change
+				// update the last notation to the correct value
+				updateLastMove(event.data.value.ply);
+			}
+			plyID = event.data.value.plyID
 		}
-		// set the style for grid-row on the square
-		squareElement.style.gridRow = row;
-		// if the index is a modulus of 5 subtract 1 from row to set the new row
-		
-		squareElement.style.grid
-		squareElement.setAttribute("data-index", `${String.fromCharCode(65 + i)+ (i+1)}`);
-		squares.appendChild(squareElement);
+		// check if game is not already over and has ended and post result with alert
+		if (!gameData.is_game_end && gameData.is_scratch && event.data.value.isGameEnd === true) {
+			if (event.data.value.result && event.data.value.result.text) {
+				gameData.result = event.data.value.result.text
+			} else {
+				gameData.result = "Game Over";
+			}
+			gameOver();
+		}
+	}
+	if (event.data.action === 'INSERT_PLIES') {
+		notate(event.data.value);
+		incrementMoveCounter();
+		if(!gameData.observing) {
+			setDisable2DBoard(false);
+		}
+	}
+	if (event.data.action === "INSERT_PLY") {
+		// send move to server;
+		if(!gameData.is_scratch && !gameData.observing && checkIfMyMove()){
+			server.send("Game#" + gameData.id + " " + fromPTN(event.data.value))
+			setDisable2DBoard(true);
+		}
+		console.log("insert ply: " + JSON.stringify(event.data.value));
+		storeNotation(event.data.value);
+		notate(event.data.value);
+		incrementMoveCounter();
 	}
 }
 
-function create2dPieces(settings) {
-	const boardSize = settings.boardSize || 5; // default to 5x5
-	const sizeSettings = defaultBoardSizeSettings[boardSize];
-	const stones = settings.stones || sizeSettings.stones;
-	const capstones = settings.capstones || sizeSettings.capstones;
-	
-	return {
-		stones,
-		capstones
-	};
+function init2DBoard() {
+	set2DBoardPadding();
+	window.addEventListener( "message", messageHandler, false);
 }
 
-function render2dPieces(settings, boardElement) {
-	 if (!boardElement) {
-		console.error("Board element is required for rendering pieces.");
-		return;
-	}
-	const pieces = create2dPieces(settings);
-	 for (let i = 0; i < pieces.stones; i++) {
-		// render each stone on the board
-	}
-	 for (let i = 0; i < pieces.capstones; i++) {
-		// render each capstone on the board
-	}
+function removeBoardMessageHandler() {
+	window.removeEventListener("message", messageHandler);
+}
+
+function set2DPlayer(value) {
+	ninja.contentWindow.postMessage({
+		action: 'SET_PLAYER',
+		value: value
+	}, '*');
+}
+
+function goToPlay(moveId) {
+	ninja.contentWindow.postMessage({
+		action: 'GO_TO_PLY',
+		value: {
+			plyID: moveId,
+			isDone: true
+		}
+	}, '*');
+}
+// PREV | NEXT | FIRST | LAST | UNDO | REDO
+function sendAction(action) {
+	ninja.contentWindow.postMessage({
+		action,
+	}, '*');
+}
+
+function set2DUI(value) {
+	ninja.contentWindow.postMessage({
+		action: 'SET_UI',
+		value: value
+	}, '*');
+}
+
+function set2DBoard(data) {
+	ninja.contentWindow.postMessage({
+		action: 'SET_CURRENT_PTN',
+		value: data
+	}, '*');
+}
+
+function set2DPlay(value) {
+	lastMove();
+	ninja.contentWindow.postMessage({
+		action: 'INSERT_PLIES',
+		value: {
+			plies: value
+		}
+	}, '*');
+}
+
+function setDisable2DBoard(value) {
+	ninja.contentWindow.postMessage({
+		action: 'SET_UI',
+		value: {
+			disableBoard: value
+		}
+	}, '*');
+}
+
+function set2DBoardPadding() {
+	const notationWidth = document.getElementById("rmenu").clientWidth;
+	const settingsWidth = document.getElementById("settings-drawer").clientWidth;
+	const chat = document.getElementById("cmenu");
+	const chatAttr = chat.hasAttribute("hidden");
+	const chatHiddenState = (typeof chatAttr !== undefined && chatAttr !== false);
+	let paddingLeft = settingsWidth > 0 ? settingsWidth : notationWidth;
+	let paddingRight = (chatHiddenState ? 0 : (+localStorage.getItem("chat_size") || 180) + 10);
+	const ninja = document.getElementById("ninja");
+	ninja.style.paddingLeft = paddingLeft + "px";
+	ninja.style.paddingRight = paddingRight + "px"
 }

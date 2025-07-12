@@ -221,9 +221,9 @@ var server = {
 				document.getElementById("seekcount").innerHTML = "0"
 				document.getElementById("seekcountbot").innerHTML = "0"
 				document.getElementById("gamecount").innerHTML = "0"
-				board.scratch = true
-				board.observing = false
-				board.gameno = 0
+				gameData.is_scratch = true
+				gameData.observing = false
+				gameData.id = 0
 				document.title = "Play Tak"
 				server.myname=null
 				server.seekslist=[]
@@ -419,6 +419,9 @@ var server = {
 		if(startswith("OK", e) || startswith("Welcome!", e)){
 			// welcome or ok message from the server nothing to do here
 		}else if (startswith("Game Start", e)) {
+			resetGameDataToDefault();
+			clearStoredNotation();
+			clearNotationMenu();
 			localStorage.removeItem("current-game-data");
 			console.log("Game Start: " + e);
 			document.getElementById("rematch").removeAttribute("disabled");
@@ -426,32 +429,32 @@ var server = {
 			document.getElementById("rematch").style.display = "none";
 			document.getElementById("removeSeek").setAttribute("hidden", "true");
 			$('#joingame-modal').modal('hide');
-			//Game Start no. size player_white vs player_black your color time
+			//Game Start ID size player_white vs player_black your color time
 			var spl = e.split(" ");
 			const p1 = spl[3];
 			const p2 = spl[5];
 			const opponent = (p1 === this.myname) ? p2 : p1;
-			board.newgame(Number(spl[7]), spl[6], +spl[10], +spl[11], +spl[12], +spl[15], +spl[16]);
-			const gameData = {
-				id: +spl[2],
-				opponent,
-				color: spl[6],
-				size: spl[7], 
-				time: +spl[8],
-				increment: +spl[9],
-				komi: +spl[10],
-				pieces: +spl[11],
-				capstones: +spl[12],
-				unrated: +spl[13],
-				tournament: +spl[14],
-				triggerMove: +spl[15],
-				timeAmount: +spl[16],
-				bot: +spl[17],
-			}
+			gameData.id = +spl[2];
+			gameData.opponent = opponent;
+			gameData.my_color = spl[6];
+			gameData.size = +spl[7];
+			gameData.time = +spl[8];
+			gameData.increment = +spl[9];
+			gameData.komi = +spl[10];
+			gameData.pieces = +spl[11];
+			gameData.capstones = +spl[12];
+			gameData.unrated = +spl[13];
+			gameData.tournament = +spl[14];
+			gameData.triggerMove = +spl[15];
+			gameData.timeAmount = +spl[16];
+			gameData.bot = +spl[17];
+			gameData.is_scratch = false;
+			gameData.observing = false;
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+			initBoard();
 			// store the game object in local storage
 			localStorage.setItem("current-game-data", JSON.stringify(gameData));
-			board.gameno = Number(spl[2]);
-			console.log("gno " + board.gameno);
+			console.log("Game ID " + gameData.id);
 
 			$("#player-me-name").removeClass("player1-name");
 			$("#player-me-name").removeClass("player2-name");
@@ -500,7 +503,7 @@ var server = {
 			$(".player2-name:first").html(p2);
 			document.title = "Tak: " + p1 + " vs " + p2;
 
-			var time = Number(spl[8]);
+			var time = gameData.time;
 			settimers(time * 1000, time * 1000);
 
 			var opponentname;
@@ -520,20 +523,39 @@ var server = {
 			document.getElementById("createSeek").setAttribute("disabled", "disabled");
 			document.getElementById("removeSeek").setAttribute("disabled", "disabled");
 		} else if (startswith("Observe ", e)) {
-			//Observe Game#1 player1 vs player2, 4x4, 180, 7 half-moves played, player2 to move
+			resetGameDataToDefault();
+			clearStoredNotation();
+			clearNotationMenu();
+			//Observe GameId player1 player2 5 300 10 0 21 1 0 0 0 0
 			var spl = e.split(" ");
 
 			var p1 = spl[2];
 			var p2 = spl[3];
-
-			board.clear();
-			board.create(+spl[4], "white", false, true, +spl[7], +spl[8], +spl[9], +spl[12], +spl[13]);
-			board.initEmpty();
-			board.gameno = +spl[1];
+			gameData.id = +spl[1];
+			gameData.opponent = "";
+			gameData.my_color = "white";
+			gameData.size = +spl[4];
+			gameData.time = +spl[5];
+			gameData.increment = +spl[6];
+			gameData.komi = +spl[7];
+			gameData.pieces = +spl[8];
+			gameData.capstones = +spl[9];
+			gameData.unrated = +spl[10];
+			gameData.tournament = +spl[11];
+			gameData.triggerMove = +spl[12];
+			gameData.timeAmount = +spl[13];
+			gameData.bot = 1;
+			gameData.observing = true;
+			gameData.is_scratch = false;
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+			initBoard()
+			if (is2DBoard) {
+				setDisable2DBoard(true);
+			}
 			$(".player1-name:first").html(p1);
 			$(".player2-name:first").html(p2);
 			document.title = "Tak: " + p1 + " vs " + p2;
-
+			document.getElementById('rematch').style.display = "none";
 			var time = +spl[5];
 			settimers(time * 1000, time * 1000);
 		} else if (startswith("GameList Add ", e)) {
@@ -567,26 +589,37 @@ var server = {
 			this.removeGameFromWatchList(id);
 		} else if (startswith("Game#", e)) {
 			var spl = e.split(" ");
-			var gameno = Number(e.split("Game#")[1].split(" ")[0]);
+			var gameId = Number(e.split("Game#")[1].split(" ")[0]);
 			//Game#1 ...
-			if (gameno === board.gameno) {
+			if (gameId === gameData.id) {
 				//Game#1 P A4 (C|W)
 				if (spl[1] === "P") {
-					board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
+					// file,rank,caporwall
+					if (is2DBoard) {
+						set2DPlay(spl[3]+spl[2]);
+					} else {
+						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
+					}
 				}
 				//Game#1 M A2 A5 2 1
 				else if (spl[1] === "M") {
-					var nums = [];
-					for (i = 4; i < spl.length; i++) {
-						nums.push(Number(spl[i]));
+					if (is2DBoard) {
+						// spilt after game#{game id}
+						const psn = e.split("M")[1];
+						set2DPlay(toPTN('M' + psn))
+					} else {
+						var nums = [];
+						for (i = 4; i < spl.length; i++) {
+							nums.push(Number(spl[i]));
+						}
+						board.serverMmove(
+							spl[2].charAt(0),
+							Number(spl[2].charAt(1)),
+							spl[3].charAt(0),
+							Number(spl[3].charAt(1)),
+							nums
+						);
 					}
-					board.serverMmove(
-						spl[2].charAt(0),
-						Number(spl[2].charAt(1)),
-						spl[3].charAt(0),
-						Number(spl[3].charAt(1)),
-						nums
-					);
 				}
 				//Game#1 Time 170 200
 				else if (spl[1] === "Time") {
@@ -596,8 +629,6 @@ var server = {
 					lastBt = bt;
 
 					lastTimeUpdate = invarianttime();
-
-					board.timer_started = true;
 					startTime(true);
 				}
 				//Game#1 Timems 170000 200000
@@ -608,8 +639,6 @@ var server = {
 					lastBt = bt;
 
 					lastTimeUpdate = invarianttime();
-
-					board.timer_started = true;
 					startTime(true);
 				}
 				//Game#1 RequestUndo
@@ -624,7 +653,7 @@ var server = {
 				}
 				//Game#1 Undo
 				else if (spl[1] === "Undo") {
-					board.undo();
+					undoMove();
 					alert("info", "Game has been UNDOed by 1 move");
 					$("#undo").removeClass("i-requested-undo").removeClass("opp-requested-undo").addClass("request-undo");
 				}
@@ -642,7 +671,7 @@ var server = {
 				else if (spl[1] === "Over") {
 					document.getElementById("open-game-over").style.display = "flex";
 					document.title = "Play Tak";
-					board.result = spl[2];
+					gameData.result = spl[2];
 
 					var msg = "Game over <span class='bold'>" + spl[2] + "</span><br>";
 					var type;
@@ -657,9 +686,9 @@ var server = {
 					}
 
 					if (spl[2] === "R-0" || spl[2] === "F-0" || spl[2] === "1-0") {
-						if (board.observing === true) {
+						if (gameData.observing === true) {
 							msg += "White wins by " + type;
-						} else if (board.mycolor === "white") {
+						} else if (gameData.my_color === "white") {
 							msg += "You win by " + type;
 						} else {
 							msg += "Your opponent wins by " + type;
@@ -670,17 +699,17 @@ var server = {
 						msg += "The game is aborted!";
 					} else {
 						//black wins
-						if (board.observing === true) {
+						if (gameData.observing === true) {
 							msg += "Black wins by " + type;
-						} else if (board.mycolor === "white") {
+						} else if (gameData.my_color === "white") {
 							msg += "Your opponent wins by " + type;
 						} else {
 							msg += "You win by " + type;
 						}
 					}
 					// get the game object and check if it's a bot game
-					const gameData = JSON.parse(localStorage.getItem("current-game-data"));
-					if (!board.observing && (gameData && !gameData.bot)) {
+					const localGameData = JSON.parse(localStorage.getItem("current-game-data"));
+					if (!gameData.observing && (localGameData && !localGameData.bot)) {
 						document.getElementById("rematch").style.display = "block";
 					}
 
@@ -688,7 +717,7 @@ var server = {
 
 					$("#gameoveralert-text").html(msg);
 					$("#gameoveralert").modal("show");
-					board.gameover();
+					gameOver();
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
 					document.getElementById("removeSeek").setAttribute("hidden", "true");
@@ -698,14 +727,14 @@ var server = {
 					//Game#1 Abandoned. name quit
 					document.title = "Play Tak";
 
-					if (board.mycolor === "white") {
-						board.result = "1-0";
+					if (gameData.my_color === "white") {
+						gameData.result = "1-0";
 					} else {
-						board.result = "0-1";
+						gameData.result = "0-1";
 					}
 
 					var msg = "Game abandoned by " + spl[2] + ".";
-					if (!board.observing) {
+					if (!gameData.observing) {
 						msg += " You win!";
 					}
 
@@ -713,7 +742,7 @@ var server = {
 
 					$("#gameoveralert-text").html(msg);
 					$("#gameoveralert").modal("show");
-					board.gameover();
+					gameOver();
 				}
 			}
 		} else if (startswith("Login or Register", e)) {
@@ -811,6 +840,12 @@ var server = {
 
 			if (e.includes("You've logged in from another window. Disconnecting")) {
 				server.anotherlogin = true;
+			}
+			
+			if (e === 'Message Your game is resumed') {
+				if (is2DBoard && checkIfMyMove()) {
+					setDisable2DBoard(false);
+				}
 			}
 
 			alert("info", "Server says: " + msg[1]);
@@ -1448,45 +1483,45 @@ var server = {
 		server.newSeek = false;
 	}
 	,draw:function(){
-		if(board.scratch){return}
-		else if(board.observing){return}
+		if(gameData.is_scratch){return}
+		else if(gameData.observing){return}
 
 		if($('#draw').hasClass("offer-draw")){//offer
 			$('#draw').toggleClass('i-offered-draw offer-draw')
-			this.send("Game#" + board.gameno + " OfferDraw")
+			this.send("Game#" + gameData.id + " OfferDraw")
 		}
 		else if($('#draw').hasClass("i-offered-draw")){//remove offer
 			$('#draw').toggleClass('i-offered-draw offer-draw')
-			this.send("Game#" + board.gameno + " RemoveDraw")
+			this.send("Game#" + gameData.id + " RemoveDraw")
 		}
 		else{//accept the offer
 			$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw')
-			this.send("Game#" + board.gameno + " OfferDraw")
+			this.send("Game#" + gameData.id + " OfferDraw")
 		}
 	}
 	,undo:function(){
-		if(board.observing){return}
+		if(gameData.observing){return}
 
 		if($('#undo').hasClass('request-undo')){//request undo
-			this.send("Game#" + board.gameno + " RequestUndo")
+			this.send("Game#" + gameData.id + " RequestUndo")
 			$('#undo').toggleClass('request-undo i-requested-undo')
 			alert('info','Undo request sent')
 		}
 		else if($('#undo').hasClass('opp-requested-undo')){//accept request
-			this.send("Game#" + board.gameno + " RequestUndo")
+			this.send("Game#" + gameData.id + " RequestUndo")
 			$('#undo').toggleClass('request-undo opp-requested-undo')
 		}
 		else if($('#undo').hasClass('i-requested-undo')){//remove request
-			this.send("Game#" + board.gameno + " RemoveUndo")
+			this.send("Game#" + gameData.id + " RemoveUndo")
 			$('#undo').toggleClass('request-undo i-requested-undo')
 			alert('info','Undo request removed')
 		}
 	}
 	,resign:function(){
-		if(board.scratch){return}
-		else if(board.observing){return}
+		if(gameData.is_scratch){return}
+		else if(gameData.observing){return}
 
-		this.send("Game#" + board.gameno + " Resign")
+		this.send("Game#" + gameData.id + " Resign")
 	}
 	,acceptseek:function(e){
 		if(this.changeseektime+800>Date.now()){
@@ -1503,16 +1538,16 @@ var server = {
 		document.getElementById("removeSeek").setAttribute("hidden", "true");
 	}
 	,unobserve:function(){
-		if(board.gameno !== 0 && board.gameno !== null){this.send("Unobserve " + board.gameno)}
+		if(gameData.id !== 0 && gameData.id !== null){this.send("Unobserve " + gameData.id)}
 	}
 	,observegame:function(game){
 		document.getElementById("open-game-over").style.display = "none";
 		document.getElementById("rematch").removeAttribute("disabled");
 		$('#watchgame-modal').modal('hide')
-		if(board.observing === false && board.scratch === false){ //don't observe game while playing another
+		if(gameData.observing === false && gameData.is_scratch === false){ //don't observe game while playing another
 			return
 		}
-		if(game.id === board.gameno){return}
+		if(game.id === gameData.id){return}
 		this.unobserve()
 		this.send("Observe " + game.id)
 		var players=[game.player1,game.player2]
@@ -1522,9 +1557,9 @@ var server = {
 	rematch: function() {
 		// send a request to the server to start a rematch
 		//check the locall storage for the gameobject
-		const gameData = localStorage.getItem("current-game-data");
-		if (gameData) {
-			const game = JSON.parse(gameData);
+		const localGameData = localStorage.getItem("current-game-data");
+		if (localGameData) {
+			const game = JSON.parse(localGameData);
 			// check the seek list for the game id and accept it
 			const seekIndex = this.seekslist.findIndex(seek => seek.id === game.id);
 			if (seekIndex !== -1) {
