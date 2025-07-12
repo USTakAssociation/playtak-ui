@@ -58,6 +58,18 @@ const gamePresets = {
 		trigger_move: 40,
 		time_amount: 600, // seconds
 		required_fields: ['opname']
+	},
+	"7_blitz": {
+		size: 7,
+		komi: 4,
+		type: 1,
+		pieces: 40,
+		capstones: 2,
+		time: 300, // seconds
+		increment: 5,
+		trigger_move: "",
+		time_amount: "", // seconds
+		required_fields: ['opname']
 	}
 }
 var camera,scene,renderer,light,canvas,controls = null
