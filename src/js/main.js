@@ -114,7 +114,11 @@ function init() {
 	loadInterfaceSettings()
 	const ninjaElement = document.getElementById("ninja");
 	const ninjaParams = "&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=false&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false"
-	if(window.location.host.indexOf("localhost")>-1 || window.location.host.indexOf("127.0.0.1")>-1 || window.location.host.indexOf("192.168.")==0){
+	if( window.location.host.indexOf("localhost")>-1 || 
+		window.location.host.indexOf("127.0.0.1")>-1 || 
+		window.location.host.indexOf("192.168.") == 0 ||
+		window.location.host.indexOf("beta.playtak.com")>-1 ||
+	){
 		ninjaElement.src = "https://next.ptn.ninja/" + ninjaParams;
 	} else {
 		ninjaElement.src = "https://ptn.ninja/" + ninjaParams;
