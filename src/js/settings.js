@@ -479,6 +479,11 @@ function set2DTheme(theme) {
 }
 
 function set2DCustomTheme() {
+	const customTheme = document.getElementById('2d-custom-theme').value;
+	if (!customTheme || customTheme.length < 10) {
+		alert('danger', 'Custom theme must be a valid JSON object with at least 10 characters');
+		return;
+	}
 	const options = document.getElementById("2d-theme-options");
 	for (let i = 0; i < options.children.length; i++) {
 		const element = options.children[i].querySelector("button");
@@ -489,8 +494,8 @@ function set2DCustomTheme() {
 	localStorage.removeItem('2d-theme');
 	// clear the active on the default themes
 	document.getElementById('set-2d-theme').innerText = 'Custom Theme Set';
-	localStorage.setItem('2d-custom-theme', document.getElementById('2d-custom-theme').value)
-	set2DUI({theme: JSON.parse(document.getElementById('2d-custom-theme').value)});
+	localStorage.setItem('2d-custom-theme', customTheme)
+	set2DUI({theme: JSON.parse(customTheme)});
 }
 
 function toggle2DBoard3D() {

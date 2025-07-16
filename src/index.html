@@ -503,7 +503,7 @@
 			<div class="tab-content clearfix">
 				<!-- Board Settings -->
 				<div class="tab-pane fade show active settings-pane" id="board">
-					<form>
+					<form onsubmit="return false;">
 						<div>
 							<div class="margin-top--8">
 								<label>
@@ -742,7 +742,7 @@
 				<!-- Interface Settings -->
 				<div class="tab-pane fade settings-pane" id="interface">
 					<h4>Interface</h4>
-					<form class="flex flex-column gap--8">
+					<form class="flex flex-column gap--8" onsubmit="return false;">
 						<div data-toggle="tooltip" data-placement="top" title="When the page loads display the events/landing page">
 							<label>
 								<input id="show-landing" type="checkbox" onClick="disableLanding()" checked/>
