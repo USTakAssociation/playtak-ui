@@ -4,7 +4,7 @@ let plyID = 0;
 
 async function messageHandler(event) {
 	if (event.source !== ninja.contentWindow) {
-		return
+		return;
 	}
 	// Consider the PTN ninja embed loaded after first GAME_STATE message
 	// Only initialize puzzles after this point
@@ -18,49 +18,45 @@ async function messageHandler(event) {
 			return; // Ignore other messages until ptn.ninja is fully loaded
 		}
 	}
-	if (event.data.action === "SET_UI") {
-	}
-	if (event.data.action === "PREV") {
-	}
-	if (event.data.action === "FIRST") {
-	}
-	if (event.data.action === "NEXT") {
-	}
-	if (event.data.action === "GAME_STATE") {
-		if (gameData.is_scratch) {
-			if (!event.data.value.isFirstMove && plyID === event.data.value.plyID) {
-				// reset the notation to match the piece change
-				// update the last notation to the correct value
-				updateLastMove(event.data.value.ply);
+	switch (event.data.action) {
+		case "GAME_STATE":
+			if (gameData.is_scratch) {
+				if (!event.data.value.isFirstMove && plyID === event.data.value.plyID) {
+					// reset the notation to match the piece change
+					// update the last notation to the correct value
+					updateLastMove(event.data.value.ply);
+				}
+				plyID = event.data.value.plyID
 			}
-			plyID = event.data.value.plyID
-		}
-		// check if game is not already over and has ended and post result with alert
-		if (!gameData.is_game_end && gameData.is_scratch && event.data.value.isGameEnd === true) {
-			if (event.data.value.result && event.data.value.result.text) {
-				gameData.result = event.data.value.result.text
-			} else {
-				gameData.result = "Game Over";
+			// check if game is not already over and has ended and post result with alert
+			if (!gameData.is_game_end && gameData.is_scratch && event.data.value.isGameEnd === true) {
+				if (event.data.value.result && event.data.value.result.text) {
+					gameData.result = event.data.value.result.text
+				} else {
+					gameData.result = "Game Over";
+				}
+				gameOver();
 			}
-			gameOver();
-		}
-	}
-	if (event.data.action === 'INSERT_PLIES') {
-		notate(event.data.value);
-		incrementMoveCounter();
-		if(!gameData.observing) {
-			setDisable2DBoard(false);
-		}
-	}
-	if (event.data.action === "INSERT_PLY") {
-		// send move to server;
-		if(!gameData.is_scratch && !gameData.observing && checkIfMyMove()){
-			server.send("Game#" + gameData.id + " " + fromPTN(event.data.value))
-			setDisable2DBoard(true);
-		}
-		storeNotation(event.data.value);
-		notate(event.data.value);
-		incrementMoveCounter();
+			break;
+		case "INSERT_PLIES":
+			notate(event.data.value);
+			incrementMoveCounter();
+			if(!gameData.observing) {
+				setDisable2DBoard(false);
+			}
+			break;
+		case "INSERT_PLY":
+			// send move to server;
+			if(!gameData.is_scratch && !gameData.observing && checkIfMyMove()){
+				server.send("Game#" + gameData.id + " " + fromPTN(event.data.value))
+				setDisable2DBoard(true);
+			}
+			storeNotation(event.data.value);
+			notate(event.data.value);
+			incrementMoveCounter();
+			break;
+		default:
+			break;
 	}
 }
 
