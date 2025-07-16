@@ -36,7 +36,8 @@ var camera,scene,renderer,light,canvas,controls = null
 var perspective
 
 function animate() {
-	if(!dontanimate && !is2DBoard){
+	if (is2DBoard) return;
+	if(!dontanimate){
 		controls.update()
 		var newscenehash=floathashscene()
 		var now=Date.now()
@@ -1357,7 +1358,6 @@ var board = {
 	}
 	,leftclick:function(){
 		var pick=this.mousepick()
-
 		this.remove_total_highlight()
 		if(!checkIfMyMove()){
 			return;
@@ -1458,10 +1458,8 @@ var board = {
 		}
 		else if(pick[0]=="piece"){
 			if(this.selected){
-				console.log(this.selected, pick[1])
 				if(this.selected === pick[1] && gameData.move_count>=2){
 					this.rotate(pick[1])
-					console.log('rotate', pick[1])
 				}
 				else{
 					this.unselect(pick[1])
@@ -2000,8 +1998,7 @@ var board = {
 	}
 	,select:function(obj){
 		obj.position.y += stack_selection_height
-		this.selected = obj
-		console.log("selected " + JSON.stringify(obj))
+		this.selected = obj;
 	}
 	,unselect:function(){
 		if(this.selected){
@@ -2166,7 +2163,6 @@ var board = {
 						s1.file + (i + 1) * df,
 						s1.rank + (i + 1) * dr
 					)
-
 					for(j = 0;j < parseInt(drops[i]);j++){
 						this.pushPieceOntoSquare(sq,tstk.pop())
 					}
@@ -2179,7 +2175,6 @@ var board = {
 			notate(move);
 			this.incmovecnt();
 		}
-		board.selected = null;
 		if(parsed.tags.Result !== undefined){
 			gameData.result = parsed.tags.Result
 			gameOver()
@@ -2397,7 +2392,6 @@ var board = {
 	}
 }
 
-
 function onWindowResize() {
 	if(rendererdone){
 		renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
@@ -2455,6 +2449,17 @@ function onKeyUp(e) {
 	}
 }
 
+function removeEventListeners() {
+	canvas.removeEventListener("mousedown", onDocumentMouseDown, false);
+	canvas.removeEventListener("mouseup", onDocumentMouseUp, false);
+	canvas.removeEventListener("mousemove", onDocumentMouseMove, false);
+	canvas.removeEventListener("contextmenu", function (e) {
+		e.preventDefault();
+	}, false);
+	window.removeEventListener("resize", onWindowResize, false);
+	window.removeEventListener("keyup", onKeyUp, false);
+}
+
 function init3DBoard() {
 	canvas = document.getElementById("gamecanvas");
 
@@ -2472,12 +2477,14 @@ function init3DBoard() {
 
 	initBoard();
 	rendererdone = true;
-	generateCamera();
 	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5, 3, 16, 100);
 	highlighter = new THREE.Mesh(geometry, materials.highlighter);
 	highlighter.rotateX(Math.PI / 2);
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
+	setTimeout(() => {
+		generateCamera();
+	}, 200);
 
 	canvas.addEventListener("mousedown", onDocumentMouseDown, false);
 	canvas.addEventListener("mouseup", onDocumentMouseUp, false);

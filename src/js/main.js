@@ -131,12 +131,7 @@ function init() {
 		makeStyleSelector();
 		load3DSettings();
 		init3DBoard();
-	}
-}
-
-function output(e) {
-	if(typeof DEBUG !== 'undefined' && DEBUG){
-		console.log("output:" + e)
+		window.addEventListener("load", animate)
 	}
 }
 
@@ -349,7 +344,6 @@ function fastrewind() {
 }
 
 function stepback() {
-	
 	previousMove();
 }
 
@@ -624,7 +618,7 @@ function filterTable(category){
 }
 
 init()
-$(window).on("load", animate);
+//(window).on("load", animate);
 $(document).ready(function() {
 	if(localStorage.getItem('sound')==='false') {
 		turnsoundoff()

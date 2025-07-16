@@ -172,7 +172,6 @@ function load() {
 	const tpsRegex = /([,x12345678SC\/]+)\s+(\d+)\s+(\d+|-)/
 	const isTPS = tpsRegex.test(text)
 	let parsed = parsePTN(text);
-	console.log("Parsed PTN:", parsed);
 	if (parsed !== null && !isTPS) {
 		if (parsed.tags === undefined || parsed.tags === null 
 			|| parsed.tags.Size === undefined || parsed.tags.Size === null
@@ -239,7 +238,6 @@ function loadCurrentGameState() {
 	const parsed = parsePTN(currentGame);
 	clearNotationMenu();
 	initCounters(0);
-	console.log(parsed);
 	if (is2DBoard) {
 		set2DBoard(currentGame);
 		sendAction('LAST')
@@ -251,9 +249,13 @@ function loadCurrentGameState() {
 			notate(parsed.moves[i]);
 			incrementMoveCounter();
 		}
+		if (gameData.is_scratch) {
+			setDisable2DBoard(false);
+		}
+		// check if my move
+		
 	} else {
 		dontanimate = true;
-		
 		board.loadptn(parsed);
 		dontanimate = false;
 	}
@@ -324,9 +326,11 @@ function settimers(p1t,p2t,nohurry){
 		$('.player2-time:first').removeClass("hurrytime")
 	}
 }
+
 function getZero(t) {
 	return t<10?'0'+t:t
 }
+
 function formatTime(t){
 	if(t<0){
 		t=0
@@ -409,7 +413,7 @@ function clearStoredNotation() {
 function storeNotation(txt) {
 	let currentGame = localStorage.getItem("currentGame");
 	if (currentGame) {
-		currentGame += ' ' + txt;
+		currentGame += ` ${txt}`;
 		localStorage.setItem("currentGame", currentGame);
 	} else {
 		localStorage.setItem("currentGame", txt);

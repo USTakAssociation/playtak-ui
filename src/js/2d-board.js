@@ -6,7 +6,6 @@ async function messageHandler(event) {
 	if (event.source !== ninja.contentWindow) {
 		return
 	}
-	console.log(event.data)
 	// Consider the PTN ninja embed loaded after first GAME_STATE message
 	// Only initialize puzzles after this point
 	if (!ptnNinjaHasLoaded) {
@@ -15,9 +14,6 @@ async function messageHandler(event) {
 			load2DSettings();
 			initBoard();
 			server.connect();
-			if (localStorage.getItem("currentGame")) {
-				loadCurrentGameState();
-			}
 		} else {
 			return; // Ignore other messages until ptn.ninja is fully loaded
 		}
@@ -62,7 +58,6 @@ async function messageHandler(event) {
 			server.send("Game#" + gameData.id + " " + fromPTN(event.data.value))
 			setDisable2DBoard(true);
 		}
-		console.log("insert ply: " + JSON.stringify(event.data.value));
 		storeNotation(event.data.value);
 		notate(event.data.value);
 		incrementMoveCounter();

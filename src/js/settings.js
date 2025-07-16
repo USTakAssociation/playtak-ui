@@ -423,6 +423,7 @@ function sliderScale(scalein,lazy) {
 
 function toggle2DBoard() {
 	removeBoardMessageHandler();
+	removeEventListeners();
 	if(document.getElementById('2d-board-checkbox').checked) {
 		localStorage.setItem('2d_board','true')
 		is2DBoard = true;
@@ -445,6 +446,12 @@ function toggle2DBoard() {
 		makeStyleSelector();
 		load3DSettings();
 		init3DBoard();
+		setTimeout(() => {
+			dontanimate = true;
+			animate();
+			dontanimate = false;
+		}, 500);
+		// window.addEventListener("load", animate)
 	}
 	if (localStorage.getItem("currentGame")) {
 		setTimeout(() => {
