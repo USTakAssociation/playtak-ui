@@ -1,7 +1,7 @@
 # PlayTak-UI
 Javascript based Play Tak web client
 
-Playtak backend can be found here [Playtak](https://github.com/USTakAssociation/Playtak)
+Playtak backend can be found here: [playtak-api](https://github.com/USTakAssociation/playtak-api)
 
 ## Getting Started
 Pull the source by cloning the repository, then cd in to the project
