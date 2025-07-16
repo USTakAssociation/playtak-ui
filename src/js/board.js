@@ -26,6 +26,265 @@ var lastMoveHighlighter;
 var mouse = new THREE.Vector2();
 var offset = new THREE.Vector3();
 
+var antialiasing_mode = true
+var maxaniso=1
+var anisolevel=16
+var dontanimate = false;
+var scenehash = 0;
+var lastanimate = 0;
+var camera,scene,renderer,light,canvas,controls = null
+var perspective
+
+function animate() {
+	if (is2DBoard) return;
+	if(!dontanimate){
+		controls.update()
+		var newscenehash=floathashscene()
+		var now=Date.now()
+		if(scenehash!=newscenehash || lastanimate+1000<=now){
+			scenehash=newscenehash
+			lastanimate=now
+			renderer.render(scene,camera)
+		}
+	}
+	requestAnimationFrame(animate)
+}
+
+function combinefrustumvectors(a,b){
+	var a2=a.dot(a)
+	var b2=b.dot(b)
+	var ab=a.dot(b)
+	var a2b2=a2*b2
+	var div=a2b2-ab*ab
+	var bmul=(a2b2-a2*ab)/div
+	var amul=(a2b2-b2*ab)/div
+	return a.clone().multiplyScalar(amul).addScaledVector(b,bmul)
+}
+
+function frustumprojectionhelper(invcam,fv){
+	return fv.dot(fv)/fv.dot(invcam)
+}
+
+function generateCamera(){
+	if(!rendererdone || is2DBoard){
+		return
+	}
+
+	settingscounter = (settingscounter+1) & 15;
+	var cuttop = $('header').height() + BOARD_PADDING;
+	var cutleft = getLeftPadding();
+	var cutright = getRightPadding();
+	var cutbottom = 0 + BOARD_PADDING;
+
+	var pointlist = [];
+	var xsizea = gameData.size*sq_size/2+border_size+stackOffsetFromBorder+piece_size;
+	var xsizeb = (gameData.size-1)*sq_size/2+piece_size/2;
+	var yneg = sq_height/2;
+	var yposa = 10*piece_height-yneg;
+	var yposb = 20*piece_height+yneg;
+	var zsizea = gameData.size*sq_size/2+border_size;
+	var zsizeb = xsizeb;
+
+	for(let a =- 1 ; a < 2; a += 2){
+		for(let b = -1; b < 2; b += 2){
+			pointlist.push(new THREE.Vector3(a*xsizea,-yneg,b*zsizea))
+			pointlist.push(new THREE.Vector3(a*xsizea,yposa,b*zsizea))
+			pointlist.push(new THREE.Vector3(a*xsizeb,yposb,b*zsizeb))
+		}
+	}
+	var invcamdir
+	if(camera && !fixedcamera){
+		invcamdir=camera.position.clone().sub(controls.center).normalize()
+	}
+	else{
+		invcamdir=new THREE.Vector3(-4,25,25).normalize()
+	}
+	var camdir=invcamdir.clone().negate()
+	var up=new THREE.Vector3(0,1,0)
+	var camleft=new THREE.Vector3()
+	camleft.crossVectors(up,camdir).normalize()
+	var camup=new THREE.Vector3()
+	camup.crossVectors(camdir,camleft).normalize()
+	var camright=camleft.clone().negate()
+	var camdown=camup.clone().negate()
+	if(perspective>0){
+		var fw=pixelratio*(window.innerWidth+Math.abs(cutleft-cutright))
+		var fh=pixelratio*(window.innerHeight+Math.abs(cuttop-cutbottom))
+		var ox=pixelratio*(Math.max(0,cutright-cutleft))
+		var oy=pixelratio*(Math.max(0,cutbottom-cuttop))
+		var xv=pixelratio*(window.innerWidth-cutleft-cutright)
+		var yv=pixelratio*(window.innerHeight-cuttop-cutbottom)
+		var perspectiveheight=fh*perspective/(yv+xv)/90
+		var perspectivewidth=perspectiveheight*fw/fh
+		var perspectiveangle=Math.atan(perspectiveheight)*360/Math.PI
+		var scaletop=perspectiveheight*yv/fh
+		var scalebottom=scaletop
+		var scaleleft=perspectivewidth*xv/fw
+		var scaleright=scaleleft
+		var fvtop=camup.clone().divideScalar(scaletop).add(invcamdir).normalize()
+		var fvbottom=camdown.clone().divideScalar(scalebottom).add(invcamdir).normalize()
+		var fvleft=camleft.clone().divideScalar(scaleleft).add(invcamdir).normalize()
+		var fvright=camright.clone().divideScalar(scaleright).add(invcamdir).normalize()
+		var maxleft=0
+		var maxright=0
+		var maxtop=0
+		var maxbottom=0
+		for(a=0;a<pointlist.length;a++){
+			var newdist=fvleft.dot(pointlist[a])
+			maxleft=Math.max(maxleft,newdist)
+			var newdist=fvright.dot(pointlist[a])
+			maxright=Math.max(maxright,newdist)
+			var newdist=fvtop.dot(pointlist[a])
+			maxtop=Math.max(maxtop,newdist)
+			var newdist=fvbottom.dot(pointlist[a])
+			maxbottom=Math.max(maxbottom,newdist)
+		}
+
+		var camdist=0
+		var camcenter=new THREE.Vector3(0,0,0)
+
+		if(fixedcamera){
+			var lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft),fvright.clone().multiplyScalar(maxright))
+			var tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop),fvbottom.clone().multiplyScalar(maxbottom))
+			var lrlen=lrcampos.dot(invcamdir)
+			var tblen=tbcampos.dot(invcamdir)
+
+			if(lrlen<tblen){
+				var addin=(maxleft+maxright)*(tblen/lrlen-1)/2
+				lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft+addin),fvright.clone().multiplyScalar(maxright+addin))
+
+				lrlen=lrcampos.dot(invcamdir)
+				addin+=(maxleft+maxright+addin*2)*(tblen/lrlen-1)/2
+				lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft+addin),fvright.clone().multiplyScalar(maxright+addin))
+
+			}
+			else{
+				var addin=(maxtop+maxbottom)*(lrlen/tblen-1)/2
+				tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop+addin),fvbottom.clone().multiplyScalar(maxbottom+addin))
+
+				tblen=tbcampos.dot(invcamdir)
+				addin+=(maxtop+maxbottom+addin*2)*(lrlen/tblen-1)/2
+				tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop+addin),fvbottom.clone().multiplyScalar(maxbottom+addin))
+
+			}
+
+			camdist=lrcampos.dot(invcamdir)
+			var camdiff=tbcampos.clone().sub(lrcampos)
+			var lradjust=camup.clone().multiplyScalar(camdiff.dot(camup))
+			var finalcampos=lrcampos.clone().add(lradjust)
+
+			var centeroffset=camdir.clone().multiplyScalar(finalcampos.dot(invcamdir))
+			camcenter=finalcampos.clone().add(centeroffset)
+
+			camera = new THREE.PerspectiveCamera(perspectiveangle,canvas.width / canvas.height,Math.max(camdist-800,10),camdist+800)
+			camera.setViewOffset(fw,fh,ox,oy,canvas.width,canvas.height)
+			camera.position.set(finalcampos.x,finalcampos.y,finalcampos.z)
+		}
+		else{
+			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvleft.clone().multiplyScalar(maxleft)))
+			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvright.clone().multiplyScalar(maxright)))
+			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvtop.clone().multiplyScalar(maxtop)))
+			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvbottom.clone().multiplyScalar(maxbottom)))
+
+			var finalcampos=invcamdir.clone().multiplyScalar(camdist)
+
+			camera = new THREE.PerspectiveCamera(perspectiveangle,canvas.width / canvas.height,Math.max(camdist/5-800,10),camdist*3+800)
+			camera.setViewOffset(fw,fh,ox,oy,canvas.width,canvas.height)
+			camera.position.set(finalcampos.x,finalcampos.y,finalcampos.z)
+		}
+
+		controls = new THREE.OrbitControls(camera,renderer.domElement)
+		controls.minDistance = camdist/5
+		controls.maxDistance = camdist*3
+		controls.enableKeys = false
+		controls.center.set(camcenter.x,camcenter.y,camcenter.z)
+		controls.enablePan=false
+
+		if(ismobile){
+			controls.zoomSpeed = 0.5
+		}
+	}
+	else{
+		var maxleft=0
+		var maxright=0
+		var maxtop=0
+		var maxbottom=0
+		for(a=0;a<pointlist.length;a++){
+			var newleft=camleft.dot(pointlist[a])
+			maxleft=Math.max(maxleft,newleft)
+			maxright=Math.min(maxright,newleft)
+			var newtop=camup.dot(pointlist[a])
+			maxtop=Math.max(maxtop,newtop)
+			maxbottom=Math.min(maxbottom,newtop)
+		}
+		var scalex=(maxleft-maxright)/(window.innerWidth-cutleft-cutright)
+		var scaley=(maxtop-maxbottom)/(window.innerHeight-cuttop-cutbottom)
+		var scale=Math.max(scalex,scaley)
+		var xpadding=(window.innerWidth-cutleft-cutright)*(1-scalex/scale)
+		var ypadding=(window.innerHeight-cuttop-cutbottom)*(1-scaley/scale)
+		cutleft+=xpadding/2
+		cutright+=xpadding/2
+		cuttop+=ypadding/2
+		cutbottom+=ypadding/2
+
+		camera = new THREE.OrthographicCamera(-maxleft-cutleft*scale,-maxright+cutright*scale,maxtop+cuttop*scale,maxbottom-cutbottom*scale,2000,5000 )
+		var campos=invcamdir.multiplyScalar(3500)
+		camera.position.set(campos.x,campos.y,campos.z)
+
+		controls = new THREE.OrbitControls(camera,renderer.domElement)
+		controls.minZoom = 0.5
+		controls.maxZoom = 3
+		controls.enableKeys = false
+		controls.center.set(0,0,0)
+		controls.enablePan=false
+
+		if(ismobile){
+			controls.zoomSpeed = 0.5
+		}
+	}
+	if(fixedcamera){
+		controls.enableRotate=false
+		controls.enableZoom=false
+		board.boardside="white"
+	}
+	if((gameData.my_color=="black") != (board.boardside=="black")){
+		board.reverseboard()
+	}
+}
+
+function floathashscene(){
+	var hash=0
+	var multiplier=1
+	updatepoint(camera.position)
+	updatepoint(controls.center)
+	update(camera.zoom)
+	var a
+	for(a=0;a<board.piece_objects.length;a++){
+		updatepoint(board.piece_objects[a].position)
+	}
+	update(window.innerWidth)
+	update(window.innerHeight)
+	update(anisolevel)
+	update(pixelratio)
+	update(settingscounter)
+	if(board.highlighted){
+		updatepoint(highlighter.position)
+	}
+	if (board.lastMoveHighlighted) {
+		updatepoint(lastMoveHighlighter.position);
+	}
+	function updatepoint(p){
+		update(p.x)
+		update(p.y)
+		update(p.z)
+	}
+	function update(n){
+		hash+=n*multiplier
+		multiplier*=1.0010472219
+	}
+	return hash
+}
+
 var materials = {
 	images_root_path: 'images/',
 	board_texture_path: 'images/board/',
@@ -62,54 +321,42 @@ var materials = {
 	lastMoveHighlighter: new THREE.LineBasicMaterial({color: 0xfff9b8})
 
 	,getWhiteSquareTextureName:function(){
-		return this.board_texture_path + 'white_' + this.white_sqr_style_name + '.png'
+		return this.board_texture_path + squaresMap[this.white_sqr_style_name].file + '.png'
 	}
-	,getBlackSquareTextureName:function(styleName){
-		return this.board_texture_path + 'black_' + this.black_sqr_style_name + '.png'
+	,getBlackSquareTextureName:function(){
+		return this.board_texture_path + squaresMap[this.black_sqr_style_name].file + '.png'
 	}
 	,getWhitePieceTextureName:function(){
-		if(piece_styles[this.white_piece_style_name]==0){
-			return this.pieces_texture_path + this.white_piece_style_name + '_pieces.png'
+		if (localStorage['set_custom_piece_white']) {
+			return localStorage[localStorage['set_custom_piece_white']]
 		}
-		else if(piece_styles[this.white_piece_style_name]==2){
-			return localStorage[this.white_piece_style_name]
-		}
-		else{
-			return this.pieces_texture_path + this.white_piece_style_name + '.png'
-		}
-	}
-	,getBlackPieceTextureName:function(){
-		if(piece_styles[this.black_piece_style_name]==0){
-			return this.pieces_texture_path + this.black_piece_style_name + '_pieces.png'
-		}
-		else if(piece_styles[this.black_piece_style_name]==2){
-			return localStorage[this.black_piece_style_name]
-		}
-		else{
-			return this.pieces_texture_path + this.black_piece_style_name + '.png'
-		}
+		return `images/pieces/${piecesMap[this.white_piece_style_name].file}.png`
 	}
 	,getWhiteCapTextureName:function(){
-		if(piece_styles[this.white_piece_style_name]==0){
-			return this.pieces_texture_path + this.white_piece_style_name + '_caps.png'
+		if (localStorage[`set_custom_piece_white`]) {
+			return localStorage[localStorage['set_custom_piece_white']]
 		}
-		else if(piece_styles[this.white_piece_style_name]==2){
-			return localStorage[this.white_piece_style_name]
+		if (piecesMap[materials.white_cap_style_name].multi_file) {
+			// load cap texture
+			return `images/pieces/${piecesMap[materials.white_cap_style_name].file.replace('pieces', 'caps')}.png`
 		}
-		else{
-			return this.pieces_texture_path + this.white_piece_style_name + '.png'
+		return `images/pieces/${piecesMap[materials.white_cap_style_name].file}.png`
+	}
+	,getBlackPieceTextureName:function(){
+		if (localStorage[`set_custom_piece_black`]) {
+			return localStorage[localStorage[`set_custom_piece_black`]]
 		}
+		return `images/pieces/${piecesMap[materials.black_piece_style_name].file}.png`
 	}
 	,getBlackCapTextureName:function(){
-		if(piece_styles[this.black_piece_style_name]==0){
-			return this.pieces_texture_path + this.black_piece_style_name + '_caps.png'
+		if (localStorage[`set_custom_piece_black`]) {
+			return localStorage[localStorage[`set_custom_piece_black`]]
 		}
-		else if(piece_styles[this.black_piece_style_name]==2){
-			return localStorage[this.black_piece_style_name]
+		if (piecesMap[materials.black_cap_style_name].multi_file) {
+			// load cap texture
+			return `images/pieces/${piecesMap[materials.black_cap_style_name].file.replace('pieces','caps')}.png`
 		}
-		else{
-			return this.pieces_texture_path + this.black_piece_style_name + '.png'
-		}
+		return `images/pieces/${piecesMap[materials.black_cap_style_name].file}.png`
 	}
 	// updateBoardMaterials after the user changes the board styles
 	,updateBoardMaterials:function(){
@@ -218,10 +465,10 @@ var materials = {
 
 		if(materials.boardLoaded === 2){
 			materials.boardLoaded = 0
-			for(i = 0;i < board.size * board.size;++i){
+			for(i = 0;i < gameData.size * gameData.size;++i){
 				if(board.board_objects[i].isboard===true){
 					board.board_objects[i].material =
-					((i + Math.floor(i / board.size) * ((board.size - 1) % 2)) % 2)
+					((i + Math.floor(i / gameData.size) * ((gameData.size - 1) % 2)) % 2)
 						? materials.white_sqr : materials.black_sqr
 				}
 			}
@@ -241,7 +488,7 @@ var boardFactory = {
 			board.sq_position.startz + rankInverse*sq_size
 		)
 		square.file = file
-		square.rank = board.size - 1 - rankInverse
+		square.rank = gameData.size - 1 - rankInverse
 		square.isboard = true
 		scene.add(square)
 		return square
@@ -307,7 +554,7 @@ var boardFactory = {
 		function gotfont(font){
 			boardFactory.boardfont=font
 			// add the letters and numbers around the border
-			for(var i = 0;i < board.size;i++){
+			for(var i = 0;i < gameData.size;i++){
 				var geometry,letter
 				
 				// Top letters
@@ -447,12 +694,12 @@ function piecegeometry(color){
 	var geometry = new THREE.BoxGeometry(piece_size,piece_height,piece_size)
 	var geometrytype
 	if(color=="white"){
-		geometrytype=piece_styles[materials.white_piece_style_name]
+		geometrytype=piecesMap[materials.white_piece_style_name]
 	}
 	else{
-		geometrytype=piece_styles[materials.black_piece_style_name]
+		geometrytype=piecesMap[materials.black_piece_style_name]
 	}
-	if(geometrytype!=0){
+	if(!geometrytype.multi_file){
 		var a,b
 		for(a=0;a<12;a++){
 			for(b=0;b<3;b++){
@@ -476,12 +723,12 @@ function capgeometry(color){
 	var a,b
 	var geometrytype
 	if(color=="white"){
-		geometrytype=piece_styles[materials.white_piece_style_name]
+		geometrytype=piecesMap[materials.white_cap_style_name]
 	}
 	else{
-		geometrytype=piece_styles[materials.black_piece_style_name]
+		geometrytype=piecesMap[materials.black_cap_style_name]
 	}
-	if(geometrytype==0){
+	if(geometrytype.multi_file){
 		for(a=60;a<120;a++){
 			for(b=0;b<3;b++){
 				geometry.faceVertexUvs[0][a][b].x=(geometry.faceVertexUvs[0][a][b].x-0.5)*0.25+0.5
@@ -697,22 +944,10 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 }
 
 var board = {
-	size: 0,
-	komi: 0,
 	totcaps: 0,
 	tottiles: 0,
 	whitepiecesleft: 0,
 	blackpiecesleft: 0,
-	mycolor: "white",
-	movecount: 0, // how many moves have been made in this game,
-	moveshown: 0, // which move are we showing (we can show previous moves)
-	// movestart is the initial move number of this game.
-	// An empty board starts from 0, but a game loaded from
-	// TPS may start at some other move.
-	// This matters during Undo, because we can't undo beyond
-	// the initial board layout received from the TPS.
-	movestart: 0,
-	scratch: true,
 	// string representation of contents of each square on the board
 	sq: [],
 	// visual objects representing the board
@@ -727,11 +962,7 @@ var board = {
 	totalhighlighted: null,
 	selected: null,
 	selectedStack: null,
-	ismymove: false,
-	gameno: null,
 	boardside: "white",
-	result: "",
-	observing: false,
 	overlay: null,
 	isBot: false,
 
@@ -741,14 +972,8 @@ var board = {
 
 	// a stack of board layouts,
 	board_history: [],
-	timer_started: false,
-	// the game has ended and play cannot continue,
-	isPlayEnded: false,
 
-	create:function(sz,color,isScratch,obs,komi,pieces,capstones, triggerMove, timeAmount, isBot){
-		this.size = sz
-		this.komi = komi || 0
-
+	create:function(sz,pieces,capstones){
 		if(sz === 3){
 			this.totcaps = 0
 			this.tottiles = 10
@@ -781,36 +1006,22 @@ var board = {
 		}
 		this.whitepiecesleft = this.tottiles + this.totcaps;
 		this.blackpiecesleft = this.tottiles + this.totcaps;
-		$("#komirule").html("+" + Math.floor(this.komi / 2) + (this.komi & 1 ? ".5" : ".0"));
-		$("#piecerule").html(this.tottiles + "/" + this.totcaps);
-		if(triggerMove > 0){
-			document.getElementById("extra-time").style.display = 'block';
-			document.getElementById("extra-time-rule").innerHTML = `${triggerMove}/+${timeAmount/60}`;
-		}
-		this.mycolor = color
 		this.sq = []
-		this.initCounters(0)
-		this.scratch = isScratch
 		this.board_objects = []
 		this.piece_objects = []
 		this.highlighted = null;
 		this.lastMoveHighlighted = null;
 		this.selected = null
 		this.selectedStack = null
-		this.gameno = null
 		this.move = {start:null,end:null,dir:'U',squares:[]}
-		this.result = ""
-		this.observing = typeof obs !== 'undefined' ? obs : false
-		this.ismymove = this.checkifmymove()
+		//gameData.observing = typeof obs !== 'undefined' ? obs : false
 		this.board_history = []
-		this.timer_started = false
-		this.isBot = isBot || false;
 		generateCamera()
 	}
 	,initEmpty:function(){
 		// we keep track of the complete board position before each move
 		// thus, the initial board position is an empty board of the proper size
-		this.pushInitialEmptyBoard(this.size)
+		this.pushInitialEmptyBoard(gameData.size)
 
 		this.addtable();
 		this.addlight();
@@ -820,17 +1031,23 @@ var board = {
 		document.getElementById("player-opp").className = "selectplayer"
 		document.getElementById("player-me").className = ""
 
-		if((this.mycolor=="black") != (this.boardside=="black")){this.reverseboard()}
+		if((gameData.my_color=="black") != (this.boardside=="black")){this.reverseboard()}
 	}
-	,initCounters:function(startMove){
-		this.movestart = startMove
-		this.movecount = startMove
-		this.moveshown = startMove
+	//remove all scene objects, reset player names, stop time, etc
+	,clear:function(){
+		for(var i = scene.children.length - 1;i >= 0;i--){
+			scene.remove(scene.children[i])
+		}
+	}
+	,newOnlinegame:function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
+		this.clear()
+		this.create(sz,col,false,false,komi,pieces,capstones, triggerMove, timeAmount)
+		this.initEmpty()
 	}
 	,calculateBoardPositions:function(){
-		this.length = this.size*sq_size + border_size*2
-		this.sq_position.endx = ((this.size-1)*sq_size) / 2.0
-		this.sq_position.endz = ((this.size-1)*sq_size) / 2.0
+		this.length = gameData.size*sq_size + border_size*2
+		this.sq_position.endx = ((gameData.size-1)*sq_size) / 2.0
+		this.sq_position.endz = ((gameData.size-1)*sq_size) / 2.0
 		this.sq_position.startx = -this.sq_position.endx
 		this.sq_position.startz = -this.sq_position.endz
 		this.corner_position.endx = this.length/2
@@ -844,8 +1061,8 @@ var board = {
 	,addboard:function(){
 		this.calculateBoardPositions()
 		// draw the squares
-		for(i = 0;i < this.size;i++){
-			for(j = 0;j < this.size;j++){
+		for(i = 0;i < gameData.size;i++){
+			for(j = 0;j < gameData.size;j++){
 				// We draw them from the left to right and top to bottom.
 				// But, note, the naming (A1, B1, etc) is left to right and bottom to top.
 				var square = boardFactory.makeSquare(i,j,scene)
@@ -865,14 +1082,14 @@ var board = {
 	addOverlay: function(value) {
 		var overlay_texture = new THREE.TextureLoader().load(value ?? materials.boardOverlayPath);
 		overlay_texture.wrapS = overlay_texture.wrapT = THREE.ClampToEdgeWrapping;
-		overlay_texture.offset.set(materials.overlayMap[this.size].offset.x, materials.overlayMap[this.size].offset.y);
-		overlay_texture.repeat.set(materials.overlayMap[this.size].repeat.x, materials.overlayMap[this.size].repeat.y);
+		overlay_texture.offset.set(materials.overlayMap[gameData.size].offset.x, materials.overlayMap[gameData.size].offset.y);
+		overlay_texture.repeat.set(materials.overlayMap[gameData.size].repeat.x, materials.overlayMap[gameData.size].repeat.y);
 		var overlay_material = new THREE.MeshLambertMaterial({map: overlay_texture});
 		overlay_texture.magFilter = THREE.LinearFilter;
 		overlay_texture.minFilter = THREE.LinearFilter;
 		overlay_texture.generateMipmaps = true; 
 		overlay_texture.anisotropy = 4;
-		var geometry = new THREE.BoxGeometry(materials.overlayMap[this.size].size, 2, materials.overlayMap[this.size].size);
+		var geometry = new THREE.BoxGeometry(materials.overlayMap[gameData.size].size, 2, materials.overlayMap[gameData.size].size);
 		this.overlay = new THREE.Mesh(geometry, overlay_material);
 		this.overlay.position.set(
 			0,
@@ -923,7 +1140,7 @@ var board = {
 	,addpieces:function(){
 		var piece
 		var stacks=Math.ceil(this.tottiles/10+this.totcaps)
-		stack_dist=Math.min((border_size*2+sq_size*this.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size)
+		stack_dist=Math.min((border_size*2+sq_size*gameData.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size)
 		for(var i=0;i < this.tottiles;i++){
 			piece = pieceFactory.makePiece(WHITE_PLAYER,i,scene)
 			this.piece_objects.push(piece)
@@ -962,7 +1179,7 @@ var board = {
 	// called if the user changes the texture or size of the pieces
 	,updatepieces:function(){
 		var stacks=Math.ceil(this.tottiles/10+this.totcaps)
-		stack_dist=Math.min((border_size*2+sq_size*this.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size)
+		stack_dist=Math.min((border_size*2+sq_size*gameData.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size)
 		var geometryW=piecegeometry("white")
 		var geometryB=piecegeometry("black")
 		var capGeometryW = capgeometry("white")
@@ -1049,30 +1266,11 @@ var board = {
 		return this.file(file) + (rank + 1)
 	}
 	,get_board_obj:function(file,rank){
-		return this.sq[file][this.size - 1 - rank].board_object
+		return this.sq[file][gameData.size - 1 - rank].board_object
 	}
 	,incmovecnt:function(){
 		this.save_board_pos()
-		if(this.moveshown === this.movecount){
-			this.moveshown++
-			$('.curmove:first').removeClass('curmove')
-			$('.moveno'+this.movecount+':first').addClass('curmove')
-		}
-		this.movecount++
-		document.getElementById("move-sound").currentTime=0
-		document.getElementById("move-sound").play()
-
-		$('#player-me').toggleClass('selectplayer')
-		$('#player-opp').toggleClass('selectplayer')
-
-		// In a scratch game I'm playing both colors
-		if(this.scratch){
-			if(this.mycolor === "white"){this.mycolor = "black"}
-			else{this.mycolor = "white"}
-		}
-
-		this.ismymove = this.checkifmymove()
-		$('#undo').removeClass('i-requested-undo').removeClass('opp-requested-undo').addClass('request-undo')
+		incrementMoveCounter();
 	}
 	// We save an array that contains a description of the pieces in each cell.
 	// Each piece is either a:	p=flatstone, c=capstone, w=wall
@@ -1080,8 +1278,8 @@ var board = {
 	,save_board_pos:function(){
 		var bp = []
 		//for all squares, convert stack info to board position info
-		for(var i=0;i<this.size;i++){
-			for(var j=0;j<this.size;j++){
+		for(var i=0;i<gameData.size;i++){
+			for(var j=0;j<gameData.size;j++){
 				var bp_sq = []
 				var stk = this.sq[i][j]
 				for(var s=0;s<stk.length;s++){
@@ -1103,17 +1301,17 @@ var board = {
 	,apply_board_pos:function(moveNum){
 		// grab the given board_history
 		// pos is a single dim. array of size*size containing arrays of piece types
-		var pos = this.board_history[moveNum - this.movestart]
+		var pos = this.board_history[moveNum - gameData.move_start]
 		if(pos === 'undefined'){
 			console.warn("no board position found for moveNum " + moveNum)
 			return
 		}
 
 		// scan through each cell in the pos array
-		for(var i=0;i<this.size;i++){//file
-			for(var j=0;j<this.size;j++){//rank
+		for(var i=0;i<gameData.size;i++){//file
+			for(var j=0;j<gameData.size;j++){//rank
 				var sq = this.get_board_obj(i,j)
-				var sqpos = pos[i*this.size + j]
+				var sqpos = pos[i*gameData.size + j]
 				// sqpos describes a stack of pieces in that square
 				// scan through those pieces
 				for(var s=0;s<sqpos.length;s++){
@@ -1160,10 +1358,9 @@ var board = {
 	}
 	,leftclick:function(){
 		var pick=this.mousepick()
-
 		this.remove_total_highlight()
-		if(!this.ismymove){
-			return
+		if(!checkIfMyMove()){
+			return;
 		}
 		if(pick[0]=="board"){
 			var destinationstack = this.get_stack(pick[1])
@@ -1179,7 +1376,7 @@ var board = {
 					else if(sel.isstanding){stone = 'Wall'}
 
 					console.log(
-						"Place " + this.movecount,
+						"Place " + gameData.move_count,
 						sel.iswhitepiece ? 'White' : 'Black',
 						stone,
 						this.squarename(hlt.file,hlt.rank)
@@ -1190,11 +1387,11 @@ var board = {
 					var sqname = this.squarename(hlt.file,hlt.rank)
 					var msg = "P " + sqname
 					if(stone !== 'Piece'){msg += " " + stone.charAt(0)}
-					this.sendmove(msg)
+					sendMove(msg)
 					this.notatePmove(sqname,stone.charAt(0))
 
 					var pcs
-					if(this.mycolor === "white"){
+					if(gameData.my_color === "white"){
 						this.whitepiecesleft--
 						pcs = this.whitepiecesleft
 					}
@@ -1202,13 +1399,13 @@ var board = {
 						this.blackpiecesleft--
 						pcs = this.blackpiecesleft
 					}
-					if(this.scratch){
+					if(gameData.is_scratch){
 						var over = this.checkroadwin()
 						if(!over){
 							over = this.checksquaresover()
 							if(!over && pcs <= 0){
 								this.findwhowon()
-								this.gameover()
+								gameOver()
 							}
 						}
 					}
@@ -1249,7 +1446,7 @@ var board = {
 				}
 			}
 			else{
-				if(this.movecount>=2 && !this.isPlayEnded){
+				if(gameData.move_count >= 2 && !gameData.is_game_end){
 					var stk = this.get_stack(pick[1])
 					if(this.is_top_mine(pick[1]) && stk.length > 0){
 						this.selectStack(stk)
@@ -1261,7 +1458,7 @@ var board = {
 		}
 		else if(pick[0]=="piece"){
 			if(this.selected){
-				if(this.selected === pick[1] && this.movecount>=2){
+				if(this.selected === pick[1] && gameData.move_count>=2){
 					this.rotate(pick[1])
 				}
 				else{
@@ -1269,15 +1466,15 @@ var board = {
 				}
 			}
 			else if(this.selectedStack){
-				this.showmove(this.moveshown,true)
+				this.showmove(gameData.move_shown,true)
 
 			}
 			else{
-				if(!this.isPlayEnded){
+				if(!gameData.is_game_end){
 					// these must match to pick up this obj
-					if(pick[1].iswhitepiece === this.is_white_piece_to_move()){
+					if(pick[1].iswhitepiece === isWhitePieceToMove()){
 					//no capstone move on 1st moves
-						if(this.movecount<2 && pick[1].iscapstone){
+						if(gameData.move_count<2 && pick[1].iscapstone){
 
 						}
 						else{
@@ -1289,10 +1486,10 @@ var board = {
 		}
 		else if(pick[0]=="none"){
 			if(this.selected){
-				this.showmove(this.moveshown,true)
+				this.showmove(gameData.move_shown,true)
 			}
 			else if(this.selectedStack){
-				this.showmove(this.moveshown,true)
+				this.showmove(gameData.move_shown,true)
 			}
 			else{
 
@@ -1337,10 +1534,6 @@ var board = {
 			this.unhighlight_sq()
 		}
 	}
-	,sendmove:function(e){
-		if(this.scratch){return}
-		server.send("Game#" + this.gameno + " " + e)
-	}
 	,getfromstack:function(cap,iswhite){
 		//	scan through the pieces for the first appropriate one
 		for(i = this.piece_objects.length-1;i >= 0;i--){
@@ -1357,13 +1550,13 @@ var board = {
 	//move the server sends
 	,serverPmove:function(file,rank,caporwall){
 		var oldpos = -1
-		if(board.moveshown!=board.movecount){
-			oldpos = board.moveshown
+		if(gameData.move_shown!=gameData.move_count){
+			oldpos = gameData.move_shown
 		}
 
 		dontanimate = true
 		fastforward()
-		var obj = this.getfromstack((caporwall === 'C'),this.is_white_piece_to_move())
+		var obj = this.getfromstack((caporwall === 'C'),isWhitePieceToMove())
 
 		if(!obj){
 			console.warn("something is wrong")
@@ -1388,8 +1581,8 @@ var board = {
 	//Move move the server sends
 	,serverMmove:function(f1,r1,f2,r2,nums){
 		var oldpos = -1
-		if(board.moveshown!=board.movecount){
-			oldpos = board.moveshown
+		if(gameData.move_shown != gameData.move_count){
+			oldpos = gameData.move_shown
 		}
 
 		dontanimate = true
@@ -1415,7 +1608,7 @@ var board = {
 				this.lastMovedSquareList.push(sq);
 			}
 		}
-		this.notateMmove(
+		this.calculateMoveNotation(
 			f1.charCodeAt(0) - 'A'.charCodeAt(0),
 			Number(r1) - 1,
 			f2.charCodeAt(0) - 'A'.charCodeAt(0),
@@ -1427,19 +1620,6 @@ var board = {
 		if(oldpos !== -1){board.showmove(oldpos)}
 		dontanimate = false
 	}
-	,gameover:function(premsg){
-		premsg = (typeof premsg === 'undefined') ? "" : premsg + " "
-		console.log('gameover ' + this.result)
-		this.notate(this.result)
-		alert("info",premsg + "Game over!! " + this.result)
-		this.scratch = true
-		this.isPlayEnded = true
-	}
-	,newgame:function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
-		this.clear()
-		this.create(sz,col,false,false,komi,pieces,capstones, triggerMove, timeAmount)
-		this.initEmpty()
-	}
 	,flatscore:function(ply){
 		var whitec = 0
 		var blackc = 0
@@ -1450,7 +1630,7 @@ var board = {
 		if(!position){
 			return [0,0]
 		}
-		for(i = 0;i < this.size*this.size;i++){
+		for(i = 0;i < gameData.size*gameData.size;i++){
 			if(position[i].length>0){
 				var toppiece=position[i][position[i].length-1]
 				whitec+=toppiece=="P"
@@ -1461,9 +1641,9 @@ var board = {
 	}
 	,findwhowon:function(){
 		var whitec = 0
-		var blackc = this.komi/2
-		for(i = 0;i < this.size;i++){
-			for(j = 0;j < this.size;j++){
+		var blackc = gameData.komi/2
+		for(i = 0;i < gameData.size;i++){
+			for(j = 0;j < gameData.size;j++){
 				var stk = this.sq[i][j]
 				if(stk.length === 0){continue}
 				var top = stk[stk.length - 1]
@@ -1472,13 +1652,13 @@ var board = {
 				else{blackc++}
 			}
 		}
-		if(whitec === blackc){this.result = "1/2-1/2"}
-		else if(whitec > blackc){this.result = "F-0"}
-		else{this.result = "0-F"}
+		if(whitec === blackc){gameData.result = "1/2-1/2"}
+		else if(whitec > blackc){gameData.result = "F-0"}
+		else{gameData.result = "0-F"}
 	}
 	,checkroadwin:function(){
-		for(var i = 0;i < this.size;i++){
-			for(var j = 0;j < this.size;j++){
+		for(var i = 0;i < gameData.size;i++){
+			for(var j = 0;j < gameData.size;j++){
 				var cur_st = this.sq[i][j]
 				cur_st.graph = -1
 				if(cur_st.length === 0){continue}
@@ -1486,7 +1666,7 @@ var board = {
 				var ctop = cur_st[cur_st.length - 1]
 				if(ctop.isstanding && !ctop.iscapstone){continue}
 
-				cur_st.graph = (i + j * this.size).toString()
+				cur_st.graph = (i + j * gameData.size).toString()
 
 				if(i - 1 >= 0){
 					var left_st = this.sq[i - 1][j]
@@ -1494,8 +1674,8 @@ var board = {
 						var ltop = left_st[left_st.length - 1]
 						if(!(ltop.isstanding && !ltop.iscapstone)){
 							if(ctop.iswhitepiece === ltop.iswhitepiece){
-								for(var r = 0;r < this.size;r++){
-									for(var c = 0;c < this.size;c++){
+								for(var r = 0;r < gameData.size;r++){
+									for(var c = 0;c < gameData.size;c++){
 										if(this.sq[r][c].graph === cur_st.graph){
 											this.sq[r][c].graph = left_st.graph
 										}
@@ -1511,8 +1691,8 @@ var board = {
 						var ttop = top_st[top_st.length - 1]
 						if(!(ttop.isstanding && !ttop.iscapstone)){
 							if(ctop.iswhitepiece === ttop.iswhitepiece){
-								for(var r = 0;r < this.size;r++){
-									for(var c = 0;c < this.size;c++){
+								for(var r = 0;r < gameData.size;r++){
+									for(var c = 0;c < gameData.size;c++){
 										if(this.sq[r][c].graph === cur_st.graph){
 											this.sq[r][c].graph = top_st.graph
 										}
@@ -1526,49 +1706,49 @@ var board = {
 		}
 		var whitewin = false
 		var blackwin = false
-		for(var tr = 0;tr < this.size;tr++){
+		for(var tr = 0;tr < gameData.size;tr++){
 			var tsq = this.sq[tr][0]
 			var no = tsq.graph
 			if(no === -1){continue}
-			for(var br = 0;br < this.size;br++){
-				var brno = this.sq[br][this.size - 1].graph
+			for(var br = 0;br < gameData.size;br++){
+				var brno = this.sq[br][gameData.size - 1].graph
 				if(no === brno){
 					if(tsq[tsq.length - 1].iswhitepiece){whitewin = true}
 					else{blackwin = true}
 				}
 			}
 		}
-		for(var tr = 0;tr < this.size;tr++){
+		for(var tr = 0;tr < gameData.size;tr++){
 			var tsq = this.sq[0][tr]
 			var no = tsq.graph
 			if(no === -1){continue}
-			for(var br = 0;br < this.size;br++){
-				var brno = this.sq[this.size - 1][br].graph
+			for(var br = 0;br < gameData.size;br++){
+				var brno = this.sq[gameData.size - 1][br].graph
 				if(no === brno){
 					if(tsq[tsq.length - 1].iswhitepiece){whitewin = true}
 					else{blackwin = true}
 				}
 			}
 		}
-		if(whitewin && blackwin){this.result = (this.movecount%2 == 0)?"R-0":"0-R"}
-		else if(whitewin){this.result = "R-0"}
-		else if(blackwin){this.result = "0-R"}
+		if(whitewin && blackwin){gameData.result = (gameData.move_count%2 == 0)?"R-0":"0-R"}
+		else if(whitewin){gameData.result = "R-0"}
+		else if(blackwin){gameData.result = "0-R"}
 
 		if(whitewin || blackwin){
-			this.gameover()
+			gameOver()
 			return true
 		}
 		return false
 	}
 	,checksquaresover:function(){
-		for(i = 0;i < this.size;i++){
-			for(j = 0;j < this.size;j++){
+		for(i = 0;i < gameData.size;i++){
+			for(j = 0;j < gameData.size;j++){
 				if(this.sq[i][j].length === 0){return false}
 			}
 		}
 
 		this.findwhowon()
-		this.gameover("All spaces covered.")
+		this.gameOver("All spaces covered.")
 		return true
 	}
 	,reverseboard:function(){
@@ -1594,85 +1774,15 @@ var board = {
 			else{this.move.dir = 'W'}
 		}
 	}
-	,notate:function(txt){
-		var res=false
-		if(txt==='R-0'||txt==='0-R'||txt==='F-0'||txt==='0-F'||txt==='1-0'||txt==='0-1'||txt==='1/2-1/2'){
-			var ol = document.getElementById("moveslist")
-			var row = ol.insertRow()
-			var cell0 = row.insertCell(0)
-			cell0.innerHTML = ''
-
-			var cell1 = row.insertCell(1)
-			var cell2 = row.insertCell(2)
-			
-			cell1.innerHTML = txt
-
-			$('#notationbar').scrollTop(10000)
-			return
-		}
-
-		if(txt === 'load'){
-			// If movecount is odd, then this initial position goes
-			// in the left column and the next move will go in the right column.
-			// If movecount is even, then the left column will be empty, and
-			// this initial position goes in the right column,
-			// and the next move will go in the left column of the next row
-			if(this.movecount % 2 === 1){
-				var row = this.insertNewNotationRow(Math.floor(this.movecount / 2 + 1))
-				var cell1 = row.cells[1]
-				cell1.innerHTML = '<a href="#" onclick="board.showmove('+(this.movecount)+');"><span class="curmove moveno'+(this.movecount-1)+'">' + txt + '</span></a>'
-			}
-			else{
-				var row = this.insertNewNotationRow(Math.floor(this.movecount / 2 + 1) - 1)
-				var cell1 = row.cells[1]
-				cell1.innerHTML = '<span>--</span>'
-				var cell2 = row.cells[2]
-				cell2.innerHTML = '<a href="#" onclick="board.showmove('+(this.movecount)+');"><span class="curmove moveno'+(this.movecount-1)+'">' + txt + '</span></a>'
-			}
-			return
-		}
-
-		// if the move count is non-zero and is an odd# then the code
-		// assumes there must be a row in the moveslist table that
-		// we can add a new cell to.
-		if(this.movecount !== 0 && this.movecount % 2 === 1){
-			var row = this.getCurrentNotationRow()
-			var cell2 = row.cells[2]
-			cell2.innerHTML = '<a href="#" onclick="board.showmove('+(this.movecount+1)+');"><span class=moveno'+this.movecount+'>'+txt+'</span></a>'
-		}
-		else{
-			var row = this.insertNewNotationRow(Math.floor(this.movecount / 2 + 1))
-			// get the left cell of the new row
-			var cell1 = row.cells[1]
-			cell1.innerHTML = '<a href="#" onclick="board.showmove('+(this.movecount+1)+');"><span class=moveno'+this.movecount+'>'+txt+'</span></a>'
-		}
-		$('#notationbar').scrollTop(10000)
-	}
-	,getCurrentNotationRow:function(){
-		var om = document.getElementById("moveslist")
-		return om.rows[om.rows.length - 1]
-	}
-	,insertNewNotationRow:function(rowNum){
-		var ol = document.getElementById("moveslist")
-		// make a new row
-		var row = ol.insertRow()
-		// insert the numbering cell
-		var cell0 = row.insertCell(0)
-		cell0.innerHTML = rowNum + '.'
-
-		// insert the left and right cell
-		row.insertCell(1)
-		row.insertCell(2)
-		return row
-	}
 	,notatePmove:function(sqname,pos){
 		if(pos === 'W'){pos = 'S'}
 		else if(pos === 'C'){pos = 'C'}
 		else{pos = ''}
-		this.notate(pos + sqname.toLowerCase())
+		notate(pos + sqname.toLowerCase());
+		storeNotation(pos + sqname.toLowerCase());
 	}
 	//all params are nums
-	,notateMmove:function(stf,str,endf,endr,nos){
+	,calculateMoveNotation:function(stf,str,endf,endr,nos){
 		var dir = ''
 		if(stf === endf){dir = (endr < str) ? '-' : '+'}
 		else{dir = (endf < stf) ? '<' : '>'}
@@ -1693,7 +1803,8 @@ var board = {
 		else if(tot === Number(lst)){lst = ''}
 		var move = tot + this.squarename(stf,str).toLowerCase()
 				+ dir + '' + lst
-		this.notate(move)
+		notate(move);
+		storeNotation(move);
 	}
 	,generateMove:function(){
 		var st = this.squarename(this.move.start.file,this.move.start.rank)
@@ -1713,18 +1824,17 @@ var board = {
 			}
 		}
 		if(st !== end){
-			console.log("Move ",this.movecount,st,end,lst)
 			var nos = ""
 			for(i = 0;i < lst.length;i++){nos += lst[i] + " "}
-			this.sendmove("M " + st + " " + end + " " + nos.trim())
-			this.notateMmove(
+			sendMove("M " + st + " " + end + " " + nos.trim())
+			this.calculateMoveNotation(
 				this.move.start.file,
 				this.move.start.rank,
 				this.move.end.file,
 				this.move.end.rank,
 				nos
 			)
-			if(this.scratch){
+			if(gameData.is_scratch){
 				this.checkroadwin()
 				this.checksquaresover()
 			}
@@ -1771,11 +1881,11 @@ var board = {
 	}
 	,rightclick:function(){
 		settingscounter=(settingscounter+1)&15
-		if(this.selected && this.movecount>=2){
+		if(this.selected && gameData.move_count>=2){
 			this.rotate(this.selected)
 		}
 		else if(this.selectedStack){
-			this.showmove(this.moveshown,true)
+			this.showmove(gameData.move_shown,true)
 		}
 		else{
 			var pick=this.mousepick()
@@ -1826,17 +1936,17 @@ var board = {
 		this.selectedStack = null
 		this.move = {start:null,end:null,dir:'U',squares:[]}
 
-		for(var i = 0;i < this.size;i++){
-			for(var j = 0;j < this.size;j++){
+		for(var i = 0;i < gameData.size;i++){
+			for(var j = 0;j < gameData.size;j++){
 				this.sq[i][j].length = 0
 			}
 		}
 		this.addpieces()
 	}
 	,resetBoardStacks:function(){
-		for(var i = 0;i < this.size;i++){
+		for(var i = 0;i < gameData.size;i++){
 			this.sq[i] = []
-			for(var j = 0;j < this.size;j++){
+			for(var j = 0;j < gameData.size;j++){
 				this.sq[i][j] = []
 			}
 		}
@@ -1845,118 +1955,29 @@ var board = {
 		this.addpieces()
 	}
 	,showmove:function(no,override){
-		if(this.movecount <= this.movestart || no>this.movecount || no<this.movestart || (this.moveshown === no && !override)){
+		if(gameData.move_count <= gameData.move_start || no>gameData.move_count || no<gameData.move_start || (gameData.move_shown === no && !override)){
 			return
 		}
-
 		var prevdontanim = dontanimate
 		dontanimate = true
-
 		console.log('showmove '+no)
 		this.unhighlight_sq()
-		this.moveshown = no
 		this.resetpieces()
-		this.apply_board_pos(this.moveshown)
-		$('.curmove:first').removeClass('curmove')
-		$('.moveno'+(no-1)+':first').addClass('curmove')
-
+		this.apply_board_pos(gameData.move_shown)
 		dontanimate = prevdontanim
 	}
 	,undo:function(){
-		// we can't undo before the place we started from
-		if(this.movecount <= this.movestart){return}
 		this.unHighlightLastMove_sq()
 		// This resetpieces() is to make sure there aren't any pieces
 		// in mid-move, in case the user clicked a piece to place it, but
 		// then clicked undo.
 		this.resetpieces()
-		this.movecount--
-		this.apply_board_pos(this.movecount)
+		this.apply_board_pos(gameData.move_count)
 		this.board_history.pop()
 		this.lastMovedSquareList.pop();
-		if(this.movecount >= 1){
+		if(gameData.move_count >= 1){
 			this.highlightLastMove_sq(this.lastMovedSquareList.at(-1));
 		}
-		this.moveshown = this.movecount;
-
-		$('#player-me').toggleClass('selectplayer')
-		$('#player-opp').toggleClass('selectplayer')
-
-		if(this.scratch){
-			if(this.mycolor === "white"){this.mycolor = "black"}
-			else{this.mycolor = "white"}
-		}
-		this.ismymove = this.checkifmymove()
-
-		//fix notation
-		var ml = document.getElementById("moveslist")
-		var lr = ml.rows[ml.rows.length - 1]
-
-		// first check if we are undoing the last move that finished
-		// the game, if we have to do something a bit special
-		var txt1 = lr.cells[1].innerHTML.trim()
-		var txt2 = lr.cells[2].innerHTML.trim()
-		if(txt1==='R-0'||txt1==='F-0'||txt1==='1-0'||txt1==='1/2'||txt2==='0-F'||txt2==='0-R'||txt2==='0-1'){
-			ml.deleteRow(ml.rows.length - 1)
-			lr = ml.rows[ml.rows.length - 1]
-			this.isPlayEnded = false
-		}
-
-		if(this.movecount % 2 == 0){
-			ml.deleteRow(ml.rows.length - 1)
-		}
-		else{
-			lr.cells[2].innerHTML=""
-		}
-
-		$('.curmove:first').removeClass('curmove')
-		$('.moveno'+(this.movecount-1)+':first').addClass('curmove')
-	}
-	//remove all scene objects, reset player names, stop time, etc
-	,clear:function(){
-		this.isPlayEnded = false
-		for(var i = scene.children.length - 1;i >= 0;i--){
-			scene.remove(scene.children[i])
-		}
-		var tbl = document.getElementById("moveslist")
-		while(tbl.rows.length > 0){tbl.deleteRow(0)}
-		document.getElementById("extra-time-rule").innerHTML = '';
-		document.getElementById("extra-time").style.display = "none";
-		$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw')
-		stopTime()
-
-		$('#player-me-name').removeClass('player1-name')
-		$('#player-me-name').removeClass('player2-name')
-		$('#player-opp-name').removeClass('player1-name')
-		$('#player-opp-name').removeClass('player2-name')
-
-		$('#player-me-time').removeClass('player1-time')
-		$('#player-me-time').removeClass('player2-time')
-		$('#player-opp-time').removeClass('player1-time')
-		$('#player-opp-time').removeClass('player2-time')
-
-		$('#player-me').removeClass('selectplayer')
-		$('#player-opp').removeClass('selectplayer')
-
-		//i'm always black after clearing
-		$('#player-me-name').addClass('player2-name')
-		$('#player-opp-name').addClass('player1-name')
-
-		$('#player-me-time').addClass('player2-time')
-		$('#player-opp-time').addClass('player1-time')
-
-		$('#player-me-img').removeClass("iswhite")
-		$('#player-me-img').addClass("isblack")
-		$('#player-opp-img').removeClass("isblack")
-		$('#player-opp-img').addClass("iswhite")
-
-		$('#player-opp').addClass('selectplayer')
-
-		$('.player1-name:first').html('You')
-		$('.player2-name:first').html('You')
-		settimers(0,0,true)
-
-		$('#gameoveralert').modal('hide')
 	}
 	,sqrel:function(sq1,sq2){
 		var f1 = sq1.file
@@ -1975,25 +1996,9 @@ var board = {
 		}
 		return 'OUTSIDE'
 	}
-	,checkifmymove:function(){
-		if(this.scratch){return true}
-		if(this.observing){return false}
-		var tomove = (this.movecount % 2 === 0) ? "white" : "black"
-		return tomove === this.mycolor
-	}
-	,is_white_piece_to_move:function(){
-		// white always goes first, so must pick up a black piece
-		if(this.movecount === 0){return false}
-		// black always goes second, so must pick up a white piece
-		if(this.movecount === 1){return true}
-		// after that, if we've made an even number of moves, then it is
-		// white's turn, and she must pick up a white piece
-		isEven = this.movecount % 2 === 0
-		return isEven
-	}
 	,select:function(obj){
 		obj.position.y += stack_selection_height
-		this.selected = obj
+		this.selected = obj;
 	}
 	,unselect:function(){
 		if(this.selected){
@@ -2002,9 +2007,8 @@ var board = {
 		}
 	}
 	,selectStack:function(stk){
-		//this.selectedStack = stk;
 		this.selectedStack = []
-		for(i = 0;stk.length > 0 && i < this.size;i++){
+		for(i = 0;stk.length > 0 && i < gameData.size;i++){
 			obj = stk.pop()
 			obj.position.y += stack_selection_height
 			this.selectedStack.push(obj)
@@ -2067,8 +2071,8 @@ var board = {
 	,is_top_mine:function(sq){
 		var ts = this.top_of_stack(sq)
 		if(!ts){return true}
-		if(ts.iswhitepiece && this.mycolor === "white"){return true}
-		if(!ts.iswhitepiece && this.mycolor !== "white"){return true}
+		if(ts.iswhitepiece && gameData.my_color === "white"){return true}
+		if(!ts.iswhitepiece && gameData.my_color !== "white"){return true}
 		return false
 	}
 	,move_stack_over:function(sq,stk){
@@ -2088,30 +2092,15 @@ var board = {
 			stk[i].onsquare = sq
 		}
 	}
-	,loadptn:function(ptn){
-		if(!this.scratch && !this.observing){
-			alert('warning','PTN cannot be loaded while in the middle of a game')
-			return
-		}
-		var parsed = parsePTN(ptn)
-		if(!parsed){
-			alert('warning','invalid PTN')
-			return
-		}
+	,loadptn: function(parsed){
 		var size = parseInt(parsed.tags.Size,10)
 		if(!(size >= 3 && size <= 8)){
 			alert('warning','invalid PTN: invalid size')
 			return
 		}
 		this.clear()
-		this.create(size,'white',true,false,(+parsed.tags.Komi||0)*2,+parsed.tags.Flats,+parsed.tags.Caps)
+		this.create(size,+parsed.tags.Flats,+parsed.tags.Caps)
 		this.initEmpty()
-		$('.player1-name:first').html(parsed.tags.Player1)
-		$('.player2-name:first').html(parsed.tags.Player2)
-		if(parsed.tags.Clock !== undefined){
-			$('.player1-time:first').html(parsed.tags.Clock)
-			$('.player2-time:first').html(parsed.tags.Clock)
-		}
 
 		for(var ply = 0;ply < parsed.moves.length;ply++){
 			var move = parsed.moves[ply]
@@ -2119,8 +2108,8 @@ var board = {
 			if((match = /^([SFC]?)([a-h])([0-8])$/.exec(move)) !== null){
 				var piece = match[1]
 				var file = match[2].charCodeAt(0) - 'a'.charCodeAt(0)
-				var rank = parseInt(match[3]) - 1
-				var obj = this.getfromstack((piece === 'C'),this.is_white_piece_to_move())
+				var rank = parseInt(match[3]) - 1;
+				var obj = this.getfromstack((piece === 'C'),isWhitePieceToMove())
 				if(!obj){
 					console.warn("bad PTN: too many pieces")
 					return
@@ -2174,7 +2163,6 @@ var board = {
 						s1.file + (i + 1) * df,
 						s1.rank + (i + 1) * dr
 					)
-
 					for(j = 0;j < parseInt(drops[i]);j++){
 						this.pushPieceOntoSquare(sq,tstk.pop())
 					}
@@ -2184,16 +2172,15 @@ var board = {
 				console.warn("unparseable: " + move)
 				continue
 			}
-
-			this.notate(move)
-			this.incmovecnt()
+			notate(move);
+			this.incmovecnt();
 		}
 		if(parsed.tags.Result !== undefined){
-			this.result = parsed.tags.Result
-			this.gameover()
+			gameData.result = parsed.tags.Result
+			gameOver()
 		}
 		else{
-			this.result = ''
+			gameData.result = ''
 		}
 	}
 	// This function loads any valid TPS
@@ -2202,52 +2189,28 @@ var board = {
 	//	 * the initial TPS tagname is optional
 	//	 * the player & move elements are optional
 	,loadtps:function(tps){
-		var playerTurn
-		var moveNumber
+		const parsed = parseTPS(tps);
+		gameData.size = parsed.size;
+		let moveNumber = parsed.linenum;
+		this.clear();
+		this.create(parsed.size, defaultPiecesAndCaps[parsed.size][0], defaultPiecesAndCaps[parsed.size][0][1])
+		this.renderBoardFromTPS(parsed.grid);
 
-		// simple RegEx for a basic TPS notation,
-		// but doesn't specify the details of the actual layout
-		var tpsRE = /\[(TPS\s*)?\"?\s*([,x12345678SC\/]+)(\s+([\d+]))?(\s+(\d+|-))?\s*\"?\s*\]/
-		var result = tpsRE.exec(tps)
-		if(!result){
-			alert('warning','Invalid TPS')
+		playerToMove = parsed.player
+		if(!playerToMove){
+			playerToMove = 1
+		}
+		else if(playerToMove != WHITE_PLAYER && playerToMove != BLACK_PLAYER){
+			alert('warning','Invalid TPS - player turn must be 1 or 2 - not ' + parsed.player)
 			return
 		}
-		else{
-			boardLayout = result[2]
-
-			playerToMove = parseInt(result[4])
-			if(!playerToMove){
-				playerToMove = 1
-			}
-			else if(playerToMove != WHITE_PLAYER && playerToMove != BLACK_PLAYER){
-				alert('warning','Invalid TPS - player turn must be 1 or 2 - not ' + playerTurn)
-				return
-			}
-
-			moveNumber = parseInt(result[6])
-			if(!moveNumber){
-				moveNumber = 1
-			}
-			else if(moveNumber < 1){
-				alert('warning','Invalid TPS - move number must be positive integer')
-				return
-			}
+		if(!moveNumber){
+			moveNumber = 1
 		}
-
-		// row descriptions are separated by slash
-		var rowDescriptors = boardLayout.split("/")
-		var rowCnt = rowDescriptors.length
-		if(rowCnt < 3 || rowCnt > 8){
-			alert('warning','Invalid TPS - must be 3 to 8 rows')
+		else if(moveNumber < 1){
+			alert('warning','Invalid TPS - move number must be positive integer')
 			return
 		}
-
-		this.clear()
-		// a board loaded from TPS is treated as a scratch game
-		this.create(rowCnt,this.determineColor(playerToMove),true,false)
-
-		this.initFromTPS(rowDescriptors)
 		if(this.checkroadwin()){return}
 		if(this.checksquaresover()){return}
 
@@ -2261,8 +2224,8 @@ var board = {
 		var p2Cnt = this.count_pieces_on_board(BLACK_PLAYER)
 		if(p1Cnt == 0 && p2Cnt == 0){
 			// nothing played yet
-			this.initCounters(0)
-			this.mycolor = "white"
+			initCounters(0)
+			gameData.my_color = "white"
 			playMsg = "White should start the game by placing a black piece."
 		}
 		else if(p1Cnt == 1 && p2Cnt == 0){
@@ -2274,8 +2237,8 @@ var board = {
 		}
 		else if(p2Cnt == 1 && p1Cnt == 0){
 			// white has placed a black piece
-			this.initCounters(1)
-			this.mycolor = "black"
+			initCounters(1)
+			gameData.my_color = "black"
 			if(playerToMove === WHITE_PLAYER){
 				infoMsg = "TPS has wrong player turn."
 			}
@@ -2290,42 +2253,42 @@ var board = {
 				assumedMoveCount = minMoves
 				infoMsg = "Initializing move number to correpond with the number of pieces on the board."
 			}
-			playMsg = "It is " + this.mycolor + "'s turn to play."
-			this.initCounters(assumedMoveCount)
+			playMsg = "It is " + gameData.my_color + "'s turn to play."
+			initCounters(assumedMoveCount)
 		}
 
 		// player-opp is white, player-me is black. Seems like those
 		// names are backward, we'll just roll with it.
-		document.getElementById("player-opp").className = (this.mycolor === "white" ? "selectplayer" : "")
-		document.getElementById("player-me").className = (this.mycolor === "black" ? "selectplayer" : "")
+		document.getElementById("player-opp").className = (gameData.my_color === "white" ? "selectplayer" : "")
+		document.getElementById("player-me").className = (gameData.my_color === "black" ? "selectplayer" : "")
 
 		this.whitepiecesleft = this.tottiles + this.totcaps - p1Cnt
 		this.blackpiecesleft = this.tottiles + this.totcaps - p2Cnt
-		if(this.whitepiecesleft <=0 && this.blackpiecesleft <=0){
+		if(this.whitepiecesleft <= 0 && this.blackpiecesleft <= 0){
 			alert('danger','TPS nonsense - all pieces used up by both players')
-			this.isPlayEnded = true
+			gameData.is_game_end = true;
 			return
 		}
 		if(this.whitepiecesleft <=0){
-			this.result = "F-0"
-			this.gameover('All white pieces used.')
+			gameData.result = "F-0"
+			this.gameOver('All white pieces used.')
 			return
 		}
 		if(this.blackpiecesleft <=0){
-			this.result = "0-F"
-			this.gameover('All black pieces used.')
+			gameData.result = "0-F"
+			this.gameOver('All black pieces used.')
 			return
 		}
-		this.notate("load")
+		notate("load")
 
-		this.showmove(this.moveshown)
+		this.showmove(gameData.move_shown)
 		alert('info',infoMsg + " " + playMsg)
 	}
 	// assumes that the movecount and movestart have been initialized meaningfully
 	// and 0,0 is OK
 	,count_pieces_on_board:function(player){
 		var count = 0
-		var pos = this.board_history[this.movecount - this.movestart]
+		var pos = this.board_history[gameData.move_count - gameData.move_start]
 		for(i=0;i < pos.length;i++){
 			var pieces = pos[i]
 			// remember, upper case is white(p1) and lower case is black(p2),
@@ -2341,9 +2304,6 @@ var board = {
 	,moveCountCalc:function(p1Turns,p2Turns,playerToMove){
 		return Math.max(p1Turns,p2Turns)*2 + (playerToMove===2 ? 1 : 0)
 	}
-	,determineColor:function(playerTurn){
-		return playerTurn === WHITE_PLAYER ? "white" : "black"
-	}
 	,pushInitialEmptyBoard:function(size){
 		var bp = []
 		for(var i = 0;i < size;i++){
@@ -2354,91 +2314,189 @@ var board = {
 			}
 		}
 		this.board_history.push(bp)
-	}
-	,initFromTPS:function(rowDescriptors){
-		this.resetBoardStacks()
-
-		// in this case the initial board position is from the TPS, we don't
-		// know what it was before
-		this.layoutFromTPS(rowDescriptors)
-
-		if((this.mycolor=="black") != (this.boardside=="black")){this.reverseboard()}
-
+	},
+	renderBoardFromTPS: function(grid) {
+		function parseIndividualDigits(cell) {
+			const cellRegex = /^([12]+)([SC]?)$/;
+			const match = cellRegex.exec(cell);
+			
+			if (!match) {
+				return null; // Invalid cell
+			}
+			
+			const digits = match[1]; // e.g., "1", "2", "12", "21", etc.
+			const suffix = match[2]; // e.g., "", "S", or "C"
+			
+			// Convert the string of digits into an array of individual numbers
+			const pieces = [...digits].map(digit => parseInt(digit, 10));
+			
+			return {
+				pieces,		// Array of individual pieces: [1], [2], [1,2], [2,1], etc.
+				suffix,
+				hasS: suffix === "S",
+				hasC: suffix === "C"
+			};
+		}
+		this.resetBoardStacks();
 		document.getElementById("player-opp").className = "selectplayer"
 		document.getElementById("player-me").className = ""
+		// we have a grid by size and need to iterate over it to place the pieces
+		// always atart in the lower left corner a1 and work up
+		for (let i = 0; i < grid.length; i++) { // iterate through rows
+			for (let j = 0; j < grid[i].length; j++) { // iterate through columns
+				if (grid[i][j].toLowerCase() !== 'x') {
+					// a cell is either empty (maybe multiple), or a stack of one or more pieces
+					const cellValues = parseIndividualDigits(grid[i][j]);
+					const square = this.get_board_obj(j, i);
+					for (let k = 0; k < cellValues.pieces.length; k++) {
+						// handle top of the stack
+						if (k === cellValues.pieces.length - 1) {
+							if (cellValues.hasS) {
+								const pc = this.getfromstack(false,cellValues.pieces[k] === 1);
+								if(pc === null || typeof pc === 'undefined'){
+									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"')
+									return
+								}
+								this.standup(pc);
+								this.pushPieceOntoSquare(square,pc);
+							}
+							else if (cellValues.hasC) {
+								const pc = this.getfromstack(true,cellValues.pieces[k] === 1)
+								if(pc === null || typeof pc === 'undefined'){
+									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"')
+									return
+								}
+								this.pushPieceOntoSquare(square,pc);
+							} else {
+								console.log('regular flat', cellValues.pieces[k]);
+								const pc = this.getfromstack(false,cellValues.pieces[k] === 1)
+								if(pc === null || typeof pc === 'undefined'){
+									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"')
+									return
+								}
+								this.pushPieceOntoSquare(square,pc);
+							}
+						}else {
+							const pc = this.getfromstack(false,cellValues.pieces[k] === 1);
+							if(pc === null || typeof pc === 'undefined'){
+								alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"')
+								return
+							}
+							this.pushPieceOntoSquare(square,pc)
+						}
+					}
+				} 
+			}
+		}
+		this.save_board_pos();
 	}
-	,layoutFromTPS:function(rowDescriptors){
-		var rowCnt = rowDescriptors.length
-		// rows are described from top to bottom
-		var currRow = rowCnt
-		for(var i = 0;i < rowCnt;i++,currRow--){
-			// cell descriptions are separated by comma
-			var cellDescriptors = rowDescriptors[i].split(",")
+}
 
-			// a cell is either empty (maybe multiple), or a stack of one or more pieces
-			var cellRE = /^((x([12345678]?))|(([12]+)([SC]?)))$/
-
-			var currCol = 1
-			for(var j = 0;j < cellDescriptors.length;j++){
-				if(currCol > rowCnt){
-					alert('warning','Invalid TPS - too many cells in row ' + currRow + '... "' + rowDescriptors[i] + '"')
-					return
-				}
-
-				var cellDescriptor = cellDescriptors[j]
-				var cellResult = cellRE.exec(cellDescriptor)
-				if(!cellResult){
-					alert('warning','Invalid TPS - cell descriptor in row ' + currRow + '... "' + cellDescriptor + '" in "' + rowDescriptors[i] + '" is nonsense')
-					return
-				}
-				if(cellResult[2]){
-					// then we have one or more empty cells
-					emptyCnt = 1
-					if(cellResult[3]){
-						emptyCnt = parseInt(cellResult[3])
-					}
-					currCol += emptyCnt
-					if(currCol > rowCnt+1){
-						alert('warning','Invalid TPS - too many empty cells at end of row ' + currRow + '... "' + rowDescriptors[i] + '"')
-						return
-					}
-					continue
-				}
-
-				// We didn't find an empty cell descriptor
-				// so it must be a stack descriptor.
-
-				// Get a board object (a square) for the current column and row
-				var square = this.get_board_obj(currCol-1,currRow-1)
-
-				var stackDescriptor = cellResult[5]
-				var lastStoneType = cellResult[6]
-				if(!lastStoneType){
-					lastStoneType = ''
-				}
-
-				for(var k = 0;k < stackDescriptor.length;k++){
-					var playerNum = stackDescriptor[k]
-					var stoneType = '' // flat stone
-					if(k == stackDescriptor.length-1){
-						stoneType = lastStoneType
-					}
-
-					var pc = this.getfromstack(stoneType === 'C',playerNum === '1')
-					if(pc === null || typeof pc === 'undefined'){
-						alert('danger','Invalid TPS - too many pieces for player ' + playerNum + ' at row ' + currRow + ', "' + rowDescriptors[i] + '"')
-						return
-					}
-					if(stoneType === 'S'){
-						this.standup(pc)
-					}
-					this.pushPieceOntoSquare(square,pc)
-				} // iterate over stack
-
-				currCol++
-			} // iterate over cellDescriptors
-		} // iterate over rowDescriptors
-
-		this.save_board_pos()
+function onWindowResize() {
+	if(rendererdone){
+		renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
+		pixelratio=(window.devicePixelRatio||1)*scalelevel
+		renderer.setPixelRatio(pixelratio)
+		adjustsidemenu();
+		closeMobileMenu();
+		setTimeout(generateCamera, 100);
 	}
+}
+
+function onDocumentMouseMove(e) {
+	var x = e.clientX - canvas.offsetLeft
+	var y = e.clientY - canvas.offsetTop
+	mouse.x = (pixelratio * x / canvas.width) * 2 - 1
+	mouse.y = -(pixelratio * y / canvas.height) * 2 + 1
+
+	board.mousemove()
+}
+
+function onDocumentMouseDown(e) {
+	var x = e.clientX - canvas.offsetLeft
+	var y = e.clientY - canvas.offsetTop
+	mouse.x = (pixelratio * x / canvas.width) * 2 - 1
+	mouse.y = -(pixelratio * y / canvas.height) * 2 + 1
+
+	if(e.button === 2){
+		board.rightclick()
+	}
+	else if(e.button === 0) {
+		if(gameData.move_count !== gameData.move_shown) {return}
+		board.leftclick()
+	}
+	board.mousemove()
+}
+
+function onDocumentMouseUp(e) {
+	if(e.button === 2){
+		e.preventDefault()
+		board.rightup()
+	}
+}
+
+function onKeyUp(e) {
+	switch(e.keyCode) {
+		case 27://ESC
+			board.showmove(gameData.move_shown,true)
+			break;
+		case 38://UP
+			stepback()
+			break;
+		case 40://DOWN
+			stepforward()
+			break;
+	}
+}
+
+function removeEventListeners() {
+	canvas.removeEventListener("mousedown", onDocumentMouseDown, false);
+	canvas.removeEventListener("mouseup", onDocumentMouseUp, false);
+	canvas.removeEventListener("mousemove", onDocumentMouseMove, false);
+	canvas.removeEventListener("contextmenu", function (e) {
+		e.preventDefault();
+	}, false);
+	window.removeEventListener("resize", onWindowResize, false);
+	window.removeEventListener("keyup", onKeyUp, false);
+}
+
+function init3DBoard() {
+	canvas = document.getElementById("gamecanvas");
+
+	scene = new THREE.Scene();
+
+	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: antialiasing_mode });
+	renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
+	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
+	renderer.setPixelRatio(pixelratio);
+	renderer.setClearColor(clearcolor, 1);
+	maxaniso = Math.min(renderer.getMaxAnisotropy() || 1, 16);
+
+	window.addEventListener("resize", onWindowResize, false);
+	window.addEventListener("keyup", onKeyUp, false);
+
+	initBoard();
+	rendererdone = true;
+	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5, 3, 16, 100);
+	highlighter = new THREE.Mesh(geometry, materials.highlighter);
+	highlighter.rotateX(Math.PI / 2);
+	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
+	lastMoveHighlighter.rotateX(Math.PI / 2);
+	setTimeout(() => {
+		generateCamera();
+	}, 200);
+
+	canvas.addEventListener("mousedown", onDocumentMouseDown, false);
+	canvas.addEventListener("mouseup", onDocumentMouseUp, false);
+	canvas.addEventListener("mousemove", onDocumentMouseMove, false);
+	canvas.addEventListener(
+		"contextmenu",
+		function (e) {
+			e.preventDefault();
+		},
+		false
+	);
+
+	materials.updateBoardMaterials();
+	materials.updatePieceMaterials();
 }
