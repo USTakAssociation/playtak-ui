@@ -1,7 +1,7 @@
 const squaresMap = {
 	"sand-velvet": { id: "sand-velvet", name: "Velvet Sand", file: 'white_sand-velvet', order: 1 },
-	"sand-velvet-diamonds": { id: "white_sand-velvet-diamonds", name: "Velvet Sand Diamonds", file: 'white_sand-velvet-diamonds', order: 2 },
-	"sand-velvet-diamonds2": { id: "white_sand-velvet-diamonds2", name: "Velvet Sand Cross", file: 'white_sand-velvet-diamonds2', order: 3 },
+	"sand-velvet-diamonds": { id: "sand-velvet-diamonds", name: "Velvet Sand Diamonds", file: 'white_sand-velvet-diamonds', order: 2 },
+	"sand-velvet-diamonds2": { id: "sand-velvet-diamonds2", name: "Velvet Sand Cross", file: 'white_sand-velvet-diamonds2', order: 3 },
 	"white_ornate": { id: "white_ornate", name: "Ornate Light", file: 'white_ornate', order: 4 },
 	"black_ornate": { id: "black_ornate", name: "Ornate Dark", file: 'black_ornate', order: 5 },
 	"white-velvet": { id: "white-velvet", name: "White Velvet", file: 'white_white-velvet', order: 6 },

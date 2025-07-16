@@ -2450,12 +2450,14 @@ function onKeyUp(e) {
 }
 
 function removeEventListeners() {
-	canvas.removeEventListener("mousedown", onDocumentMouseDown, false);
-	canvas.removeEventListener("mouseup", onDocumentMouseUp, false);
-	canvas.removeEventListener("mousemove", onDocumentMouseMove, false);
-	canvas.removeEventListener("contextmenu", function (e) {
-		e.preventDefault();
-	}, false);
+	if (canvas) {
+		canvas.removeEventListener("mousedown", onDocumentMouseDown, false);
+		canvas.removeEventListener("mouseup", onDocumentMouseUp, false);
+		canvas.removeEventListener("mousemove", onDocumentMouseMove, false);
+		canvas.removeEventListener("contextmenu", function (e) {
+			e.preventDefault();
+		}, false);
+	}
 	window.removeEventListener("resize", onWindowResize, false);
 	window.removeEventListener("keyup", onKeyUp, false);
 }
@@ -2482,9 +2484,13 @@ function init3DBoard() {
 	highlighter.rotateX(Math.PI / 2);
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
-	setTimeout(() => {
-		generateCamera();
-	}, 200);
+	generateCamera();
+	if (camera && controls) {
+		startAnimation();
+	} else {
+		console.warn("Camera or controls not ready, retrying...");
+		waitForSceneReady();
+	}
 
 	canvas.addEventListener("mousedown", onDocumentMouseDown, false);
 	canvas.addEventListener("mouseup", onDocumentMouseUp, false);
@@ -2499,4 +2505,31 @@ function init3DBoard() {
 
 	materials.updateBoardMaterials();
 	materials.updatePieceMaterials();
+}
+
+function waitForSceneReady(attempts = 0) {
+	const maxAttempts = 10;
+	const retryDelay = 100;
+
+	if (attempts >= maxAttempts) {
+		console.error("Failed to initialize scene after multiple attempts");
+		return;
+	}
+
+	if (camera && controls) {
+		startAnimation();
+	} else {
+		setTimeout(() => {
+			generateCamera();
+			waitForSceneReady(attempts + 1);
+		}, retryDelay);
+	}
+}
+
+function startAnimation() {
+	if (!camera || !controls) {
+		console.error("Cannot start animation without camera and controls");
+		return;
+	}
+	animate();
 }

@@ -147,7 +147,6 @@ function init() {
 		makeStyleSelector();
 		load3DSettings();
 		init3DBoard();
-		window.addEventListener("load", animate)
 	}
 }
 
@@ -633,8 +632,8 @@ function filterTable(category){
 	
 }
 
-init()
-//(window).on("load", animate);
+
+//$(window).on("load", animate());
 $(document).ready(function() {
 	if(localStorage.getItem('sound')==='false') {
 		turnsoundoff()
@@ -665,4 +664,5 @@ $(document).ready(function() {
 	loadGameSettings();
 	// get current game settings
 	fetchEvents();
+	init();
 })
