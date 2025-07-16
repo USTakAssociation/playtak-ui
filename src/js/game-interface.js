@@ -38,6 +38,7 @@ const defaultPiecesAndCaps = {
 	7: [40, 2],
 	8: [50, 2],
 }
+let hasPlayedHurry = false;
 
 function resetGameDataToDefault() {
 	gameData = {
@@ -121,29 +122,29 @@ function initBoard() {
 		setDisable2DBoard(false);
 	}
 	if (!gameData.is_scratch) {
-		set2DPlayer(gameData.my_color === 'white' ? 1 : 2)
+		set2DPlayer(gameData.my_color === 'white' ? 1 : 2);
 	}
 
 }
 
 function initCounters(startMove) {
-	gameData.move_start = startMove
-	gameData.move_count = startMove
-	gameData.move_shown = startMove
+	gameData.move_start = startMove;
+	gameData.move_count = startMove;
+	gameData.move_shown = startMove;
 }
 
 function incrementMoveCounter() {
 	if(gameData.move_shown === gameData.move_count){
-		$('.curmove:first').removeClass('curmove')
-		$('.moveno'+gameData.move_count+':first').addClass('curmove')
-		gameData.move_shown++
+		$('.curmove:first').removeClass('curmove');
+		$('.moveno'+gameData.move_count+':first').addClass('curmove');
+		gameData.move_shown++;
 	}
-	gameData.move_count++
-	document.getElementById("move-sound").currentTime=0
-	document.getElementById("move-sound").play()
+	gameData.move_count++;
+	document.getElementById("move-sound").currentTime = 0;
+	document.getElementById("move-sound").play();
 
-	$('#player-me').toggleClass('selectplayer')
-	$('#player-opp').toggleClass('selectplayer')
+	$('#player-me').toggleClass('selectplayer');
+	$('#player-opp').toggleClass('selectplayer');
 
 	// In a scratch game I'm playing both colors
 	if(gameData.is_scratch){
@@ -193,9 +194,9 @@ function load() {
 		alert('warning','Invalid PTN/TPS')
 		return;
 	}
-	
+
 	const resultArray = ['0-1', '1-0', '1/2-1/2', 'F-0', '0-F','R-0', '0-R']
-	
+
 	if (is2DBoard) {
 		if (parsed && !isTPS) {
 			if (resultArray.includes(parsed.moves[parsed.moves.length - 1])) {
@@ -270,140 +271,134 @@ function adjustBoardWidth() {
 }
 
 // time controls
-var haveplayedhurry=false
 function startTime(fromFn) {
 	if(typeof fromFn === 'undefined' && !server.timervar) {return}
-	var t = invarianttime()
-	var elapsed = t-lastTimeUpdate
-	var t1
-	var nextupdate
-	var ismymove = checkIfMyMove()
-	var t1f=lastWt
-	var t2f=lastBt
+	const t = invarianttime();
+	const elapsed = t - lastTimeUpdate;
+	let t1;
+	const isMyMove = checkIfMyMove();
+	let t1f=lastWt;
+	let t2f=lastBt;
 
 	if(gameData.move_count%2 === 0) {
-		t1f=Math.max(lastWt - elapsed,0)
-		t1=t1f
+		t1f = Math.max(lastWt - elapsed, 0);
+		t1 = t1f;
 	}
 	else{
-		t2f=Math.max(lastBt - elapsed,0)
-		t1=t2f
+		t2f = Math.max(lastBt - elapsed, 0);
+		t1 = t2f;
 	}
-	nextupdate=((t1-1)%100)+1
-	settimers(t1f,t2f)
-	if(t1<=10000 && ismymove && !haveplayedhurry){
-		haveplayedhurry=true
-		var hurrysound = document.getElementById("hurry-sound")
-		//hurrysound.pause()
-		hurrysound.currentTime=0
-		hurrysound.play()
+	const nextUpdate = ((t1-1)%100)+1;
+	settimers(t1f,t2f);
+	if(t1<=10000 && isMyMove && !hasPlayedHurry){
+		hasPlayedHurry = true;
+		const hurrySound = document.getElementById("hurry-sound")
+		hurrySound.currentTime = 0;
+		hurrySound.play();
 	}
-	if(!ismymove){
-		haveplayedhurry=false
+	if(!isMyMove){
+		hasPlayedHurry = false;
 	}
-	clearTimeout(server.timervar)
-	server.timervar = setTimeout(startTime,nextupdate)
+	clearTimeout(server.timervar);
+	server.timervar = setTimeout(startTime, nextUpdate);
 }
 
 function stopTime() {
-	clearTimeout(server.timervar)
-	server.timervar = null
+	clearTimeout(server.timervar);
+	server.timervar = null;
 }
 
-function settimers(p1t,p2t,nohurry){
-	$('.player1-time:first').html(formatTime(p1t))
-	$('.player2-time:first').html(formatTime(p2t))
-	if(p1t<=10000 && !nohurry){
-		$('.player1-time:first').addClass("hurrytime")
+function settimers(p1t,p2t,noHurry){
+	$('.player1-time:first').html(formatTime(p1t));
+	$('.player2-time:first').html(formatTime(p2t));
+	if(p1t <= 10000 && !noHurry){
+		$('.player1-time:first').addClass("hurrytime");
+	}else{
+		$('.player1-time:first').removeClass("hurrytime");
 	}
-	else{
-		$('.player1-time:first').removeClass("hurrytime")
-	}
-	if(p2t<=10000 && !nohurry){
-		$('.player2-time:first').addClass("hurrytime")
-	}
-	else{
-		$('.player2-time:first').removeClass("hurrytime")
+	if(p2t <= 10000 && !noHurry){
+		$('.player2-time:first').addClass("hurrytime");
+	}else{
+		$('.player2-time:first').removeClass("hurrytime");
 	}
 }
 
 function getZero(t) {
-	return t<10?'0'+t:t
+	return t < 10 ? '0' + t : t;
 }
 
-function formatTime(t){
-	if(t<0){
-		t=0
+function formatTime(time){
+	if(time < 0){
+		time = 0;
 	}
-	if(t>59900){
-		var st=Math.ceil(t/1000)
-		return Math.floor(st/60)+':'+getZero(st%60)
-	}
-	else{
-		var dst=Math.ceil(t/100)
-		return getZero(Math.floor(dst/10))+".<span style='font-size:70%;'>"+(dst%10)+"</span>"
+	if(time > 59900){
+		const st = Math.ceil(time/1000);
+		return Math.floor(st/60) + ':' + getZero(st%60);
+	}else{
+		const dst = Math.ceil(time/100);
+		return getZero(Math.floor(dst/10)) + ".<span style='font-size:70%;'>" + (dst%10) + "</span>";
 	}
 }
 // notation controls
 function clearNotationMenu() {
-	var tbl = document.getElementById("moveslist")
-	while(tbl.rows.length > 0){tbl.deleteRow(0)}
+	const tbl = document.getElementById("moveslist");
+	while(tbl.rows.length > 0){ tbl.deleteRow(0) }
 	document.getElementById("extra-time-rule").innerHTML = '';
 	document.getElementById("extra-time").style.display = "none";
-	$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw')
-	stopTime()
+	$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw');
+	stopTime();
 
-	$('#player-me-name').removeClass('player1-name')
-	$('#player-me-name').removeClass('player2-name')
-	$('#player-opp-name').removeClass('player1-name')
-	$('#player-opp-name').removeClass('player2-name')
+	$('#player-me-name').removeClass('player1-name');
+	$('#player-me-name').removeClass('player2-name');
+	$('#player-opp-name').removeClass('player1-name');
+	$('#player-opp-name').removeClass('player2-name');
 
-	$('#player-me-time').removeClass('player1-time')
-	$('#player-me-time').removeClass('player2-time')
-	$('#player-opp-time').removeClass('player1-time')
-	$('#player-opp-time').removeClass('player2-time')
+	$('#player-me-time').removeClass('player1-time');
+	$('#player-me-time').removeClass('player2-time');
+	$('#player-opp-time').removeClass('player1-time');
+	$('#player-opp-time').removeClass('player2-time');
 
-	$('#player-me').removeClass('selectplayer')
-	$('#player-opp').removeClass('selectplayer')
+	$('#player-me').removeClass('selectplayer');
+	$('#player-opp').removeClass('selectplayer');
 
 	//i'm always black after clearing
-	$('#player-me-name').addClass('player2-name')
-	$('#player-opp-name').addClass('player1-name')
+	$('#player-me-name').addClass('player2-name');
+	$('#player-opp-name').addClass('player1-name');
 
-	$('#player-me-time').addClass('player2-time')
-	$('#player-opp-time').addClass('player1-time')
+	$('#player-me-time').addClass('player2-time');
+	$('#player-opp-time').addClass('player1-time');
 
-	$('#player-me-img').removeClass("iswhite")
-	$('#player-me-img').addClass("isblack")
-	$('#player-opp-img').removeClass("isblack")
-	$('#player-opp-img').addClass("iswhite")
+	$('#player-me-img').removeClass("iswhite");
+	$('#player-me-img').addClass("isblack");
+	$('#player-opp-img').removeClass("isblack");
+	$('#player-opp-img').addClass("iswhite");
 
-	$('#player-opp').addClass('selectplayer')
+	$('#player-opp').addClass('selectplayer');
 
-	$('.player1-name:first').html('You')
-	$('.player2-name:first').html('You')
-	settimers(0,0,true)
+	$('.player1-name:first').html('You');
+	$('.player2-name:first').html('You');
+	settimers(0, 0, true);
 
-	$('#gameoveralert').modal('hide')
+	$('#gameoveralert').modal('hide');
 }
 
 function getCurrentNotationRow() {
-	var om = document.getElementById("moveslist")
-	return om.rows[om.rows.length - 1]
+	const moveList = document.getElementById("moveslist");
+	return moveList.rows[moveList.rows.length - 1];
 }
 
 function insertNewNotationRow(rowNum) {
-	var ol = document.getElementById("moveslist")
+	const moveList = document.getElementById("moveslist");
 	// make a new row
-	var row = ol.insertRow()
+	const row = moveList.insertRow();
 	// insert the numbering cell
-	var cell0 = row.insertCell(0)
-	cell0.innerHTML = rowNum + '.'
+	const cell0 = row.insertCell(0);
+	cell0.innerHTML = rowNum + '.';
 
 	// insert the left and right cell
-	row.insertCell(1)
-	row.insertCell(2)
-	return row
+	row.insertCell(1);
+	row.insertCell(2);
+	return row;
 }
 
 function clearStoredNotation() {
@@ -422,18 +417,17 @@ function storeNotation(txt) {
 
 function notate(txt) {
 	if(txt==='R-0'||txt==='0-R'||txt==='F-0'||txt==='0-F'||txt==='1-0'||txt==='0-1'||txt==='1/2-1/2'){
-		var ol = document.getElementById("moveslist")
-		var row = ol.insertRow()
-		var cell0 = row.insertCell(0)
-		cell0.innerHTML = ''
+		const moveList = document.getElementById("moveslist");
+		const row = moveList.insertRow();
+		const cell0 = row.insertCell(0);
+		cell0.innerHTML = '';
 
-		var cell1 = row.insertCell(1)
-		var cell2 = row.insertCell(2)
+		const cell1 = row.insertCell(1);
 		
-		cell1.innerHTML = txt
+		cell1.innerHTML = txt;
 
-		$('#notationbar').scrollTop(10000)
-		return
+		$('#notationbar').scrollTop(10000);
+		return;
 	}
 
 	if(txt === 'load'){
@@ -443,43 +437,42 @@ function notate(txt) {
 		// this initial position goes in the right column,
 		// and the next move will go in the left column of the next row
 		if(gameData.move_count % 2 === 1){
-			var row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1))
-			var cell1 = row.cells[1]
-			cell1.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count)+');"><span class="curmove moveno'+(gameData.move_count-1)+'">' + txt + '</span></a>'
+			const row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1));
+			const cell1 = row.cells[1];
+			cell1.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count)+');"><span class="curmove moveno'+(gameData.move_count-1)+'">' + txt + '</span></a>';
+		}else{
+			const row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1) - 1);
+			const cell1 = row.cells[1];
+			cell1.innerHTML = '<span>--</span>';
+			const cell2 = row.cells[2];
+			cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count)+');"><span class="curmove moveno'+(gameData.move_count-1)+'">' + txt + '</span></a>';
 		}
-		else{
-			var row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1) - 1)
-			var cell1 = row.cells[1]
-			cell1.innerHTML = '<span>--</span>'
-			var cell2 = row.cells[2]
-			cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count)+');"><span class="curmove moveno'+(gameData.move_count-1)+'">' + txt + '</span></a>'
-		}
-		return
+		return;
 	}
 
 	// if the move count is non-zero and is an odd# then the code
 	// assumes there must be a row in the moveslist table that
 	// we can add a new cell to.
 	if(gameData.move_count !== 0 && gameData.move_count % 2 === 1){
-		var row = this.getCurrentNotationRow()
-		var cell2 = row.cells[2]
-		cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>'
+		const row = this.getCurrentNotationRow();
+		const cell2 = row.cells[2];
+		cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>';
 	}
 	else{
-		var row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1))
+		const row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1));
 		// get the left cell of the new row
-		var cell1 = row.cells[1]
-		cell1.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>'
+		const cell1 = row.cells[1];
+		cell1.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>';
 	}
-	$('#notationbar').scrollTop(10000)
+	$('#notationbar').scrollTop(10000);
 }
 
 function updateLastMove(move) {
-	if(gameData.move_count <= gameData.move_start){return}
+	if(gameData.move_count <= gameData.move_start){ return }
 	gameData.move_count = gameData.move_count - 1;
 	gameData.move_shown = gameData.move_shown - 1;
-	$('#player-me').toggleClass('selectplayer')
-	$('#player-opp').toggleClass('selectplayer')
+	$('#player-me').toggleClass('selectplayer');
+	$('#player-opp').toggleClass('selectplayer');
 
 	if(gameData.is_scratch){
 		if(gameData.my_color === "black"){gameData.my_color = "white"}
@@ -487,14 +480,14 @@ function updateLastMove(move) {
 	}
 
 	//fix notation
-	var ml = document.getElementById("moveslist")
-	var lr = ml.rows[ml.rows.length - 1];
+	const moveList = document.getElementById("moveslist")
+	let lr = moveList.rows[moveList.rows.length - 1];
 	const tempCount = gameData.move_count - 1;
 	// clears out the next row
 	if(gameData.move_count % 2 == 0){
-		ml.deleteRow(ml.rows.length - 1)
+		moveList.deleteRow(moveList.rows.length - 1);
 		// update the inner html of the last cell
-		lr = ml.rows[ml.rows.length - 1];
+		lr = moveList.rows[moveList.rows.length - 1];
 		lr.cells[2].innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count)+');"><span class=moveno'+tempCount+'>'+move+'</span></a>';
 	} else{
 		lr.cells[1].innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count)+');"><span class=moveno'+tempCount+'>'+move+'</span></a>';
@@ -505,7 +498,7 @@ function updateLastMove(move) {
 }
 
 function firstMove() {
-	setShownMove(gameData.move_start)
+	setShownMove(gameData.move_start);
 	if (is2DBoard) {
 		sendAction('FIRST');
 		return;
@@ -523,9 +516,9 @@ function lastMove() {
 }
 
 function previousMove() {
-	const moveId = gameData.move_shown-1;
+	const moveId = gameData.move_shown - 1;
 	if(gameData.move_count <= gameData.move_start || moveId > gameData.move_count || moveId < gameData.move_start || (gameData.move_shown === moveId && !override)){
-		return
+		return;
 	}
 	setShownMove(moveId);
 	if (is2DBoard) {
@@ -538,7 +531,7 @@ function previousMove() {
 function nextMove() {
 	const moveId = gameData.move_shown+1;
 	if(gameData.move_count <= gameData.move_start || moveId > gameData.move_count || moveId < gameData.move_start || (gameData.move_shown === moveId && !override)){
-		return
+		return;
 	}
 	setShownMove(moveId);
 	if (is2DBoard) {
@@ -552,7 +545,6 @@ function showMove(moveId) {
 	if (is2DBoard) {
 		goToPlay(moveId - 1);
 		setShownMove(moveId);
-		return;
 	} else {
 		setShownMove(moveId);
 		board.showmove(moveId, true);
@@ -560,24 +552,24 @@ function showMove(moveId) {
 }
 
 function setShownMove(moveId) {
-	gameData.move_shown = moveId
-	$('.curmove:first').removeClass('curmove')
-	$('.moveno'+(gameData.move_shown - 1)+':first').addClass('curmove')
+	gameData.move_shown = moveId;
+	$('.curmove:first').removeClass('curmove');
+	$('.moveno'+(gameData.move_shown - 1)+':first').addClass('curmove');
 }
 
 function undoMove() {
 	// we can't undo before the place we started from
-	if(gameData.move_count <= gameData.move_start){return}
+	if(gameData.move_count <= gameData.move_start){ return }
 	gameData.move_count--;
 	gameData.move_shown = gameData.move_count;
 	if (is2DBoard) {
-		sendAction('UNDO')
+		sendAction('UNDO');
 	} else {
 		board.undo();
 	}
 	
-	$('#player-me').toggleClass('selectplayer')
-	$('#player-opp').toggleClass('selectplayer')
+	$('#player-me').toggleClass('selectplayer');
+	$('#player-opp').toggleClass('selectplayer');
 
 	if(gameData.is_scratch){
 		if(gameData.my_color === "white"){gameData.my_color = "black"}
@@ -585,35 +577,35 @@ function undoMove() {
 	}
 
 	//fix notation
-	var ml = document.getElementById("moveslist")
-	var lr = ml.rows[ml.rows.length - 1]
+	const moveList = document.getElementById("moveslist");
+	let lr = moveList.rows[moveList.rows.length - 1];
 
 	// first check if we are undoing the last move that finished
 	// the game, if we have to do something a bit special
-	var txt1 = lr.cells[1].innerHTML.trim()
-	var txt2 = lr.cells[2].innerHTML.trim()
+	const txt1 = lr.cells[1].innerHTML.trim()
+	const txt2 = lr.cells[2].innerHTML.trim()
 	if(txt1==='R-0'||txt1==='F-0'||txt1==='1-0'||txt1==='1/2'||txt2==='0-F'||txt2==='0-R'||txt2==='0-1'){
-		ml.deleteRow(ml.rows.length - 1)
-		lr = ml.rows[ml.rows.length - 1]
-		gameData.is_game_end = false
+		moveList.deleteRow(moveList.rows.length - 1);
+		lr = moveList.rows[moveList.rows.length - 1];
+		gameData.is_game_end = false;
 	}
 
 	if(gameData.move_count % 2 == 0){
-		ml.deleteRow(ml.rows.length - 1)
+		moveList.deleteRow(moveList.rows.length - 1);
 	}
 	else{
-		lr.cells[2].innerHTML=""
+		lr.cells[2].innerHTML = "";
 	}
 
-	$('.curmove:first').removeClass('curmove')
-	$('.moveno'+(gameData.move_count-1)+':first').addClass('curmove')
+	$('.curmove:first').removeClass('curmove');
+	$('.moveno'+(gameData.move_count-1)+':first').addClass('curmove');
 }
 
 function checkIfMyMove() {
-	if(gameData.is_scratch){ return true }
-	if(gameData.observing){ return false }
-	var tomove = (gameData.move_count % 2 === 0) ? "white" : "black";
-	return tomove === gameData.my_color
+	if(gameData.is_scratch){ return true; }
+	if(gameData.observing){ return false; }
+	const toMove = (gameData.move_count % 2 === 0) ? "white" : "black";
+	return toMove === gameData.my_color;
 }
 
 function isWhitePieceToMove() {
@@ -623,13 +615,12 @@ function isWhitePieceToMove() {
 	if(gameData.move_count === 1){return true}
 	// after that, if we've made an even number of moves, then it is
 	// white's turn, and she must pick up a white piece
-	isEven = gameData.move_count % 2 === 0
-	return isEven
+	return gameData.move_count % 2 === 0;
 }
 
 function sendMove(move) {
 	if(gameData.is_scratch){ return }
-	server.send("Game#" + gameData.id + " " + move)
+	server.send("Game#" + gameData.id + " " + move);
 }
 
 function getLeftPadding() {
@@ -654,12 +645,11 @@ function getRightPadding() {
 	return (chatHiddenState ? 0 : 24 + (+localStorage.getItem("chat_size") || 180)) + BOARD_PADDING;
 }
 
-function gameOver(premsg) {
-	premsg = (typeof premsg === 'undefined') ? "" : premsg + " ";
+function gameOver(preMessage) {
+	preMessage = (typeof preMessage === 'undefined') ? "" : preMessage + " ";
 	notate(gameData.result);
-	alert("info",premsg + "Game over!! " + gameData.result);
+	alert("info",preMessage + "Game over!! " + gameData.result);
 	gameData.is_game_end = true;
-	
 	if (is2DBoard) {
 		setDisable2DBoard(true);
 	}

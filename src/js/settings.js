@@ -411,13 +411,13 @@ function sliderAniso(anisoin,lazy) {
 	}
 }
 
-function sliderScale(scalein,lazy) {
-	if(!lazy || localStorage['scale']!=scalein){
-		scalelevel=[0.5,Math.SQRT1_2,1,Math.SQRT2,2][scalein]
-		localStorage['scale']=scalein
-		$('#scale-display').html(["0.5","0.7","1.0","1.4","2.0"][scalein])
-		$('#scale-slider').val(scalein)
-		onWindowResize()
+function sliderScale(scaleIn,lazy) {
+	if(!lazy || localStorage['scale']!=scaleIn){
+		scalelevel = [0.5,Math.SQRT1_2,1,Math.SQRT2,2][scaleIn];
+		localStorage['scale'] = scaleIn;
+		$('#scale-display').html(["0.5","0.7","1.0","1.4","2.0"][scaleIn]);
+		$('#scale-slider').val(scaleIn);
+		onWindowResize();
 	}
 }
 
@@ -451,7 +451,6 @@ function toggle2DBoard() {
 			animate();
 			dontanimate = false;
 		}, 500);
-		// window.addEventListener("load", animate)
 	}
 	if (localStorage.getItem("currentGame")) {
 		setTimeout(() => {
@@ -616,7 +615,6 @@ function load2DSettings() {
 		set2DUI({
 			highlightSquares: value
 		})
-		
 	}
 }
 
