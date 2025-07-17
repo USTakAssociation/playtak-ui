@@ -450,8 +450,8 @@ var server = {
 			gameData.bot = +spl[17];
 			gameData.is_scratch = false;
 			gameData.observing = false;
-			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
+			storeNotation();
 			// store the game object in local storage
 			localStorage.setItem("current-game-data", JSON.stringify(gameData));
 			console.log("Game ID " + gameData.id);
@@ -547,8 +547,8 @@ var server = {
 			gameData.bot = 1;
 			gameData.observing = true;
 			gameData.is_scratch = false;
-			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard()
+			storeNotation();
 			if (is2DBoard) {
 				setDisable2DBoard(true);
 			}

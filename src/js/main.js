@@ -122,7 +122,6 @@ function init() {
 		document.getElementById("main-nav").appendChild(li);
 	}
 	clearStoredNotation();
-	storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 	loadInterfaceSettings()
 	const ninjaElement = document.getElementById("ninja");
 	const ninjaParams = "&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=false&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false"
@@ -142,12 +141,12 @@ function init() {
 		document.getElementById('2d-board-checkbox').checked = true;
 		is2DBoard = true;
 		init2DBoard();
-		storeNotation(``);
 	} else {
 		makeStyleSelector();
 		load3DSettings();
 		init3DBoard();
 	}
+	storeNotation();
 }
 
 function adjustsidemenu(notation,chat){
@@ -285,18 +284,18 @@ function copyGameIdToClipboard (){
 }
 
 function getNotation(id) {
-	var p1 = $('.player1-name:first').html()
-	var p2 = $('.player2-name:first').html()
-	var now = new Date()
-	var dt = now.getFullYear()+'.'+(now.getMonth()+1)+'.'+now.getDate()+' '+now.getHours()+'.'+getZero(now.getMinutes())
+	const p1 = $('.player1-name:first').html()
+	const p2 = $('.player2-name:first').html()
+	const date = new Date()
 	
 	if (id) {
+		const dt = date.getFullYear()+'.'+(date.getMonth()+1)+'.'+date.getDate()+' '+date.getHours()+'.'+getZero(date.getMinutes())
 		$(`#${id || "download_notation"}`).attr("download", p1 + " vs " + p2 + " " + dt + ".ptn");
 	}
 
-	var res=''
+	let res=''
 	res += getHeader('Site','PlayTak.com')
-	res += getHeader('Date',now.getFullYear()+'.'+(now.getMonth()+1)+'.'+now.getDate())
+	res += getHeader('Date',date.getFullYear()+'.'+(date.getMonth()+1)+'.'+date.getDate())
 	res += getHeader('Player1',p1)
 	res += getHeader('Player2',p2)
 	res += getHeader('Size',gameData.size)

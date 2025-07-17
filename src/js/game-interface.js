@@ -90,11 +90,11 @@ function playScratch() {
 		gameData.capstones = parseInt(document.getElementById("scratchCapCount").value);
 		gameData.komi = 0;
 		gameData.id = 0;
-		storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 		initBoard();
 		if (is2DBoard) {
 			set2DPlayer(null);
 		}
+		storeNotation();
 	} else {
 		alert('warning', 'You can`t play a scratch game while playing an online game');
 	}
@@ -405,14 +405,8 @@ function clearStoredNotation() {
 	localStorage.removeItem("currentGame");
 }
 
-function storeNotation(txt) {
-	let currentGame = localStorage.getItem("currentGame");
-	if (currentGame) {
-		currentGame += ` ${txt}`;
-		localStorage.setItem("currentGame", currentGame);
-	} else {
-		localStorage.setItem("currentGame", txt);
-	}
+function storeNotation() {
+	localStorage.setItem("currentGame", getNotation());
 }
 
 function notate(txt) {
@@ -495,6 +489,7 @@ function updateLastMove(move) {
 	}
 	$('.curmove:first').removeClass('curmove');
 	$('.moveno'+(tempCount)+':first').addClass('curmove');
+	storeNotation();
 }
 
 function firstMove() {

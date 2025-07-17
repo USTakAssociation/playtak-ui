@@ -51,9 +51,9 @@ async function messageHandler(event) {
 				server.send("Game#" + gameData.id + " " + fromPTN(event.data.value))
 				setDisable2DBoard(true);
 			}
-			storeNotation(event.data.value);
 			notate(event.data.value);
 			incrementMoveCounter();
+			storeNotation();
 			break;
 		default:
 			break;

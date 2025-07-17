@@ -247,7 +247,7 @@ function generateCamera(){
 		controls.enableZoom=false
 		board.boardside="white"
 	}
-	if((gameData.my_color=="black") != (board.boardside=="black")){
+	if(!gameData.isScratch && (gameData.my_color=="black") != (board.boardside=="black")){
 		board.reverseboard()
 	}
 }
@@ -1779,7 +1779,7 @@ var board = {
 		else if(pos === 'C'){pos = 'C'}
 		else{pos = ''}
 		notate(pos + sqname.toLowerCase());
-		storeNotation(pos + sqname.toLowerCase());
+		storeNotation();
 	}
 	//all params are nums
 	,calculateMoveNotation:function(stf,str,endf,endr,nos){
@@ -1804,7 +1804,7 @@ var board = {
 		var move = tot + this.squarename(stf,str).toLowerCase()
 				+ dir + '' + lst
 		notate(move);
-		storeNotation(move);
+		storeNotation();
 	}
 	,generateMove:function(){
 		var st = this.squarename(this.move.start.file,this.move.start.rank)
