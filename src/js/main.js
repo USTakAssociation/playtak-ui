@@ -631,9 +631,10 @@ function filterTable(category){
 	
 }
 
-
-//$(window).on("load", animate());
 $(document).ready(function() {
+	if (localStorage.getItem("2d_board") === "true") {
+		is2DBoard = true;
+	}
 	if(localStorage.getItem('sound')==='false') {
 		turnsoundoff()
 	}

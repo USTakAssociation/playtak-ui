@@ -450,8 +450,8 @@ var server = {
 			gameData.bot = +spl[17];
 			gameData.is_scratch = false;
 			gameData.observing = false;
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
-			storeNotation();
 			// store the game object in local storage
 			localStorage.setItem("current-game-data", JSON.stringify(gameData));
 			console.log("Game ID " + gameData.id);
@@ -548,7 +548,7 @@ var server = {
 			gameData.observing = true;
 			gameData.is_scratch = false;
 			initBoard()
-			storeNotation();
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			if (is2DBoard) {
 				setDisable2DBoard(true);
 			}
@@ -600,6 +600,7 @@ var server = {
 					} else {
 						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
 					}
+					storeNotation();
 				}
 				//Game#1 M A2 A5 2 1
 				else if (spl[1] === "M") {
@@ -620,6 +621,7 @@ var server = {
 							nums
 						);
 					}
+					storeNotation();
 				}
 				//Game#1 Time 170 200
 				else if (spl[1] === "Time") {

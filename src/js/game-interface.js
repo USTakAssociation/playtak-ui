@@ -405,8 +405,8 @@ function clearStoredNotation() {
 	localStorage.removeItem("currentGame");
 }
 
-function storeNotation() {
-	localStorage.setItem("currentGame", getNotation());
+function storeNotation(txt) {
+	localStorage.setItem("currentGame", txt ? txt: getNotation());
 }
 
 function notate(txt) {
