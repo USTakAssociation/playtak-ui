@@ -1,4 +1,4 @@
-function parsePTN(text) {
+function parsePTN(text){
 	text = text.replace(/\r/g, "");
 	text = text.replace(/\{[^}]+\}/gm, "");
 
@@ -6,31 +6,31 @@ function parsePTN(text) {
 
 	var body = text.replace(/\[(\S+)\s+\"([^"]+)\"\]/g, "").trim();
 	var moves = parsePTNMoves(body);
-	if (header && moves) {
+	if(header && moves){
 		return {
 			tags: header,
-			moves: moves,
+			moves: moves
 		};
 	}
 	return null;
 }
 
-function parsePTNHeader(header) {
+function parsePTNHeader(header){
 	var tags = {};
 	var match;
 	var re = /\[(\S+)\s+\"([^"]+)\"\]/gm;
-	while ((match = re.exec(header)) !== null) {
+	while((match = re.exec(header)) !== null){
 		tags[match[1]] = match[2];
 	}
 	return tags;
 }
 
-function parsePTNMoves(body) {
+function parsePTNMoves(body){
 	var bits = body.split(/\s+/);
 	var moves = [];
-	for (var i = 0; i < bits.length; i++) {
+	for(var i = 0; i < bits.length; i++){
 		var tok = bits[i];
-		if (tok.match(/\d+\./)) {
+		if(tok.match(/\d+\./)){
 			continue;
 		}
 		moves.push(tok);
@@ -41,7 +41,7 @@ function parsePTNMoves(body) {
 // Play Tak Server notation conversion functions
 // copied from https://gist.github.com/gruppler/031b8863b9439700d5ab30694aab0b9d
 // takes in psn and converts it to ptn
-function toPTN(notation) {
+function toPTN(notation){
 	return notation
 		.split(",")
 		.map((ply) =>
@@ -58,16 +58,15 @@ function toPTN(notation) {
 					const b = +(a ? sq1[0] < sq2[0] : sq1[1] < sq2[1]);
 					const direction = [
 						["-", "+"],
-						["<", ">"],
+						["<", ">"]
 					][a][b];
 					return (total > 1 ? total : "") + sq1.toLowerCase() + direction + (drops !== total ? drops : "");
-				})
-		)
+				}))
 		.join(" ");
 }
 
 // takes ptn and converts it to psn
-function fromPTN(notation) {
+function fromPTN(notation){
 	const atoi = (coord) => ["ABCDEFGH".indexOf(coord[0]), parseInt(coord[1], 10) - 1];
 	const itoa = ([x, y]) => "ABCDEFGH"[x] + (y + 1);
 
@@ -76,7 +75,7 @@ function fromPTN(notation) {
 		.map((ply) => {
 			const matchData = ply.match(/(\d)?([CS])?([a-h])([1-8])(([<>+-])([1-8]+)?(\*)?)?/i);
 
-			if (!matchData) {
+			if(!matchData){
 				throw new Error("Invalid PTN format");
 			}
 
@@ -87,22 +86,24 @@ function fromPTN(notation) {
 
 			ply = `${type} ${sq1}`;
 
-			if (type === "P" && specialPiece) {
-				if (specialPiece === "S") {
+			if(type === "P" && specialPiece){
+				if(specialPiece === "S"){
 					ply += " W";
-				} else if (specialPiece === "C") {
+				}
+				else if(specialPiece === "C"){
 					ply += " C";
 				}
-			} else if (type === "M") {
-				if (!pieceCount) {
+			}
+			else if(type === "M"){
+				if(!pieceCount){
 					pieceCount = 1;
 				}
-				if (!drops) {
+				if(!drops){
 					drops = String(pieceCount);
 				}
 				const distance = drops.length;
 				let sq2 = atoi(sq1);
-				switch (direction) {
+				switch (direction){
 					case "+":
 						sq2[1] = sq2[1] + distance;
 						break;
@@ -128,16 +129,16 @@ function fromPTN(notation) {
 /**
  * Copied from tps-ninja
  * supports - as an alternative to / for handling TPS passed from a URL
- * @param {string} tps 
+ * @param {string} tps
  * @returns Object with grid, player, linenum, size, and error properties
  */
-function parseTPS(tps) {
+function parseTPS(tps){
 	const matchData = tps
 		.toUpperCase()
 		.match(/^([X1-8SC,/-]+)\s+([12])\s+(\d+)$/);
 	const result = {};
 
-	if (!matchData) {
+	if(!matchData){
 		result.error = "Invalid TPS notation";
 		return result;
 	}
@@ -146,11 +147,11 @@ function parseTPS(tps) {
 
 	result.grid = result.grid
 		.replace(/X(\d+)/g, (x, count) => {
-		const spaces = ["X"];
-		while (spaces.length < count) {
-			spaces.push("X");
-		}
-		return spaces.join(",");
+			const spaces = ["X"];
+			while(spaces.length < count){
+				spaces.push("X");
+			}
+			return spaces.join(",");
 		})
 		.split(/[/-]/)
 		.reverse()
@@ -160,12 +161,12 @@ function parseTPS(tps) {
 	result.linenum = Number(result.linenum);
 
 	const validCell = /^(X|[12]+[SC]?)$/;
-	if (
+	if(
 		result.grid.find(
-		(row) =>
-			row.length !== result.size || row.find((cell) => !validCell.test(cell))
+			(row) =>
+				row.length !== result.size || row.find((cell) => !validCell.test(cell))
 		)
-	) {
+	){
 		result.error = "Invalid TPS notation";
 	}
 	return result;
