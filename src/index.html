@@ -528,7 +528,7 @@
 									<div>
 										<label>
 											<input type="checkbox" name="2d-board-3d" id="2d-3d-toggle" onchange="toggle2DBoard3D(); event.preventDefault();">
-											3D Board
+											Toggle 3D board
 										</label>
 									</div>
 									<div id="2d-board-3d-options" class="flex-column gap--16" style="display: none;">
@@ -549,13 +549,13 @@
 									<div>
 										<label>
 											<input type="checkbox" name="2d-axis-labels" id="2d-axis-toggle" onchange="toggle2DAxis(); event.preventDefault();" checked>
-											Axis Labels
+											Axis labels
 										</label>
 									</div>
 									<div>
 										<label>
 											<input type="checkbox" name="2d-board-3d" id="2d-highlight-toggle" onchange="toggle2DHighlightSquare(); event.preventDefault();" checked>
-											highlight Last move
+											Show last move highlighter
 										</label>
 									</div>
 								</div>
@@ -620,7 +620,7 @@
 								</div>
 							</div>
 							<div id="black_pieces_form">
-								Black pieces<br />
+								Black Pieces<br />
 								<div class="dropdown">
 									<button id="black_piece_select" class="btn btn-secondary select dropdown-toggle form-control text-left" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 										Select an option
@@ -630,7 +630,7 @@
 							</div>
 							<div>
 								<label >
-									Custom pieces
+									Custom Pieces
 									<input type="file" id="piecetexture"/>
 								</label>
 							</div>
@@ -654,7 +654,7 @@
 							</div>
 							<div>
 								<label>
-									Border color
+									Border Color
 									<input
 										type="color"
 										id="borderColor"
@@ -677,14 +677,14 @@
 								<div>
 									<label>
 										<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
-										Hide Border Text
+										Hide border text
 									</label>
 								</div>
 							</div>
 							<div class="flex flex-column gap--8">
 								Board Overlay
 								<div id="remove-overlay" style="display:none;">
-									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove overlay</button>
+									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove Overlay</button>
 								</div>
 								<div id="board-overlay-form">
 									<input type="file" id="board-overlay" accept="image/*" />

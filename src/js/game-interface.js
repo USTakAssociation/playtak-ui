@@ -105,6 +105,8 @@ function playScratch(){
 function initBoard(){
 	$("#komirule").html("+" + Math.floor(gameData.komi / 2) + (gameData.komi & 1 ? ".5" : ".0"));
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
+	document.getElementById("player-opp").className = "selectplayer";
+	document.getElementById("player-me").className = "";
 	if(gameData.triggerMove > 0){
 		document.getElementById("extra-time").style.display = 'block';
 		document.getElementById("extra-time-rule").innerHTML = `${gameData.triggerMove}/+${gameData.timeAmount/60}`;
@@ -503,6 +505,7 @@ function firstMove(){
 	setShownMove(gameData.move_start);
 	if(is2DBoard){
 		sendAction('FIRST');
+		setDisable2DBoard(true);;
 		return;
 	}
 	board.showmove(gameData.move_start, true);
@@ -512,6 +515,9 @@ function lastMove(){
 	setShownMove(gameData.move_count);
 	if(is2DBoard){
 		sendAction('LAST');
+		if(checkIfMyMove()){
+			setDisable2DBoard(false);
+		}
 		return;
 	}
 	board.showmove(gameData.move_count, true);
@@ -525,6 +531,7 @@ function previousMove(){
 	setShownMove(moveId);
 	if(is2DBoard){
 		sendAction('PREV');
+		setDisable2DBoard(true);
 		return;
 	}
 	board.showmove(moveId, true);
@@ -538,6 +545,9 @@ function nextMove(){
 	setShownMove(moveId);
 	if(is2DBoard){
 		sendAction('NEXT');
+		if(moveId === gameData.move_count && checkIfMyMove()){
+			setDisable2DBoard(false);
+		}
 		return;
 	}
 	board.showmove(moveId, true);
@@ -545,8 +555,12 @@ function nextMove(){
 
 function showMove(moveId){
 	if(is2DBoard){
+		setDisable2DBoard(true);
 		goToPlay(moveId - 1);
 		setShownMove(moveId);
+		if(moveId === gameData.move_count && checkIfMyMove()){
+			setDisable2DBoard(false);
+		}
 	}
 	else{
 		setShownMove(moveId);
@@ -566,6 +580,9 @@ function undoMove(){
 	gameData.move_count--;
 	gameData.move_shown = gameData.move_count;
 	if(is2DBoard){
+		if(checkIfMyMove()){
+			setDisable2DBoard(false);
+		}
 		sendAction('UNDO');
 	}
 	else{
@@ -602,6 +619,7 @@ function undoMove(){
 
 	$('.curmove:first').removeClass('curmove');
 	$('.moveno'+(gameData.move_count-1)+':first').addClass('curmove');
+	storeNotation();
 }
 
 function checkIfMyMove(){

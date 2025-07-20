@@ -154,8 +154,9 @@ function gotnewtexturefile(){
 	let fileName;
 	if(this.files.length){
 		fileName = this.files[0].name;
+		const regex = /\s/;
 		// ensure the filename has no spaces
-		if(fileName.test(/\s/)){
+		if(regex.test(fileName)){
 			alert('danger', 'File name cannot contain spaces, please rename the file and try again');
 			return;
 		}

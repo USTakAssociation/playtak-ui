@@ -1024,10 +1024,9 @@ var board = {
 		this.addboard();
 		this.addpieces();
 
-		document.getElementById("player-opp").className = "selectplayer";
-		document.getElementById("player-me").className = "";
-
-		if((gameData.my_color=="black") != (this.boardside=="black")){this.reverseboard();}
+		if(!gameData.isScratch && ((gameData.my_color=="black") != (this.boardside=="black"))){
+			this.reverseboard();
+		}
 	},
 	//remove all scene objects, reset player names, stop time, etc
 	clear: function(){
@@ -2475,7 +2474,6 @@ function init3DBoard(){
 	window.addEventListener("resize", onWindowResize, false);
 	window.addEventListener("keyup", onKeyUp, false);
 
-	initBoard();
 	rendererdone = true;
 	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5, 3, 16, 100);
 	highlighter = new THREE.Mesh(geometry, materials.highlighter);
@@ -2483,6 +2481,7 @@ function init3DBoard(){
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
 	generateCamera();
+	initBoard();
 	if(camera && controls){
 		startAnimation();
 	}
