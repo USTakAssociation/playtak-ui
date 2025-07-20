@@ -600,7 +600,7 @@ var server = {
 				if(spl[1] === "P"){
 					// file,rank,caporwall
 					if(is2DBoard){
-						set2DPlay(spl[3]+spl[2]);
+						set2DPlay(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
 					}
 					else{
 						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
