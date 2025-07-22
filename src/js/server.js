@@ -601,6 +601,12 @@ var server = {
 					// file,rank,caporwall
 					if(is2DBoard){
 						set2DPlay(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
+						if(!checkIfMyMove()){
+							setDisable2DBoard(true);
+						}
+						else{
+							setDisable2DBoard(false);
+						}
 					}
 					else{
 						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
@@ -613,6 +619,12 @@ var server = {
 						// spilt after game#{game id}
 						const psn = e.split("M")[1];
 						set2DPlay(toPTN('M' + psn));
+						if(!checkIfMyMove()){
+							setDisable2DBoard(true);
+						}
+						else{
+							setDisable2DBoard(false);
+						}
 					}
 					else{
 						var nums = [];

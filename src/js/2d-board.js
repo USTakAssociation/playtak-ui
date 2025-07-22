@@ -20,6 +20,28 @@ async function messageHandler(event){
 		}
 	}
 	switch (event.data.action){
+		case "SET_UI":
+			// check for the key is in the object
+			if(event.data.value.hasOwnProperty("board3D")){
+				localStorage.setItem('2d-board-3d', event.data.value.board3D);
+				document.getElementById("2d-3d-toggle").checked = event.data.value.board3D;
+				const options = document.getElementById('2d-board-3d-options');
+				if(document.getElementById('2d-3d-toggle').checked){
+					options.style.display = 'flex';
+				}
+				else{
+					options.style.display = 'none';
+				}
+			}
+			if(event.data.value.hasOwnProperty("axisLabels")){
+				document.getElementById("2d-axis-toggle").checked = event.data.value.board3D;
+				localStorage.setItem('2d-axis', event.data.value.board3D);
+			}
+			if(event.data.value.hasOwnProperty("highlightSquares")){
+				document.getElementById("2d-highlight-toggle").checked = event.data.value.highlightSquares;
+				localStorage.setItem('2d-last-move-highlight', event.data.value.highlightSquares);
+			}
+			break;
 		case "GAME_STATE":
 			if(gameData.is_scratch){
 				if(!event.data.value.isFirstMove && plyID === event.data.value.plyID){
