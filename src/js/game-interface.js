@@ -118,7 +118,7 @@ function initBoard(){
 		board.initEmpty();
 		return;
 	}
-	set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+	set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 	if(gameData.my_color === 'black'){
 		setDisable2DBoard(true);
 	}
@@ -669,9 +669,67 @@ function getRightPadding(){
 function gameOver(preMessage){
 	preMessage = (typeof preMessage === 'undefined') ? "" : preMessage + " ";
 	notate(gameData.result);
+	storeNotation();
 	alert("info",preMessage + "Game over!! " + gameData.result);
 	gameData.is_game_end = true;
 	if(is2DBoard){
 		setDisable2DBoard(true);
 	}
+}
+
+function handleGameOverState(){
+	document.getElementById("open-game-over").style.display = "flex";
+	var msg = "Game over <span class='bold'>" + gameData.result + "</span><br>";
+	var type;
+
+	if(gameData.result === "R-0" || gameData.result === "0-R"){
+		type = "making a road";
+	}
+	else if(gameData.result === "F-0" || gameData.result === "0-F"){
+		if(!is2DBoard){
+			gameData.flatCount = board.flatscore();
+		}
+		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + "+" + Math.floor(gameData.komi / 2) + (gameData.komi & 1 ? ".5" : ".0") + ")";
+	}
+	else if(gameData.result === "1-0" || gameData.result === "0-1"){
+		type = "resignation or time";
+	}
+
+	if(gameData.result === "R-0" || gameData.result === "F-0" || gameData.result === "1-0"){
+		if(gameData.observing === true){
+			msg += "White wins by " + type;
+		}
+		else if(gameData.my_color === "white"){
+			msg += "You win by " + type;
+		}
+		else{
+			msg += "Your opponent wins by " + type;
+		}
+	}
+	else if(gameData.result === "1/2-1/2"){
+		msg += "The game is a draw!";
+	}
+	else if(gameData.result === "0-0"){
+		msg += "The game is aborted!";
+	}
+	else{
+		//black wins
+		if(gameData.observing === true){
+			msg += "Black wins by " + type;
+		}
+		else if(gameData.my_color === "white"){
+			msg += "Your opponent wins by " + type;
+		}
+		else{
+			msg += "You win by " + type;
+		}
+	}
+	// get the game object and check if it's a bot game
+	const localGameData = JSON.parse(localStorage.getItem("current-game-data"));
+	if(!gameData.observing && (localGameData && !localGameData.bot)){
+		document.getElementById("rematch").style.display = "block";
+	}
+
+	$("#gameoveralert-text").html(msg);
+	$("#gameoveralert").modal("show");
 }

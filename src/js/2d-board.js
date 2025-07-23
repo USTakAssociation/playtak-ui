@@ -51,7 +51,17 @@ async function messageHandler(event){
 				}
 				plyID = event.data.value.plyID;
 			}
-			// check if game is not already over and has ended and post result with alert
+			if(event.data.value.flatsWithoutKomi){
+				gameData.flatCount = event.data.value.flatsWithoutKomi;
+			}
+			if(!gameData.is_game_end && !gameData.is_scratch && event.data.value.isGameEnd === true){
+				if(event.data.value.result && event.data.value.result.text){
+					gameData.result = event.data.value.result.text;
+				}
+				handleGameOverState();
+				gameOver();
+			}
+			//Scratch Game check if game is not already over and has ended and post result with alert
 			if(!gameData.is_game_end && gameData.is_scratch && event.data.value.isGameEnd === true){
 				if(event.data.value.result && event.data.value.result.text){
 					gameData.result = event.data.value.result.text;
@@ -65,6 +75,7 @@ async function messageHandler(event){
 		case "INSERT_PLIES":
 			notate(event.data.value);
 			incrementMoveCounter();
+			storeNotation();
 			if(!gameData.observing){
 				setDisable2DBoard(false);
 			}

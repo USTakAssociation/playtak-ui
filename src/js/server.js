@@ -448,7 +448,7 @@ var server = {
 			gameData.bot = +spl[17];
 			gameData.is_scratch = false;
 			gameData.observing = false;
-			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
 			// store the game object in local storage
 			localStorage.setItem("current-game-data", JSON.stringify(gameData));
@@ -549,7 +549,7 @@ var server = {
 			gameData.observing = true;
 			gameData.is_scratch = false;
 			initBoard();
-			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			if(is2DBoard){
 				setDisable2DBoard(true);
 			}
@@ -611,7 +611,6 @@ var server = {
 					else{
 						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
 					}
-					storeNotation();
 				}
 				//Game#1 M A2 A5 2 1
 				else if(spl[1] === "M"){
@@ -627,7 +626,7 @@ var server = {
 						}
 					}
 					else{
-						var nums = [];
+						const nums = [];
 						for(i = 4; i < spl.length; i++){
 							nums.push(Number(spl[i]));
 						}
@@ -639,7 +638,6 @@ var server = {
 							nums
 						);
 					}
-					storeNotation();
 				}
 				//Game#1 Time 170 200
 				else if(spl[1] === "Time"){
@@ -689,64 +687,13 @@ var server = {
 				}
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
-					document.getElementById("open-game-over").style.display = "flex";
-					document.title = "Play Tak";
 					gameData.result = spl[2];
-
-					var msg = "Game over <span class='bold'>" + spl[2] + "</span><br>";
-					var type;
-
-					if(spl[2] === "R-0" || spl[2] === "0-R"){
-						type = "making a road";
-					}
-					else if(spl[2] === "F-0" || spl[2] === "0-F"){
-						var score = board.flatscore();
-						type = "having more top flats (" + score[0] + " to " + score[1] + "+" + Math.floor(board.komi / 2) + (board.komi & 1 ? ".5" : ".0") + ")";
-					}
-					else if(spl[2] === "1-0" || spl[2] === "0-1"){
-						type = "resignation or time";
-					}
-
-					if(spl[2] === "R-0" || spl[2] === "F-0" || spl[2] === "1-0"){
-						if(gameData.observing === true){
-							msg += "White wins by " + type;
-						}
-						else if(gameData.my_color === "white"){
-							msg += "You win by " + type;
-						}
-						else{
-							msg += "Your opponent wins by " + type;
-						}
-					}
-					else if(spl[2] === "1/2-1/2"){
-						msg += "The game is a draw!";
-					}
-					else if(spl[2] === "0-0"){
-						msg += "The game is aborted!";
-					}
-					else{
-						//black wins
-						if(gameData.observing === true){
-							msg += "Black wins by " + type;
-						}
-						else if(gameData.my_color === "white"){
-							msg += "Your opponent wins by " + type;
-						}
-						else{
-							msg += "You win by " + type;
-						}
-					}
-					// get the game object and check if it's a bot game
-					const localGameData = JSON.parse(localStorage.getItem("current-game-data"));
-					if(!gameData.observing && (localGameData && !localGameData.bot)){
-						document.getElementById("rematch").style.display = "block";
-					}
-
 					stopTime();
-
-					$("#gameoveralert-text").html(msg);
-					$("#gameoveralert").modal("show");
-					gameOver();
+					document.title = "Play Tak";
+					if(!is2DBoard){
+						handleGameOverState();
+						gameOver();
+					}
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
 					document.getElementById("removeSeek").setAttribute("hidden", "true");

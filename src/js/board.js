@@ -1582,19 +1582,19 @@ var board = {
 
 		dontanimate = true;
 		fastforward();
-		var s1 = this.get_board_obj(f1.charCodeAt(0) - 'A'.charCodeAt(0),r1 - 1);
-		var fi = 0,ri = 0;
-		if(f1 === f2){ri = r2 > r1 ? 1 : -1;}
-		if(r1 === r2){fi = f2 > f1 ? 1 : -1;}
-
 		var tot = 0;
 		for(i = 0;i < nums.length;i++){tot += nums[i];}
 
 		var tstk = [];
+		var s1 = this.get_board_obj(f1.charCodeAt(0) - 'A'.charCodeAt(0),r1 - 1);
 		var stk = this.get_stack(s1);
 		for(i = 0;i < tot;i++){
 			tstk.push(stk.pop());
 		}
+		var fi = 0,ri = 0;
+		if(f1 === f2){ri = r2 > r1 ? 1 : -1;}
+		if(r1 === r2){fi = f2 > f1 ? 1 : -1;}
+
 		for(i = 0;i < nums.length;i++){
 			var sq = this.get_board_obj(s1.file + (i + 1) * fi,s1.rank + (i + 1) * ri);
 			for(j = 0;j < nums[i];j++){
@@ -1743,7 +1743,7 @@ var board = {
 		}
 
 		this.findwhowon();
-		this.gameOver("All spaces covered.");
+		gameOver("All spaces covered.");
 		return true;
 	},
 	reverseboard: function(){
@@ -2266,12 +2266,12 @@ var board = {
 		}
 		if(this.whitepiecesleft <=0){
 			gameData.result = "F-0";
-			this.gameOver('All white pieces used.');
+			gameOver('All white pieces used.');
 			return;
 		}
 		if(this.blackpiecesleft <=0){
 			gameData.result = "0-F";
-			this.gameOver('All black pieces used.');
+			gameOver('All black pieces used.');
 			return;
 		}
 		notate("load");

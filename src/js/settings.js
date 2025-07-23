@@ -1,4 +1,5 @@
 const default2DThemes = [
+	{ id: "aaron", name: "Aaron"},
 	{ id: "aer", name: "Aer"},
 	{ id: "aether", name: "Aether"},
 	{ id: "aqua", name: "Aqua"},
@@ -7,6 +8,7 @@ const default2DThemes = [
 	{ id: "bubbletron", name: "BubbleTron"},
 	{ id: "classic", name: "Classic"},
 	{ id: "discord", name: "Discord"},
+	{ id: "essence", name: "Essence"},
 	{ id: "fresh", name: "Fresh"},
 	{ id: "ignis", name: "Ignis"},
 	{ id: "luna", name: "Luna"},
