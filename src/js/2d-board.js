@@ -34,8 +34,9 @@ async function messageHandler(event){
 				}
 			}
 			if(event.data.value.hasOwnProperty("axisLabels")){
-				document.getElementById("2d-axis-toggle").checked = event.data.value.board3D;
-				localStorage.setItem('2d-axis', event.data.value.board3D);
+				console.log(event.data, event.data.value);
+				document.getElementById("2d-axis-toggle").checked = event.data.value.axisLabels;
+				localStorage.setItem('2d-axis', event.data.value.axisLabels);
 			}
 			if(event.data.value.hasOwnProperty("highlightSquares")){
 				document.getElementById("2d-highlight-toggle").checked = event.data.value.highlightSquares;
