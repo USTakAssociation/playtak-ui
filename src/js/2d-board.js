@@ -34,7 +34,6 @@ async function messageHandler(event){
 				}
 			}
 			if(event.data.value.hasOwnProperty("axisLabels")){
-				console.log(event.data, event.data.value);
 				document.getElementById("2d-axis-toggle").checked = event.data.value.axisLabels;
 				localStorage.setItem('2d-axis', event.data.value.axisLabels);
 			}
