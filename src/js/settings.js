@@ -604,9 +604,10 @@ function load2DSettings(){
 	}
 
 	if(localStorage.getItem('2d-ortho')){
-		document.getElementById('2d-ortho').checked = !!localStorage.getItem('2d-ortho');
+		const value = localStorage.getItem('2d-ortho') === 'true' ? true : false;
+		document.getElementById('2d-ortho').checked = value;
 		set2DUI({
-			orthographic: localStorage.getItem('2d-ortho')
+			orthographic: value
 		});
 	}
 
