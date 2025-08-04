@@ -537,6 +537,14 @@ function toggle2DAxis(){
 	});
 }
 
+function toggle2DAxisSmall(){
+	const checked = document.getElementById('2d-axis-small-toggle').checked;
+	localStorage.setItem('2d-axis-small', checked);
+	set2DUI({
+		axisLabelsSmall: checked
+	});
+}
+
 function toggle2DHighlightSquare(){
 	const checked = document.getElementById('2d-highlight-toggle').checked;
 	localStorage.setItem('2d-last-move-highlight', checked);
@@ -612,6 +620,12 @@ function load2DSettings(){
 		const value = localStorage.getItem('2d-axis') === 'true' ? true : false;
 		document.getElementById('2d-axis-toggle').checked = value;
 		set2DUI({ axisLabels: value });
+	}
+
+	if(localStorage.getItem('2d-axis-small')){
+		const value = localStorage.getItem('2d-axis-small') === 'true' ? true : false;
+		document.getElementById('2d-axis-small-toggle').checked = value;
+		set2DUI({ axisLabelsSmall: value });
 	}
 
 	if(localStorage.getItem('2d-last-move-highlight')){

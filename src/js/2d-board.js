@@ -37,6 +37,10 @@ async function messageHandler(event){
 				document.getElementById("2d-axis-toggle").checked = event.data.value.axisLabels;
 				localStorage.setItem('2d-axis', event.data.value.axisLabels);
 			}
+			if(event.data.value.hasOwnProperty("axisLabelsSmall")){
+				document.getElementById("2d-axis-small-toggle").checked = event.data.value.axisLabelsSmall;
+				localStorage.setItem('2d-axis-small', event.data.value.axisLabelsSmall);
+			}
 			if(event.data.value.hasOwnProperty("highlightSquares")){
 				document.getElementById("2d-highlight-toggle").checked = event.data.value.highlightSquares;
 				localStorage.setItem('2d-last-move-highlight', event.data.value.highlightSquares);
