@@ -103,6 +103,7 @@
 .landing .events{
 	background-color: var(--primary-bg-color);
 	height: auto;
+	user-select: text;
 }
 .landing .events-wrapper{
 	min-height: 200px;

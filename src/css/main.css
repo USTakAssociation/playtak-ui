@@ -53,6 +53,7 @@ body {
 	height: 100%;
 	color: var(--primary-font-color);
 	background-color: var(--primary-bg-color);
+	user-select: none;
 }
 
 a {
@@ -269,7 +270,6 @@ a.navitem, div.navitem{
 	bottom: 0;
 	left: 0;
 	position: absolute;
-	user-select: text;
 }
 
 .section-title{
@@ -521,7 +521,6 @@ a.navitem, div.navitem{
 /* || Modals */
 .modal {
 	text-align: center;
-	user-select: text;
 }
 
 .modal-dialog {
@@ -558,6 +557,10 @@ a.navitem, div.navitem{
 
 #help-modal ul li ul li {
 	font-weight: normal;
+}
+
+#help-modal .tab-content {
+	user-select: text;
 }
 
 #settings-modal ul li ul {
