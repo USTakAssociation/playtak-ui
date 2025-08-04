@@ -102,6 +102,7 @@ async function messageHandler(event){
 function init2DBoard(){
 	set2DBoardPadding();
 	window.addEventListener("message", messageHandler, false);
+	window.addEventListener("keyup", onKeyUp, false);
 }
 
 function removeBoardMessageHandler(){
@@ -152,6 +153,14 @@ function set2DPlay(value){
 		value: {
 			plies: value
 		}
+	}, '*');
+}
+
+function appendPly(value){
+	lastMove();
+	ninja.contentWindow.postMessage({
+		action: 'APPEND_PLY',
+		value: value
 	}, '*');
 }
 

@@ -2432,33 +2432,6 @@ function onDocumentMouseUp(e){
 	}
 }
 
-function onKeyUp(e){
-	switch (e.keyCode){
-		case 27://ESC
-			board.showmove(gameData.move_shown,true);
-			break;
-		case 38://UP
-			stepback();
-			break;
-		case 40://DOWN
-			stepforward();
-			break;
-	}
-}
-
-function removeEventListeners(){
-	if(canvas){
-		canvas.removeEventListener("mousedown", onDocumentMouseDown, false);
-		canvas.removeEventListener("mouseup", onDocumentMouseUp, false);
-		canvas.removeEventListener("mousemove", onDocumentMouseMove, false);
-		canvas.removeEventListener("contextmenu", function(e){
-			e.preventDefault();
-		}, false);
-	}
-	window.removeEventListener("resize", onWindowResize, false);
-	window.removeEventListener("keyup", onKeyUp, false);
-}
-
 function init3DBoard(){
 	canvas = document.getElementById("gamecanvas");
 
