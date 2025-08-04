@@ -711,6 +711,7 @@ select, .select.dropdown-toggle {
 }
 .table-overflow {
 	max-height: 300px;
+	min-height: 200px;
 	overflow-y: scroll;
 }
 .linestable tr.headerrow{
