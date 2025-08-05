@@ -1537,7 +1537,8 @@ var server = {
 		document.getElementById("open-game-over").style.display = "none";
 		document.getElementById("rematch").removeAttribute("disabled");
 		$('#watchgame-modal').modal('hide');
-		if(gameData.observing === false && gameData.is_scratch === false){ //don't observe game while playing another
+		if((gameData.observing === false && gameData.is_scratch === false)){ //don't observe game while playing another
+			alert("danger", "You are already playing a game. Please finish it before observing another game.");
 			return;
 		}
 		if(game.id === gameData.id){return;}
@@ -1545,7 +1546,7 @@ var server = {
 		this.send("Observe " + game.id);
 		var players=[game.player1,game.player2];
 		players.sort();
-		this.send("JoinRoom "+players.join("-"));
+		this.send("JoinRoom " + players.join("-"));
 	},
 	rematch: function(){
 		// send a request to the server to start a rematch

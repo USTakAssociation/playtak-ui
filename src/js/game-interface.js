@@ -733,6 +733,7 @@ function handleGameOverState(){
 
 	$("#gameoveralert-text").html(msg);
 	$("#gameoveralert").modal("show");
+	gameData.is_scratch = true;
 }
 
 function onKeyUp(e){
