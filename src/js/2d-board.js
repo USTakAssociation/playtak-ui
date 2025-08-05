@@ -14,6 +14,13 @@ async function messageHandler(event){
 			load2DSettings();
 			initBoard();
 			server.connect();
+			if(location.search.slice(0,6)===('?load=')){
+				const text = decodeURIComponent(location.search.split('?load=')[1]);
+				document.getElementById("loadptntext").value = text;
+				document.title = "Tak Review";
+				hideElement("landing");
+				load();
+			}
 		}
 		else{
 			return; // Ignore other messages until ptn.ninja is fully loaded

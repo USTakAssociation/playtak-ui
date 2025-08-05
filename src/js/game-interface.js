@@ -160,20 +160,19 @@ function incrementMoveCounter(){
 }
 
 function load(){
+	if(!gameData.is_scratch && !gameData.observing){
+		alert('warning',"TPS/PTN won't be displayed in the middle of an online game");
+		return;
+	}
 	clearStoredNotation();
 	resetGameDataToDefault();
 	clearNotationMenu();
 	document.getElementById("open-game-over").style.display = "none";
 	$("#creategamemodal").modal("hide");
-	if(!gameData.is_scratch && !gameData.observing){
-		alert('warning',"TPS/PTN won't be displayed in the middle of an online game");
-		return;
-	}
 
 	server.unobserve();
 
 	const text = document.getElementById("loadptntext").value;
-
 	const tpsRegex = /([,x12345678SC\/]+)\s+(\d+)\s+(\d+|-)/;
 	const isTPS = tpsRegex.test(text);
 	let parsed = parsePTN(text);
@@ -200,7 +199,7 @@ function load(){
 		return;
 	}
 
-	const resultArray = ['0-1', '1-0', '1/2-1/2', 'F-0', '0-F','R-0', '0-R'];
+	const resultArray = ['0-1', '1-0', '1/2-1/2', 'F-0', '0-F','R-0', '0-R', '0-0'];
 
 	if(is2DBoard){
 		if(parsed && !isTPS){
