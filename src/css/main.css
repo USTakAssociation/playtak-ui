@@ -767,7 +767,6 @@ a.active svg {
 	align-items: start;
 }
 
-
 .flex--1 {
 	flex: 1;
 }
@@ -1128,10 +1127,12 @@ a.btn.btn-primary {
 	background-color: var(--primary-bg-color);
 	border-color: var(--primary-border-color);
 	filter: drop-shadow(2px 2px 9px #000);
+	overflow-y: scroll;
+	max-height: 60vh;
 }
 .dropdown-item {
 	color: var(--primary-font-color);
-	white-space: wrap;
+	white-space: break-spaces;
 	word-break: break-word;
 }
 

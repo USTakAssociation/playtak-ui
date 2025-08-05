@@ -1560,7 +1560,7 @@ var server = {
 				return;
 			}
 			// swap the player color for the new seek
-			const newColor = game.color === "black" ? "W" : "B";
+			const newColor = game.my_color === "black" ? "W" : "B";
 			this.send(`Rematch ${game.id} ${game.size} ${game.time} ${game.increment} ${newColor} ${game.komi} ${game.pieces} ${game.capstones} ${game.unrated} ${game.tournament} ${game.triggerMove} ${game.timeAmount} ${game.opponent}`);
 			document.getElementById("rematch").setAttribute("disabled", "disabled");
 			document.getElementById('createSeek').setAttribute("disabled", "disabled");
