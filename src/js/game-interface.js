@@ -245,6 +245,7 @@ function loadCurrentGameState(){
 	const parsed = parsePTN(currentGame);
 	clearNotationMenu();
 	initCounters(0);
+	console.log(parsed);
 	if(is2DBoard){
 		set2DBoard(currentGame);
 		sendAction('LAST');
@@ -259,12 +260,16 @@ function loadCurrentGameState(){
 		if(gameData.is_scratch){
 			setDisable2DBoard(false);
 		}
-		// check if my move
 	}
 	else{
 		dontanimate = true;
 		board.loadptn(parsed);
 		dontanimate = false;
+	}
+	// set players
+	if(parsed.tags){
+		$(".player1-name:first").html(parsed.tags.Player1 || 'You');
+		$(".player2-name:first").html(parsed.tags.Player2 || 'You');
 	}
 }
 
