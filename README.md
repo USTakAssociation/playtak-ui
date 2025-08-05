@@ -1,7 +1,7 @@
 # PlayTak-UI
 Javascript based Play Tak web client
 
-Playtak backend can be found here [Playtak](https://github.com/USTakAssociation/Playtak)
+Playtak backend can be found here: [playtak-api](https://github.com/USTakAssociation/playtak-api)
 
 ## Getting Started
 Pull the source by cloning the repository, then cd in to the project
@@ -10,7 +10,7 @@ git clone git@github.com:USTakAssociation/playtak-ui.git
 cd playtak-ui
 ```
 
-Install the dev dependencies to run localy or run it using some web server like apache or nginx.
+Install the dev dependencies to run locally or run it using some web server like apache or nginx.
 
 Running locally with NodeJs requires (version 14 or later) and NPM. [Node](http://nodejs.org/) and [NPM](https://npmjs.org/) which are really easy to install.
 
@@ -30,12 +30,12 @@ This will start a local dev server for you
 
 If you make any changes just reload the page as caching is turned off
 
-To play locally against the live playtak server in the /src/js/server.js on line 208 uncomment that line and reload
+To play locally against the live PlayTak server in the /src/js/server.js on line 208 uncomment that line and reload
 
 
 ## TODO
 - Hot reloading
-- Paramatize environment variables
+- Parametrize environment variables
 - Implement build tooling?
 - Some sort of testing
 - github action for pull request checks
