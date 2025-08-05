@@ -1,7 +1,7 @@
 const gamePresets = {
 	"beginner": {
 		size: 6,
-		komi: 0,
+		komi: 4,
 		type: 1, // 1 for tournament, 0 for normal, 2 for unrated
 		pieces: 30,
 		capstones: 1,
