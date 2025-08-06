@@ -160,20 +160,19 @@ function incrementMoveCounter(){
 }
 
 function load(){
+	if(!gameData.is_scratch && !gameData.observing){
+		alert('warning',"TPS/PTN won't be displayed in the middle of an online game");
+		return;
+	}
 	clearStoredNotation();
 	resetGameDataToDefault();
 	clearNotationMenu();
 	document.getElementById("open-game-over").style.display = "none";
 	$("#creategamemodal").modal("hide");
-	if(!gameData.is_scratch && !gameData.observing){
-		alert('warning',"TPS/PTN won't be displayed in the middle of an online game");
-		return;
-	}
 
 	server.unobserve();
 
 	const text = document.getElementById("loadptntext").value;
-
 	const tpsRegex = /([,x12345678SC\/]+)\s+(\d+)\s+(\d+|-)/;
 	const isTPS = tpsRegex.test(text);
 	let parsed = parsePTN(text);
@@ -200,7 +199,7 @@ function load(){
 		return;
 	}
 
-	const resultArray = ['0-1', '1-0', '1/2-1/2', 'F-0', '0-F','R-0', '0-R'];
+	const resultArray = ['0-1', '1-0', '1/2-1/2', 'F-0', '0-F','R-0', '0-R', '0-0'];
 
 	if(is2DBoard){
 		if(parsed && !isTPS){
@@ -257,15 +256,19 @@ function loadCurrentGameState(){
 			notate(parsed.moves[i]);
 			incrementMoveCounter();
 		}
-		if(gameData.is_scratch){
+		if(gameData.is_scratch || checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
-		// check if my move
 	}
 	else{
 		dontanimate = true;
 		board.loadptn(parsed);
 		dontanimate = false;
+	}
+	// set players
+	if(parsed.tags){
+		$(".player1-name:first").html(parsed.tags.Player1 || 'You');
+		$(".player2-name:first").html(parsed.tags.Player2 || 'You');
 	}
 }
 
@@ -453,12 +456,14 @@ function notate(txt){
 	}
 
 	// if the move count is non-zero and is an odd# then the code
-	// assumes there must be a row in the moveslist table that
+	// assumes there must be a row in the moves list table that
 	// we can add a new cell to.
 	if(gameData.move_count !== 0 && gameData.move_count % 2 === 1){
 		const row = this.getCurrentNotationRow();
 		const cell2 = row.cells[2];
-		cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>';
+		if(cell2){
+			cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>';
+		}
 	}
 	else{
 		const row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1));
@@ -505,7 +510,7 @@ function firstMove(){
 	setShownMove(gameData.move_start);
 	if(is2DBoard){
 		sendAction('FIRST');
-		setDisable2DBoard(true);;
+		setDisable2DBoard(true);
 		return;
 	}
 	board.showmove(gameData.move_start, true);
@@ -582,7 +587,7 @@ function undoMove(){
 	gameData.move_count--;
 	gameData.move_shown = gameData.move_count;
 	if(is2DBoard){
-		if(checkIfMyMove()){
+		if(!gameData.observing && checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
 		sendAction('UNDO');
@@ -670,13 +675,13 @@ function getRightPadding(){
 
 function gameOver(preMessage){
 	preMessage = (typeof preMessage === 'undefined') ? "" : preMessage + " ";
-	notate(gameData.result);
-	storeNotation();
 	alert("info",preMessage + "Game over!! " + gameData.result);
 	gameData.is_game_end = true;
 	if(is2DBoard){
 		setDisable2DBoard(true);
 	}
+	notate(gameData.result);
+	storeNotation();
 }
 
 function handleGameOverState(){
@@ -734,6 +739,8 @@ function handleGameOverState(){
 
 	$("#gameoveralert-text").html(msg);
 	$("#gameoveralert").modal("show");
+	gameData.is_scratch = true;
+	document.getElementById("2d-board-checkbox").removeAttribute("disabled");
 }
 
 function onKeyUp(e){

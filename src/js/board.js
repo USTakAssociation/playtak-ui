@@ -2470,6 +2470,14 @@ function init3DBoard(){
 
 	materials.updateBoardMaterials();
 	materials.updatePieceMaterials();
+
+	if(location.search.slice(0,6)===('?load=')){
+		const text = decodeURIComponent(location.search.split('?load=')[1]);
+		document.getElementById("loadptntext").value = text;
+		document.title = "Tak Review";
+		hideElement("landing");
+		load();
+	}
 }
 
 function waitForSceneReady(attempts = 0){

@@ -639,14 +639,7 @@ $(document).ready(function(){
 		turnsoundoff();
 	}
 	chathandler.init();
-	if(location.search.slice(0,6)===('?load=')){
-		var text = decodeURIComponent(location.search.split('?load=')[1]);
-		$('#loadptntext').val(text.replace(/\n/g,' '));
-		document.title = "Tak Review";
-		hideElement("landing");
-		load();
-	}
-	else if(localStorage.getItem('keeploggedin') === 'true' && !is2DBoard){
+	if(localStorage.getItem('keeploggedin') === 'true' && !is2DBoard){
 		server.connect();
 	}
 	else if(!is2DBoard){
