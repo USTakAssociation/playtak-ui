@@ -245,7 +245,6 @@ function loadCurrentGameState(){
 	const parsed = parsePTN(currentGame);
 	clearNotationMenu();
 	initCounters(0);
-	console.log(parsed);
 	if(is2DBoard){
 		set2DBoard(currentGame);
 		sendAction('LAST');
@@ -257,7 +256,7 @@ function loadCurrentGameState(){
 			notate(parsed.moves[i]);
 			incrementMoveCounter();
 		}
-		if(gameData.is_scratch){
+		if(gameData.is_scratch || checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
 	}
@@ -457,12 +456,14 @@ function notate(txt){
 	}
 
 	// if the move count is non-zero and is an odd# then the code
-	// assumes there must be a row in the moveslist table that
+	// assumes there must be a row in the moves list table that
 	// we can add a new cell to.
 	if(gameData.move_count !== 0 && gameData.move_count % 2 === 1){
 		const row = this.getCurrentNotationRow();
 		const cell2 = row.cells[2];
-		cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>';
+		if(cell2){
+			cell2.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>';
+		}
 	}
 	else{
 		const row = this.insertNewNotationRow(Math.floor(gameData.move_count / 2 + 1));
@@ -509,7 +510,7 @@ function firstMove(){
 	setShownMove(gameData.move_start);
 	if(is2DBoard){
 		sendAction('FIRST');
-		setDisable2DBoard(true);;
+		setDisable2DBoard(true);
 		return;
 	}
 	board.showmove(gameData.move_start, true);
@@ -586,7 +587,7 @@ function undoMove(){
 	gameData.move_count--;
 	gameData.move_shown = gameData.move_count;
 	if(is2DBoard){
-		if(checkIfMyMove()){
+		if(!gameData.observing && checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
 		sendAction('UNDO');
@@ -674,13 +675,13 @@ function getRightPadding(){
 
 function gameOver(preMessage){
 	preMessage = (typeof preMessage === 'undefined') ? "" : preMessage + " ";
-	notate(gameData.result);
-	storeNotation();
 	alert("info",preMessage + "Game over!! " + gameData.result);
 	gameData.is_game_end = true;
 	if(is2DBoard){
 		setDisable2DBoard(true);
 	}
+	notate(gameData.result);
+	storeNotation();
 }
 
 function handleGameOverState(){
@@ -739,6 +740,7 @@ function handleGameOverState(){
 	$("#gameoveralert-text").html(msg);
 	$("#gameoveralert").modal("show");
 	gameData.is_scratch = true;
+	document.getElementById("2d-board-checkbox").removeAttribute("disabled");
 }
 
 function onKeyUp(e){

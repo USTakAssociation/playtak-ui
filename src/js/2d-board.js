@@ -83,10 +83,15 @@ async function messageHandler(event){
 				gameOver();
 			}
 			break;
-		case "INSERT_PLIES":
+		case "APPEND_PLY":
 			notate(event.data.value);
 			incrementMoveCounter();
 			storeNotation();
+			if(!gameData.observing){
+				setDisable2DBoard(false);
+			}
+			break;
+		case "INSERT_PLIES":
 			if(!gameData.observing){
 				setDisable2DBoard(false);
 			}
@@ -163,7 +168,7 @@ function set2DPlay(value){
 	}, '*');
 }
 
-function appendPly(value){
+function appendPlay(value){
 	lastMove();
 	ninja.contentWindow.postMessage({
 		action: 'APPEND_PLY',

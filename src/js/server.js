@@ -522,6 +522,8 @@ var server = {
 
 			document.getElementById("createSeek").setAttribute("disabled", "disabled");
 			document.getElementById("removeSeek").setAttribute("disabled", "disabled");
+			// disable board toggle
+			document.getElementById('2d-board-checkbox').setAttribute("disabled", "true");
 		}
 		else if(startswith("Observe ", e)){
 			resetGameDataToDefault();
@@ -548,13 +550,15 @@ var server = {
 			gameData.bot = 1;
 			gameData.observing = true;
 			gameData.is_scratch = false;
-			initBoard();
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+			initBoard();
 			if(is2DBoard){
 				setDisable2DBoard(true);
 			}
 			$(".player1-name:first").html(p1);
 			$(".player2-name:first").html(p2);
+			// disable board toggle
+			document.getElementById('2d-board-checkbox').setAttribute("disabled", "true");
 			document.title = "Tak: " + p1 + " vs " + p2;
 			document.getElementById('rematch').style.display = "none";
 			var time = +spl[5];
@@ -601,6 +605,9 @@ var server = {
 					// file,rank,caporwall
 					if(is2DBoard){
 						set2DPlay(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
+						notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3].toLowerCase() : ''}${spl[2].toLowerCase()}`);
+						incrementMoveCounter();
+						storeNotation();
 						if(!checkIfMyMove()){
 							setDisable2DBoard(true);
 						}
@@ -618,6 +625,9 @@ var server = {
 						// spilt after game#{game id}
 						const psn = e.split("M")[1];
 						set2DPlay(toPTN('M' + psn));
+						notate(toPTN('M' + psn));
+						incrementMoveCounter();
+						storeNotation();
 						if(!checkIfMyMove()){
 							setDisable2DBoard(true);
 						}
@@ -1541,7 +1551,10 @@ var server = {
 			alert("danger", "You are already playing a game. Please finish it before observing another game.");
 			return;
 		}
-		if(game.id === gameData.id){return;}
+		if(game.id === gameData.id){
+			alert("danger", "You are already observing this game.");
+			return;
+		}
 		this.unobserve();
 		this.send("Observe " + game.id);
 		var players=[game.player1,game.player2];
