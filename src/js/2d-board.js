@@ -40,6 +40,10 @@ async function messageHandler(event){
 					options.style.display = 'none';
 				}
 			}
+			if(event.data.value.hasOwnProperty("animateBoard")){
+				document.getElementById("2d-animations-toggle").checked = event.data.value.animateBoard;
+				localStorage.setItem('2d-axis', event.data.value.animateBoard);
+			}
 			if(event.data.value.hasOwnProperty("axisLabels")){
 				document.getElementById("2d-axis-toggle").checked = event.data.value.axisLabels;
 				localStorage.setItem('2d-axis', event.data.value.axisLabels);
