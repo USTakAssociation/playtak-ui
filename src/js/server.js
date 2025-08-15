@@ -696,9 +696,10 @@ var server = {
 					gameData.result = spl[2];
 					stopTime();
 					document.title = "Play Tak";
-					if(!is2DBoard){
+					if(!is2DBoard || !gameData.is_game_end){
 						handleGameOverState();
 						gameOver();
+						$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw");
 					}
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
