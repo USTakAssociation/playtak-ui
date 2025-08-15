@@ -139,8 +139,8 @@ async function getPlayersRating(playerName){
 	// set the url based on the current host
 	let url = '';
 	// if localhost, use the local server
-	if(window.location.host.indexOf("localhost") > -1 || window.location.host.indexOf("127.0.0.1") > -1){
-		url = 'http://localhost:3004/v1/ratings/' + playerName;
+	if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"){
+		url = 'http://' + window.location.hostname + ':3004/v1/ratings/' + playerName;
 	}
 	// if in beta use the beta api url
 	else if(window.location.host.indexOf("beta") > -1){
@@ -195,9 +195,9 @@ var server = {
 		if(!this.connection){
 			var proto = 'wss://';
 			var url = window.location.host + '/ws';
-			if(window.location.host.indexOf("localhost")>-1 || window.location.host.indexOf("127.0.0.1")>-1 || window.location.host.indexOf("192.168.")==0){
+			if(window.location.hostname==="localhost" || window.location.hostname==="127.0.0.1" || window.location.hostname.indexOf("192.168.")==0){
 				proto = 'ws://';
-				url=window.location.host.replace(/\:\d+$/,"")+":9999" + '/ws';
+				url=window.location.hostname+":9999" + '/ws';
 				// uncomment to play locally against the live server
 				//url = "www.playtak.com:9999/ws";
 			}
