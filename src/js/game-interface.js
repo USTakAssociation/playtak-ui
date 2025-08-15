@@ -103,7 +103,7 @@ function playScratch(){
 }
 
 function initBoard(){
-	$("#komirule").html("+" + Math.floor(gameData.komi / 2) + (gameData.komi & 1 ? ".5" : ".0"));
+	$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
 	document.getElementById("player-opp").className = "selectplayer";
 	document.getElementById("player-me").className = "";
@@ -696,7 +696,11 @@ function handleGameOverState(){
 		if(!is2DBoard){
 			gameData.flatCount = board.flatscore();
 		}
-		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + "+" + Math.floor(gameData.komi / 2) + (gameData.komi & 1 ? ".5" : ".0") + ")";
+		var komi = (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "");
+		if(komi){
+			komi = "+" + komi;
+		}
+		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + komi + ")";
 	}
 	else if(gameData.result === "1-0" || gameData.result === "0-1"){
 		type = "resignation or time";

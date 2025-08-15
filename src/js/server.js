@@ -1266,7 +1266,7 @@ var server = {
 			// game details
 			$('<td/>').append(sizespan).addClass("right").appendTo(row);
 			$('<td/>').append(minuteseconds(seek.time) + ' +'+minuteseconds(seek.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control and increment").appendTo(row);
-			$('<td/>').append(Math.floor(seek.komi/2)+"."+(seek.komi&1?"5":"0")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
+			$('<td/>').append((Math.floor(seek.komi/2)||(seek.komi&1?"":"0"))+(seek.komi&1?"&frac12;":"")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
 			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
 			$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title",gameTypeText).appendTo(row);
 			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row);
