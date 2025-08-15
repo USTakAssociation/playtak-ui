@@ -682,7 +682,7 @@ var server = {
 				//Game#1 Undo
 				else if(spl[1] === "Undo"){
 					undoMove();
-					alert("info", "Game has been UNDOed by 1 move");
+					alert("info", "The last move has been undone");
 					$("#undo").removeClass("i-requested-undo").removeClass("opp-requested-undo").addClass("request-undo");
 				}
 				//Game#1 OfferDraw
@@ -809,7 +809,7 @@ var server = {
 
 			this.myname = e.split("Welcome ")[1].split("!")[0];
 			server.updateplayerinfo();
-			alert("success", "You're logged in " + this.myname + "!");
+			alert("success", "You're logged in, " + this.myname + "!");
 			document.title = "Play Tak";
 			server.loggedin = true;
 			this.updatePlayerRatingInfo(await getPlayersRating(this.myname));
