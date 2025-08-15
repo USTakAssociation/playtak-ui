@@ -124,10 +124,6 @@ function minuteseconds(seconds){
 	return (minutes>0?minutes:"")+":"+(seconds<10?"0":"")+seconds;
 }
 
-function startswith(start,str){
-	return str.slice(0,start.length)===start;
-}
-
 async function getPlayersRating(playerName){
 	if(!playerName){
 		return 0;
@@ -413,10 +409,10 @@ var server = {
 	},
 	msg: async function(e){
 		e = e.replace(/[\n\r]+$/,"");
-		if(startswith("OK", e) || startswith("Welcome!", e)){
+		if(e.startsWith("OK") || e.startsWith("Welcome!")){
 			// welcome or ok message from the server nothing to do here
 		}
-		else if(startswith("Game Start", e)){
+		else if(e.startsWith("Game Start")){
 			resetGameDataToDefault();
 			clearStoredNotation();
 			clearNotationMenu();
@@ -525,7 +521,7 @@ var server = {
 			// disable board toggle
 			document.getElementById('2d-board-checkbox').setAttribute("disabled", "true");
 		}
-		else if(startswith("Observe ", e)){
+		else if(e.startsWith("Observe ")){
 			resetGameDataToDefault();
 			clearStoredNotation();
 			clearNotationMenu();
@@ -564,7 +560,7 @@ var server = {
 			var time = +spl[5];
 			settimers(time * 1000, time * 1000);
 		}
-		else if(startswith("GameList Add ", e)){
+		else if(e.startsWith("GameList Add ")){
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
 			var spl = e.split(" ");
 			const game = {
@@ -585,7 +581,7 @@ var server = {
 			this.gameslist.push(game);
 			this.addGameToWatchList(game);
 		}
-		else if(startswith("GameList Remove ", e)){
+		else if(e.startsWith("GameList Remove ")){
 			//GameList Remove Game#1 player1 vs player2, 4x4, 180, 0 half-moves played, player1 to move
 			var spl = e.split(" ");
 			var id = +spl[2];
@@ -595,7 +591,7 @@ var server = {
 			}
 			this.removeGameFromWatchList(id);
 		}
-		else if(startswith("Game#", e)){
+		else if(e.startsWith("Game#")){
 			var spl = e.split(" ");
 			var gameId = Number(e.split("Game#")[1].split(" ")[0]);
 			//Game#1 ...
@@ -733,7 +729,7 @@ var server = {
 				}
 			}
 		}
-		else if(startswith("Login or Register", e)){
+		else if(e.startsWith("Login or Register")){
 			server.stopLoginTimer();
 			clearInterval(this.timeoutvar);
 			this.timeoutvar = setInterval(this.keepalive, 10000);
@@ -753,7 +749,7 @@ var server = {
 			}
 		}
 		//Registered ...
-		else if(startswith("Registered", e)){
+		else if(e.startsWith("Registered")){
 			alert("success", "You're registered! Check mail for password");
 			hideElement("loading");
 			hideElement("sign-up");
@@ -761,37 +757,37 @@ var server = {
 			showElement("landing-login");
 		}
 		// Registration Error
-		else if(startswith("Registration Error: ", e)){
+		else if(e.startsWith("Registration Error: ")){
 			console.error("Registration Error: ", e);
 			alert("danger", e);
 			hideElement("loading");
 			hideElement("hero-actions");
 			showElement("sign-up");
 		}
-		else if(startswith("Reset Token Error:", e)){
+		else if(e.startsWith("Reset Token Error:")){
 			alert("danger", e);
 			hideElement("loading");
 			hideElement("hero-actions");
 			showElement("send-token");
 		}
 		//Authentication failure
-		else if(startswith("Authentication failure", e)){
+		else if(e.startsWith("Authentication failure")){
 			localStorage.removeItem("keeploggedin");
 			localStorage.removeItem("usr");
 			localStorage.removeItem("token");
 			showElement("login-error");
 			alert("danger", "Authentication failure");
 		}
-		else if(startswith("Wrong password", e)){
+		else if(e.startsWith("Wrong password")){
 			showElement("login-error");
 		}
 		//You're already logged in
-		else if(startswith("You're already logged in", e)){
+		else if(e.startsWith("You're already logged in")){
 			alert("warning", "You're already logged in from another window");
 			this.connection.close();
 		}
 		//Welcome kaka!
-		else if(startswith("Welcome ", e)){
+		else if(e.startsWith("Welcome ")){
 			this.tries = 0;
 			hideElement("loading");
 			setLoggedInState();
@@ -814,7 +810,7 @@ var server = {
 			server.loggedin = true;
 			this.updatePlayerRatingInfo(await getPlayersRating(this.myname));
 			var rem = $("#keeploggedin").is(":checked");
-			if(rem === true && !startswith("Guest", this.myname)){
+			if(rem === true && !this.myname.startsWith("Guest")){
 				var name = $("#login-username").val();
 				var token = $("#login-pwd").val();
 
@@ -825,11 +821,11 @@ var server = {
 			hideElement("login-error");
 			localStorage.setItem("isLoggedIn", true);
 		}
-		else if(startswith("Password changed", e)){
+		else if(e.startsWith("Password changed")){
 			$("#settings-modal").modal("hide");
 			alert("success", "Password changed!");
 		}
-		else if(startswith("Message", e)){
+		else if(e.startsWith("Message")){
 			var msg = e.split("Message ");
 
 			if(e.includes("You've logged in from another window. Disconnecting")){
@@ -844,48 +840,48 @@ var server = {
 
 			alert("info", "Server says: " + msg[1]);
 		}
-		else if(startswith("Error", e)){
+		else if(e.startsWith("Error")){
 			var msg = e.split("Error:")[1];
 			alert("danger", "Server says: " + msg);
 		}
 		//Shout <name> msg
-		else if(startswith("Shout ", e)){
+		else if(e.startsWith("Shout ")){
 			var regex = /Shout <([^\s]*)> (.*)/g;
 			var match = regex.exec(e);
 			chathandler.received("global", "", match[1], match[2]);
 		}
 		//ShoutRoom name <name> msg
-		else if(startswith("ShoutRoom", e)){
+		else if(e.startsWith("ShoutRoom")){
 			var regex = /ShoutRoom ([^\s]*) <([^\s]*)> (.*)/g;
 			var match = regex.exec(e);
 
 			chathandler.received("room", match[1], match[2], match[3]);
 		}
 		//Tell <name> msg
-		else if(startswith("Tell", e)){
+		else if(e.startsWith("Tell")){
 			var regex = /Tell <([^\s]*)> (.*)/g;
 			var match = regex.exec(e);
 
 			chathandler.received("priv", match[1], match[1], match[2]);
 		}
 		//Told <name> msg
-		else if(startswith("Told", e)){
+		else if(e.startsWith("Told")){
 			var regex = /Told <([^\s]*)> (.*)/g;
 			var match = regex.exec(e);
 
 			chathandler.received("priv", match[1], this.myname, match[2]);
 		}
-		else if(startswith("CmdReply", e)){
+		else if(e.startsWith("CmdReply")){
 			var msg = e.split("CmdReply ")[1];
 			msg = '<span class="cmdreply">' + msg + "</span>";
 		}
-		else if(startswith("sudoReply", e)){
+		else if(e.startsWith("sudoReply")){
 			var msg = e.split("sudoReply ")[1];
 
 			chathandler.received("admin", "admin", "&gt;", msg);
 		}
 		//new seek
-		else if(startswith("Seek new", e)){
+		else if(e.startsWith("Seek new")){
 			// Seek new 1 {player} 5 900 20 A 0 21 1 0 0 0 0 {oppoenent}
 			var spl = e.split(" ");
 			let playerRating;
@@ -916,7 +912,7 @@ var server = {
 			this.rendeerseekslist();
 		}
 		//remove seek
-		else if(startswith("Seek remove", e)){
+		else if(e.startsWith("Seek remove")){
 			//Seek remove 1 chaitu 5 15
 			var spl = e.split(" ");
 			var id = +spl[2];
@@ -931,18 +927,18 @@ var server = {
 			this.rendeerseekslist();
 		}
 		// accept rematch
-		else if(startswith("Accept Rematch", e)){
+		else if(e.startsWith("Accept Rematch")){
 			const spl = e.split(" ");
 			const gameId = +spl[2];
 			this.acceptseek(gameId);
 		}
-		else if(startswith("Rematch", e)){
+		else if(e.startsWith("Rematch")){
 			alert("info", "Rematch seek created!");
 		}
 		//Online count
-		else if(startswith("Online ", e)){
+		else if(e.startsWith("Online ")){
 		}
-		else if(startswith("OnlinePlayers ", e)){
+		else if(e.startsWith("OnlinePlayers ")){
 			const msgArray = e.split("OnlinePlayers ");
 			this.onlinePlayers = JSON.parse(msgArray[1]);
 			document.getElementById("onlineplayers").style.display = "block";
@@ -950,24 +946,24 @@ var server = {
 			this.renderOnlinePlayers();
 		}
 		//Reset token sent
-		else if(startswith("Reset token sent", e)){
+		else if(e.startsWith("Reset token sent")){
 			hideElement("loading");
 			showElement("forgot-password");
 			hideElement("send-token");
 			showElement("reset-password");
 		}
 		//Wrong token
-		else if(startswith("Wrong token", e)){
+		else if(e.startsWith("Wrong token")){
 			alert("danger", "Wrong token. Try again");
 		}
 		//Password is changed
-		else if(startswith("Password is changed", e)){
+		else if(e.startsWith("Password is changed")){
 			alert("danger", "Password changed. Login with your new password.");
 			hideElement("reset-password");
 			hideElement("forgot-password");
 			showElement("landing-login");
 		}
-		else if(startswith("Joined room ", e)){
+		else if(e.startsWith("Joined room ")){
 			var spl = e.split(" ");
 			var roomname = spl[2];
 			var players = roomname.split("-");
@@ -980,7 +976,7 @@ var server = {
 			}
 			chathandler.selectRoom(id);
 		}
-		else if(startswith("Is Mod", e)){
+		else if(e.startsWith("Is Mod")){
 			chathandler.createRoom("admin-admin", "<b>Moderate Tak</b>");
 		}
 		else{
