@@ -215,7 +215,7 @@ function load(){
 				incrementMoveCounter();
 			}
 			set2DBoard(text);
-			sendAction('LAST');
+			send2DAction('LAST');
 		}
 		else{
 			const parsedTPS = parseTPS(text);
@@ -247,7 +247,7 @@ function loadCurrentGameState(){
 	initCounters(0);
 	if(is2DBoard){
 		set2DBoard(currentGame);
-		sendAction('LAST');
+		send2DAction('LAST');
 		for(let i = 0; i < parsed.moves.length; i++){
 			if((/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
 				console.warn("unparseable: " + parsed.moves[i]);
@@ -509,7 +509,7 @@ function updateLastMove(move){
 function firstMove(){
 	setShownMove(gameData.move_start);
 	if(is2DBoard){
-		sendAction('FIRST');
+		send2DAction('FIRST');
 		setDisable2DBoard(true);
 		return;
 	}
@@ -519,7 +519,7 @@ function firstMove(){
 function lastMove(){
 	setShownMove(gameData.move_count);
 	if(is2DBoard){
-		sendAction('LAST');
+		send2DAction('LAST');
 		if(checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
@@ -535,7 +535,7 @@ function previousMove(){
 	}
 	setShownMove(moveId);
 	if(is2DBoard){
-		sendAction('PREV');
+		send2DAction('PREV');
 		setDisable2DBoard(true);
 		return;
 	}
@@ -549,7 +549,7 @@ function nextMove(){
 	}
 	setShownMove(moveId);
 	if(is2DBoard){
-		sendAction('NEXT');
+		send2DAction('NEXT');
 		if(moveId === gameData.move_count && checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
@@ -590,7 +590,7 @@ function undoMove(){
 		if(!gameData.observing && checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
-		sendAction('UNDO');
+		send2DAction('UNDO');
 	}
 	else{
 		board.undo();
@@ -675,7 +675,7 @@ function getRightPadding(){
 
 function gameOver(preMessage){
 	preMessage = (typeof preMessage === 'undefined') ? "" : preMessage + " ";
-	alert("info",preMessage + "Game over!! " + gameData.result);
+	alert("info",preMessage + "Game over! " + gameData.result);
 	gameData.is_game_end = true;
 	if(is2DBoard){
 		setDisable2DBoard(true);
