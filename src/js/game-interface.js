@@ -583,16 +583,15 @@ function undoMove(){
 	// we can't undo before the place we started from
 	if(gameData.move_count <= gameData.move_start){return;}
 	// ensure we are on the last move first
+	if(is2DBoard){
+		// Delete the last ply before jumping to the end,
+		// otherwise we risk triggering a 'game over' message from ptn.ninja
+		send2DAction('DELETE_PLY', gameData.move_count - 1);
+	}
 	lastMove();
 	gameData.move_count--;
 	gameData.move_shown = gameData.move_count;
-	if(is2DBoard){
-		if(!gameData.observing && checkIfMyMove()){
-			setDisable2DBoard(false);
-		}
-		send2DAction('UNDO');
-	}
-	else{
+	if(!is2DBoard){
 		board.undo();
 	}
 	$('#player-me').toggleClass('selectplayer');

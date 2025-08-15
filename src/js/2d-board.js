@@ -1,6 +1,5 @@
 let ptnNinjaHasLoaded = false;
 const ninja = document.getElementById("ninja");
-let plyID = 0;
 
 async function messageHandler(event){
 	if(event.source !== ninja.contentWindow){
@@ -58,14 +57,6 @@ async function messageHandler(event){
 			}
 			break;
 		case "GAME_STATE":
-			if(gameData.is_scratch){
-				if(!value.isFirstMove && plyID === value.plyID){
-					// reset the notation to match the piece change
-					// update the last notation to the correct value
-					updateLastMove(value.ply);
-				}
-				plyID = value.plyID;
-			}
 			if(value.flatsWithoutKomi){
 				gameData.flatCount = value.flatsWithoutKomi;
 			}
@@ -92,6 +83,11 @@ async function messageHandler(event){
 			notate(value);
 			incrementMoveCounter();
 			storeNotation();
+			break;
+		case "DELETE_PLY":
+			if(!gameData.observing && checkIfMyMove()){
+				setDisable2DBoard(false);
+			}
 			break;
 		default:
 			break;
