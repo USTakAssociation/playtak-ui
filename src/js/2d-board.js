@@ -87,19 +87,6 @@ async function messageHandler(event){
 				gameOver();
 			}
 			break;
-		case "APPEND_PLY":
-			notate(event.data.value);
-			incrementMoveCounter();
-			storeNotation();
-			if(!gameData.observing){
-				setDisable2DBoard(false);
-			}
-			break;
-		case "INSERT_PLIES":
-			if(!gameData.observing){
-				setDisable2DBoard(false);
-			}
-			break;
 		case "INSERT_PLY":
 			// send move to server;
 			if(!gameData.is_scratch && !gameData.observing && checkIfMyMove()){
@@ -162,18 +149,7 @@ function set2DBoard(data){
 	}, '*');
 }
 
-function set2DPly(value){
-	lastMove();
-	ninja.contentWindow.postMessage({
-		action: 'INSERT_PLIES',
-		value: {
-			plies: value
-		}
-	}, '*');
-}
-
 function appendPly(value){
-	lastMove();
 	ninja.contentWindow.postMessage({
 		action: 'APPEND_PLY',
 		value: value

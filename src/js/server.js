@@ -604,11 +604,11 @@ var server = {
 				if(spl[1] === "P"){
 					// file,rank,caporwall
 					if(is2DBoard){
-						set2DPly(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
+						appendPly(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
 						notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2].toLowerCase()}`);
 						incrementMoveCounter();
 						storeNotation();
-						if(!checkIfMyMove()){
+						if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
 							setDisable2DBoard(true);
 						}
 						else{
@@ -624,11 +624,11 @@ var server = {
 					if(is2DBoard){
 						// split after game#{game id}
 						const psn = e.split("M")[1];
-						set2DPly(toPTN('M' + psn));
+						appendPly(toPTN('M' + psn));
 						notate(toPTN('M' + psn));
 						incrementMoveCounter();
 						storeNotation();
-						if(!checkIfMyMove()){
+						if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
 							setDisable2DBoard(true);
 						}
 						else{
