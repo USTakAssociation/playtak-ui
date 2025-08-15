@@ -605,7 +605,7 @@ var server = {
 					// file,rank,caporwall
 					if(is2DBoard){
 						set2DPly(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
-						notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3].toLowerCase() : ''}${spl[2].toLowerCase()}`);
+						notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2].toLowerCase()}`);
 						incrementMoveCounter();
 						storeNotation();
 						if(!checkIfMyMove()){
