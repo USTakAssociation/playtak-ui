@@ -604,7 +604,7 @@ var server = {
 				if(spl[1] === "P"){
 					// file,rank,caporwall
 					if(is2DBoard){
-						set2DPlay(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
+						set2DPly(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
 						notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3].toLowerCase() : ''}${spl[2].toLowerCase()}`);
 						incrementMoveCounter();
 						storeNotation();
@@ -622,9 +622,9 @@ var server = {
 				//Game#1 M A2 A5 2 1
 				else if(spl[1] === "M"){
 					if(is2DBoard){
-						// spilt after game#{game id}
+						// split after game#{game id}
 						const psn = e.split("M")[1];
-						set2DPlay(toPTN('M' + psn));
+						set2DPly(toPTN('M' + psn));
 						notate(toPTN('M' + psn));
 						incrementMoveCounter();
 						storeNotation();

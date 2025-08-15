@@ -162,7 +162,7 @@ function set2DBoard(data){
 	}, '*');
 }
 
-function set2DPlay(value){
+function set2DPly(value){
 	lastMove();
 	ninja.contentWindow.postMessage({
 		action: 'INSERT_PLIES',
@@ -172,7 +172,7 @@ function set2DPlay(value){
 	}, '*');
 }
 
-function appendPlay(value){
+function appendPly(value){
 	lastMove();
 	ninja.contentWindow.postMessage({
 		action: 'APPEND_PLY',
