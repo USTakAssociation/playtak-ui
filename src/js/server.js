@@ -1189,7 +1189,7 @@ var server = {
 			const rating = seek.player_rating;
 			var ratingdecoration="";
 			var ratingtext="";
-			if(rating && seek.player.toLowerCase() != this.myname.toLowerCase()){
+			if(rating && seek.player.toLowerCase() != this.myname.toLowerCase() && !this.myname.startsWith("Guest")){
 				if(rating>=myrating+levelgap){
 					ratingdecoration="<span class='ratingup'>"+("↑".slice(0,Math.min(Math.floor((rating-myrating)/levelgap),3)))+"</span>";
 				}
