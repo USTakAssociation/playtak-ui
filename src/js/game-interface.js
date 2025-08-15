@@ -561,7 +561,7 @@ function nextMove(){
 function showMove(moveId){
 	if(is2DBoard){
 		setDisable2DBoard(true);
-		goToPlay(moveId - 1);
+		goToPly(moveId - 1);
 		setShownMove(moveId);
 		if(moveId === gameData.move_count && checkIfMyMove()){
 			setDisable2DBoard(false);

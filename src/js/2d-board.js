@@ -132,7 +132,7 @@ function set2DPlayer(value){
 	}, '*');
 }
 
-function goToPlay(moveId){
+function goToPly(moveId){
 	ninja.contentWindow.postMessage({
 		action: 'GO_TO_PLY',
 		value: {
