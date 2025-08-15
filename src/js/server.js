@@ -153,6 +153,9 @@ async function getPlayersRating(playerName){
 		}
 		const json = await response.json();
 		if(json.rating){
+			if(playerName === server.myname){
+				server.updatePlayerRatingInfo(json.rating);
+			}
 			return json.rating;
 		}
 		else{
@@ -885,13 +888,7 @@ var server = {
 		else if(e.startsWith("Seek new")){
 			// Seek new 1 {player} 5 900 20 A 0 21 1 0 0 0 0 {oppoenent}
 			var spl = e.split(" ");
-			let playerRating;
-			if(spl[3] === this.myname){
-				playerRating = "~";
-			}
-			else{
-				playerRating = await getPlayersRating(spl[3]);
-			}
+			let playerRating = await getPlayersRating(spl[3]);
 			this.seekslist.push({
 				id: +spl[2],
 				player: spl[3],
@@ -1192,7 +1189,7 @@ var server = {
 			const rating = seek.player_rating;
 			var ratingdecoration="";
 			var ratingtext="";
-			if(rating){
+			if(rating && seek.player.toLowerCase() != this.myname.toLowerCase()){
 				if(rating>=myrating+levelgap){
 					ratingdecoration="<span class='ratingup'>"+("↑".slice(0,Math.min(Math.floor((rating-myrating)/levelgap),3)))+"</span>";
 				}
