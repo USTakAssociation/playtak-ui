@@ -610,8 +610,7 @@ function undoMove(){
 	// first check if we are undoing the last move that finished
 	// the game, if we have to do something a bit special
 	const txt1 = lr.cells[1].innerHTML.trim();
-	const txt2 = lr.cells[2].innerHTML.trim();
-	if(txt1==='R-0'||txt1==='F-0'||txt1==='1-0'||txt1==='1/2'||txt2==='0-F'||txt2==='0-R'||txt2==='0-1'){
+	if(/^[01FR]-[012FR]|1\/2-1\/2$/.test(txt1)){
 		moveList.deleteRow(moveList.rows.length - 1);
 		lr = moveList.rows[moveList.rows.length - 1];
 		gameData.is_game_end = false;
