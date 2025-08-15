@@ -700,8 +700,10 @@ var server = {
 					gameData.result = spl[2];
 					stopTime();
 					document.title = "Play Tak";
-					handleGameOverState();
-					gameOver();
+					if(!is2DBoard){
+						handleGameOverState();
+						gameOver();
+					}
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
 					document.getElementById("removeSeek").setAttribute("hidden", "true");
