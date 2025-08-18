@@ -529,6 +529,14 @@ function perspective2DChange(value){
 	set2DUI({ perspective: value });
 }
 
+function toggle2DAnimations(){
+	const checked = document.getElementById('2d-animations-toggle').checked;
+	localStorage.setItem('2d-animations', checked);
+	set2DUI({
+		animateBoard: checked
+	});
+}
+
 function toggle2DAxis(){
 	const checked = document.getElementById('2d-axis-toggle').checked;
 	localStorage.setItem('2d-axis', checked);
@@ -615,6 +623,12 @@ function load2DSettings(){
 		document.getElementById("2d-perspective-slider").value = localStorage.getItem('2d-perspective');
 		document.getElementById('2d-perspective-display').innerText = localStorage.getItem('2d-perspective');
 		set2DUI({ perspective: localStorage.getItem('2d-perspective') });
+	}
+
+	if(localStorage.getItem('2d-animations')){
+		const value = localStorage.getItem('2d-animations') === 'true' ? true : false;
+		document.getElementById('2d-animations-toggle').checked = value;
+		set2DUI({ animateBoard: value });
 	}
 
 	if(localStorage.getItem('2d-axis')){

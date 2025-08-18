@@ -186,6 +186,7 @@ a.navitem, div.navitem{
 }
 
 .navitemlogin{
+	white-space: nowrap;
 	width: 80px;
 	margin: 3px 4px;
 	padding: 4px;

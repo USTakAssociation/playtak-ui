@@ -103,7 +103,7 @@ function playScratch(){
 }
 
 function initBoard(){
-	$("#komirule").html("+" + Math.floor(gameData.komi / 2) + (gameData.komi & 1 ? ".5" : ".0"));
+	$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
 	document.getElementById("player-opp").className = "selectplayer";
 	document.getElementById("player-me").className = "";
@@ -215,7 +215,7 @@ function load(){
 				incrementMoveCounter();
 			}
 			set2DBoard(text);
-			sendAction('LAST');
+			send2DAction('LAST');
 		}
 		else{
 			const parsedTPS = parseTPS(text);
@@ -247,7 +247,7 @@ function loadCurrentGameState(){
 	initCounters(0);
 	if(is2DBoard){
 		set2DBoard(currentGame);
-		sendAction('LAST');
+		send2DAction('LAST');
 		for(let i = 0; i < parsed.moves.length; i++){
 			if((/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
 				console.warn("unparseable: " + parsed.moves[i]);
@@ -509,7 +509,7 @@ function updateLastMove(move){
 function firstMove(){
 	setShownMove(gameData.move_start);
 	if(is2DBoard){
-		sendAction('FIRST');
+		send2DAction('FIRST');
 		setDisable2DBoard(true);
 		return;
 	}
@@ -519,7 +519,7 @@ function firstMove(){
 function lastMove(){
 	setShownMove(gameData.move_count);
 	if(is2DBoard){
-		sendAction('LAST');
+		send2DAction('LAST');
 		if(checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
@@ -535,7 +535,7 @@ function previousMove(){
 	}
 	setShownMove(moveId);
 	if(is2DBoard){
-		sendAction('PREV');
+		send2DAction('PREV');
 		setDisable2DBoard(true);
 		return;
 	}
@@ -549,7 +549,7 @@ function nextMove(){
 	}
 	setShownMove(moveId);
 	if(is2DBoard){
-		sendAction('NEXT');
+		send2DAction('NEXT');
 		if(moveId === gameData.move_count && checkIfMyMove()){
 			setDisable2DBoard(false);
 		}
@@ -561,7 +561,7 @@ function nextMove(){
 function showMove(moveId){
 	if(is2DBoard){
 		setDisable2DBoard(true);
-		goToPlay(moveId - 1);
+		goToPly(moveId - 1);
 		setShownMove(moveId);
 		if(moveId === gameData.move_count && checkIfMyMove()){
 			setDisable2DBoard(false);
@@ -583,16 +583,15 @@ function undoMove(){
 	// we can't undo before the place we started from
 	if(gameData.move_count <= gameData.move_start){return;}
 	// ensure we are on the last move first
+	if(is2DBoard){
+		// Delete the last ply before jumping to the end,
+		// otherwise we risk triggering a 'game over' message from ptn.ninja
+		send2DAction('DELETE_PLY', gameData.move_count - 1);
+	}
 	lastMove();
 	gameData.move_count--;
 	gameData.move_shown = gameData.move_count;
-	if(is2DBoard){
-		if(!gameData.observing && checkIfMyMove()){
-			setDisable2DBoard(false);
-		}
-		sendAction('UNDO');
-	}
-	else{
+	if(!is2DBoard){
 		board.undo();
 	}
 	$('#player-me').toggleClass('selectplayer');
@@ -610,8 +609,7 @@ function undoMove(){
 	// first check if we are undoing the last move that finished
 	// the game, if we have to do something a bit special
 	const txt1 = lr.cells[1].innerHTML.trim();
-	const txt2 = lr.cells[2].innerHTML.trim();
-	if(txt1==='R-0'||txt1==='F-0'||txt1==='1-0'||txt1==='1/2'||txt2==='0-F'||txt2==='0-R'||txt2==='0-1'){
+	if(/^[01FR]-[012FR]|1\/2-1\/2$/.test(txt1)){
 		moveList.deleteRow(moveList.rows.length - 1);
 		lr = moveList.rows[moveList.rows.length - 1];
 		gameData.is_game_end = false;
@@ -675,7 +673,7 @@ function getRightPadding(){
 
 function gameOver(preMessage){
 	preMessage = (typeof preMessage === 'undefined') ? "" : preMessage + " ";
-	alert("info",preMessage + "Game over!! " + gameData.result);
+	alert("info",preMessage + "Game over! " + gameData.result);
 	gameData.is_game_end = true;
 	if(is2DBoard){
 		setDisable2DBoard(true);
@@ -696,7 +694,11 @@ function handleGameOverState(){
 		if(!is2DBoard){
 			gameData.flatCount = board.flatscore();
 		}
-		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + "+" + Math.floor(gameData.komi / 2) + (gameData.komi & 1 ? ".5" : ".0") + ")";
+		var komi = (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "");
+		if(komi){
+			komi = "+" + komi;
+		}
+		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + komi + ")";
 	}
 	else if(gameData.result === "1-0" || gameData.result === "0-1"){
 		type = "resignation or time";
