@@ -1040,7 +1040,7 @@ var server = {
 		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		// game details
 		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row);
-		$('<td/>').append(minuteseconds(game.time) + ' +'+minuteseconds(game.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control adn increment").appendTo(row);
+		$('<td/>').append(minuteseconds(game.time) + ' +'+minuteseconds(game.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control and increment").appendTo(row);
 		$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
 		$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
 		$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", gameTypeText).appendTo(row);
