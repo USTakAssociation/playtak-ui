@@ -105,7 +105,7 @@
 				<button id="login-button" class="btn btn-pill btn-primary btn-slim navitemlogin" onclick="server.loginbutton()">
 					Log In
 				</button>
-				<button id="logout-button" class="navitem" onclick="server.loginbutton()" data-toggle="tooltip" data-placement="bottom" title="Logout">
+				<button id="logout-button" class="navitem" onclick="server.loginbutton()" data-toggle="tooltip" data-placement="bottom" title="Log out">
 					<svg class="action-icon" viewBox="0 0 576 512"><path d="M534.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L434.7 224 224 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM192 96c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-53 0-96 43-96 96l0 256c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z"/></svg>
 				</button>
 			</div>
@@ -548,6 +548,12 @@
 									</div>
 									<div>
 										<label>
+											<input type="checkbox" name="2d-animations-labels" id="2d-animations-toggle" onchange="toggle2DAnimations(); event.preventDefault();" checked>
+											Animations
+										</label>
+									</div>
+									<div>
+										<label>
 											<input type="checkbox" name="2d-axis-labels" id="2d-axis-toggle" onchange="toggle2DAxis(); event.preventDefault();" checked>
 											Axis labels
 										</label>
@@ -967,15 +973,15 @@
 												>
 													<label for="komiselect">Komi</label>
 													<select class="form-control" id="komiselect">
-														<option value="0" selected="selected">0.0</option>
-														<option value="1">0.5</option>
-														<option value="2">1.0</option>
-														<option value="3">1.5</option>
-														<option value="4">2.0</option>
-														<option value="5">2.5</option>
-														<option value="6">3.0</option>
-														<option value="7">3.5</option>
-														<option value="8">4.0</option>
+														<option value="0" selected="selected">0</option>
+														<option value="1">&frac12;</option>
+														<option value="2">1</option>
+														<option value="3">1&frac12;</option>
+														<option value="4">2</option>
+														<option value="5">2&frac12;</option>
+														<option value="6">3</option>
+														<option value="7">3&frac12;</option>
+														<option value="8">4</option>
 													</select>
 												</div>
 											</div>
@@ -1364,7 +1370,7 @@
 									<!-- action buttons -->
 									<button id="play-button" class="btn btn-pill btn-secondary margin-bottom--8 flex flex-center flex-align-center" style="display: none;" onclick="hideElement('landing');">Play</button>
 									<button id="signup-button" class="btn btn-pill btn-primary margin-bottom--8 flex flex-center flex-align-center" onclick="hideElement('hero-actions'); showElement('sign-up')">Sign Up</button>
-									<button id="landing-login-button" class="btn btn-pill btn-secondary margin-bottom--8 flex flex-center flex-align-center" onclick="hideElement('hero-actions'); showElement('landing-login')">Login</button>
+									<button id="landing-login-button" class="btn btn-pill btn-secondary margin-bottom--8 flex flex-center flex-align-center" onclick="hideElement('hero-actions'); showElement('landing-login')">Log In</button>
 									<a class="btn btn-pill btn-primary margin-bottom--8 flex flex-center flex-align-center" href="https://discord.gg/2xEt42X" target="_blank" rel="noopener noreferrer">
 										<svg
 											class="verticle-align--middle"
@@ -1437,8 +1443,8 @@
 												</label>
 											</div>
 											<div class="flex flex-space-between">
-												<button type="submit" class="btn btn-pill btn-primary flex flex-center flex-align-center">Login</button>
-												<button type="reset" class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('landing-login'); showElement('hero-actions');">cancel</button>
+												<button type="submit" class="btn btn-pill btn-primary flex flex-center flex-align-center">Log In</button>
+												<button type="reset" class="btn btn-pill btn-secondary flex flex-center flex-align-center" onclick="hideElement('landing-login'); showElement('hero-actions');">Cancel</button>
 											</div>
 										</form>
 										<br />
@@ -2038,7 +2044,7 @@
 												<li>Scroll wheel to zoom in and out.</li>
 												<li>Left-click a piece in your reserves to select it. Left-click on it again (or right-click) to rotate it to make it a wall.</li>
 												<li>Left-click a square on the board to place the selected piece or to pick up a piece or stack.</li>
-												<li>Right-click and hold on a stack/piece to hide pieces on all other squares (helps to see stack clearly).</li>
+												<li>Right-click and hold on a stack or piece to hide pieces on all other squares, enabling you to see the stack clearly.</li>
 											</ul>
 										</li>
 										<li>
@@ -2047,43 +2053,42 @@
 												<li>Touch and drag to rotate the board.</li>
 												<li>Two-finger pinch to zoom in and out </li>
 												<li>Tap a piece from your reserves to select it. Tap it again to rotate it to make it a wall.</li>
-												<li>Tap on a square on the board to place the selected piece or to pick up a piece or stack</li>
+												<li>Tap on a square on the board to place the selected piece or to pick up a piece or stack.</li>
 											</ul>
 										</li>
 										<li>
 											<h5>General Notes</h5>
 											<ul>
 												<li>If any of the above controls don't work, it means that the control is invalid for the current move.</li>
-												<li>Current player to move is indicated by highlighting their name in the left pane.</li>
-												<li>Selecting the undo move in the left pane will require your opponent to also click it to approve it.</li>
-												<li>Selecting the offer draw in the left pane will require your opponent to also click it to accept it.</li>
+												<li>The current player to move is indicated by highlighting their name in the left pane.</li>
+												<li>Selecting 'undo move' in the left pane will require your opponent to also click it to approve it.</li>
+												<li>Selecting 'offer draw' in the left pane will require your opponent to also click it to accept it.</li>
 											</ul>
 										</li>
 									</ul>
 									<h4>Play Locally</h4>
 									<ul>
-										<li>From the login page select "Play Scratch"</li>
-										<li>Select "New Game" and navigate to the "Play Scratch" tab. From there, select your board size and hit "Play Scratch"</li>
+										<li>From the login page, select "Play Scratch."</li>
+										<li>Select "New Game" and navigate to the "Play Scratch" tab. From there, select your board size and hit "Play Scratch."</li>
 									</ul>
 									<h4>Play Online</h4>
 									<ul>
-										<li>Login to server by clicking "Login" button, signup and then login.</li>
+										<li>Log in to server by clicking "Log In" button, sign up if necessary, and then log in.</li>
 										<li>
 											Click on "New Game" in the menu to start a new game or accept another
-											player's seek by selecting it in "Join game" menu.
+											player's seek by selecting it in the "Join game" menu.
 										</li>
 										<li>
-											Click on one of any ongoing games from "Watch" menu to watch an ongoing
-											game.
+											Click on one of the ongoing games from "Watch" menu to watch an ongoing game.
 										</li>
 									</ul>
 									<h4>Board Settings</h4>
 									<ul>
 										<li>
-											Click on the "Settings" Icon to change the board style, piece styles and other options.
+											Click on the "Settings" icon to change the board style, piece styles, and other options.
 										</li>
-										<li>You can set a board overlay to customize the look of the board. You can download the template here. <a href="/images/board/overlay.png" target="_blank">Board Overlay Template</a></li>
-										<li>You can also change the color and the texture of the border, the border texture can use any image but may need to be adjusted to fit correctly.</li>
+										<li>You can set a board overlay to customize the look of the board. You can <a href="/images/board/overlay.png" target="_blank">download the template here</a>.</li>
+										<li>You can also change the color and the texture of the border. The border texture can use any image but may need to be adjusted to fit correctly.</li>
 									</ul>
 								</div>
 							</div>
