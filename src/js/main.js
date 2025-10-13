@@ -58,6 +58,18 @@ const gamePresets = {
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ['opname']
+	},
+	"trans-atlan": {
+		size: 6,
+		komi: 4,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 1200, // seconds
+		increment: 15,
+		trigger_move: "35",
+		time_amount: "600", // seconds
+		required_fields: ['opname']
 	}
 };
 
