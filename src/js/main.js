@@ -70,6 +70,18 @@ const gamePresets = {
 		trigger_move: "35",
 		time_amount: "600", // seconds
 		required_fields: ['opname']
+	},
+	"tak-open": {
+		size: 6,
+		komi: 4,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 900, // seconds
+		increment: 15,
+		trigger_move: "",
+		time_amount: "", // seconds
+		required_fields: ['opname']
 	}
 };
 
