@@ -137,6 +137,11 @@ function initCounters(startMove){
 	gameData.move_shown = startMove;
 }
 
+function playMoveSound(){
+	document.getElementById("move-sound").currentTime = 0;
+	document.getElementById("move-sound").play();
+}
+
 function incrementMoveCounter(){
 	if(gameData.move_shown === gameData.move_count){
 		$('.curmove:first').removeClass('curmove');
@@ -144,8 +149,9 @@ function incrementMoveCounter(){
 		gameData.move_shown++;
 	}
 	gameData.move_count++;
-	document.getElementById("move-sound").currentTime = 0;
-	document.getElementById("move-sound").play();
+
+	// Sound will be played at end of animation via animation.play(playMoveSound)
+	// If animations are disabled, it plays immediately in the callback
 
 	$('#player-me').toggleClass('selectplayer');
 	$('#player-opp').toggleClass('selectplayer');
@@ -582,6 +588,9 @@ function setShownMove(moveId){
 function undoMove(){
 	// we can't undo before the place we started from
 	if(gameData.move_count <= gameData.move_start){return;}
+	// Save current view position
+	var wasViewingHistory = gameData.move_shown !== gameData.move_count;
+	var oldViewPos = gameData.move_shown;
 	// ensure we are on the last move first
 	if(is2DBoard){
 		// Delete the last ply before jumping to the end,
@@ -590,9 +599,19 @@ function undoMove(){
 	}
 	lastMove();
 	gameData.move_count--;
-	gameData.move_shown = gameData.move_count;
+	// Preserve view position if we were viewing history, otherwise show latest
+	if(wasViewingHistory && oldViewPos <= gameData.move_count){
+		gameData.move_shown = oldViewPos;
+	}
+	else{
+		gameData.move_shown = gameData.move_count;
+	}
 	if(!is2DBoard){
 		board.undo();
+		// If viewing history, restore that view
+		if(wasViewingHistory && oldViewPos <= gameData.move_count){
+			board.showmove(oldViewPos, true);
+		}
 	}
 	$('#player-me').toggleClass('selectplayer');
 	$('#player-opp').toggleClass('selectplayer');
@@ -622,8 +641,9 @@ function undoMove(){
 		lr.cells[2].innerHTML = "";
 	}
 
+	// Update moves panel highlight - preserve history view position if applicable
 	$('.curmove:first').removeClass('curmove');
-	$('.moveno'+(gameData.move_count-1)+':first').addClass('curmove');
+	$('.moveno'+(gameData.move_shown-1)+':first').addClass('curmove');
 	storeNotation();
 }
 
@@ -749,7 +769,7 @@ function onKeyUp(e){
 	switch (e.keyCode){
 		case 27://ESC
 			if(!is2DBoard){
-				board.showmove(gameData.move_shown,true);
+				board.cancelMove();
 			}
 			break;
 		case 38://UP

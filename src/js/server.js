@@ -1,3 +1,5 @@
+var loadingGameHistory = false;
+
 function randomtoken(){
 	var a,b;
 	var s=Math.random()+";"+Math.random()+";"+Math.random()+";"+(+new Date())+";";
@@ -449,6 +451,7 @@ var server = {
 			gameData.observing = false;
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
+			loadingGameHistory = true;
 			// store the game object in local storage
 			localStorage.setItem("current-game-data", JSON.stringify(gameData));
 			console.log("Game ID " + gameData.id);
@@ -551,6 +554,7 @@ var server = {
 			gameData.is_scratch = false;
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
+			loadingGameHistory = true;
 			if(is2DBoard){
 				setDisable2DBoard(true);
 			}
@@ -615,7 +619,7 @@ var server = {
 						}
 					}
 					else{
-						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
+						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3], loadingGameHistory);
 					}
 				}
 				//Game#1 M A2 A5 2 1
@@ -644,12 +648,14 @@ var server = {
 							Number(spl[2].charAt(1)),
 							spl[3].charAt(0),
 							Number(spl[3].charAt(1)),
-							nums
+							nums,
+							loadingGameHistory
 						);
 					}
 				}
 				//Game#1 Time 170 200
 				else if(spl[1] === "Time"){
+					loadingGameHistory = false;
 					var wt = Math.max(+spl[2] || 0, 0) * 1000;
 					var bt = Math.max(+spl[3] || 0, 0) * 1000;
 					lastWt = wt;
@@ -660,6 +666,7 @@ var server = {
 				}
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
+					loadingGameHistory = false;
 					var wt = Math.max(+spl[2] || 0, 0);
 					var bt = Math.max(+spl[3] || 0, 0);
 					lastWt = wt;

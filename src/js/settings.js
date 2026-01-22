@@ -122,6 +122,16 @@ function sliderPieceSize(newSize){
 
 /*
  * Notify checkbox change for checkbox:
+ *	 Enable or disable animations
+ */
+function toggleAnimations(event){
+	var enabled = event.target.checked;
+	localStorage.setItem('animations_enabled', enabled ? 'true' : 'false');
+	animationsEnabled = enabled;
+}
+
+/*
+ * Notify checkbox change for checkbox:
  *	 Show or hide table
  */
 function showTable(event){
@@ -138,6 +148,12 @@ function showLastMoveHighlighter(event){
 	board.lastMoveHighlighterVisible = event.target.checked;
 	if(!event.target.checked){
 		board.unHighlightLastMove_sq();
+	}
+	else{
+		// Re-highlight the last moved square when turning on
+		if(board.lastMovedSquareList.length > 0){
+			board.highlightLastMove_sq(board.lastMovedSquareList.at(-1));
+		}
 	}
 }
 
@@ -656,11 +672,16 @@ function load2DSettings(){
  */
 function load3DSettings(){
 	if(!is2DBoard){
+		// load animations setting
+		if(localStorage.getItem("animations_enabled") !== null){
+			animationsEnabled = localStorage.getItem("animations_enabled") === 'true';
+			document.getElementById("animations-checkbox").checked = animationsEnabled;
+		}
 		// load background color setting
 		document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
 		clearcolorchange();
 		// diagonal walls
-		if(localStorage.getItem("diagonal_walls") === "true" || (!localStorage.getItem("diagonal_walls") && ismobile)){
+		if(localStorage.getItem("diagonal_walls") !== "false"){
 			document.getElementById("wall-orientation").checked = true;
 			diagonal_walls = true;
 		}
@@ -683,12 +704,15 @@ function load3DSettings(){
 			document.getElementById("show-table").checked = show_table;
 		}
 		// show last move highlighter
-		if(localStorage.getItem("show_last_move_highlight") !== null){
+		if(localStorage.getItem("show_last_move_highlight") === null){
+			showLastMove = true;
+			document.getElementById("show-last-move").checked = true;
+		}
+		else{
 			showLastMove = JSON.parse(localStorage.getItem("show_last_move_highlight"));
 			document.getElementById("show-last-move").checked = showLastMove;
-			// TODO test readding this
-			//showLastMoveHighlighter(showLastMove);
 		}
+		board.lastMoveHighlighterVisible = showLastMove;
 		// load white piece style setting
 		if(localStorage.getItem("piece_style_white3") !== null){
 			const styleName = localStorage.getItem("piece_style_white3");
@@ -771,7 +795,10 @@ function load3DSettings(){
 			document.getElementById('board-overlay-form').style.display = "none";
 		}
 		// auto rotate board when player 2 setting
-		if(localStorage.getItem("auto_rotate") === "false"){
+		if(localStorage.getItem("auto_rotate") === "true"){
+			document.getElementById("auto-rotate-checkbox").checked = true;
+		}
+		else{
 			document.getElementById("auto-rotate-checkbox").checked = false;
 		}
 		// load antialiasing setting

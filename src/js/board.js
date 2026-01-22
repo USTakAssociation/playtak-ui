@@ -939,6 +939,189 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 	return geometry;
 }
 
+var animationsEnabled = true;
+
+var animation = {
+	queue: [], // { objects, from, to, fromRot, toRot, type, duration, onComplete }
+	playing: false,
+	pendingFrom: null, // stores the 'from' positions/rotations for the next animation
+
+	push: function(objects, type, duration, onComplete){
+		if(type === undefined){type = 'none';}
+		if(duration === undefined){duration = 0;}
+		var positions = objects.map(function(obj){return obj.position.clone();});
+		var rotations = objects.map(function(obj){return obj.quaternion.clone();});
+		if(type === 'none'){
+			// Store positions/rotations as the starting point for the next animation
+			this.pendingFrom = {objects: objects.slice(), positions: positions, rotations: rotations};
+		}
+		else{
+			// This is an animation frame - use pendingFrom as 'from' and current as 'to'
+			var from = this.pendingFrom ? this.pendingFrom.positions : positions;
+			var fromRot = this.pendingFrom ? this.pendingFrom.rotations : rotations;
+			this.queue.push({
+				objects: objects.slice(),
+				from: from,
+				to: positions,
+				fromRot: fromRot,
+				toRot: rotations,
+				type: type,
+				duration: duration,
+				onComplete: onComplete
+			});
+			this.pendingFrom = null;
+		}
+	},
+
+	play: function(onComplete){
+		// Only clear pendingFrom if we're actually going to start playing
+		if(!this.playing){
+			this.pendingFrom = null;
+		}
+		if(!animationsEnabled){
+			// Skip animations - just set final positions/rotations and call callback
+			while(this.queue.length > 0){
+				var frame = this.queue.shift();
+				for(var i = 0; i < frame.objects.length; ++i){
+					frame.objects[i].position.copy(frame.to[i]);
+					frame.objects[i].quaternion.copy(frame.toRot[i]);
+				}
+				if(frame.onComplete){frame.onComplete();}
+			}
+			if(onComplete){onComplete();}
+			return;
+		}
+		// Reset playing flag if queue was empty (safety check)
+		if(this.queue.length === 0){
+			this.playing = false;
+		}
+		if(!this.playing && this.queue.length > 0){
+			this.playing = true;
+			this.onAllComplete = onComplete;
+			this.nextFrame();
+		}
+		else if(onComplete){
+			onComplete();
+		}
+	},
+
+	nextFrame: function(){
+		if(this.queue.length === 0){
+			this.playing = false;
+			if(this.onAllComplete){
+				var callback = this.onAllComplete;
+				this.onAllComplete = null;
+				callback();
+			}
+		}
+		else{
+			var frame = this.queue.shift();
+			this.playFrame(frame, performance.now());
+		}
+	},
+
+	// Stop all animations and jump to final positions
+	stop: function(){
+		this.playing = false;
+		this.pendingFrom = null;
+		while(this.queue.length > 0){
+			var frame = this.queue.shift();
+			for(var i = 0; i < frame.objects.length; ++i){
+				frame.objects[i].position.copy(frame.to[i]);
+				frame.objects[i].quaternion.copy(frame.toRot[i]);
+			}
+		}
+		this.onAllComplete = null;
+	},
+
+	playFrame: function(frame, startTime){
+		var objects = frame.objects;
+		var from = frame.from;
+		var to = frame.to;
+		var fromRot = frame.fromRot;
+		var toRot = frame.toRot;
+		var type = frame.type;
+		var duration = frame.duration;
+
+		// Immediately set objects to their starting positions/rotations to prevent snap
+		for(var i = 0; i < objects.length; ++i){
+			objects[i].position.copy(from[i]);
+			objects[i].quaternion.copy(fromRot[i]);
+		}
+
+		if(type === 'jump'){
+			var dx = to[0].x - from[0].x;
+			var dy = to[0].y - from[0].y;
+			var dz = to[0].z - from[0].z;
+			var distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+			duration = Math.max(frame.duration, frame.duration * distance * 0.003);
+		}
+
+		var self = this;
+		var isLastFrame = this.queue.length === 0;
+		var soundPlayed = false;
+		var soundTime = Math.max(0, duration - 100); // Play sound 100ms before end
+		var animate = function(now){
+			try{
+				var elapsed = now - startTime;
+				var t = elapsed / duration;
+				if(t >= 1){t = 1;}
+
+				// Play sound 100ms before animation ends on last frame
+				if(isLastFrame && !soundPlayed && elapsed >= soundTime && self.onAllComplete){
+					soundPlayed = true;
+					self.onAllComplete();
+					self.onAllComplete = null;
+				}
+
+				for(var i = 0; i < objects.length; ++i){
+					// Interpolate rotation using slerp
+					THREE.Quaternion.slerp(fromRot[i], toRot[i], objects[i].quaternion, t);
+
+					if(type === 'move'){
+						objects[i].position.lerpVectors(from[i], to[i], t);
+					}
+
+					if(type === 'jump'){
+						var obj = objects[i];
+
+						obj.position.x = from[i].x + (to[i].x - from[i].x) * t;
+						obj.position.z = from[i].z + (to[i].z - from[i].z) * t;
+
+						var dx = to[i].x - from[i].x;
+						var dz = to[i].z - from[i].z;
+						var distance = Math.sqrt(dx * dx + dz * dz);
+
+						var jumpHeight = 40 + distance * 0.33;
+						var baseY = from[i].y + (to[i].y - from[i].y) * t;
+						obj.position.y = baseY + jumpHeight * 4 * t * (1 - t);
+					}
+				}
+
+				if(t < 1){
+					requestAnimationFrame(animate);
+				}
+				else{
+					// Ensure final position/rotation is exact
+					for(var j = 0; j < objects.length; ++j){
+						objects[j].position.copy(to[j]);
+						objects[j].quaternion.copy(toRot[j]);
+					}
+					self.nextFrame();
+				}
+			}
+			catch(e){
+				console.error('Animation error:', e);
+				self.playing = false;
+				self.queue = [];
+			}
+		};
+
+		requestAnimationFrame(animate);
+	}
+};
+
 var board = {
 	totcaps: 0,
 	tottiles: 0,
@@ -1185,6 +1368,28 @@ var board = {
 		// for all pieces...
 		for(i = 0;i < this.piece_objects.length;i++){
 			var piece=this.piece_objects[i];
+			// Skip selected unplayed piece, don't reset its position
+			if(piece === this.selected && !piece.onsquare){
+				// Just update geometry and rotation for diagonal walls change
+				if(!piece.iscapstone){
+					var wasStanding = piece.isstanding;
+					piece.rotation.set(0,0,0);
+					piece.isstanding = false;
+					if(piece.iswhitepiece){
+						piece.geometry = geometryW;
+					}
+					else{
+						piece.geometry = geometryB;
+					}
+					piece.updateMatrix();
+					if(wasStanding){
+						piece.isstanding = true;
+						piece.rotateX(-Math.PI / 2);
+						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
+					}
+				}
+				continue;
+			}
 			if(piece.iscapstone){
 				var grow=capstone_height-piece.geometry.parameters.height;
 				piece.position.y+=grow/2;
@@ -1197,14 +1402,13 @@ var board = {
 				piece.updateMatrix();
 			}
 			else{
-				// if standing, reset and reapply orientation.
-				if(piece.isstanding){
-					piece.rotation.set(0,0,0);
-					piece.updateMatrix();
-					piece.position.y -= old_size / 2 - piece_height / 2;
-					piece.isstanding = false;
-					this.standup(piece);
-				}
+				// Track if piece was standing before reset
+				var wasStanding = piece.isstanding;
+
+				// Reset rotation first
+				piece.rotation.set(0,0,0);
+				piece.updateMatrix();
+				piece.isstanding = false;
 
 				// reapply geometry.
 				if(piece.iswhitepiece){
@@ -1214,20 +1418,28 @@ var board = {
 					piece.geometry = geometryB;
 				}
 				piece.updateMatrix();
+
+				// Reapply standing orientation if it was standing
+				if(wasStanding){
+					piece.isstanding = true;
+					piece.rotateX(-Math.PI / 2);
+					if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
+				}
 			}
 			if(!piece.onsquare){
+				var selectionOffset = (piece === this.selected) ? stack_selection_height : 0;
 				if(piece.iscapstone){
 					if(piece.iswhitepiece){
 						piece.position.set(
 							board.corner_position.endx + capstone_radius + stackOffsetFromBorder,
-							capstone_height/2-sq_height/2,
+							capstone_height/2-sq_height/2 + selectionOffset,
 							board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
 						);
 					}
 					else{
 						piece.position.set(
 							board.corner_position.x - capstone_radius - stackOffsetFromBorder,
-							capstone_height/2-sq_height/2,
+							capstone_height/2-sq_height/2 + selectionOffset,
 							board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2)
 						);
 					}
@@ -1235,17 +1447,18 @@ var board = {
 				else{
 					var stackno = Math.floor(piece.pieceNum / 10);
 					var stackheight = piece.pieceNum % 10;
+					var baseY = piece.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
 					if(piece.iswhitepiece){
 						piece.position.set(
 							board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
-							stackheight*piece_height+piece_height/2-sq_height/2,
+							baseY + selectionOffset,
 							board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
 						);
 					}
 					else{
 						piece.position.set(
 							board.corner_position.x - stackOffsetFromBorder - piece_size/2,
-							stackheight*piece_height+piece_height/2-sq_height/2,
+							baseY + selectionOffset,
 							board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
 						);
 					}
@@ -1362,9 +1575,12 @@ var board = {
 			if(this.selected){
 				if(destinationstack.length==0){
 					var sel=this.selected;
-					this.unselect();
+					animation.push([sel]);
+					this.unselect({animate: false});
 					var hlt=pick[1];
 					this.pushPieceOntoSquare(hlt,sel);
+					animation.push([sel], 'jump', 300);
+					animation.play(playMoveSound);
 					//check if actually moved
 					var stone = 'Piece';
 					if(sel.iscapstone){stone = 'Cap';}
@@ -1425,8 +1641,28 @@ var board = {
 					}
 					if(goodmove){
 						var obj = this.selectedStack.pop();
-						this.pushPieceOntoSquare(pick[1],obj);
-						this.move_stack_over(pick[1],this.selectedStack);
+						var isLastPiece = this.selectedStack.length === 0;
+						var isSameSquare = pick[1] === this.move.squares[this.move.squares.length - 1];
+						var isMoveCanceled = isLastPiece && pick[1] === this.move.start;
+						if(isLastPiece){
+							var wallToFlatten = this.top_of_stack(pick[1]);
+							var hasWallToFlatten = wallToFlatten && wallToFlatten.isstanding && !wallToFlatten.iscapstone && obj.iscapstone;
+							var objectsToAnimate = hasWallToFlatten ? [obj, wallToFlatten] : [obj];
+							animation.push(objectsToAnimate);
+							this.pushPieceOntoSquare(pick[1],obj);
+							var animType = isSameSquare ? 'move' : 'jump';
+							animation.push(objectsToAnimate, animType, isSameSquare ? 100 : 200);
+							// Only play sound if move was actually made, not canceled
+							animation.play(isMoveCanceled ? null : playMoveSound);
+						}
+						else{
+							var allPieces = [obj].concat(this.selectedStack);
+							animation.push(allPieces);
+							this.pushPieceOntoSquare(pick[1],obj);
+							this.move_stack_over(pick[1],this.selectedStack, false);
+							animation.push(allPieces, 'move', 100);
+							animation.play();
+						}
 						this.move.squares.push(pick[1]);
 
 						if(this.move.squares.length > 1 && this.move.dir === 'U'){this.setmovedir();}
@@ -1454,42 +1690,38 @@ var board = {
 		else if(pick[0]=="piece"){
 			if(this.selected){
 				if(this.selected === pick[1] && gameData.move_count>=2){
-					this.rotate(pick[1]);
+					this.rotate(pick[1], true);
+					justRotatedPiece = true;
 				}
 				else{
-					this.unselect(pick[1]);
+					this.cancelMove();
 				}
 			}
 			else if(this.selectedStack){
-				this.showmove(gameData.move_shown,true);
-
+				this.cancelMove();
 			}
 			else{
 				if(!gameData.is_game_end){
-					// these must match to pick up this obj
-					if(pick[1].iswhitepiece === isWhitePieceToMove()){
+					// On first two moves, players select opponent's pieces (first turn rule)
+					var expectedColor = gameData.move_count < 2 ? !isWhitePieceToMove() : isWhitePieceToMove();
+					if(pick[1].iswhitepiece === expectedColor){
 					//no capstone move on 1st moves
 						if(gameData.move_count<2 && pick[1].iscapstone){
 
 						}
 						else{
-							this.select(pick[1]);
+							// Always select from top of first remaining stack of same type
+							var pieceToSelect = this.getfromstack(pick[1].iscapstone, pick[1].iswhitepiece);
+							if(pieceToSelect){
+								this.select(pieceToSelect);
+								justSelectedPiece = true;
+							}
 						}
 					}
 				}
 			}
 		}
-		else if(pick[0]=="none"){
-			if(this.selected){
-				this.showmove(gameData.move_shown,true);
-			}
-			else if(this.selectedStack){
-				this.showmove(gameData.move_shown,true);
-			}
-			else{
-
-			}
-		}
+		// Background click cancel is handled in onDocumentMouseUp to allow view rotation
 	},
 	mousemove: function(){
 		var pick=this.mousepick();
@@ -1543,7 +1775,7 @@ var board = {
 		return null;
 	},
 	//move the server sends
-	serverPmove: function(file,rank,caporwall){
+	serverPmove: function(file,rank,caporwall,skipAnimation){
 		var oldpos = -1;
 		if(gameData.move_shown!=gameData.move_count){
 			oldpos = gameData.move_shown;
@@ -1558,23 +1790,40 @@ var board = {
 			return;
 		}
 
-		if(caporwall === 'W'){
-			this.standup(obj);
-		}
-
 		var hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0),rank - 1);
-		this.pushPieceOntoSquare(hlt,obj);
+		if(skipAnimation || oldpos !== -1){
+			// Just place the piece without animation (loading history or viewing earlier position)
+			if(caporwall === 'W'){
+				this.standup(obj);
+			}
+			this.pushPieceOntoSquare(hlt,obj);
+			// Still play sound if viewing earlier position (not loading history)
+			if(oldpos !== -1 && !skipAnimation){
+				playMoveSound();
+			}
+		}
+		else{
+			// Record start position before any changes
+			animation.push([obj]);
+			// Apply standup rotation if wall
+			if(caporwall === 'W'){
+				this.standup(obj);
+			}
+			this.pushPieceOntoSquare(hlt,obj);
+			animation.push([obj], 'jump', 300);
+			animation.play(playMoveSound);
+		}
 		this.highlightLastMove_sq(hlt);
 		this.lastMovedSquareList.push(hlt);
 
 		this.notatePmove(file + rank,caporwall);
 		this.incmovecnt();
 
-		if(oldpos !== -1){board.showmove(oldpos);}
+		if(oldpos !== -1){board.showmove(oldpos, true);}
 		dontanimate = false;
 	},
 	//Move move the server sends
-	serverMmove: function(f1,r1,f2,r2,nums){
+	serverMmove: function(f1,r1,f2,r2,nums,skipAnimation){
 		var oldpos = -1;
 		if(gameData.move_shown != gameData.move_count){
 			oldpos = gameData.move_shown;
@@ -1595,13 +1844,51 @@ var board = {
 		if(f1 === f2){ri = r2 > r1 ? 1 : -1;}
 		if(r1 === r2){fi = f2 > f1 ? 1 : -1;}
 
+		// Collect all pieces and their target squares first
+		var allPieces = [];
+		var pieceTargets = [];
 		for(i = 0;i < nums.length;i++){
 			var sq = this.get_board_obj(s1.file + (i + 1) * fi,s1.rank + (i + 1) * ri);
 			for(j = 0;j < nums[i];j++){
-				this.pushPieceOntoSquare(sq,tstk.pop());
+				var piece = tstk.pop();
+				allPieces.push(piece);
+				pieceTargets.push(sq);
 				this.highlightLastMove_sq(sq);
 				this.lastMovedSquareList.push(sq);
 			}
+		}
+
+		if(skipAnimation || oldpos !== -1){
+			// Just place pieces without animation (loading history or viewing earlier position)
+			for(i = 0; i < allPieces.length; i++){
+				this.pushPieceOntoSquare(pieceTargets[i], allPieces[i]);
+			}
+			// Still play sound if viewing earlier position (not loading history)
+			if(oldpos !== -1 && !skipAnimation){
+				playMoveSound();
+			}
+		}
+		else{
+			// Check if any walls will be flattened (capstone landing on standing wall)
+			var wallsToFlatten = [];
+			for(i = 0; i < allPieces.length; i++){
+				if(allPieces[i].iscapstone){
+					var targetStack = this.get_stack(pieceTargets[i]);
+					var topPiece = targetStack.length > 0 ? targetStack[targetStack.length - 1] : null;
+					if(topPiece && topPiece.isstanding && !topPiece.iscapstone){
+						wallsToFlatten.push(topPiece);
+					}
+				}
+			}
+			// Record start positions for all pieces including walls to flatten
+			var objectsToAnimate = allPieces.concat(wallsToFlatten);
+			animation.push(objectsToAnimate);
+			// Set end positions for all pieces
+			for(i = 0; i < allPieces.length; i++){
+				this.pushPieceOntoSquare(pieceTargets[i], allPieces[i]);
+			}
+			animation.push(objectsToAnimate, 'jump', 300);
+			animation.play(playMoveSound);
 		}
 		this.calculateMoveNotation(
 			f1.charCodeAt(0) - 'A'.charCodeAt(0),
@@ -1612,7 +1899,7 @@ var board = {
 		);
 		this.incmovecnt();
 
-		if(oldpos !== -1){board.showmove(oldpos);}
+		if(oldpos !== -1){board.showmove(oldpos, true);}
 		dontanimate = false;
 	},
 	flatscore: function(ply){
@@ -1842,7 +2129,11 @@ var board = {
 	pushPieceOntoSquare: function(sq,pc){
 		var st = this.get_stack(sq);
 		var top = this.top_of_stack(sq);
-		if(top && top.isstanding && !top.iscapstone && pc.iscapstone){this.rotate(top);}
+		var flattened = null;
+		if(top && top.isstanding && !top.iscapstone && pc.iscapstone){
+			flattened = top;
+			this.rotate(top);
+		}
 
 		pc.position.x = sq.position.x;
 
@@ -1854,37 +2145,78 @@ var board = {
 		pc.position.z = sq.position.z;
 		pc.onsquare = sq;
 		st.push(pc);
+		return flattened;
 	},
-	rotate: function(piece){
+	rotate: function(piece, animate){
 		if(piece.iscapstone){return;}
-		if(piece.isstanding){this.flatten(piece);}
-		else{this.standup(piece);}
+		if(piece.isstanding){this.flatten(piece, animate);}
+		else{this.standup(piece, animate);}
 	},
-	flatten: function(piece){
+	flatten: function(piece, animate){
 		if(!piece.isstanding){return;}
+		if(animate && animation.playing){
+			// Stop current animation and jump to final state before starting new one
+			animation.stop();
+		}
+		if(animate){animation.push([piece]);}
 		piece.position.y -= piece_size / 2 - piece_height / 2;
 		if(diagonal_walls){piece.rotateZ(Math.PI / 4);}
 		piece.rotateX(Math.PI / 2);
 		piece.isstanding = false;
+		if(animate){
+			animation.push([piece], 'move', 150);
+			animation.play();
+		}
 	},
-	standup: function(piece){
+	standup: function(piece, animate){
 		if(piece.isstanding){return;}
+		if(animate && animation.playing){
+			// Stop current animation and jump to final state before starting new one
+			animation.stop();
+		}
+		if(animate){animation.push([piece]);}
 		piece.position.y += piece_size / 2 - piece_height / 2;
 		piece.rotateX(-Math.PI / 2);
 		if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 		piece.isstanding = true;
+		if(animate){
+			animation.push([piece], 'move', 150);
+			animation.play();
+		}
 	},
 	rightclick: function(){
 		settingscounter=(settingscounter+1)&15;
 		if(this.selected && gameData.move_count>=2){
-			this.rotate(this.selected);
+			this.rotate(this.selected, true);
 		}
 		else if(this.selectedStack){
-			this.showmove(gameData.move_shown,true);
+			this.cancelMove();
 		}
 		else{
 			var pick=this.mousepick();
-			if(pick[0]=="board"){
+			if(pick[0]=="piece"){
+				// Right-click on unplayed piece - select it as standing
+				// Only works on your turn, after move 2, and not at game end
+				if(!gameData.is_game_end && gameData.move_count >= 2 && checkIfMyMove()){
+					// After move 2, select your own color pieces
+					if(pick[1].iswhitepiece === isWhitePieceToMove() && !pick[1].iscapstone){
+						var pieceToSelect = this.getfromstack(false, pick[1].iswhitepiece);
+						if(pieceToSelect){
+							// Select and standup as a single animation
+							animation.push([pieceToSelect]);
+							// Raise by selection height + standing height difference
+							pieceToSelect.position.y += stack_selection_height + (piece_size / 2 - piece_height / 2);
+							pieceToSelect.rotateX(-Math.PI / 2);
+							if(diagonal_walls){pieceToSelect.rotateZ(-Math.PI / 4);}
+							pieceToSelect.isstanding = true;
+							this.selected = pieceToSelect;
+							animation.push([pieceToSelect], 'move', 150);
+							animation.play();
+						}
+					}
+				}
+			}
+			else if(pick[0]=="board"){
 				var square=pick[1];
 				var stack=this.get_stack(square);
 				var i;
@@ -1956,9 +2288,15 @@ var board = {
 		var prevdontanim = dontanimate;
 		dontanimate = true;
 		console.log('showmove '+no);
+		setShownMove(no);
 		this.unhighlight_sq();
 		this.resetpieces();
-		this.apply_board_pos(gameData.move_shown);
+		this.apply_board_pos(no);
+		// Update last move highlighter to show the move at this position
+		this.unHighlightLastMove_sq();
+		if(no > gameData.move_start && this.lastMovedSquareList.length >= no - gameData.move_start){
+			this.highlightLastMove_sq(this.lastMovedSquareList[no - gameData.move_start - 1]);
+		}
 		dontanimate = prevdontanim;
 	},
 	undo: function(){
@@ -1992,41 +2330,139 @@ var board = {
 		return 'OUTSIDE';
 	},
 	select: function(obj){
+		animation.push([obj]);
 		obj.position.y += stack_selection_height;
 		this.selected = obj;
+		animation.push([obj], 'move', 100);
+		animation.play();
 	},
-	unselect: function(){
+	unselect: function(options){
+		var animate = !options || options.animate !== false;
 		if(this.selected){
+			animate && animation.push([this.selected]);
 			this.selected.position.y -= stack_selection_height;
+			animate && animation.push([this.selected], 'move', 75);
 			this.selected = null;
+			animate && animation.play();
 		}
 	},
 	selectStack: function(stk){
 		this.selectedStack = [];
+		var objectsToAnimate = [];
 		for(i = 0;stk.length > 0 && i < gameData.size;i++){
 			obj = stk.pop();
-			obj.position.y += stack_selection_height;
+			objectsToAnimate.push(obj);
 			this.selectedStack.push(obj);
 		}
+		if(objectsToAnimate.length > 0){
+			animation.push(objectsToAnimate);
+			for(i = 0;i < objectsToAnimate.length;i++){
+				objectsToAnimate[i].position.y += stack_selection_height;
+			}
+			animation.push(objectsToAnimate, 'move', 100);
+			animation.play();
+		}
 	},
-	unselectStackElem: function(obj){
+	unselectStackElem: function(obj, options){
+		var animate = !options || options.animate !== false;
+		if(animate){animation.push([obj]);}
 		obj.position.y -= stack_selection_height;
+		if(animate){animation.push([obj], 'move', 75);}
 	},
 	unselectStack: function(){
 		var stk = this.selectedStack.reverse();
 		var lastsq = this.move.squares[this.move.squares.length - 1];
 		//push unselected stack elems onto last moved square
 		for(i = 0;i < stk.length;i++){
-			this.unselectStackElem(stk[i]);
+			this.unselectStackElem(stk[i], {animate: false});
 			this.pushPieceOntoSquare(lastsq,stk[i]);
 			this.move.squares.push(lastsq);
 		}
 		this.selectedStack = null;
 	},
-	highlightLastMove_sq: function(sq){
-		if(JSON.parse(localStorage.getItem("show_last_move_highlight"))){
-			this.lastMoveHighlighterVisible = true;
+	cancelMove: function(){
+		// Animate unplayed piece back down (and reset to flat if standing)
+		if(this.selected && !this.selected.onsquare){
+			var piece = this.selected;
+			var needsFlatten = piece.isstanding && !piece.iscapstone;
+			// Record current position for animation start
+			animation.push([piece]);
+			// Calculate absolute final position (not relative to current)
+			var stackno = Math.floor(piece.pieceNum / 10);
+			var stackheight = piece.pieceNum % 10;
+			var finalY;
+			if(piece.iscapstone){
+				finalY = capstone_height/2 - sq_height/2;
+			}
+			else{
+				// Flat position (standing pieces get flattened)
+				finalY = stackheight * piece_height + piece_height/2 - sq_height/2;
+			}
+			piece.position.y = finalY;
+			// Reset rotation to flat
+			if(needsFlatten){
+				piece.rotation.set(0, 0, 0);
+				piece.isstanding = false;
+			}
+			animation.push([piece], 'move', 100);
+			animation.play();
+			this.selected = null;
+			return;
 		}
+		// Animate selected stack back to starting position
+		if(this.move.start){
+			var startSq = this.move.start;
+			var lastSq = this.move.squares[this.move.squares.length - 1];
+			var isSameSquare = startSq === lastSq;
+			var allPieces = [];
+
+			// Collect pieces from dropped squares (in order they were dropped)
+			for(var i = 1; i < this.move.squares.length; i++){
+				var sq = this.move.squares[i];
+				if(sq !== startSq){
+					var stack = this.get_stack(sq);
+					if(stack.length > 0){
+						var piece = stack.pop();
+						piece.onsquare = null;
+						allPieces.push(piece);
+					}
+				}
+			}
+
+			// Collect pieces still in selectedStack (top to bottom order in selectedStack)
+			// We want bottom pieces first, so reverse
+			if(this.selectedStack && this.selectedStack.length > 0){
+				var remaining = this.selectedStack.slice().reverse();
+				allPieces = allPieces.concat(remaining);
+			}
+
+			if(allPieces.length > 0){
+				// Record start positions for animation (at current positions)
+				animation.push(allPieces);
+				// Lower selected pieces and set final positions
+				for(var j = 0; j < allPieces.length; j++){
+					if(this.selectedStack && this.selectedStack.indexOf(allPieces[j]) !== -1){
+						allPieces[j].position.y -= stack_selection_height;
+					}
+				}
+				// Use pushPieceOntoSquare to set correct final positions
+				for(var k = 0; k < allPieces.length; k++){
+					this.pushPieceOntoSquare(startSq, allPieces[k]);
+				}
+				var animType = isSameSquare ? 'move' : 'jump';
+				animation.push(allPieces, animType, isSameSquare ? 100 : 200);
+				animation.play();
+				this.selectedStack = null;
+				this.move = { start: null, end: null, dir: 'U', squares: []};
+				this.unhighlight_sq();
+				return;
+			}
+		}
+		// Fallback to showmove for other cases
+		this.showmove(gameData.move_shown, true);
+	},
+	highlightLastMove_sq: function(sq){
+		if(!sq){return;}
 		if(!this.lastMoveHighlighterVisible){return;}
 		this.unHighlightLastMove_sq(this.lastMoveHighlighted);
 		this.lastMoveHighlighted = sq;
@@ -2070,21 +2506,32 @@ var board = {
 		if(!ts.iswhitepiece && gameData.my_color !== "white"){return true;}
 		return false;
 	},
-	move_stack_over: function(sq,stk){
-		if(stk.length === 0){return;}
+	move_stack_over: function(sq,stk,animate){
+		if(stk.length === 0){
+			if(animate){animation.play();}
+			return;
+		}
 		var top = this.top_of_stack(sq);
 		if(!top){top = sq;}
 
 		var ts = stk[stk.length - 1];
-		if(ts.onsquare === sq){return;}
+		if(ts.onsquare === sq){
+			if(animate){animation.play();}
+			return;
+		}
 
 		var diffy = ts.position.y - top.position.y;
 
+		if(animate){animation.push(stk);}
 		for(i = 0;i < stk.length;i++){
 			stk[i].position.x = sq.position.x;
 			stk[i].position.z = sq.position.z;
 			stk[i].position.y += stack_selection_height - diffy;
 			stk[i].onsquare = sq;
+		}
+		if(animate){
+			animation.push(stk, 'move', 100);
+			animation.play();
 		}
 	},
 	loadptn: function(parsed){
@@ -2409,11 +2856,20 @@ function onDocumentMouseMove(e){
 	board.mousemove();
 }
 
+var mouseDownPos = { x: 0, y: 0 };
+var mouseDragThreshold = 5;
+var justRotatedPiece = false;
+var justSelectedPiece = false;
+
 function onDocumentMouseDown(e){
+	justRotatedPiece = false;
+	justSelectedPiece = false;
 	var x = e.clientX - canvas.offsetLeft;
 	var y = e.clientY - canvas.offsetTop;
 	mouse.x = (pixelratio * x / canvas.width) * 2 - 1;
 	mouse.y = -(pixelratio * y / canvas.height) * 2 + 1;
+	mouseDownPos.x = e.clientX;
+	mouseDownPos.y = e.clientY;
 
 	if(e.button === 2){
 		board.rightclick();
@@ -2429,6 +2885,20 @@ function onDocumentMouseUp(e){
 	if(e.button === 2){
 		e.preventDefault();
 		board.rightup();
+	}
+	else if(e.button === 0){
+		// Check if this was a click (not a drag) on background
+		var dx = e.clientX - mouseDownPos.x;
+		var dy = e.clientY - mouseDownPos.y;
+		var dist = Math.sqrt(dx * dx + dy * dy);
+		if(dist < mouseDragThreshold && !justRotatedPiece && !justSelectedPiece){
+			// This was a click, not a drag - cancel move if on background
+			// Don't cancel if we just rotated or selected a piece (raycaster might miss moved piece)
+			var pick = board.mousepick();
+			if(pick[0] === "none" && (board.selected || board.selectedStack)){
+				board.cancelMove();
+			}
+		}
 	}
 }
 
