@@ -630,7 +630,12 @@ var pieceFactory = {
 		var stackheight = pieceNum % 10;
 		var piece = new THREE.Mesh(geometry,materialMine);
 		piece.iswhitepiece = (playerNum === WHITE_PLAYER);
-		if(playerNum === WHITE_PLAYER){
+		// Swap first-to-play flat stone positions for first turn rule
+		// getfromstack returns the highest pieceNum first, so tottiles-1 is first to play
+		var firstToPlayPieceNum = board.tottiles - 1;
+		var isFirstToPlay = (pieceNum === firstToPlayPieceNum);
+		var positionAsWhite = (playerNum === WHITE_PLAYER) !== isFirstToPlay;
+		if(positionAsWhite){
 			piece.position.set(
 				board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
 				stackheight*piece_height+piece_height/2-sq_height/2,
@@ -1702,15 +1707,24 @@ var board = {
 			}
 			else{
 				if(!gameData.is_game_end){
-					// On first two moves, players select opponent's pieces (first turn rule)
-					var expectedColor = gameData.move_count < 2 ? !isWhitePieceToMove() : isWhitePieceToMove();
-					if(pick[1].iswhitepiece === expectedColor){
-					//no capstone move on 1st moves
-						if(gameData.move_count<2 && pick[1].iscapstone){
-
+					if(gameData.move_count < 2){
+						// First turn rule: select the swapped piece (opponent's color on your side)
+						// No capstones on first moves
+						if(!pick[1].iscapstone){
+							// Determine whose turn it is (not what color to pick)
+							var isWhitePlayerTurn = (gameData.move_count % 2 === 0);
+							var pieceToSelect = this.getSwappedFirstPiece(isWhitePlayerTurn);
+							if(pieceToSelect){
+								this.select(pieceToSelect);
+								justSelectedPiece = true;
+							}
 						}
-						else{
-							// Always select from top of first remaining stack of same type
+					}
+					else{
+						// Normal turns: select your own colored pieces
+						// isWhitePieceToMove returns the color of piece to pick (same as player color after move 2)
+						var myColor = isWhitePieceToMove();
+						if(pick[1].iswhitepiece === myColor){
 							var pieceToSelect = this.getfromstack(pick[1].iscapstone, pick[1].iswhitepiece);
 							if(pieceToSelect){
 								this.select(pieceToSelect);
@@ -1769,6 +1783,23 @@ var board = {
 			if(!obj.onsquare &&
 					(obj.iswhitepiece === iswhite) &&
 					(cap === obj.iscapstone)){
+				return obj;
+			}
+		}
+		return null;
+	},
+	// Get the swapped first-turn piece (opponent's color positioned on player's side)
+	getSwappedFirstPiece: function(forWhitePlayer){
+		// The swapped piece has pieceNum = tottiles - 1
+		// For white player: want the BLACK piece (which is positioned on white's side)
+		// For black player: want the WHITE piece (which is positioned on black's side)
+		var wantWhitePiece = !forWhitePlayer;
+		var targetPieceNum = this.tottiles - 1;
+		for(var i = 0; i < this.piece_objects.length; i++){
+			var obj = this.piece_objects[i];
+			if(!obj.onsquare && !obj.iscapstone &&
+					obj.pieceNum === targetPieceNum &&
+					obj.iswhitepiece === wantWhitePiece){
 				return obj;
 			}
 		}
