@@ -57,10 +57,10 @@ async function messageHandler(event){
 			}
 			break;
 		case "GAME_STATE":
-			if(value.flatsWithoutKomi){
-				gameData.flatCount = value.flatsWithoutKomi;
-			}
 			if(!gameData.is_game_end && value.isGameEnd === true){
+				if(value.flatsWithoutKomi){
+					gameData.flatCount = value.flatsWithoutKomi;
+				}
 				if(value.result && value.result.text){
 					gameData.result = value.result.text;
 				}
