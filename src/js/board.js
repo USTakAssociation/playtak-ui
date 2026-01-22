@@ -623,7 +623,6 @@ var boardFactory = {
 var pieceFactory = {
 	makePiece: function(playerNum,pieceNum,scene){
 		var materialMine = (playerNum === WHITE_PLAYER ? materials.white_piece : materials.black_piece);
-		var materialOpp = (playerNum === WHITE_PLAYER ? materials.black_piece : materials.white_piece);
 		var geometry=piecegeometry(playerNum === WHITE_PLAYER?"white":"black");
 
 		var stackno = Math.floor(pieceNum / 10);
@@ -2419,7 +2418,6 @@ var board = {
 			// Record current position for animation start
 			animation.push([piece]);
 			// Calculate absolute final position (not relative to current)
-			var stackno = Math.floor(piece.pieceNum / 10);
 			var stackheight = piece.pieceNum % 10;
 			var finalY;
 			if(piece.iscapstone){
