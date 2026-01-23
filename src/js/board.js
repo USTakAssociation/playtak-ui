@@ -23,6 +23,7 @@ var light_radius = [1.8, 1600];
 var raycaster = new THREE.Raycaster();
 var highlighter;
 var lastMoveHighlighter;
+var shadowLight;
 var mouse = new THREE.Vector2();
 var offset = new THREE.Vector3();
 
@@ -30,6 +31,65 @@ var antialiasing_mode = true;
 var maxaniso=1;
 var anisolevel=16;
 var dontanimate = false;
+
+// Create a blurred AO shadow texture using canvas blur filter
+// shape: 'square', 'circle', or 'rect'
+// width/height: canvas dimensions
+// shapeWidth/shapeHeight: dimensions of the shape to draw (before blur)
+// blurAmount: blur radius in pixels
+// opacity: base opacity of the shadow (0-1)
+function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape, blurAmount, opacity){
+	var canvas = document.createElement('canvas');
+	canvas.width = width;
+	canvas.height = height;
+	var ctx = canvas.getContext('2d');
+	
+	// Clear canvas
+	ctx.clearRect(0, 0, width, height);
+	
+	// Apply blur filter
+	ctx.filter = 'blur(' + blurAmount + 'px)';
+	
+	// Draw the shape in the center
+	ctx.fillStyle = 'rgba(0, 0, 0, ' + opacity + ')';
+	var centerX = width / 2;
+	var centerY = height / 2;
+	
+	if(shape === 'circle'){
+		ctx.beginPath();
+		ctx.arc(centerX, centerY, shapeWidth / 2, 0, Math.PI * 2);
+		ctx.fill();
+	}
+	else{
+		// Square or rectangle
+		ctx.fillRect(centerX - shapeWidth / 2, centerY - shapeHeight / 2, shapeWidth, shapeHeight);
+	}
+	
+	var texture = new THREE.CanvasTexture(canvas);
+	texture.needsUpdate = true;
+	return texture;
+}
+
+// Cached AO textures
+var aoTextureFlat = null;
+var aoTextureCap = null;
+var aoTextureWall = null;
+
+function getWallAOTexture(){
+	if(!aoTextureWall){
+		// Wall is rectangular - piece_size x piece_height footprint
+		// Canvas 128x64, shape 90x50, blur 8, opacity 0.5
+		aoTextureWall = createBlurredAOTexture(128, 64, 90, 30, 'rect', 4, 0.5);
+	}
+	return aoTextureWall;
+}
+
+function getFlatAOTexture(){
+	if(!aoTextureFlat){
+		aoTextureFlat = createBlurredAOTexture(128, 128, 90, 90, 'square', 4, 0.5);
+	}
+	return aoTextureFlat;
+}
 var scenehash = 0;
 var lastanimate = 0;
 var camera,scene,renderer,light,canvas,controls = null;
@@ -300,12 +360,12 @@ var materials = {
 	borderColor: 0x6f4734,
 	borders: [],
 	letters: [],
-	white_piece: new THREE.MeshBasicMaterial({color: 0xd4b375}),
-	black_piece: new THREE.MeshBasicMaterial({color: 0x573312}),
-	white_cap: new THREE.MeshBasicMaterial({color: 0xd4b375}),
-	black_cap: new THREE.MeshBasicMaterial({color: 0x573312}),
-	white_sqr: new THREE.MeshBasicMaterial({color: 0xe6d4a7}),
-	black_sqr: new THREE.MeshBasicMaterial({color: 0xba6639}),
+	white_piece: new THREE.MeshLambertMaterial({color: 0xd4b375}),
+	black_piece: new THREE.MeshLambertMaterial({color: 0x573312}),
+	white_cap: new THREE.MeshLambertMaterial({color: 0xd4b375}),
+	black_cap: new THREE.MeshLambertMaterial({color: 0x573312}),
+	white_sqr: new THREE.MeshLambertMaterial({color: 0xe6d4a7}),
+	black_sqr: new THREE.MeshLambertMaterial({color: 0xba6639}),
 	boardOverlay: new THREE.MeshBasicMaterial({map: {}}),
 	overlayMap: {
 		3: { "size": 270, "offset": { "x": 0.5333, "y": 0.0556 }, "repeat": { "x": 0.2, "y": 0.1667 } },
@@ -315,8 +375,9 @@ var materials = {
 		7: { "size": 630, "offset": { "x": 0.5333, "y": 0.6111 }, "repeat": { "x": 0.4667, "y": 0.3889 } },
 		8: { "size": 720, "offset": { "x": 0.0007, "y": 0.5556 }, "repeat": { "x": 0.5333, "y": 0.4444 } }
 	},
-	border: new THREE.MeshBasicMaterial({color: 0x6f4734}),
+	border: new THREE.MeshLambertMaterial({color: 0x6f4734}),
 	letter: new THREE.MeshBasicMaterial({color: 0xFFF5B5}),
+	aoShadow: null, // Will be created with gradient texture in init3DBoard
 	highlighter: new THREE.LineBasicMaterial({color: 0x0000f0}),
 	lastMoveHighlighter: new THREE.LineBasicMaterial({color: 0xfff9b8}),
 	getWhiteSquareTextureName: function(){
@@ -362,8 +423,8 @@ var materials = {
 		this.boardLoaded = 0;
 		var loader = new THREE.TextureLoader();
 
-		this.white_sqr = new THREE.MeshBasicMaterial({map: loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn), transparent: true});
-		this.black_sqr = new THREE.MeshBasicMaterial({map: loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn), transparent: true});
+		this.white_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn), transparent: true});
+		this.black_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn), transparent: true});
 		var an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_sqr.map.anisotropy=an;
@@ -382,9 +443,10 @@ var materials = {
 	},
 	updateBorderTexture: function(val){
 		const loader = new THREE.TextureLoader();
-		let mesh = new THREE.MeshBasicMaterial({ map: loader.load(val), transparent: true});
+		let mesh = new THREE.MeshLambertMaterial({ map: loader.load(val), transparent: true});
 		for(let i = 0; i < this.borders.length; i++){
 			this.borders[i].material = mesh;
+			this.borders[i].receiveShadow = true;
 		}
 	},
 	removeBorderTexture: function(){
@@ -397,10 +459,11 @@ var materials = {
 			}
 			color = colorVal;
 		}
-		const mesh = new THREE.MeshBasicMaterial({color: color});
+		const mesh = new THREE.MeshLambertMaterial({color: color});
 		mesh.color.setHex(color);
 		for(let i = 0; i < this.borders.length; i++){
 			this.borders[i].material = mesh;
+			this.borders[i].receiveShadow = true;
 		}
 	},
 	// for some reason this is not working 100% need to look into it more
@@ -416,10 +479,10 @@ var materials = {
 		var loader = new THREE.TextureLoader();
 		this.piecesLoaded = 0;
 
-		this.black_piece = new THREE.MeshBasicMaterial({map: loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn)});
-		this.white_piece = new THREE.MeshBasicMaterial({map: loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn)});
-		this.white_cap = new THREE.MeshBasicMaterial({map: loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn)});
-		this.black_cap = new THREE.MeshBasicMaterial({map: loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn)});
+		this.black_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn)});
+		this.white_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn)});
+		this.white_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn)});
+		this.black_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn)});
 		var an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_piece.map.anisotropy=an;
@@ -467,6 +530,7 @@ var materials = {
 					board.board_objects[i].material =
 					((i + Math.floor(i / gameData.size) * ((gameData.size - 1) % 2)) % 2)
 						? materials.white_sqr : materials.black_sqr;
+					board.board_objects[i].receiveShadow = true;
 				}
 			}
 		}
@@ -487,6 +551,7 @@ var boardFactory = {
 		square.file = file;
 		square.rank = gameData.size - 1 - rankInverse;
 		square.isboard = true;
+		square.receiveShadow = true;
 		scene.add(square);
 		return square;
 	},
@@ -494,7 +559,7 @@ var boardFactory = {
 		materials.borders = [];
 		if(localStorage.getItem('borderTexture')){
 			const loader = new THREE.TextureLoader();
-			materials.border = new THREE.MeshBasicMaterial({ map: loader.load(localStorage.getItem('borderTexture')), transparent: true}, materials.boardLoadedFn());
+			materials.border = new THREE.MeshLambertMaterial({ map: loader.load(localStorage.getItem('borderTexture')), transparent: true}, materials.boardLoadedFn());
 		}
 		// We use the same geometry for all 4 borders. This means the borders
 		// overlap each other at the corners. Probably OK at this point, but
@@ -513,21 +578,25 @@ var boardFactory = {
 		// Top border
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(0,0,board.corner_position.z + border_size/2);
+		border.receiveShadow = true;
 		materials.borders.push(border);
 		// Bottom border
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(0,0,board.corner_position.endz - border_size/2);
 		border.rotateY(Math.PI);
+		border.receiveShadow = true;
 		materials.borders.push(border);
 		// Left border
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(board.corner_position.x + border_size/2,0,0);
 		border.rotateY(Math.PI/2);
+		border.receiveShadow = true;
 		materials.borders.push(border);
 		// Right border
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(board.corner_position.endx - border_size/2,0,0);
 		border.rotateY(-Math.PI / 2);
+		border.receiveShadow = true;
 		materials.borders.push(border);
 
 		for(let i = 0; i < materials.borders.length; i++){
@@ -654,6 +723,28 @@ var pieceFactory = {
 		piece.isboard = false;
 		piece.iscapstone = false;
 		piece.pieceNum=pieceNum;
+		piece.receiveShadow = true;
+		piece.castShadow = false;
+		// Add ambient occlusion shadow plane with blurred square texture
+		var aoSize = piece_size * 1.5;
+		var aoGeometry = new THREE.PlaneGeometry(aoSize, aoSize);
+		var aoMaterial = new THREE.MeshBasicMaterial({
+			map: getFlatAOTexture(),
+			transparent: true,
+			opacity: 1.0,
+			depthWrite: false,
+			side: THREE.DoubleSide
+		});
+		var aoPlane = new THREE.Mesh(aoGeometry, aoMaterial);
+		aoPlane.rotation.x = -Math.PI / 2;
+		// AO plane Y offset from piece center (will be updated when piece moves)
+		aoPlane.aoYOffset = -piece_height / 2 + 0.5;
+		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
+		// Only show AO on bottom piece of unplayed stack (stackheight === 0)
+		aoPlane.visible = (stackheight === 0);
+		aoPlane.material.opacity = (stackheight === 0) ? 1.0 : 0;
+		scene.add(aoPlane);
+		piece.aoPlane = aoPlane;
 		scene.add(piece);
 		return piece;
 	},
@@ -685,6 +776,30 @@ var pieceFactory = {
 		piece.isboard = false;
 		piece.iscapstone = true;
 		piece.pieceNum=capNum;
+		piece.receiveShadow = true;
+		piece.castShadow = false;
+		// Add ambient occlusion shadow plane (circular for capstone) with blurred circle texture
+		var aoRadius = capstone_radius * 1.5;
+		var aoGeometry = new THREE.PlaneGeometry(aoRadius * 2, aoRadius * 2);
+		if(!aoTextureCap){
+			// Canvas size, shape size, shape type, blur amount, opacity
+			aoTextureCap = createBlurredAOTexture(128, 128, 95, 95, 'circle', 4, 0.5);
+		}
+		var aoMaterial = new THREE.MeshBasicMaterial({
+			map: aoTextureCap,
+			transparent: true,
+			opacity: 1.0,
+			depthWrite: false,
+			side: THREE.DoubleSide
+		});
+		var aoPlane = new THREE.Mesh(aoGeometry, aoMaterial);
+		aoPlane.rotation.x = -Math.PI / 2;
+		// AO plane Y offset from piece center (will be updated when piece moves)
+		aoPlane.aoYOffset = -capstone_height / 2 + 0.5;
+		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
+		aoPlane.visible = true;
+		scene.add(aoPlane);
+		piece.aoPlane = aoPlane;
 		scene.add(piece);
 		return piece;
 	}
@@ -1033,6 +1148,14 @@ var animation = {
 			for(var i = 0; i < frame.objects.length; ++i){
 				frame.objects[i].position.copy(frame.to[i]);
 				frame.objects[i].quaternion.copy(frame.toRot[i]);
+				// Update AO plane position
+				if(frame.objects[i].aoPlane){
+					frame.objects[i].aoPlane.position.set(
+						frame.objects[i].position.x,
+						frame.objects[i].position.y + frame.objects[i].aoPlane.aoYOffset,
+						frame.objects[i].position.z
+					);
+				}
 			}
 		}
 		this.onAllComplete = null;
@@ -1101,6 +1224,25 @@ var animation = {
 						var baseY = from[i].y + (to[i].y - from[i].y) * t;
 						obj.position.y = baseY + jumpHeight * 4 * t * (1 - t);
 					}
+
+					// Update AO plane position to follow piece
+					if(objects[i].aoPlane){
+						objects[i].aoPlane.position.set(
+							objects[i].position.x,
+							objects[i].position.y + objects[i].aoPlane.aoYOffset,
+							objects[i].position.z
+						);
+						// Fade in AO during last 30% of animation if flagged for fade-in
+						if(objects[i].aoPlane.fadeIn){
+							if(t > 0.7){
+								var fadeT = (t - 0.7) / 0.3; // 0 to 1 during last 30%
+								objects[i].aoPlane.material.opacity = fadeT;
+							}
+							else{
+								objects[i].aoPlane.material.opacity = 0;
+							}
+						}
+					}
 				}
 
 				if(t < 1){
@@ -1111,6 +1253,19 @@ var animation = {
 					for(var j = 0; j < objects.length; ++j){
 						objects[j].position.copy(to[j]);
 						objects[j].quaternion.copy(toRot[j]);
+						// Update AO plane final position and opacity
+						if(objects[j].aoPlane){
+							objects[j].aoPlane.position.set(
+								objects[j].position.x,
+								objects[j].position.y + objects[j].aoPlane.aoYOffset,
+								objects[j].position.z
+							);
+							// Set final opacity if AO was fading in
+							if(objects[j].aoPlane.fadeIn){
+								objects[j].aoPlane.material.opacity = 1.0;
+								objects[j].aoPlane.fadeIn = false;
+							}
+						}
 					}
 					self.nextFrame();
 				}
@@ -1210,6 +1365,7 @@ var board = {
 		this.addlight();
 		this.addboard();
 		this.addpieces();
+		this.updateShadowCamera();
 
 		if(!gameData.isScratch && ((gameData.my_color=="black") != (this.boardside=="black"))){
 			this.reverseboard();
@@ -1219,6 +1375,11 @@ var board = {
 	clear: function(){
 		for(var i = scene.children.length - 1;i >= 0;i--){
 			scene.remove(scene.children[i]);
+		}
+		// Re-add shadow light after clearing scene
+		if(shadowLight){
+			scene.add(shadowLight);
+			scene.add(shadowLight.target);
 		}
 	},
 	newOnlinegame: function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
@@ -1260,6 +1421,33 @@ var board = {
 		if(localStorage.getItem('boardOverlay')){
 			this.addOverlay(localStorage.getItem('boardOverlay'));
 		}
+		// Add static AO shadow for the board
+		this.addBoardAO();
+	},
+	addBoardAO: function(){
+		// Remove existing board AO if present
+		if(this.boardAO){
+			scene.remove(this.boardAO);
+		}
+		// Create AO shadow with blurred square texture
+		var boardSize = sq_size * gameData.size + border_size * 2;
+		var aoPadding = piece_size * 0.5; // Same padding as piece AO
+		var aoSize = boardSize + aoPadding;
+		var aoGeometry = new THREE.PlaneGeometry(aoSize, aoSize);
+		// Canvas size, shape size, shape type, blur amount, opacity
+		var aoTexture = createBlurredAOTexture(512, 512, 490, 490, 'square', 4, 0.5);
+		var aoMaterial = new THREE.MeshBasicMaterial({
+			map: aoTexture,
+			transparent: true,
+			opacity: 1.0,
+			depthWrite: false,
+			side: THREE.DoubleSide
+		});
+		this.boardAO = new THREE.Mesh(aoGeometry, aoMaterial);
+		this.boardAO.rotation.x = -Math.PI / 2;
+		this.boardAO.position.set(0, -sq_height / 2 + 0.5, 0);
+		this.boardAO.ispassive = true;
+		scene.add(this.boardAO);
 	},
 	addOverlay: function(value){
 		var overlay_texture = new THREE.TextureLoader().load(value ?? materials.boardOverlayPath);
@@ -1279,6 +1467,8 @@ var board = {
 			0
 		);
 		this.overlay.ispassive = true;
+		this.overlay.receiveShadow = true;
+		this.overlay.renderOrder = 0;
 		scene.add(this.overlay);
 	},
 	removeOverlay: function(){
@@ -1298,6 +1488,7 @@ var board = {
 		this.table = new THREE.Mesh(geometry, table_material);
 		this.table.position.set(0, -(table_height + sq_height) / 2, -sq_size / 2);
 		this.table.ispassive = true;
+		this.table.receiveShadow = true;
 		scene.add(this.table);
 		this.table.visible = true;
 		if(!JSON.parse(localStorage.getItem('show_table'))){
@@ -1306,7 +1497,7 @@ var board = {
 	},
 	// Add light for the table
 	addlight: function(){
-		var light = new THREE.PointLight(0xAAAAAA, light_radius[0], light_radius[1]);
+		var light = new THREE.PointLight(0x888888, light_radius[0], light_radius[1]);
 		light.position.x = light_position[0];
 		light.position.y = light_position[1];
 		light.position.z = light_position[2];
@@ -1317,6 +1508,20 @@ var board = {
 		hemisphereLight.groundColor.setHSL(0.1, 0.8, 1);
 		hemisphereLight.ispassive = true;
 		scene.add(hemisphereLight);
+	},
+	// Update shadow camera frustum to match board size plus table area
+	updateShadowCamera: function(){
+		if(!shadowLight){return;}
+		// Include extra space for pieces on the table (capstones, unplayed pieces)
+		var shadowCamSize = gameData.size * sq_size / 2 + border_size + stackOffsetFromBorder + piece_size * 2;
+		shadowLight.shadow.camera.left = -shadowCamSize;
+		shadowLight.shadow.camera.right = shadowCamSize;
+		shadowLight.shadow.camera.top = shadowCamSize;
+		shadowLight.shadow.camera.bottom = -shadowCamSize;
+		// Ensure shadow camera covers from light position down to table level
+		shadowLight.shadow.camera.near = 1;
+		shadowLight.shadow.camera.far = 600;
+		shadowLight.shadow.camera.updateProjectionMatrix();
 	},
 	// addpieces: add the pieces to the scene, not on the board
 	addpieces: function(){
@@ -1390,6 +1595,19 @@ var board = {
 						piece.isstanding = true;
 						piece.rotateX(-Math.PI / 2);
 						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
+						// Update AO plane rotation and texture for wall
+						if(piece.aoPlane){
+							piece.aoPlane.geometry.dispose();
+							var aoPadding = piece_size * 0.5;
+							// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
+							piece.aoPlane.geometry = new THREE.PlaneGeometry(piece_size + aoPadding, piece_height + aoPadding);
+							piece.aoPlane.material.map = getWallAOTexture();
+							piece.aoPlane.material.needsUpdate = true;
+							piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+							if(diagonal_walls){
+								piece.aoPlane.rotation.z = -Math.PI / 4;
+							}
+						}
 					}
 				}
 				continue;
@@ -1428,6 +1646,19 @@ var board = {
 					piece.isstanding = true;
 					piece.rotateX(-Math.PI / 2);
 					if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
+					// Update AO plane rotation and texture for wall
+					if(piece.aoPlane){
+						piece.aoPlane.geometry.dispose();
+						var aoPadding = piece_size * 0.5;
+						// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
+						piece.aoPlane.geometry = new THREE.PlaneGeometry(piece_size + aoPadding, piece_height + aoPadding);
+						piece.aoPlane.material.map = getWallAOTexture();
+						piece.aoPlane.material.needsUpdate = true;
+						piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+						if(diagonal_walls){
+							piece.aoPlane.rotation.z = -Math.PI / 4;
+						}
+					}
 				}
 			}
 			if(!piece.onsquare){
@@ -1579,11 +1810,17 @@ var board = {
 			if(this.selected){
 				if(destinationstack.length==0){
 					var sel=this.selected;
+					var self=this;
 					animation.push([sel]);
-					this.unselect({animate: false});
+					this.selected = null;
 					var hlt=pick[1];
+					// Set fadeIn flag BEFORE pushPieceOntoSquare since animation.playing may not be true yet
+					if(sel.aoPlane && animationsEnabled){
+						sel.aoPlane.fadeIn = true;
+						sel.aoPlane.material.opacity = 0;
+					}
 					this.pushPieceOntoSquare(hlt,sel);
-					animation.push([sel], 'jump', 300);
+					animation.push([sel], 'jump', 300, function(){self.hideSelectionShadow();});
 					animation.play(playMoveSound);
 					//check if actually moved
 					var stone = 'Piece';
@@ -1652,18 +1889,44 @@ var board = {
 							var wallToFlatten = this.top_of_stack(pick[1]);
 							var hasWallToFlatten = wallToFlatten && wallToFlatten.isstanding && !wallToFlatten.iscapstone && obj.iscapstone;
 							var objectsToAnimate = hasWallToFlatten ? [obj, wallToFlatten] : [obj];
+							var self = this;
+							// Enable drop shadow on wall being flattened
+							if(hasWallToFlatten){
+								wallToFlatten.castShadow = true;
+							}
+							// Set fadeIn flag for AO to fade in at end of animation
+							if(obj.aoPlane && animationsEnabled){
+								obj.aoPlane.fadeIn = true;
+								obj.aoPlane.material.opacity = 0;
+							}
 							animation.push(objectsToAnimate);
 							this.pushPieceOntoSquare(pick[1],obj);
 							var animType = isSameSquare ? 'move' : 'jump';
-							animation.push(objectsToAnimate, animType, isSameSquare ? 100 : 200);
+							animation.push(objectsToAnimate, animType, isSameSquare ? 100 : 200, function(){
+								self.hideSelectionShadow();
+								// Disable drop shadow on wall after animation
+								if(hasWallToFlatten){
+									wallToFlatten.castShadow = false;
+								}
+							});
 							// Only play sound if move was actually made, not canceled
 							animation.play(isMoveCanceled ? null : playMoveSound);
 						}
 						else{
 							var allPieces = [obj].concat(this.selectedStack);
+							// Set fadeIn flag for dropped piece's AO to fade in at end of animation
+							if(obj.aoPlane && animationsEnabled){
+								obj.aoPlane.fadeIn = true;
+								obj.aoPlane.material.opacity = 0;
+							}
 							animation.push(allPieces);
 							this.pushPieceOntoSquare(pick[1],obj);
 							this.move_stack_over(pick[1],this.selectedStack, false);
+							// Update shadow position to follow the stack
+							var bottomPiece = this.selectedStack[this.selectedStack.length - 1];
+							if(bottomPiece){
+								this.showSelectionShadow(bottomPiece);
+							}
 							animation.push(allPieces, 'move', 100);
 							animation.play();
 						}
@@ -1675,6 +1938,7 @@ var board = {
 							this.move.end = pick[1];
 							this.selectedStack = null;
 							this.unhighlight_sq();
+							// hideSelectionShadow is called in animation onComplete callback
 							this.generateMove();
 						}
 					}
@@ -1833,6 +2097,8 @@ var board = {
 			}
 		}
 		else{
+			// Enable drop shadow during animation
+			obj.castShadow = true;
 			// Record start position before any changes
 			animation.push([obj]);
 			// Apply standup rotation if wall
@@ -1840,7 +2106,9 @@ var board = {
 				this.standup(obj);
 			}
 			this.pushPieceOntoSquare(hlt,obj);
-			animation.push([obj], 'jump', 300);
+			animation.push([obj], 'jump', 300, function(){
+				obj.castShadow = false;
+			});
 			animation.play(playMoveSound);
 		}
 		this.highlightLastMove_sq(hlt);
@@ -1910,14 +2178,39 @@ var board = {
 					}
 				}
 			}
+			// Find bottom pieces of each new stack (first piece dropped on each target square)
+			var bottomPiecesForShadow = [];
+			var seenTargets = [];
+			for(i = 0; i < allPieces.length; i++){
+				var targetKey = pieceTargets[i].file + '_' + pieceTargets[i].rank;
+				if(seenTargets.indexOf(targetKey) === -1){
+					seenTargets.push(targetKey);
+					bottomPiecesForShadow.push(allPieces[i]);
+				}
+			}
 			// Record start positions for all pieces including walls to flatten
 			var objectsToAnimate = allPieces.concat(wallsToFlatten);
+			// Enable drop shadow on walls being flattened and bottom pieces during animation
+			for(i = 0; i < wallsToFlatten.length; i++){
+				wallsToFlatten[i].castShadow = true;
+			}
+			for(i = 0; i < bottomPiecesForShadow.length; i++){
+				bottomPiecesForShadow[i].castShadow = true;
+			}
 			animation.push(objectsToAnimate);
 			// Set end positions for all pieces
 			for(i = 0; i < allPieces.length; i++){
 				this.pushPieceOntoSquare(pieceTargets[i], allPieces[i]);
 			}
-			animation.push(objectsToAnimate, 'jump', 300);
+			animation.push(objectsToAnimate, 'jump', 300, function(){
+				// Disable drop shadow on walls and bottom pieces after animation
+				for(var j = 0; j < wallsToFlatten.length; j++){
+					wallsToFlatten[j].castShadow = false;
+				}
+				for(var k = 0; k < bottomPiecesForShadow.length; k++){
+					bottomPiecesForShadow[k].castShadow = false;
+				}
+			});
 			animation.play(playMoveSound);
 		}
 		this.calculateMoveNotation(
@@ -2162,9 +2455,18 @@ var board = {
 		var flattened = null;
 		if(top && top.isstanding && !top.iscapstone && pc.iscapstone){
 			flattened = top;
-			this.rotate(top);
+			this.rotate(top, false);
 		}
 
+		// AO shadow logic:
+		// - Bottom piece of stack always shows AO (on table/board)
+		// - Standing pieces (walls/caps) on top of flats also show AO
+		// - Flat on flat does NOT show AO
+		// Only hide AO on previous top if it was a standing piece (wall/cap)
+		// The bottom flat of a stack should always keep its AO
+		if(top && top.aoPlane && top.isstanding){
+			top.aoPlane.visible = false;
+		}
 		pc.position.x = sq.position.x;
 
 		if(pc.isstanding){
@@ -2173,6 +2475,23 @@ var board = {
 		}
 		else{pc.position.y = sq_height + st.length * piece_height;}
 		pc.position.z = sq.position.z;
+
+		// Show AO on new piece only if:
+		// 1. It's at the bottom of the stack (st.length === 0), OR
+		// 2. It's a standing piece (wall/cap) on top of flats
+		if(pc.aoPlane){
+			var isBottom = (st.length === 0);
+			var isStandingOnFlats = pc.isstanding && st.length > 0;
+			var shouldShowAO = isBottom || isStandingOnFlats;
+			pc.aoPlane.visible = shouldShowAO;
+			// Don't overwrite fadeIn if it was already set (e.g., by leftclick before this call)
+			if(!pc.aoPlane.fadeIn){
+				pc.aoPlane.fadeIn = false;
+				pc.aoPlane.material.opacity = shouldShowAO ? 1.0 : 0;
+			}
+			// Update AO plane position to match piece
+			pc.aoPlane.position.set(pc.position.x, pc.position.y + pc.aoPlane.aoYOffset, pc.position.z);
+		}
 		pc.onsquare = sq;
 		st.push(pc);
 		return flattened;
@@ -2188,13 +2507,47 @@ var board = {
 			// Stop current animation and jump to final state before starting new one
 			animation.stop();
 		}
-		if(animate){animation.push([piece]);}
+		// Enable drop shadow while flattening
+		if(animate){
+			piece.castShadow = true;
+			animation.push([piece]);
+		}
 		piece.position.y -= piece_size / 2 - piece_height / 2;
 		if(diagonal_walls){piece.rotateZ(Math.PI / 4);}
 		piece.rotateX(Math.PI / 2);
 		piece.isstanding = false;
+		// Update AO plane for flat shape, texture and position
+		if(piece.aoPlane){
+			piece.aoPlane.aoYOffset = -piece_height / 2 + 0.5;
+			// Resize AO for flat (square) and reset rotation to horizontal
+			piece.aoPlane.geometry.dispose();
+			piece.aoPlane.geometry = new THREE.PlaneGeometry(piece_size * 1.5, piece_size * 1.5);
+			piece.aoPlane.material.map = getFlatAOTexture();
+			piece.aoPlane.material.needsUpdate = true;
+			piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+			// Only hide AO if piece is on a stack (has flats beneath it)
+			// Check if piece is on a square with other pieces beneath
+			if(piece.onsquare){
+				var stack = this.get_stack(piece.onsquare);
+				// If there are other pieces in the stack (besides this one which was just flattened)
+				// the smashed wall is on top of flats, so hide its AO
+				if(stack.length > 1){
+					piece.aoPlane.visible = false;
+					piece.aoPlane.material.opacity = 0;
+				}
+				else{
+					// Wall was alone on square, now it's a flat at bottom - show AO
+					piece.aoPlane.visible = true;
+					piece.aoPlane.material.opacity = 1.0;
+				}
+			}
+		}
 		if(animate){
-			animation.push([piece], 'move', 150);
+			var self = this;
+			animation.push([piece], 'move', 150, function(){
+				piece.castShadow = false;
+				self.hideSelectionShadow();
+			});
 			animation.play();
 		}
 	},
@@ -2209,6 +2562,24 @@ var board = {
 		piece.rotateX(-Math.PI / 2);
 		if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 		piece.isstanding = true;
+		// Update AO plane for wall shape, texture and position
+		if(piece.aoPlane){
+			piece.aoPlane.aoYOffset = -piece_size / 2 + 0.5;
+			// Resize AO for wall with consistent padding on all sides
+			piece.aoPlane.geometry.dispose();
+			var aoPadding = piece_size * 0.5;
+			// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
+			var aoWidth = piece_size + aoPadding;
+			var aoDepth = piece_height + aoPadding;
+			piece.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
+			piece.aoPlane.material.map = getWallAOTexture();
+			piece.aoPlane.material.needsUpdate = true;
+			// AO stays horizontal but rotates around Z to match wall orientation
+			piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+			if(diagonal_walls){
+				piece.aoPlane.rotation.z = -Math.PI / 4;
+			}
+		}
 		if(animate){
 			animation.push([piece], 'move', 150);
 			animation.play();
@@ -2239,7 +2610,27 @@ var board = {
 							pieceToSelect.rotateX(-Math.PI / 2);
 							if(diagonal_walls){pieceToSelect.rotateZ(-Math.PI / 4);}
 							pieceToSelect.isstanding = true;
+							// Update AO plane for wall shape and texture
+							if(pieceToSelect.aoPlane){
+								pieceToSelect.aoPlane.aoYOffset = -piece_size / 2 + 0.5;
+								pieceToSelect.aoPlane.geometry.dispose();
+								// Use consistent padding on all sides
+								var aoPadding = piece_size * 0.5;
+								// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
+								var aoWidth = piece_size + aoPadding;
+								var aoDepth = piece_height + aoPadding;
+								pieceToSelect.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
+								pieceToSelect.aoPlane.material.map = getWallAOTexture();
+								pieceToSelect.aoPlane.material.needsUpdate = true;
+								pieceToSelect.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+								if(diagonal_walls){
+									pieceToSelect.aoPlane.rotation.z = -Math.PI / 4;
+								}
+								// Hide AO when lifting
+								pieceToSelect.aoPlane.material.opacity = 0;
+							}
 							this.selected = pieceToSelect;
+							this.showSelectionShadow(pieceToSelect);
 							animation.push([pieceToSelect], 'move', 150);
 							animation.play();
 						}
@@ -2254,10 +2645,18 @@ var board = {
 					var obj=scene.children[i];
 					if(!obj.isboard && obj.onsquare){
 						obj.visible=false;
+						// Also hide AO plane
+						if(obj.aoPlane){
+							obj.aoPlane.visible=false;
+						}
 					}
 				}
 				for(i=0;i<stack.length;i++){
 					stack[i].visible=true;
+					// Show AO plane only for bottom piece of the visible stack
+					if(stack[i].aoPlane){
+						stack[i].aoPlane.visible = (i === 0);
+					}
 				}
 				this.totalhighlighted=square;
 			}
@@ -2269,6 +2668,13 @@ var board = {
 				var obj = scene.children[i];
 				if(obj.isboard || !obj.onsquare){continue;}
 				obj.visible = true;
+				// Restore AO visibility based on stack position
+				if(obj.aoPlane){
+					var stack = this.get_stack(obj.onsquare);
+					var isBottom = (stack.indexOf(obj) === 0);
+					var isStandingOnFlats = obj.isstanding && stack.indexOf(obj) > 0;
+					obj.aoPlane.visible = isBottom || isStandingOnFlats;
+				}
 			}
 			this.totalhighlighted = null;
 		}
@@ -2281,6 +2687,10 @@ var board = {
 	//bring pieces to original positions,
 	resetpieces: function(){
 		for(var i = this.piece_objects.length - 1;i >= 0;i--){
+			// Remove AO plane from scene if it exists
+			if(this.piece_objects[i].aoPlane){
+				scene.remove(this.piece_objects[i].aoPlane);
+			}
 			scene.remove(this.piece_objects[i]);
 		}
 
@@ -2338,7 +2748,8 @@ var board = {
 		this.apply_board_pos(gameData.move_count);
 		this.board_history.pop();
 		this.lastMovedSquareList.pop();
-		if(gameData.move_count >= 1){
+		// Highlight the previous move if there is one
+		if(this.lastMovedSquareList.length > 0){
 			this.highlightLastMove_sq(this.lastMovedSquareList.at(-1));
 		}
 	},
@@ -2363,32 +2774,96 @@ var board = {
 		animation.push([obj]);
 		obj.position.y += stack_selection_height;
 		this.selected = obj;
+		this.showSelectionShadow(obj);
+		// Fade out AO shadow when lifting
+		if(obj.aoPlane && animationsEnabled){
+			obj.aoPlane.material.opacity = 0;
+		}
+		else if(obj.aoPlane){
+			obj.aoPlane.visible = false;
+		}
 		animation.push([obj], 'move', 100);
 		animation.play();
 	},
 	unselect: function(options){
 		var animate = !options || options.animate !== false;
 		if(this.selected){
-			animate && animation.push([this.selected]);
-			this.selected.position.y -= stack_selection_height;
-			animate && animation.push([this.selected], 'move', 75);
+			var self = this;
+			var piece = this.selected;
+			animate && animation.push([piece]);
+			// If piece is standing (wall), flatten it back and adjust height accordingly
+			if(piece.isstanding && !piece.iscapstone){
+				piece.position.y -= stack_selection_height + (piece_size / 2 - piece_height / 2);
+				piece.rotateX(Math.PI / 2);
+				if(diagonal_walls){piece.rotateZ(Math.PI / 4);}
+				piece.isstanding = false;
+				// Reset AO plane to flat shape and texture
+				if(piece.aoPlane){
+					piece.aoPlane.aoYOffset = -piece_height / 2 + 0.5;
+					piece.aoPlane.geometry.dispose();
+					piece.aoPlane.geometry = new THREE.PlaneGeometry(piece_size * 1.5, piece_size * 1.5);
+					piece.aoPlane.material.map = getFlatAOTexture();
+					piece.aoPlane.material.needsUpdate = true;
+					piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+				}
+			}
+			else{
+				piece.position.y -= stack_selection_height;
+			}
+			// Restore AO visibility for unplayed pieces being dropped back
+			if(piece.aoPlane && !piece.onsquare){
+				piece.aoPlane.visible = true;
+				piece.aoPlane.fadeIn = true;
+				piece.aoPlane.material.opacity = 0;
+			}
+			animate && animation.push([piece], 'move', 75, function(){
+				self.hideSelectionShadow();
+				// Ensure AO is visible after animation completes
+				if(piece.aoPlane && !piece.onsquare){
+					piece.aoPlane.material.opacity = 1.0;
+					piece.aoPlane.fadeIn = false;
+				}
+			});
 			this.selected = null;
+			if(!animate){
+				this.hideSelectionShadow();
+				if(piece.aoPlane && !piece.onsquare){
+					piece.aoPlane.material.opacity = 1.0;
+				}
+			}
 			animate && animation.play();
 		}
 	},
 	selectStack: function(stk){
 		this.selectedStack = [];
 		var objectsToAnimate = [];
+		// Fade out AO on pieces being picked up
 		for(i = 0;stk.length > 0 && i < gameData.size;i++){
 			obj = stk.pop();
+			if(obj.aoPlane){
+				if(animationsEnabled){
+					obj.aoPlane.material.opacity = 0;
+				}
+				else{
+					obj.aoPlane.visible = false;
+				}
+			}
 			objectsToAnimate.push(obj);
 			this.selectedStack.push(obj);
+		}
+		// Show AO on piece that's now at bottom of remaining stack
+		if(stk.length > 0 && stk[stk.length - 1].aoPlane){
+			stk[stk.length - 1].aoPlane.visible = true;
+			stk[stk.length - 1].aoPlane.material.opacity = 1.0;
 		}
 		if(objectsToAnimate.length > 0){
 			animation.push(objectsToAnimate);
 			for(i = 0;i < objectsToAnimate.length;i++){
 				objectsToAnimate[i].position.y += stack_selection_height;
 			}
+			// Bottom piece of selected stack is the last one in the array
+			var bottomPiece = this.selectedStack[this.selectedStack.length - 1];
+			this.showSelectionShadow(bottomPiece);
 			animation.push(objectsToAnimate, 'move', 100);
 			animation.play();
 		}
@@ -2432,8 +2907,38 @@ var board = {
 			if(needsFlatten){
 				piece.rotation.set(0, 0, 0);
 				piece.isstanding = false;
+				// Reset AO plane to flat shape and texture
+				if(piece.aoPlane){
+					piece.aoPlane.aoYOffset = -piece_height / 2 + 0.5;
+					piece.aoPlane.geometry.dispose();
+					piece.aoPlane.geometry = new THREE.PlaneGeometry(piece_size * 1.5, piece_size * 1.5);
+					piece.aoPlane.material.map = getFlatAOTexture();
+					piece.aoPlane.material.needsUpdate = true;
+					piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+				}
 			}
-			animation.push([piece], 'move', 100);
+			// Restore AO visibility only if piece is at bottom of unplayed stack
+			var isBottomOfStack = (stackheight === 0);
+			if(piece.aoPlane){
+				if(isBottomOfStack){
+					piece.aoPlane.visible = true;
+					piece.aoPlane.fadeIn = true;
+					piece.aoPlane.material.opacity = 0;
+				}
+				else{
+					piece.aoPlane.visible = false;
+					piece.aoPlane.material.opacity = 0;
+				}
+			}
+			var self = this;
+			animation.push([piece], 'move', 100, function(){
+				self.hideSelectionShadow();
+				// Ensure AO is visible after animation completes (only for bottom pieces)
+				if(piece.aoPlane && isBottomOfStack){
+					piece.aoPlane.material.opacity = 1.0;
+					piece.aoPlane.fadeIn = false;
+				}
+			});
 			animation.play();
 			this.selected = null;
 			return;
@@ -2476,10 +2981,15 @@ var board = {
 				}
 				// Use pushPieceOntoSquare to set correct final positions
 				for(var k = 0; k < allPieces.length; k++){
+					// Reset fadeIn flag so pushPieceOntoSquare can set correct AO visibility
+					if(allPieces[k].aoPlane){
+						allPieces[k].aoPlane.fadeIn = false;
+					}
 					this.pushPieceOntoSquare(startSq, allPieces[k]);
 				}
 				var animType = isSameSquare ? 'move' : 'jump';
-				animation.push(allPieces, animType, isSameSquare ? 100 : 200);
+				var self = this;
+				animation.push(allPieces, animType, isSameSquare ? 100 : 200, function(){ self.hideSelectionShadow(); });
 				animation.play();
 				this.selectedStack = null;
 				this.move = { start: null, end: null, dir: 'U', squares: []};
@@ -2520,6 +3030,16 @@ var board = {
 			scene.remove(highlighter);
 		}
 	},
+	showSelectionShadow: function(obj){
+		// Enable shadow casting on the selected piece
+		obj.castShadow = true;
+	},
+	hideSelectionShadow: function(){
+		// Disable shadow casting on all pieces
+		for(var i = 0; i < this.piece_objects.length; i++){
+			this.piece_objects[i].castShadow = false;
+		}
+	},
 	get_stack: function(sq){
 		return this.sq[sq.file][sq.rank];
 	},
@@ -2541,7 +3061,6 @@ var board = {
 			return;
 		}
 		var top = this.top_of_stack(sq);
-		if(!top){top = sq;}
 
 		var ts = stk[stk.length - 1];
 		if(ts.onsquare === sq){
@@ -2549,13 +3068,44 @@ var board = {
 			return;
 		}
 
-		var diffy = ts.position.y - top.position.y;
+		// Calculate the target Y position for the bottom piece of the selected stack
+		// It should be stack_selection_height above the top of the destination stack
+		// Note: top piece's position.y is already set to its FINAL position by pushPieceOntoSquare
+		var topY;
+		if(top){
+			// Top of existing stack - use piece's final position plus half its height
+			if(top.iscapstone){
+				topY = top.position.y + capstone_height / 2;
+			}
+			else if(top.isstanding){
+				topY = top.position.y + piece_size / 2;
+			}
+			else{
+				topY = top.position.y + piece_height / 2;
+			}
+		}
+		else{
+			// Empty square - use board surface
+			topY = sq_height / 2;
+		}
+		// Bottom of selected stack should be at topY + stack_selection_height + half piece height
+		// But the bottom piece of stk is a flat, so use piece_height / 2
+		var bottomPieceHalfHeight = piece_height / 2;
+		if(ts.iscapstone){
+			bottomPieceHalfHeight = capstone_height / 2;
+		}
+		else if(ts.isstanding){
+			bottomPieceHalfHeight = piece_size / 2;
+		}
+		var bottomPieceTargetY = topY + stack_selection_height + bottomPieceHalfHeight;
+		var currentBottomY = ts.position.y;
+		var deltaY = bottomPieceTargetY - currentBottomY;
 
 		if(animate){animation.push(stk);}
 		for(i = 0;i < stk.length;i++){
 			stk[i].position.x = sq.position.x;
 			stk[i].position.z = sq.position.z;
-			stk[i].position.y += stack_selection_height - diffy;
+			stk[i].position.y += deltaY;
 			stk[i].onsquare = sq;
 		}
 		if(animate){
@@ -2941,7 +3491,7 @@ function init3DBoard(){
 	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
 	renderer.setPixelRatio(pixelratio);
 	renderer.setClearColor(clearcolor, 1);
-	maxaniso = Math.min(renderer.getMaxAnisotropy() || 1, 16);
+	maxaniso = Math.min((renderer.capabilities ? renderer.capabilities.getMaxAnisotropy() : renderer.getMaxAnisotropy()) || 1, 16);
 
 	window.addEventListener("resize", onWindowResize, false);
 	window.addEventListener("keyup", onKeyUp, false);
@@ -2952,6 +3502,36 @@ function init3DBoard(){
 	highlighter.rotateX(Math.PI / 2);
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
+	// Create radial gradient texture for AO shadow (DEBUG: very obvious for testing)
+	var aoCanvas = document.createElement('canvas');
+	aoCanvas.width = 64;
+	aoCanvas.height = 64;
+	var aoCtx = aoCanvas.getContext('2d');
+	var gradient = aoCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+	gradient.addColorStop(0, 'rgba(255,0,0,0.8)');
+	gradient.addColorStop(0.5, 'rgba(255,0,0,0.5)');
+	gradient.addColorStop(1, 'rgba(255,0,0,0)');
+	aoCtx.fillStyle = gradient;
+	aoCtx.fillRect(0, 0, 64, 64);
+	var aoTexture = new THREE.CanvasTexture(aoCanvas);
+	materials.aoShadow = new THREE.MeshBasicMaterial({map: aoTexture, transparent: true, depthWrite: false});
+	// Enable shadow mapping on renderer
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	// Create directional light for shadows (pointing straight down)
+	shadowLight = new THREE.DirectionalLight(0xffffff, 0.1);
+	shadowLight.position.set(0, 500, 0);
+	shadowLight.target.position.set(0, 0, 0);
+	shadowLight.castShadow = true;
+	shadowLight.shadow.mapSize.width = 2048;
+	shadowLight.shadow.mapSize.height = 2048;
+	shadowLight.shadow.camera.near = 1;
+	shadowLight.shadow.camera.far = 1000;
+	shadowLight.shadow.bias = -0.001;
+	shadowLight.shadow.radius = 4;
+	shadowLight.ispassive = true;
+	scene.add(shadowLight);
+	scene.add(shadowLight.target);
 	generateCamera();
 	initBoard();
 	if(camera && controls){
