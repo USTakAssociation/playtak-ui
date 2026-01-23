@@ -795,7 +795,7 @@ function load3DSettings(){
 			document.getElementById('board-overlay-form').style.display = "none";
 		}
 		// auto rotate board when player 2 setting
-		if(localStorage.getItem("auto_rotate") === "true"){
+		if(localStorage.getItem("auto_rotate") !== "false"){
 			document.getElementById("auto-rotate-checkbox").checked = true;
 		}
 		else{
