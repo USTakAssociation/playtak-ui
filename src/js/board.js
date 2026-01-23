@@ -1088,6 +1088,21 @@ var animation = {
 				duration: duration,
 				onComplete: onComplete
 			});
+			// Immediately reset objects to start position to prevent flash at end position
+			if(this.pendingFrom){
+				for(var i = 0; i < objects.length; i++){
+					objects[i].position.copy(from[i]);
+					objects[i].quaternion.copy(fromRot[i]);
+					// Also reset AO plane position
+					if(objects[i].aoPlane){
+						objects[i].aoPlane.position.set(
+							from[i].x,
+							from[i].y + objects[i].aoPlane.aoYOffset,
+							from[i].z
+						);
+					}
+				}
+			}
 			this.pendingFrom = null;
 		}
 	},
