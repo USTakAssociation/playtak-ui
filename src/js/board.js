@@ -52,7 +52,7 @@ var aoConfig = {
 	// Capstone AO
 	cap: {
 		canvasSize: 128,
-		shapeSize: 95
+		shapeSize: 90
 	},
 	// Wall AO
 	wall: {
@@ -340,6 +340,9 @@ function generateCamera(){
 		controls.enableKeys = false;
 		controls.center.set(camcenter.x,camcenter.y,camcenter.z);
 		controls.enablePan=false;
+		// Limit vertical rotation to prevent seeing below the board
+		controls.minPolarAngle = 0.1; // Just above horizontal
+		controls.maxPolarAngle = Math.PI / 2 - 0.05; // Just above looking straight down
 
 		if(ismobile){
 			controls.zoomSpeed = 0.5;
@@ -378,6 +381,9 @@ function generateCamera(){
 		controls.enableKeys = false;
 		controls.center.set(0,0,0);
 		controls.enablePan=false;
+		// Limit vertical rotation to prevent seeing below the board
+		controls.minPolarAngle = 0.1;
+		controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
 		if(ismobile){
 			controls.zoomSpeed = 0.5;
@@ -1611,10 +1617,21 @@ var board = {
 		this.table.ispassive = true;
 		this.table.receiveShadow = true;
 		scene.add(this.table);
-		this.table.visible = true;
-		if(!JSON.parse(localStorage.getItem('show_table'))){
-			this.table.visible = false;
-		}
+		// Create shadow plane for when table is hidden (matches background color)
+		// Use ShadowMaterial which is invisible except for shadows
+		var shadowPlaneGeometry = new THREE.PlaneGeometry(table_width * 2, table_depth * 2);
+		var shadowPlaneMaterial = new THREE.ShadowMaterial({opacity: 0.3});
+		this.shadowPlane = new THREE.Mesh(shadowPlaneGeometry, shadowPlaneMaterial);
+		this.shadowPlane.rotation.x = -Math.PI / 2;
+		this.shadowPlane.position.set(0, -sq_height / 2 - 0.5, -sq_size / 2);
+		this.shadowPlane.ispassive = true;
+		this.shadowPlane.receiveShadow = true;
+		scene.add(this.shadowPlane);
+		// Show table or shadow plane based on setting
+		var showTable = JSON.parse(localStorage.getItem('show_table'));
+		if(showTable === null){showTable = true;}
+		this.table.visible = showTable;
+		this.shadowPlane.visible = !showTable;
 	},
 	// Add light for the table
 	addlight: function(){

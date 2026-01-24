@@ -148,6 +148,9 @@ function toggleShadows(event){
 function showTable(event){
 	localStorage.setItem('show_table', event.target.checked);
 	board.table.visible = event.target.checked;
+	if(board.shadowPlane){
+		board.shadowPlane.visible = !event.target.checked;
+	}
 }
 
 /*
@@ -718,6 +721,13 @@ function load3DSettings(){
 				localStorage.setItem("show_table", true);
 			}
 			document.getElementById("show-table").checked = show_table;
+			// Apply table visibility setting
+			if(board && board.table){
+				board.table.visible = show_table;
+				if(board.shadowPlane){
+					board.shadowPlane.visible = !show_table;
+				}
+			}
 		}
 		// show last move highlighter
 		if(localStorage.getItem("show_last_move_highlight") === null){
