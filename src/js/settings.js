@@ -132,6 +132,17 @@ function toggleAnimations(event){
 
 /*
  * Notify checkbox change for checkbox:
+ *	 Enable or disable shadows
+ */
+function toggleShadows(event){
+	var enabled = event.target.checked;
+	localStorage.setItem('shadows_enabled', enabled ? 'true' : 'false');
+	shadowsEnabled = enabled;
+	updateShadowsVisibility();
+}
+
+/*
+ * Notify checkbox change for checkbox:
  *	 Show or hide table
  */
 function showTable(event){
@@ -676,6 +687,11 @@ function load3DSettings(){
 		if(localStorage.getItem("animations_enabled") !== null){
 			animationsEnabled = localStorage.getItem("animations_enabled") === 'true';
 			document.getElementById("animations-checkbox").checked = animationsEnabled;
+		}
+		// load shadows setting
+		if(localStorage.getItem("shadows_enabled") !== null){
+			shadowsEnabled = localStorage.getItem("shadows_enabled") === 'true';
+			document.getElementById("shadows-checkbox").checked = shadowsEnabled;
 		}
 		// load background color setting
 		document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
