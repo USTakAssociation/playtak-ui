@@ -151,7 +151,7 @@ function createAOPlane(texture, width, height, yOffset){
 
 // Update AO plane visibility based on piece position and shadows setting
 function updatePieceAOVisibility(piece){
-	if(!piece.aoPlane) return;
+	if(!piece.aoPlane){return;}
 	if(!shadowsEnabled){
 		piece.aoPlane.visible = false;
 		return;
@@ -169,6 +169,35 @@ function updatePieceAOVisibility(piece){
 	else{
 		// Unplayed pieces - only bottom of stack shows AO
 		piece.aoPlane.visible = true; // Will be set correctly by caller
+	}
+}
+
+// Reset AO plane to flat piece shape and texture
+function resetAOToFlat(piece){
+	if(!piece.aoPlane){return;}
+	piece.aoPlane.aoYOffset = -piece_height / 2 + aoConfig.yOffset;
+	piece.aoPlane.geometry.dispose();
+	var aoSize = piece_size + piece_size * aoConfig.padding;
+	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoSize, aoSize);
+	piece.aoPlane.material.map = getFlatAOTexture();
+	piece.aoPlane.material.needsUpdate = true;
+	piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+}
+
+// Update AO plane to wall shape and texture
+function setAOToWall(piece){
+	if(!piece.aoPlane){return;}
+	piece.aoPlane.aoYOffset = -piece_size / 2 + aoConfig.yOffset;
+	piece.aoPlane.geometry.dispose();
+	var aoPadding = piece_size * aoConfig.padding;
+	var aoWidth = piece_size + aoPadding;
+	var aoDepth = piece_height + aoPadding;
+	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
+	piece.aoPlane.material.map = getWallAOTexture();
+	piece.aoPlane.material.needsUpdate = true;
+	piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+	if(diagonal_walls){
+		piece.aoPlane.rotation.z = -Math.PI / 4;
 	}
 }
 var scenehash = 0;
@@ -1741,18 +1770,7 @@ var board = {
 						piece.rotateX(-Math.PI / 2);
 						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 						// Update AO plane rotation and texture for wall
-						if(piece.aoPlane){
-							piece.aoPlane.geometry.dispose();
-							var aoPadding = piece_size * aoConfig.padding;
-							// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
-							piece.aoPlane.geometry = new THREE.PlaneGeometry(piece_size + aoPadding, piece_height + aoPadding);
-							piece.aoPlane.material.map = getWallAOTexture();
-							piece.aoPlane.material.needsUpdate = true;
-							piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-							if(diagonal_walls){
-								piece.aoPlane.rotation.z = -Math.PI / 4;
-							}
-						}
+						setAOToWall(piece);
 					}
 				}
 				continue;
@@ -1792,18 +1810,7 @@ var board = {
 					piece.rotateX(-Math.PI / 2);
 					if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 					// Update AO plane rotation and texture for wall
-					if(piece.aoPlane){
-						piece.aoPlane.geometry.dispose();
-						var aoPadding = piece_size * aoConfig.padding;
-						// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
-						piece.aoPlane.geometry = new THREE.PlaneGeometry(piece_size + aoPadding, piece_height + aoPadding);
-						piece.aoPlane.material.map = getWallAOTexture();
-						piece.aoPlane.material.needsUpdate = true;
-						piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-						if(diagonal_walls){
-							piece.aoPlane.rotation.z = -Math.PI / 4;
-						}
-					}
+					setAOToWall(piece);
 				}
 			}
 			if(!piece.onsquare){
@@ -2677,30 +2684,18 @@ var board = {
 		piece.rotateX(Math.PI / 2);
 		piece.isstanding = false;
 		// Update AO plane for flat shape, texture and position
-		if(piece.aoPlane){
-			piece.aoPlane.aoYOffset = -piece_height / 2 + aoConfig.yOffset;
-			// Resize AO for flat (square) and reset rotation to horizontal
-			piece.aoPlane.geometry.dispose();
-			var aoSize = piece_size + piece_size * aoConfig.padding;
-			piece.aoPlane.geometry = new THREE.PlaneGeometry(aoSize, aoSize);
-			piece.aoPlane.material.map = getFlatAOTexture();
-			piece.aoPlane.material.needsUpdate = true;
-			piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-			// Only hide AO if piece is on a stack (has flats beneath it)
-			// Check if piece is on a square with other pieces beneath
-			if(piece.onsquare){
-				var stack = this.get_stack(piece.onsquare);
-				// If there are other pieces in the stack (besides this one which was just flattened)
-				// the smashed wall is on top of flats, so hide its AO
-				if(stack.length > 1){
-					piece.aoPlane.visible = false;
-					piece.aoPlane.material.opacity = 0;
-				}
-				else{
-					// Wall was alone on square, now it's a flat at bottom - show AO if shadows enabled
-					piece.aoPlane.visible = shadowsEnabled;
-					piece.aoPlane.material.opacity = 1.0;
-				}
+		resetAOToFlat(piece);
+		if(piece.aoPlane && piece.onsquare){
+			var stack = this.get_stack(piece.onsquare);
+			// If there are other pieces in the stack, the smashed wall is on top - hide its AO
+			if(stack.length > 1){
+				piece.aoPlane.visible = false;
+				piece.aoPlane.material.opacity = 0;
+			}
+			else{
+				// Wall was alone on square, now it's a flat at bottom - show AO if shadows enabled
+				piece.aoPlane.visible = shadowsEnabled;
+				piece.aoPlane.material.opacity = 1.0;
 			}
 		}
 		if(animate){
@@ -2724,23 +2719,7 @@ var board = {
 		if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 		piece.isstanding = true;
 		// Update AO plane for wall shape, texture and position
-		if(piece.aoPlane){
-			piece.aoPlane.aoYOffset = -piece_size / 2 + aoConfig.yOffset;
-			// Resize AO for wall with consistent padding on all sides
-			piece.aoPlane.geometry.dispose();
-			var aoPadding = piece_size * aoConfig.padding;
-			// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
-			var aoWidth = piece_size + aoPadding;
-			var aoDepth = piece_height + aoPadding;
-			piece.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
-			piece.aoPlane.material.map = getWallAOTexture();
-			piece.aoPlane.material.needsUpdate = true;
-			// AO stays horizontal but rotates around Z to match wall orientation
-			piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-			if(diagonal_walls){
-				piece.aoPlane.rotation.z = -Math.PI / 4;
-			}
-		}
+		setAOToWall(piece);
 		if(animate){
 			animation.push([piece], 'move', 150);
 			animation.play();
@@ -2772,22 +2751,9 @@ var board = {
 							if(diagonal_walls){pieceToSelect.rotateZ(-Math.PI / 4);}
 							pieceToSelect.isstanding = true;
 							// Update AO plane for wall shape and texture
+							setAOToWall(pieceToSelect);
+							// Hide AO when lifting
 							if(pieceToSelect.aoPlane){
-								pieceToSelect.aoPlane.aoYOffset = -piece_size / 2 + aoConfig.yOffset;
-								pieceToSelect.aoPlane.geometry.dispose();
-								// Use consistent padding on all sides
-								var aoPadding = piece_size * aoConfig.padding;
-								// Wall footprint: long edge (piece_size) along X, short edge (piece_height) along Z
-								var aoWidth = piece_size + aoPadding;
-								var aoDepth = piece_height + aoPadding;
-								pieceToSelect.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
-								pieceToSelect.aoPlane.material.map = getWallAOTexture();
-								pieceToSelect.aoPlane.material.needsUpdate = true;
-								pieceToSelect.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-								if(diagonal_walls){
-									pieceToSelect.aoPlane.rotation.z = -Math.PI / 4;
-								}
-								// Hide AO when lifting
 								pieceToSelect.aoPlane.material.opacity = 0;
 							}
 							this.selected = pieceToSelect;
@@ -2970,15 +2936,7 @@ var board = {
 				if(diagonal_walls){piece.rotateZ(Math.PI / 4);}
 				piece.isstanding = false;
 				// Reset AO plane to flat shape and texture
-				if(piece.aoPlane){
-					piece.aoPlane.aoYOffset = -piece_height / 2 + aoConfig.yOffset;
-					piece.aoPlane.geometry.dispose();
-					var aoSize = piece_size + piece_size * aoConfig.padding;
-					piece.aoPlane.geometry = new THREE.PlaneGeometry(aoSize, aoSize);
-					piece.aoPlane.material.map = getFlatAOTexture();
-					piece.aoPlane.material.needsUpdate = true;
-					piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-				}
+				resetAOToFlat(piece);
 			}
 			else{
 				piece.position.y -= stack_selection_height;
@@ -3103,15 +3061,7 @@ var board = {
 				piece.rotation.set(0, 0, 0);
 				piece.isstanding = false;
 				// Reset AO plane to flat shape and texture
-				if(piece.aoPlane){
-					piece.aoPlane.aoYOffset = -piece_height / 2 + aoConfig.yOffset;
-					piece.aoPlane.geometry.dispose();
-					var aoSize = piece_size + piece_size * aoConfig.padding;
-					piece.aoPlane.geometry = new THREE.PlaneGeometry(aoSize, aoSize);
-					piece.aoPlane.material.map = getFlatAOTexture();
-					piece.aoPlane.material.needsUpdate = true;
-					piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-				}
+				resetAOToFlat(piece);
 			}
 			// Restore AO visibility only if piece is at bottom of unplayed stack and shadows enabled
 			var isBottomOfStack = (stackheight === 0);
