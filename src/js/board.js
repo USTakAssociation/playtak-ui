@@ -465,15 +465,15 @@ var materials = {
 	images_root_path: 'images/',
 	board_texture_path: 'images/board/',
 	pieces_texture_path: 'images/pieces/',
-	white_sqr_style_name: 'sand-velvet-diamonds',
-	black_sqr_style_name: 'sand-velvet-diamonds',
+	white_sqr_style_name: 'none',
+	black_sqr_style_name: 'none',
 	white_piece_style_name: "white_coral",
 	black_piece_style_name: "black_pietersite",
 	white_cap_style_name: "white_coral",
 	black_cap_style_name: "black_pietersite",
 	table_texture_path: 'images/wooden_table.png',
 	boardOverlayPath: 'images/board/overlay.png',
-	borderColor: 0x6f4734,
+	borderColor: 0x181a19,
 	borders: [],
 	letters: [],
 	white_piece: new THREE.MeshLambertMaterial({color: 0xd4b375}),
@@ -1585,8 +1585,24 @@ var board = {
 		boardFactory.makeBorders(scene);
 		// draw the text around the board
 		boardFactory.makeBorderText(scene);
+		// Load overlay: custom overlay takes priority, then preset by ID, then default to aaron
 		if(localStorage.getItem('boardOverlay')){
+			// Custom uploaded overlay
 			this.addOverlay(localStorage.getItem('boardOverlay'));
+		}
+		else{
+			var overlayId = localStorage.getItem('boardOverlayId');
+			if(overlayId === 'none'){
+				// Explicitly set to no overlay
+			}
+			else if(overlayId && typeof overlaysMap !== 'undefined' && overlaysMap[overlayId]){
+				// Preset overlay by ID
+				this.addOverlay('images/board/overlays/' + overlaysMap[overlayId].file);
+			}
+			else{
+				// Default to aaron overlay
+				this.addOverlay('images/board/overlays/board_overlay_aaron_181a19.jpg');
+			}
 		}
 		// Add static AO shadow for the board
 		this.addBoardAO();

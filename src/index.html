@@ -676,6 +676,24 @@
 									<ul id="black_square_options" class="dropdown-menu settings-drop-down"></ul>
 								</div>
 							</div>
+							<div id="overlay_form">
+								Board Overlay<br />
+								<div class="dropdown">
+									<button id="overlay_select" class="btn btn-secondary select dropdown-toggle form-control text-left" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										Select an option
+									</button>
+									<ul id="overlay_options" class="dropdown-menu settings-drop-down"></ul>
+								</div>
+							</div>
+							<div class="flex flex-column gap--8">
+								Custom Board Overlay
+								<div id="remove-overlay" style="display:none;">
+									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove Custom Overlay</button>
+								</div>
+								<div id="board-overlay-form">
+									<input type="file" id="board-overlay" accept="image/*" />
+								</div>
+							</div>
 							<div>
 								<label>
 									Border Color
@@ -703,15 +721,6 @@
 										<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
 										Hide border text
 									</label>
-								</div>
-							</div>
-							<div class="flex flex-column gap--8">
-								Board Overlay
-								<div id="remove-overlay" style="display:none;">
-									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove Overlay</button>
-								</div>
-								<div id="board-overlay-form">
-									<input type="file" id="board-overlay" accept="image/*" />
 								</div>
 							</div>
 							<!-- advanced settings -->

@@ -337,9 +337,22 @@ function removeOverlay(){
 	// update the settings state to hide the button and show the upload
 	document.getElementById("board-overlay").value = '';
 	localStorage.removeItem('boardOverlay');
+	localStorage.setItem('boardOverlayId', 'none');
 	board.removeOverlay();
 	document.getElementById('board-overlay-form').style.display = "block";
 	document.getElementById('remove-overlay').style.display = "none";
+	// Reset overlay selector UI to None
+	const overlaySelect = document.getElementById('overlay_select');
+	if(overlaySelect){overlaySelect.innerText = 'None';}
+	const options = document.getElementById("overlay_options");
+	if(options){
+		for(let i = 0; i < options.children.length; i++){
+			const element = options.children[i].querySelector("button");
+			if(element){element.classList.remove("active");}
+		}
+	}
+	const noneOverlay = document.getElementById('none_overlay');
+	if(noneOverlay){noneOverlay.classList.add('active');}
 }
 
 /*
@@ -816,7 +829,9 @@ function load3DSettings(){
 			document.getElementById('hide-border-text').checked = true;
 		}
 		// board overlay setting
-		if(localStorage.getItem("boardOverlay")){
+		initOverlaySelector();
+		// Only show custom overlay remove button if there's a custom overlay (not a preset)
+		if(localStorage.getItem("boardOverlay") && !localStorage.getItem("boardOverlayId")){
 			document.getElementById("remove-overlay").style.display = "inline-block";
 			document.getElementById('board-overlay-form').style.display = "none";
 		}
