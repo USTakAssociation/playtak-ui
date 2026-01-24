@@ -74,13 +74,13 @@ function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
 	canvas.width = width;
 	canvas.height = height;
 	var ctx = canvas.getContext('2d');
-	
+
 	ctx.clearRect(0, 0, width, height);
 	ctx.filter = 'blur(' + aoConfig.blur + 'px)';
 	ctx.fillStyle = 'rgba(0, 0, 0, ' + aoConfig.opacity + ')';
 	var centerX = width / 2;
 	var centerY = height / 2;
-	
+
 	if(shape === 'circle'){
 		ctx.beginPath();
 		ctx.arc(centerX, centerY, shapeWidth / 2, 0, Math.PI * 2);
@@ -89,7 +89,7 @@ function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
 	else{
 		ctx.fillRect(centerX - shapeWidth / 2, centerY - shapeHeight / 2, shapeWidth, shapeHeight);
 	}
-	
+
 	var texture = new THREE.CanvasTexture(canvas);
 	texture.needsUpdate = true;
 	return texture;
@@ -465,15 +465,15 @@ var materials = {
 	images_root_path: 'images/',
 	board_texture_path: 'images/board/',
 	pieces_texture_path: 'images/pieces/',
-	white_sqr_style_name: 'none',
-	black_sqr_style_name: 'none',
-	white_piece_style_name: "white_archvenison",
-	black_piece_style_name: "black_archvenison",
-	white_cap_style_name: "white_archvenison",
-	black_cap_style_name: "black_archvenison",
+	white_sqr_style_name: boardDefaults.whiteSquares,
+	black_sqr_style_name: boardDefaults.blackSquares,
+	white_piece_style_name: boardDefaults.whitePieces,
+	black_piece_style_name: boardDefaults.blackPieces,
+	white_cap_style_name: boardDefaults.whiteCaps,
+	black_cap_style_name: boardDefaults.blackCaps,
 	table_texture_path: 'images/wooden_table.png',
 	boardOverlayPath: 'images/board/overlay.png',
-	borderColor: 0x181a19,
+	borderColor: parseInt(boardDefaults.borderColor.replace('#', '0x')),
 	borders: [],
 	letters: [],
 	white_piece: new THREE.MeshLambertMaterial({color: 0xd4b375}),
@@ -844,6 +844,7 @@ var pieceFactory = {
 		piece.isboard = false;
 		piece.iscapstone = false;
 		piece.pieceNum=pieceNum;
+		piece.positionAsWhite = positionAsWhite;
 		piece.receiveShadow = true;
 		piece.castShadow = false;
 		// Add ambient occlusion shadow plane
@@ -1275,6 +1276,14 @@ var animation = {
 				for(var i = 0; i < frame.objects.length; ++i){
 					frame.objects[i].position.copy(frame.to[i]);
 					frame.objects[i].quaternion.copy(frame.toRot[i]);
+					// Update AO plane position
+					if(frame.objects[i].aoPlane){
+						frame.objects[i].aoPlane.position.set(
+							frame.objects[i].position.x,
+							frame.objects[i].position.y + frame.objects[i].aoPlane.aoYOffset,
+							frame.objects[i].position.z
+						);
+					}
 				}
 				if(frame.onComplete){frame.onComplete();}
 			}
@@ -1604,9 +1613,9 @@ var board = {
 				// Preset overlay by ID
 				this.addOverlay('images/board/overlays/' + overlaysMap[overlayId].file);
 			}
-			else{
-				// Default to aaron overlay
-				this.addOverlay('images/board/overlays/board_overlay_aaron_181a19.jpg');
+			else if(boardDefaults.overlayFile){
+				// Default overlay from boardDefaults
+				this.addOverlay('images/board/overlays/' + boardDefaults.overlayFile);
 			}
 		}
 		// Add static AO shadow for the board
@@ -1858,7 +1867,9 @@ var board = {
 					var stackno = Math.floor(piece.pieceNum / 10);
 					var stackheight = piece.pieceNum % 10;
 					var baseY = piece.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
-					if(piece.iswhitepiece){
+					// Use positionAsWhite to preserve swapped first-turn pieces
+					var posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
+					if(posAsWhite){
 						piece.position.set(
 							board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
 							baseY + selectionOffset,
@@ -2728,11 +2739,7 @@ var board = {
 			}
 		}
 		if(animate){
-			var self = this;
-			animation.push([piece], 'move', 150, function(){
-				piece.castShadow = false;
-				self.hideSelectionShadow();
-			});
+			animation.push([piece], 'move', 150);
 			animation.play();
 		}
 	},

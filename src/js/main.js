@@ -92,7 +92,7 @@ var clickthrough=true;
 var hovertext=true;
 var pixelratio=1;
 var rendererdone=false;
-var clearcolor=0xdddddd;
+var clearcolor=parseInt(boardDefaults.backgroundColor.replace('#', '0x'));
 
 var settingscounter=0;
 var is2DBoard = false;

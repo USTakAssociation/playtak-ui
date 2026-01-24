@@ -1,7 +1,23 @@
 const overlaysMap = {
-	"aaron": { id: "aaron", name: "Aaron", file: "board_overlay_aaron_181a19.jpg", border: "#181a19", order: 1 },
-	"devi": { id: "devi", name: "Devi", file: "board_overlay_devi_intersections_271a18.jpg", border: "#271a18", order: 2 },
-	"nok": { id: "nok", name: "Nok", file: "board_overlay_nok.jpg", border: "#692106", order: 3 }
+	"aaron": { id: "aaron", name: "Aaron", file: "board_overlay_aaron_181a19.jpg", border: "#181a19", text: "#888888", order: 1 },
+	"devi": { id: "devi", name: "Devi", file: "board_overlay_devi_intersections_271a18.jpg", border: "#271a18", text: "#58332c", order: 2 },
+	"nok": { id: "nok", name: "Nok", file: "board_overlay_nok.jpg", border: "#692106", text: "#dec087", order: 3 }
+};
+
+// Board defaults
+const boardDefaults = {
+	overlay: "aaron",
+	whiteSquares: "sand-velvet-diamonds",
+	blackSquares: "sand-velvet-diamonds",
+	whitePieces: "white_archvenison",
+	blackPieces: "black_archvenison",
+	whiteCaps: "white_archvenison",
+	blackCaps: "black_archvenison",
+	backgroundColor: "#453a3a",
+	// Derived from overlay
+	get borderColor(){return overlaysMap[this.overlay]?.border || "#181a19";},
+	get letterColor(){return overlaysMap[this.overlay]?.text || "#888888";},
+	get overlayFile(){return overlaysMap[this.overlay]?.file || null;}
 };
 
 const squaresMap = {
@@ -246,6 +262,10 @@ function setOverlayStyle(name, id){
 		document.getElementById("borderColor").value = overlayData.border;
 		localStorage["borderColor"] = overlayData.border;
 		board.updateBorderColor(overlayData.border);
+		// Apply the associated text color
+		document.getElementById("letterColor").value = overlayData.text;
+		localStorage["letterColor"] = overlayData.text;
+		board.updateLetterColor(overlayData.text);
 	}
 	settingscounter = (settingscounter + 1) & 15;
 }
@@ -305,12 +325,16 @@ function initOverlaySelector(){
 		document.getElementById(`${savedOverlayId}_overlay`).classList.add('active');
 	}
 	else{
-		// Default to aaron - apply its border color
-		document.getElementById('overlay_select').innerText = overlaysMap['aaron'].name;
-		document.getElementById('aaron_overlay').classList.add('active');
-		document.getElementById("borderColor").value = overlaysMap['aaron'].border;
-		localStorage["borderColor"] = overlaysMap['aaron'].border;
-		board.updateBorderColor(overlaysMap['aaron'].border);
+		// Default to boardDefaults.overlay - apply its border and text colors
+		const defaultOverlay = boardDefaults.overlay;
+		document.getElementById('overlay_select').innerText = overlaysMap[defaultOverlay].name;
+		document.getElementById(`${defaultOverlay}_overlay`).classList.add('active');
+		document.getElementById("borderColor").value = boardDefaults.borderColor;
+		localStorage["borderColor"] = boardDefaults.borderColor;
+		board.updateBorderColor(boardDefaults.borderColor);
+		document.getElementById("letterColor").value = boardDefaults.letterColor;
+		localStorage["letterColor"] = boardDefaults.letterColor;
+		board.updateLetterColor(boardDefaults.letterColor);
 	}
 }
 

@@ -72,13 +72,13 @@ function checkboxDarkMode(){
 		body.classList.add('dark-theme');
 		if(localStorage.getItem('clearcolor') === '#dddddd'){
 			localStorage.removeItem('clearcolor');
-			document.getElementById("clearcolorbox").value = '#453a3a';
+			document.getElementById("clearcolorbox").value = boardDefaults.backgroundColor;
 			clearcolorchange();
 		}
 	}
 	else{
 		// Handle switching from dark to light
-		if(localStorage.getItem('clearcolor') === '#453a3a'){
+		if(localStorage.getItem('clearcolor') === boardDefaults.backgroundColor){
 			localStorage.removeItem('clearcolor');
 			document.getElementById("clearcolorbox").value = '#dddddd';
 			clearcolorchange();
@@ -260,7 +260,7 @@ function notifyBorderColorChange(){
 }
 
 // Border texture change
-document.getElementById("border-texture").onchange = setBorderTexture;
+/* document.getElementById("border-texture").onchange = setBorderTexture;
 function setBorderTexture(){
 	if(this.files[0].size > 2097152){
 		alert("danger", "File is too big! must be less than 2MB");
@@ -291,7 +291,7 @@ function removeBorderTexture(){
 	board.removeBorderTexture();
 	document.getElementById('border-texture-form').style.display = "block";
 	document.getElementById('remove-border-texture').style.display = "none";
-}
+} */
 
 /*
 *
@@ -771,6 +771,11 @@ function load3DSettings(){
 				document.getElementById(`white_piece_select`).innerText = piecesMap[materials.white_piece_style_name].name;
 			}
 		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`white_${materials.white_piece_style_name}_piece`)?.classList.add('active');
+			document.getElementById(`white_piece_select`).innerText = piecesMap[materials.white_piece_style_name]?.name || 'White by Archvenison';
+		}
 		// load black piece style setting
 		if(localStorage.getItem("piece_style_black3") !== null){
 			const styleName = localStorage.getItem("piece_style_black3");
@@ -784,6 +789,11 @@ function load3DSettings(){
 				document.getElementById(`black_${materials.black_piece_style_name}_piece`).classList.add('active');
 				document.getElementById(`black_piece_select`).innerText = piecesMap[materials.black_piece_style_name].name;
 			}
+		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`black_${materials.black_piece_style_name}_piece`)?.classList.add('active');
+			document.getElementById(`black_piece_select`).innerText = piecesMap[materials.black_piece_style_name]?.name || 'Black by Archvenison';
 		}
 
 		// load white board style setting
@@ -802,6 +812,11 @@ function load3DSettings(){
 				document.getElementById(`white_square_select`).innerText = squaresMap[materials.white_sqr_style_name].name;
 			}
 		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`white_${materials.white_sqr_style_name}_square`)?.classList.add('active');
+			document.getElementById(`white_square_select`).innerText = squaresMap[materials.white_sqr_style_name]?.name || 'Velvet Sand Diamonds';
+		}
 		// load black board style setting
 		if(localStorage.getItem("board_style_black2") !== null){
 			let styleName = localStorage.getItem("board_style_black2");
@@ -818,6 +833,11 @@ function load3DSettings(){
 				document.getElementById(`black_square_select`).innerText = squaresMap[materials.black_sqr_style_name].name;
 			}
 		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`black_${materials.black_sqr_style_name}_square`)?.classList.add('active');
+			document.getElementById(`black_square_select`).innerText = squaresMap[materials.black_sqr_style_name]?.name || 'Velvet Sand Diamonds';
+		}
 		// border color setting
 		if(localStorage["borderColor"]){
 			document.getElementById("borderColor").value = localStorage["borderColor"];
@@ -833,7 +853,7 @@ function load3DSettings(){
 			document.getElementById('hide-border-text').checked = true;
 		}
 		// load letter color setting
-		var letterColor = localStorage["letterColor"] || "#888888";
+		var letterColor = localStorage["letterColor"] || boardDefaults.letterColor;
 		document.getElementById("letterColor").value = letterColor;
 		board.updateLetterColor(letterColor);
 		// board overlay setting
@@ -898,8 +918,8 @@ function loadInterfaceSettings(){
 		body.classList.add(storedTheme);
 		document.getElementById("dark-mode").checked = true;
 		if(!localStorage.getItem("clearcolor")){
-			localStorage.setItem("clearcolor", "#453a3a");
-			document.getElementById("clearcolorbox").value = "#453a3a";
+			localStorage.setItem("clearcolor", boardDefaults.backgroundColor);
+			document.getElementById("clearcolorbox").value = boardDefaults.backgroundColor;
 			clearcolorchange();
 		}
 	}
