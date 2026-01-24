@@ -305,9 +305,12 @@ function initOverlaySelector(){
 		document.getElementById(`${savedOverlayId}_overlay`).classList.add('active');
 	}
 	else{
-		// Default to aaron
+		// Default to aaron - apply its border color
 		document.getElementById('overlay_select').innerText = overlaysMap['aaron'].name;
 		document.getElementById('aaron_overlay').classList.add('active');
+		document.getElementById("borderColor").value = overlaysMap['aaron'].border;
+		localStorage["borderColor"] = overlaysMap['aaron'].border;
+		board.updateBorderColor(overlaysMap['aaron'].border);
 	}
 }
 

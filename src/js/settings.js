@@ -72,13 +72,13 @@ function checkboxDarkMode(){
 		body.classList.add('dark-theme');
 		if(localStorage.getItem('clearcolor') === '#dddddd'){
 			localStorage.removeItem('clearcolor');
-			document.getElementById("clearcolorbox").value = '#152028';
+			document.getElementById("clearcolorbox").value = '#453a3a';
 			clearcolorchange();
 		}
 	}
 	else{
 		// Handle switching from dark to light
-		if(localStorage.getItem('clearcolor') === '#152028'){
+		if(localStorage.getItem('clearcolor') === '#453a3a'){
 			localStorage.removeItem('clearcolor');
 			document.getElementById("clearcolorbox").value = '#dddddd';
 			clearcolorchange();
@@ -309,6 +309,12 @@ function notifyBorderSizeChange(value){
 function hideBorderText(event){
 	localStorage.setItem('hideBorderText', event.target.checked);
 	board.updateLetterVisibility(!event.target.checked);
+}
+
+function notifyLetterColorChange(){
+	var val = document.getElementById("letterColor").value;
+	localStorage["letterColor"] = val;
+	board.updateLetterColor(val);
 }
 
 document.getElementById("board-overlay").onchange = setNewOverlay;
@@ -723,23 +729,21 @@ function load3DSettings(){
 			document.getElementById("piece-size-display").innerHTML = piece_size;
 			document.getElementById("piece-size-slider").value = piece_size;
 		}
-		// show table
-		if(localStorage.getItem("show_table") !== null || ismobile){
-			show_table = JSON.parse(localStorage.getItem("show_table"));
-			let storedTheme =
-				localStorage.getItem("theme") ||
-				(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
-			if(show_table === null && ismobile && storedTheme === "dark-theme"){
-				show_table = true;
-				localStorage.setItem("show_table", true);
-			}
-			document.getElementById("show-table").checked = show_table;
-			// Apply table visibility setting
-			if(board && board.table){
-				board.table.visible = show_table;
-				if(board.shadowPlane){
-					board.shadowPlane.visible = !show_table;
-				}
+		// show table - default to hidden
+		show_table = localStorage.getItem("show_table") === 'true';
+		let storedTheme =
+			localStorage.getItem("theme") ||
+			(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
+		if(localStorage.getItem("show_table") === null && ismobile && storedTheme === "dark-theme"){
+			show_table = true;
+			localStorage.setItem("show_table", true);
+		}
+		document.getElementById("show-table").checked = show_table;
+		// Apply table visibility setting
+		if(board && board.table){
+			board.table.visible = show_table;
+			if(board.shadowPlane){
+				board.shadowPlane.visible = !show_table;
 			}
 		}
 		// show last move highlighter
@@ -828,6 +832,10 @@ function load3DSettings(){
 			board.updateLetterVisibility(false);
 			document.getElementById('hide-border-text').checked = true;
 		}
+		// load letter color setting
+		var letterColor = localStorage["letterColor"] || "#888888";
+		document.getElementById("letterColor").value = letterColor;
+		board.updateLetterColor(letterColor);
 		// board overlay setting
 		initOverlaySelector();
 		// Only show custom overlay remove button if there's a custom overlay (not a preset)
@@ -890,8 +898,8 @@ function loadInterfaceSettings(){
 		body.classList.add(storedTheme);
 		document.getElementById("dark-mode").checked = true;
 		if(!localStorage.getItem("clearcolor")){
-			localStorage.setItem("clearcolor", "#152028");
-			document.getElementById("clearcolorbox").value = "#152028";
+			localStorage.setItem("clearcolor", "#453a3a");
+			document.getElementById("clearcolorbox").value = "#453a3a";
 			clearcolorchange();
 		}
 	}

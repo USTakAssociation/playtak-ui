@@ -688,7 +688,7 @@
 							<div class="flex flex-column gap--8">
 								Custom Board Overlay
 								<div id="remove-overlay" style="display:none;">
-									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove Custom Overlay</button>
+									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();" style="height: 3em">Remove Custom Overlay</button>
 								</div>
 								<div id="board-overlay-form">
 									<input type="file" id="board-overlay" accept="image/*" />
@@ -720,6 +720,18 @@
 									<label>
 										<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
 										Hide border text
+									</label>
+								</div>
+								<div>
+									<label>
+										Border Text Color
+										<input
+											type="color"
+											id="letterColor"
+											class="form-control"
+											oninput="notifyLetterColorChange()"
+											value="#888888"
+										/>
 									</label>
 								</div>
 							</div>

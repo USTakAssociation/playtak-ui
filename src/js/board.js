@@ -52,7 +52,7 @@ var aoConfig = {
 	// Capstone AO
 	cap: {
 		canvasSize: 128,
-		shapeSize: 90
+		shapeSize: 85
 	},
 	// Wall AO
 	wall: {
@@ -467,10 +467,10 @@ var materials = {
 	pieces_texture_path: 'images/pieces/',
 	white_sqr_style_name: 'none',
 	black_sqr_style_name: 'none',
-	white_piece_style_name: "white_coral",
-	black_piece_style_name: "black_pietersite",
-	white_cap_style_name: "white_coral",
-	black_cap_style_name: "black_pietersite",
+	white_piece_style_name: "white_archvenison",
+	black_piece_style_name: "black_archvenison",
+	white_cap_style_name: "white_archvenison",
+	black_cap_style_name: "black_archvenison",
 	table_texture_path: 'images/wooden_table.png',
 	boardOverlayPath: 'images/board/overlay.png',
 	borderColor: 0x181a19,
@@ -492,10 +492,10 @@ var materials = {
 		8: { "size": 720, "offset": { "x": 0.0007, "y": 0.5556 }, "repeat": { "x": 0.5333, "y": 0.4444 } }
 	},
 	border: new THREE.MeshLambertMaterial({color: 0x6f4734}),
-	letter: new THREE.MeshBasicMaterial({color: 0xFFF5B5}),
+	letter: new THREE.MeshBasicMaterial({color: 0xffffff}),
 	aoShadow: null, // Will be created with gradient texture in init3DBoard
-	highlighter: new THREE.LineBasicMaterial({color: 0x0000f0}),
-	lastMoveHighlighter: new THREE.LineBasicMaterial({color: 0xfff9b8}),
+	highlighter: new THREE.MeshBasicMaterial({color: 0xffffff}),
+	lastMoveHighlighter: new THREE.MeshBasicMaterial({color: 0x000000}),
 	getWhiteSquareTextureName: function(){
 		return this.board_texture_path + squaresMap[this.white_sqr_style_name].file + '.png';
 	},
@@ -611,6 +611,11 @@ var materials = {
 		for(let i = 0; i < this.letters.length; i++){
 			this.letters[i].visible = val;
 		}
+	},
+	updateLetterColor(color){
+		var hexColor = parseInt(color.replace('#', '0x'));
+		this.letter.color.setHex(hexColor);
+		settingscounter = (settingscounter + 1) & 15;
 	},
 	piecesLoaded: 0,
 	//callback on loading piece textures
@@ -1672,9 +1677,8 @@ var board = {
 		this.shadowPlane.ispassive = true;
 		this.shadowPlane.receiveShadow = true;
 		scene.add(this.shadowPlane);
-		// Show table or shadow plane based on setting
-		var showTable = JSON.parse(localStorage.getItem('show_table'));
-		if(showTable === null){showTable = true;}
+		// Show table or shadow plane based on setting (default to hidden)
+		var showTable = localStorage.getItem('show_table') === 'true';
 		this.table.visible = showTable;
 		this.shadowPlane.visible = !showTable;
 	},
@@ -1752,6 +1756,9 @@ var board = {
 	},
 	updateLetterVisibility: function(val){
 		materials.updateLetterVisibility(val);
+	},
+	updateLetterColor: function(color){
+		materials.updateLetterColor(color);
 	},
 	// called if the user changes the texture or size of the pieces
 	updatepieces: function(){
@@ -2001,7 +2008,7 @@ var board = {
 						stone,
 						this.squarename(hlt.file,hlt.rank)
 					);
-					this.highlightLastMove_sq(hlt);
+					this.highlightLastMove_sq(hlt, gameData.move_count);
 					this.lastMovedSquareList.push(hlt);
 
 					var sqname = this.squarename(hlt.file,hlt.rank);
@@ -2161,6 +2168,7 @@ var board = {
 							var isWhitePlayerTurn = (gameData.move_count % 2 === 0);
 							var pieceToSelect = this.getSwappedFirstPiece(isWhitePlayerTurn);
 							if(pieceToSelect){
+								pieceToSelect.isFirstTurnPiece = true;
 								this.select(pieceToSelect);
 								justSelectedPiece = true;
 							}
@@ -2267,6 +2275,11 @@ var board = {
 			return;
 		}
 
+		// Mark as first-turn piece if this is one of the first two moves
+		if(gameData.move_count < 2){
+			obj.isFirstTurnPiece = true;
+		}
+
 		var hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0),rank - 1);
 		if(skipAnimation || oldpos !== -1){
 			// Just place the piece without animation (loading history or viewing earlier position)
@@ -2294,7 +2307,7 @@ var board = {
 			});
 			animation.play(playMoveSound);
 		}
-		this.highlightLastMove_sq(hlt);
+		this.highlightLastMove_sq(hlt, gameData.move_count);
 		this.lastMovedSquareList.push(hlt);
 
 		this.notatePmove(file + rank,caporwall);
@@ -2334,7 +2347,7 @@ var board = {
 				var piece = tstk.pop();
 				allPieces.push(piece);
 				pieceTargets.push(sq);
-				this.highlightLastMove_sq(sq);
+				this.highlightLastMove_sq(sq, gameData.move_count);
 				this.lastMovedSquareList.push(sq);
 			}
 		}
@@ -2627,7 +2640,7 @@ var board = {
 				this.checksquaresover();
 			}
 			this.incmovecnt();
-			this.highlightLastMove_sq(this.move.end);
+			this.highlightLastMove_sq(this.move.end, gameData.move_count - 1);
 			this.lastMovedSquareList.push(this.move.end);
 		}
 		this.move = { start: null, end: null, dir: 'U', squares: []};
@@ -2880,7 +2893,8 @@ var board = {
 		// Update last move highlighter to show the move at this position
 		this.unHighlightLastMove_sq();
 		if(no > gameData.move_start && this.lastMovedSquareList.length >= no - gameData.move_start){
-			this.highlightLastMove_sq(this.lastMovedSquareList[no - gameData.move_start - 1]);
+			// Pass the move number (no - 1) since we're showing the move that led to position 'no'
+			this.highlightLastMove_sq(this.lastMovedSquareList[no - gameData.move_start - 1], no - 1);
 		}
 		dontanimate = prevdontanim;
 	},
@@ -2895,7 +2909,7 @@ var board = {
 		this.lastMovedSquareList.pop();
 		// Highlight the previous move if there is one
 		if(this.lastMovedSquareList.length > 0){
-			this.highlightLastMove_sq(this.lastMovedSquareList.at(-1));
+			this.highlightLastMove_sq(this.lastMovedSquareList.at(-1), gameData.move_count - 1);
 		}
 	},
 	sqrel: function(sq1,sq2){
@@ -3162,11 +3176,18 @@ var board = {
 		// Fallback to showmove for other cases
 		this.showmove(gameData.move_shown, true);
 	},
-	highlightLastMove_sq: function(sq){
+	highlightLastMove_sq: function(sq, moveNum){
 		if(!sq){return;}
 		if(!this.lastMoveHighlighterVisible){return;}
 		this.unHighlightLastMove_sq(this.lastMoveHighlighted);
 		this.lastMoveHighlighted = sq;
+
+		// Set color based on who made the move
+		// If moveNum is provided, use it; otherwise use move_shown
+		var moveNumber = (moveNum !== undefined) ? moveNum : gameData.move_shown;
+		// Even move numbers (0, 2, 4...) are white's moves
+		var lastMoveWasWhite = (moveNumber % 2 === 0);
+		lastMoveHighlighter.material.color.setHex(lastMoveWasWhite ? 0xffffff : 0x000000);
 
 		lastMoveHighlighter.position.x = sq.position.x;
 		lastMoveHighlighter.position.y = sq_height / 2;
@@ -3180,6 +3201,10 @@ var board = {
 	highlight_sq: function(sq){
 		this.unhighlight_sq(this.highlighted);
 		this.highlighted = sq;
+
+		// Set color based on whose turn it is (even move_count = white's turn)
+		var isWhiteTurn = (gameData.move_count % 2 === 0);
+		highlighter.material.color.setHex(isWhiteTurn ? 0xffffff : 0x000000);
 
 		highlighter.position.x = sq.position.x;
 		highlighter.position.y = sq_height / 2;
