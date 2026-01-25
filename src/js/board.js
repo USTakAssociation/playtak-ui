@@ -1416,8 +1416,8 @@ var animation = {
 							objects[i].position.y + objects[i].aoPlane.aoYOffset,
 							objects[i].position.z
 						);
-						// Fade in AO during last 30% of animation if flagged for fade-in
-						if(objects[i].aoPlane.fadeIn){
+						// Fade in AO during last 30% of animation if flagged for fade-in and visible
+						if(objects[i].aoPlane.fadeIn && objects[i].aoPlane.visible){
 							if(t > 0.7){
 								var fadeT = (t - 0.7) / 0.3; // 0 to 1 during last 30%
 								objects[i].aoPlane.material.opacity = fadeT;
@@ -1444,9 +1444,9 @@ var animation = {
 								objects[j].position.y + objects[j].aoPlane.aoYOffset,
 								objects[j].position.z
 							);
-							// Set final opacity if AO was fading in
+							// Set final opacity if AO was fading in and should be visible
 							if(objects[j].aoPlane.fadeIn){
-								objects[j].aoPlane.material.opacity = 1.0;
+								objects[j].aoPlane.material.opacity = objects[j].aoPlane.visible ? 1.0 : 0;
 								objects[j].aoPlane.fadeIn = false;
 							}
 						}
@@ -2089,8 +2089,8 @@ var board = {
 								wallToFlatten.castShadow = true;
 							}
 							// Set fadeIn flag for AO to fade in at end of animation
+							// Don't set visible here - pushPieceOntoSquare will set correct visibility
 							if(obj.aoPlane && animationsEnabled && shadowsEnabled){
-								obj.aoPlane.visible = true;
 								obj.aoPlane.fadeIn = true;
 								obj.aoPlane.material.opacity = 0;
 							}
@@ -2110,11 +2110,8 @@ var board = {
 						else{
 							var allPieces = [obj].concat(this.selectedStack);
 							// Set fadeIn flag for dropped piece's AO to fade in at end of animation
-							var droppedStack = this.get_stack(pick[1]);
-							// Note: obj hasn't been pushed yet, so check if stack is empty
-							var willBeAtBottom = droppedStack.length === 0;
-							if(obj.aoPlane && animationsEnabled && shadowsEnabled && willBeAtBottom){
-								obj.aoPlane.visible = true;
+							// Don't set visible here - pushPieceOntoSquare will set correct visibility
+							if(obj.aoPlane && animationsEnabled && shadowsEnabled){
 								obj.aoPlane.fadeIn = true;
 								obj.aoPlane.material.opacity = 0;
 							}
@@ -2963,12 +2960,15 @@ var board = {
 			obj.aoPlane.visible = false;
 		}
 		// Show AO on piece underneath if this was a standing piece on a stack
+		// Only show if the piece underneath is at the bottom of the stack or is standing
 		if(obj.onsquare && (obj.isstanding || obj.iscapstone)){
 			var stack = this.get_stack(obj.onsquare);
 			var objIndex = stack.indexOf(obj);
 			if(objIndex > 0 && stack[objIndex - 1].aoPlane && shadowsEnabled){
-				stack[objIndex - 1].aoPlane.visible = true;
-				stack[objIndex - 1].aoPlane.material.opacity = 1.0;
+				var pieceBelow = stack[objIndex - 1];
+				var shouldShowBelow = (objIndex === 1) || pieceBelow.isstanding;
+				pieceBelow.aoPlane.visible = shouldShowBelow;
+				pieceBelow.aoPlane.material.opacity = shouldShowBelow ? 1.0 : 0;
 			}
 		}
 		animation.push([obj], 'move', 100);
@@ -3000,12 +3000,13 @@ var board = {
 				piece.aoPlane.fadeIn = shadowsEnabled;
 				piece.aoPlane.material.opacity = 0;
 			}
-			// Hide AO on piece underneath if this is a standing piece going back on a stack
-			if(piece.onsquare && piece.isstanding){
+			// Hide AO on piece underneath if this is a standing piece or capstone going back on a stack
+			if(piece.onsquare && (piece.isstanding || piece.iscapstone)){
 				var stack = this.get_stack(piece.onsquare);
 				var pieceIndex = stack.indexOf(piece);
 				if(pieceIndex > 0 && stack[pieceIndex - 1].aoPlane){
 					stack[pieceIndex - 1].aoPlane.visible = false;
+					stack[pieceIndex - 1].aoPlane.material.opacity = 0;
 				}
 			}
 			animate && animation.push([piece], 'move', 75, function(){
@@ -3051,16 +3052,19 @@ var board = {
 					}
 				}
 				else{
-					// Other pieces - keep AO visible (in contact with piece below)
-					obj.aoPlane.visible = shadowsEnabled;
-					obj.aoPlane.material.opacity = shadowsEnabled ? 1.0 : 0;
+					// Other pieces - only show AO if standing (wall/cap), not for flats
+					var shouldShow = shadowsEnabled && obj.isstanding;
+					obj.aoPlane.visible = shouldShow;
+					obj.aoPlane.material.opacity = shouldShow ? 1.0 : 0;
 				}
 			}
 		}
-		// Show AO on piece that's now at top of remaining stack (if any pieces remain on board)
+		// Show AO on piece that's now at top of remaining stack (only if bottom or standing)
 		if(stk.length > 0 && stk[stk.length - 1].aoPlane && shadowsEnabled){
-			stk[stk.length - 1].aoPlane.visible = true;
-			stk[stk.length - 1].aoPlane.material.opacity = 1.0;
+			var newTop = stk[stk.length - 1];
+			var shouldShowNewTopAO = (stk.length === 1) || newTop.isstanding;
+			newTop.aoPlane.visible = shouldShowNewTopAO;
+			newTop.aoPlane.material.opacity = shouldShowNewTopAO ? 1.0 : 0;
 		}
 		if(objectsToAnimate.length > 0){
 			animation.push(objectsToAnimate);
