@@ -199,6 +199,10 @@ function setAOToWall(piece){
 	if(diagonal_walls){
 		piece.aoPlane.rotation.z = -Math.PI / 4;
 	}
+	// Rotate black walls 90 degrees
+	if(!piece.iswhitepiece){
+		piece.aoPlane.rotation.z += Math.PI / 2;
+	}
 }
 var scenehash = 0;
 var lastanimate = 0;
@@ -1799,6 +1803,8 @@ var board = {
 					piece.updateMatrix();
 					if(wasStanding){
 						piece.isstanding = true;
+						// Rotate black walls 90 degrees (before X rotation)
+						if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
 						piece.rotateX(-Math.PI / 2);
 						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 						// Update AO plane rotation and texture for wall
@@ -1839,6 +1845,8 @@ var board = {
 				// Reapply standing orientation if it was standing
 				if(wasStanding){
 					piece.isstanding = true;
+					// Rotate black walls 90 degrees (before X rotation)
+					if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
 					piece.rotateX(-Math.PI / 2);
 					if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 					// Update AO plane rotation and texture for wall
@@ -2722,6 +2730,8 @@ var board = {
 		piece.position.y -= piece_size / 2 - piece_height / 2;
 		if(diagonal_walls){piece.rotateZ(Math.PI / 4);}
 		piece.rotateX(Math.PI / 2);
+		// Reverse black wall 90-degree rotation (after X rotation)
+		if(!piece.iswhitepiece){piece.rotateY(-Math.PI / 2);}
 		piece.isstanding = false;
 		// Update AO plane for flat shape, texture and position
 		resetAOToFlat(piece);
@@ -2751,6 +2761,8 @@ var board = {
 		}
 		if(animate){animation.push([piece]);}
 		piece.position.y += piece_size / 2 - piece_height / 2;
+		// Rotate black walls 90 degrees (before X rotation)
+		if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
 		piece.rotateX(-Math.PI / 2);
 		if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 		piece.isstanding = true;
@@ -2783,6 +2795,8 @@ var board = {
 							animation.push([pieceToSelect]);
 							// Raise by selection height + standing height difference
 							pieceToSelect.position.y += stack_selection_height + (piece_size / 2 - piece_height / 2);
+							// Rotate black walls 90 degrees (before X rotation)
+							if(!pieceToSelect.iswhitepiece){pieceToSelect.rotateY(Math.PI / 2);}
 							pieceToSelect.rotateX(-Math.PI / 2);
 							if(diagonal_walls){pieceToSelect.rotateZ(-Math.PI / 4);}
 							pieceToSelect.isstanding = true;
@@ -2969,8 +2983,10 @@ var board = {
 			// If piece is standing (wall), flatten it back and adjust height accordingly
 			if(piece.isstanding && !piece.iscapstone){
 				piece.position.y -= stack_selection_height + (piece_size / 2 - piece_height / 2);
-				piece.rotateX(Math.PI / 2);
 				if(diagonal_walls){piece.rotateZ(Math.PI / 4);}
+				piece.rotateX(Math.PI / 2);
+				// Reverse black wall 90-degree rotation (after X rotation)
+				if(!piece.iswhitepiece){piece.rotateY(-Math.PI / 2);}
 				piece.isstanding = false;
 				// Reset AO plane to flat shape and texture
 				resetAOToFlat(piece);
