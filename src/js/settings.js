@@ -131,6 +131,16 @@ function toggleAnimations(event){
 }
 
 /*
+ * Update animation speed
+ */
+function updateAnimationSpeed(value){
+	var speed = parseFloat(value);
+	animationSpeed = speed;
+	localStorage.setItem('animation_speed', speed.toString());
+	document.getElementById('animation-speed-value').textContent = speed.toFixed(1) + 'x';
+}
+
+/*
  * Notify checkbox change for checkbox:
  *	 Enable or disable shadows
  */
@@ -709,6 +719,13 @@ function load3DSettings(){
 		if(localStorage.getItem("animations_enabled") !== null){
 			animationsEnabled = localStorage.getItem("animations_enabled") === 'true';
 			document.getElementById("animations-checkbox").checked = animationsEnabled;
+		}
+		// load animation speed setting
+		if(localStorage.getItem("animation_speed") !== null){
+			var speed = parseFloat(localStorage.getItem("animation_speed"));
+			animationSpeed = speed;
+			document.getElementById("animation-speed-slider").value = speed;
+			document.getElementById("animation-speed-value").textContent = speed.toFixed(1) + 'x';
 		}
 		// load shadows setting
 		if(localStorage.getItem("shadows_enabled") !== null){

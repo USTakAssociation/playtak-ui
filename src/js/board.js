@@ -32,6 +32,22 @@ var maxaniso=1;
 var anisolevel=16;
 var dontanimate = false;
 
+// Initialize animation speed from localStorage or default to 1.0
+// Higher value = faster animations (duration is divided by this value)
+var animationSpeed = 1.0;
+try{
+	var savedSpeed = localStorage.getItem('animation_speed');
+	if(savedSpeed !== null){
+		animationSpeed = parseFloat(savedSpeed);
+		if(isNaN(animationSpeed) || animationSpeed <= 0){
+			animationSpeed = 1.0;
+		}
+	}
+}
+catch(e){
+	animationSpeed = 1.0;
+}
+
 // ============================================
 // AO Shadow Configuration
 // ============================================
@@ -1227,15 +1243,20 @@ var animation = {
 	pendingFrom: null, // stores the 'from' positions/rotations for the next animation
 
 	push: function(objects, type, duration, onComplete){
-		if(type === undefined){type = 'none';}
-		if(duration === undefined){duration = 0;}
 		var positions = objects.map(function(obj){return obj.position.clone();});
 		var rotations = objects.map(function(obj){return obj.quaternion.clone();});
-		if(type === 'none'){
+		if(!type){
 			// Store positions/rotations as the starting point for the next animation
 			this.pendingFrom = {objects: objects.slice(), positions: positions, rotations: rotations};
 		}
 		else{
+			// Apply animation speed multiplier to duration
+			// Higher speed = shorter duration, so divide instead of multiply
+			// Ensure animationSpeed is valid
+			if(animationSpeed <= 0 || animationSpeed === undefined || isNaN(animationSpeed)){
+				animationSpeed = 1.0;
+			}
+			var adjustedDuration = duration / animationSpeed;
 			// This is an animation frame - use pendingFrom as 'from' and current as 'to'
 			var from = this.pendingFrom ? this.pendingFrom.positions : positions;
 			var fromRot = this.pendingFrom ? this.pendingFrom.rotations : rotations;
@@ -1246,7 +1267,7 @@ var animation = {
 				fromRot: fromRot,
 				toRot: rotations,
 				type: type,
-				duration: duration,
+				duration: adjustedDuration,
 				onComplete: onComplete
 			});
 			// Immediately reset objects to start position to prevent flash at end position
@@ -3192,7 +3213,7 @@ var board = {
 				}
 				var animType = isSameSquare ? 'move' : 'jump';
 				var self = this;
-				animation.push(allPieces, animType, isSameSquare ? 100 : 200, function(){ self.hideSelectionShadow(); });
+				animation.push(allPieces, animType, isSameSquare ? 100 : 200, function(){self.hideSelectionShadow();});
 				animation.play();
 				this.selectedStack = null;
 				this.move = { start: null, end: null, dir: 'U', squares: []};
