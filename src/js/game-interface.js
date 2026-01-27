@@ -589,8 +589,8 @@ function undoMove(){
 	// we can't undo before the place we started from
 	if(gameData.move_count <= gameData.move_start){return;}
 	// Save current view position
-	var wasViewingHistory = gameData.move_shown !== gameData.move_count;
-	var oldViewPos = gameData.move_shown;
+	const wasViewingHistory = gameData.move_shown !== gameData.move_count;
+	const oldViewPos = gameData.move_shown;
 	// ensure we are on the last move first
 	if(is2DBoard){
 		// Delete the last ply before jumping to the end,
@@ -704,8 +704,8 @@ function gameOver(preMessage){
 
 function handleGameOverState(){
 	document.getElementById("open-game-over").style.display = "flex";
-	var msg = "Game over <span class='bold'>" + gameData.result + "</span><br>";
-	var type;
+	let msg = "Game over <span class='bold'>" + gameData.result + "</span><br>";
+	let type;
 
 	if(gameData.result === "R-0" || gameData.result === "0-R"){
 		type = "making a road";
@@ -714,7 +714,7 @@ function handleGameOverState(){
 		if(!is2DBoard){
 			gameData.flatCount = board.flatscore();
 		}
-		var komi = (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "");
+		let komi = (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "");
 		if(komi){
 			komi = "+" + komi;
 		}

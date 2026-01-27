@@ -1,4 +1,4 @@
-var xhttp = new XMLHttpRequest();
+const xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function(){
 	if(this.readyState == 4 && this.status == 200){
 		makeratinglist(JSON.parse(xhttp.responseText));

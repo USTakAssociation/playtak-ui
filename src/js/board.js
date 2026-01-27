@@ -1,42 +1,42 @@
 const WHITE_PLAYER = 1;
 const BLACK_PLAYER = 2;
-var stack_dist = 15;
-var piece_size = 60;
-var piece_height = 15;
-var sq_size = 90;
-var sq_height = 15;
-var capstone_height = 70;
-var capstone_radius = 30;
-var stack_selection_height = 60;
-var border_size = 30;
+let stack_dist = 15;
+let piece_size = 60;
+let piece_height = 15;
+let sq_size = 90;
+let sq_height = 15;
+let capstone_height = 70;
+let capstone_radius = 30;
+let stack_selection_height = 60;
+let border_size = 30;
 let borderOffset = 27;
-var stackOffsetFromBorder = 50;
-var letter_size = 12;
-var diagonal_walls = false;
-var table_width = 1280;
-var table_depth = 920;
-var table_height = 50;
+let stackOffsetFromBorder = 50;
+let letter_size = 12;
+let diagonal_walls = false;
+let table_width = 1280;
+let table_depth = 920;
+let table_height = 50;
 
-var light_position = [0, 800, -45];
-var light_radius = [1.8, 1600];
+const light_position = [0, 800, -45];
+const light_radius = [1.8, 1600];
 
-var raycaster = new THREE.Raycaster();
-var highlighter;
-var lastMoveHighlighter;
-var shadowLight;
-var mouse = new THREE.Vector2();
-var offset = new THREE.Vector3();
+const raycaster = new THREE.Raycaster();
+let highlighter;
+let lastMoveHighlighter;
+let shadowLight;
+const mouse = new THREE.Vector2();
+const offset = new THREE.Vector3();
 
-var antialiasing_mode = true;
-var maxaniso=1;
-var anisolevel=16;
-var dontanimate = false;
+let antialiasing_mode = true;
+let maxaniso=1;
+let anisolevel=16;
+let dontanimate = false;
 
 // Initialize animation speed from localStorage or default to 1.0
 // Higher value = faster animations (duration is divided by this value)
-var animationSpeed = 1.0;
+let animationSpeed = 1.0;
 try{
-	var savedSpeed = localStorage.getItem('animation_speed');
+	const savedSpeed = localStorage.getItem('animation_speed');
 	if(savedSpeed !== null){
 		animationSpeed = parseFloat(savedSpeed);
 		if(isNaN(animationSpeed) || animationSpeed <= 0){
@@ -51,7 +51,7 @@ catch(e){
 // ============================================
 // AO Shadow Configuration
 // ============================================
-var aoConfig = {
+const aoConfig = {
 	// Y offset from piece bottom to AO plane (prevents z-fighting)
 	yOffset: 0.75,
 	// Texture blur amount (pixels)
@@ -86,16 +86,16 @@ var aoConfig = {
 
 // Create a blurred AO shadow texture using canvas blur filter
 function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
-	var canvas = document.createElement('canvas');
+	const canvas = document.createElement('canvas');
 	canvas.width = width;
 	canvas.height = height;
-	var ctx = canvas.getContext('2d');
+	const ctx = canvas.getContext('2d');
 
 	ctx.clearRect(0, 0, width, height);
 	ctx.filter = 'blur(' + aoConfig.blur + 'px)';
 	ctx.fillStyle = 'rgba(0, 0, 0, ' + aoConfig.opacity + ')';
-	var centerX = width / 2;
-	var centerY = height / 2;
+	const centerX = width / 2;
+	const centerY = height / 2;
 
 	if(shape === 'circle'){
 		ctx.beginPath();
@@ -106,20 +106,20 @@ function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
 		ctx.fillRect(centerX - shapeWidth / 2, centerY - shapeHeight / 2, shapeWidth, shapeHeight);
 	}
 
-	var texture = new THREE.CanvasTexture(canvas);
+	const texture = new THREE.CanvasTexture(canvas);
 	texture.needsUpdate = true;
 	return texture;
 }
 
 // Cached AO textures
-var aoTextureFlat = null;
-var aoTextureCap = null;
-var aoTextureWall = null;
-var aoTextureBoard = null;
+let aoTextureFlat = null;
+let aoTextureCap = null;
+let aoTextureWall = null;
+let aoTextureBoard = null;
 
 function getFlatAOTexture(){
 	if(!aoTextureFlat){
-		var c = aoConfig.flat;
+		const c = aoConfig.flat;
 		aoTextureFlat = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, 'square');
 	}
 	return aoTextureFlat;
@@ -127,7 +127,7 @@ function getFlatAOTexture(){
 
 function getCapAOTexture(){
 	if(!aoTextureCap){
-		var c = aoConfig.cap;
+		const c = aoConfig.cap;
 		aoTextureCap = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, 'circle');
 	}
 	return aoTextureCap;
@@ -135,7 +135,7 @@ function getCapAOTexture(){
 
 function getWallAOTexture(){
 	if(!aoTextureWall){
-		var c = aoConfig.wall;
+		const c = aoConfig.wall;
 		aoTextureWall = createBlurredAOTexture(c.canvasWidth, c.canvasHeight, c.shapeWidth, c.shapeHeight, 'rect');
 	}
 	return aoTextureWall;
@@ -143,7 +143,7 @@ function getWallAOTexture(){
 
 function getBoardAOTexture(){
 	if(!aoTextureBoard){
-		var c = aoConfig.board;
+		const c = aoConfig.board;
 		aoTextureBoard = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, 'square');
 	}
 	return aoTextureBoard;
@@ -151,15 +151,15 @@ function getBoardAOTexture(){
 
 // Create AO plane for a piece
 function createAOPlane(texture, width, height, yOffset){
-	var geometry = new THREE.PlaneGeometry(width, height);
-	var material = new THREE.MeshBasicMaterial({
+	const geometry = new THREE.PlaneGeometry(width, height);
+	const material = new THREE.MeshBasicMaterial({
 		map: texture,
 		transparent: true,
 		opacity: 1.0,
 		depthWrite: false,
 		side: THREE.DoubleSide
 	});
-	var plane = new THREE.Mesh(geometry, material);
+	const plane = new THREE.Mesh(geometry, material);
 	plane.rotation.x = -Math.PI / 2;
 	plane.aoYOffset = yOffset;
 	return plane;
@@ -179,7 +179,7 @@ function updatePieceAOVisibility(piece){
 	}
 	// Flats only show AO if at bottom of stack
 	if(piece.onsquare){
-		var stack = board.get_stack(piece.onsquare);
+		const stack = board.get_stack(piece.onsquare);
 		piece.aoPlane.visible = (stack.indexOf(piece) === 0);
 	}
 	else{
@@ -193,7 +193,7 @@ function resetAOToFlat(piece){
 	if(!piece.aoPlane){return;}
 	piece.aoPlane.aoYOffset = -piece_height / 2 + aoConfig.yOffset;
 	piece.aoPlane.geometry.dispose();
-	var aoSize = piece_size + piece_size * aoConfig.padding;
+	const aoSize = piece_size + piece_size * aoConfig.padding;
 	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoSize, aoSize);
 	piece.aoPlane.material.map = getFlatAOTexture();
 	piece.aoPlane.material.needsUpdate = true;
@@ -205,9 +205,9 @@ function setAOToWall(piece){
 	if(!piece.aoPlane){return;}
 	piece.aoPlane.aoYOffset = -piece_size / 2 + aoConfig.yOffset;
 	piece.aoPlane.geometry.dispose();
-	var aoPadding = piece_size * aoConfig.padding;
-	var aoWidth = piece_size + aoPadding;
-	var aoDepth = piece_height + aoPadding;
+	const aoPadding = piece_size * aoConfig.padding;
+	const aoWidth = piece_size + aoPadding;
+	const aoDepth = piece_height + aoPadding;
 	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
 	piece.aoPlane.material.map = getWallAOTexture();
 	piece.aoPlane.material.needsUpdate = true;
@@ -220,17 +220,17 @@ function setAOToWall(piece){
 		piece.aoPlane.rotation.z += Math.PI / 2;
 	}
 }
-var scenehash = 0;
-var lastanimate = 0;
-var camera,scene,renderer,light,canvas,controls = null;
-var perspective;
+let scenehash = 0;
+let lastanimate = 0;
+let camera,scene,renderer,light,canvas,controls = null;
+let perspective;
 
 function animate(){
 	if(is2DBoard){return;}
 	if(!dontanimate){
 		controls.update();
-		var newscenehash=floathashscene();
-		var now=Date.now();
+		const newscenehash=floathashscene();
+		const now=Date.now();
 		if(scenehash!=newscenehash || lastanimate+1000<=now){
 			scenehash=newscenehash;
 			lastanimate=now;
@@ -241,13 +241,13 @@ function animate(){
 }
 
 function combinefrustumvectors(a,b){
-	var a2=a.dot(a);
-	var b2=b.dot(b);
-	var ab=a.dot(b);
-	var a2b2=a2*b2;
-	var div=a2b2-ab*ab;
-	var bmul=(a2b2-a2*ab)/div;
-	var amul=(a2b2-b2*ab)/div;
+	const a2=a.dot(a);
+	const b2=b.dot(b);
+	const ab=a.dot(b);
+	const a2b2=a2*b2;
+	const div=a2b2-ab*ab;
+	const bmul=(a2b2-a2*ab)/div;
+	const amul=(a2b2-b2*ab)/div;
 	return a.clone().multiplyScalar(amul).addScaledVector(b,bmul);
 }
 
@@ -261,19 +261,19 @@ function generateCamera(){
 	}
 
 	settingscounter = (settingscounter+1) & 15;
-	var cuttop = $('header').height() + BOARD_PADDING;
-	var cutleft = getLeftPadding();
-	var cutright = getRightPadding();
-	var cutbottom = 0 + BOARD_PADDING;
+	const cuttop = $('header').height() + BOARD_PADDING;
+	const cutleft = getLeftPadding();
+	const cutright = getRightPadding();
+	const cutbottom = 0 + BOARD_PADDING;
 
-	var pointlist = [];
-	var xsizea = gameData.size*sq_size/2+border_size+stackOffsetFromBorder+piece_size;
-	var xsizeb = (gameData.size-1)*sq_size/2+piece_size/2;
-	var yneg = sq_height/2;
-	var yposa = 10*piece_height-yneg;
-	var yposb = 20*piece_height+yneg;
-	var zsizea = gameData.size*sq_size/2+border_size;
-	var zsizeb = xsizeb;
+	const pointlist = [];
+	const xsizea = gameData.size*sq_size/2+border_size+stackOffsetFromBorder+piece_size;
+	const xsizeb = (gameData.size-1)*sq_size/2+piece_size/2;
+	const yneg = sq_height/2;
+	const yposa = 10*piece_height-yneg;
+	const yposb = 20*piece_height+yneg;
+	const zsizea = gameData.size*sq_size/2+border_size;
+	const zsizeb = xsizeb;
 
 	for(let a = -1; a < 2; a += 2){
 		for(let b = -1; b < 2; b += 2){
@@ -282,65 +282,65 @@ function generateCamera(){
 			pointlist.push(new THREE.Vector3(a*xsizeb,yposb,b*zsizeb));
 		}
 	}
-	var invcamdir;
+	let invcamdir;
 	if(camera && !fixedcamera){
 		invcamdir=camera.position.clone().sub(controls.center).normalize();
 	}
 	else{
 		invcamdir=new THREE.Vector3(-4,25,25).normalize();
 	}
-	var camdir=invcamdir.clone().negate();
-	var up=new THREE.Vector3(0,1,0);
-	var camleft=new THREE.Vector3();
+	const camdir=invcamdir.clone().negate();
+	const up=new THREE.Vector3(0,1,0);
+	const camleft=new THREE.Vector3();
 	camleft.crossVectors(up,camdir).normalize();
-	var camup=new THREE.Vector3();
+	const camup=new THREE.Vector3();
 	camup.crossVectors(camdir,camleft).normalize();
-	var camright=camleft.clone().negate();
-	var camdown=camup.clone().negate();
+	const camright=camleft.clone().negate();
+	const camdown=camup.clone().negate();
 	if(perspective>0){
-		var fw=pixelratio*(window.innerWidth+Math.abs(cutleft-cutright));
-		var fh=pixelratio*(window.innerHeight+Math.abs(cuttop-cutbottom));
-		var ox=pixelratio*(Math.max(0,cutright-cutleft));
-		var oy=pixelratio*(Math.max(0,cutbottom-cuttop));
-		var xv=pixelratio*(window.innerWidth-cutleft-cutright);
-		var yv=pixelratio*(window.innerHeight-cuttop-cutbottom);
-		var perspectiveheight=fh*perspective/(yv+xv)/90;
-		var perspectivewidth=perspectiveheight*fw/fh;
-		var perspectiveangle=Math.atan(perspectiveheight)*360/Math.PI;
-		var scaletop=perspectiveheight*yv/fh;
-		var scalebottom=scaletop;
-		var scaleleft=perspectivewidth*xv/fw;
-		var scaleright=scaleleft;
-		var fvtop=camup.clone().divideScalar(scaletop).add(invcamdir).normalize();
-		var fvbottom=camdown.clone().divideScalar(scalebottom).add(invcamdir).normalize();
-		var fvleft=camleft.clone().divideScalar(scaleleft).add(invcamdir).normalize();
-		var fvright=camright.clone().divideScalar(scaleright).add(invcamdir).normalize();
-		var maxleft=0;
-		var maxright=0;
-		var maxtop=0;
-		var maxbottom=0;
-		for(a=0;a<pointlist.length;a++){
-			var newdist=fvleft.dot(pointlist[a]);
+		const fw=pixelratio*(window.innerWidth+Math.abs(cutleft-cutright));
+		const fh=pixelratio*(window.innerHeight+Math.abs(cuttop-cutbottom));
+		const ox=pixelratio*(Math.max(0,cutright-cutleft));
+		const oy=pixelratio*(Math.max(0,cutbottom-cuttop));
+		const xv=pixelratio*(window.innerWidth-cutleft-cutright);
+		const yv=pixelratio*(window.innerHeight-cuttop-cutbottom);
+		const perspectiveheight=fh*perspective/(yv+xv)/90;
+		const perspectivewidth=perspectiveheight*fw/fh;
+		const perspectiveangle=Math.atan(perspectiveheight)*360/Math.PI;
+		const scaletop=perspectiveheight*yv/fh;
+		const scalebottom=scaletop;
+		const scaleleft=perspectivewidth*xv/fw;
+		const scaleright=scaleleft;
+		const fvtop=camup.clone().divideScalar(scaletop).add(invcamdir).normalize();
+		const fvbottom=camdown.clone().divideScalar(scalebottom).add(invcamdir).normalize();
+		const fvleft=camleft.clone().divideScalar(scaleleft).add(invcamdir).normalize();
+		const fvright=camright.clone().divideScalar(scaleright).add(invcamdir).normalize();
+		let maxleft=0;
+		let maxright=0;
+		let maxtop=0;
+		let maxbottom=0;
+		for(let a=0;a<pointlist.length;a++){
+			let newdist=fvleft.dot(pointlist[a]);
 			maxleft=Math.max(maxleft,newdist);
-			var newdist=fvright.dot(pointlist[a]);
+			newdist=fvright.dot(pointlist[a]);
 			maxright=Math.max(maxright,newdist);
-			var newdist=fvtop.dot(pointlist[a]);
+			newdist=fvtop.dot(pointlist[a]);
 			maxtop=Math.max(maxtop,newdist);
-			var newdist=fvbottom.dot(pointlist[a]);
+			newdist=fvbottom.dot(pointlist[a]);
 			maxbottom=Math.max(maxbottom,newdist);
 		}
 
-		var camdist=0;
-		var camcenter=new THREE.Vector3(0,0,0);
+		let camdist=0;
+		let camcenter=new THREE.Vector3(0,0,0);
 
 		if(fixedcamera){
-			var lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft),fvright.clone().multiplyScalar(maxright));
-			var tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop),fvbottom.clone().multiplyScalar(maxbottom));
-			var lrlen=lrcampos.dot(invcamdir);
-			var tblen=tbcampos.dot(invcamdir);
+			let lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft),fvright.clone().multiplyScalar(maxright));
+			let tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop),fvbottom.clone().multiplyScalar(maxbottom));
+			let lrlen=lrcampos.dot(invcamdir);
+			let tblen=tbcampos.dot(invcamdir);
 
 			if(lrlen<tblen){
-				var addin=(maxleft+maxright)*(tblen/lrlen-1)/2;
+				let addin=(maxleft+maxright)*(tblen/lrlen-1)/2;
 				lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft+addin),fvright.clone().multiplyScalar(maxright+addin));
 
 				lrlen=lrcampos.dot(invcamdir);
@@ -349,7 +349,7 @@ function generateCamera(){
 
 			}
 			else{
-				var addin=(maxtop+maxbottom)*(lrlen/tblen-1)/2;
+				let addin=(maxtop+maxbottom)*(lrlen/tblen-1)/2;
 				tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop+addin),fvbottom.clone().multiplyScalar(maxbottom+addin));
 
 				tblen=tbcampos.dot(invcamdir);
@@ -359,11 +359,11 @@ function generateCamera(){
 			}
 
 			camdist=lrcampos.dot(invcamdir);
-			var camdiff=tbcampos.clone().sub(lrcampos);
-			var lradjust=camup.clone().multiplyScalar(camdiff.dot(camup));
-			var finalcampos=lrcampos.clone().add(lradjust);
+			const camdiff=tbcampos.clone().sub(lrcampos);
+			const lradjust=camup.clone().multiplyScalar(camdiff.dot(camup));
+			const finalcampos=lrcampos.clone().add(lradjust);
 
-			var centeroffset=camdir.clone().multiplyScalar(finalcampos.dot(invcamdir));
+			const centeroffset=camdir.clone().multiplyScalar(finalcampos.dot(invcamdir));
 			camcenter=finalcampos.clone().add(centeroffset);
 
 			camera = new THREE.PerspectiveCamera(perspectiveangle,canvas.width / canvas.height,Math.max(camdist-800,10),camdist+800);
@@ -376,7 +376,7 @@ function generateCamera(){
 			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvtop.clone().multiplyScalar(maxtop)));
 			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvbottom.clone().multiplyScalar(maxbottom)));
 
-			var finalcampos=invcamdir.clone().multiplyScalar(camdist);
+			const finalcampos=invcamdir.clone().multiplyScalar(camdist);
 
 			camera = new THREE.PerspectiveCamera(perspectiveangle,canvas.width / canvas.height,Math.max(camdist/5-800,10),camdist*3+800);
 			camera.setViewOffset(fw,fh,ox,oy,canvas.width,canvas.height);
@@ -398,30 +398,30 @@ function generateCamera(){
 		}
 	}
 	else{
-		var maxleft=0;
-		var maxright=0;
-		var maxtop=0;
-		var maxbottom=0;
-		for(a=0;a<pointlist.length;a++){
-			var newleft=camleft.dot(pointlist[a]);
+		let maxleft=0;
+		let maxright=0;
+		let maxtop=0;
+		let maxbottom=0;
+		for(let a=0;a<pointlist.length;a++){
+			const newleft=camleft.dot(pointlist[a]);
 			maxleft=Math.max(maxleft,newleft);
 			maxright=Math.min(maxright,newleft);
-			var newtop=camup.dot(pointlist[a]);
+			const newtop=camup.dot(pointlist[a]);
 			maxtop=Math.max(maxtop,newtop);
 			maxbottom=Math.min(maxbottom,newtop);
 		}
-		var scalex=(maxleft-maxright)/(window.innerWidth-cutleft-cutright);
-		var scaley=(maxtop-maxbottom)/(window.innerHeight-cuttop-cutbottom);
-		var scale=Math.max(scalex,scaley);
-		var xpadding=(window.innerWidth-cutleft-cutright)*(1-scalex/scale);
-		var ypadding=(window.innerHeight-cuttop-cutbottom)*(1-scaley/scale);
+		const scalex=(maxleft-maxright)/(window.innerWidth-cutleft-cutright);
+		const scaley=(maxtop-maxbottom)/(window.innerHeight-cuttop-cutbottom);
+		const scale=Math.max(scalex,scaley);
+		const xpadding=(window.innerWidth-cutleft-cutright)*(1-scalex/scale);
+		const ypadding=(window.innerHeight-cuttop-cutbottom)*(1-scaley/scale);
 		cutleft+=xpadding/2;
 		cutright+=xpadding/2;
 		cuttop+=ypadding/2;
 		cutbottom+=ypadding/2;
 
 		camera = new THREE.OrthographicCamera(-maxleft-cutleft*scale,-maxright+cutright*scale,maxtop+cuttop*scale,maxbottom-cutbottom*scale,2000,5000);
-		var campos=invcamdir.multiplyScalar(3500);
+		const campos=invcamdir.multiplyScalar(3500);
 		camera.position.set(campos.x,campos.y,campos.z);
 
 		controls = new THREE.OrbitControls(camera,renderer.domElement);
@@ -449,13 +449,12 @@ function generateCamera(){
 }
 
 function floathashscene(){
-	var hash=0;
-	var multiplier=1;
+	let hash=0;
+	let multiplier=1;
 	updatepoint(camera.position);
 	updatepoint(controls.center);
 	update(camera.zoom);
-	var a;
-	for(a=0;a<board.piece_objects.length;a++){
+	for(let a=0;a<board.piece_objects.length;a++){
 		updatepoint(board.piece_objects[a].position);
 	}
 	update(window.innerWidth);
@@ -481,7 +480,7 @@ function floathashscene(){
 	return hash;
 }
 
-var materials = {
+const materials = {
 	images_root_path: 'images/',
 	board_texture_path: 'images/board/',
 	pieces_texture_path: 'images/pieces/',
@@ -557,11 +556,11 @@ var materials = {
 	// updateBoardMaterials after the user changes the board styles
 	updateBoardMaterials: function(){
 		this.boardLoaded = 0;
-		var loader = new THREE.TextureLoader();
+		const loader = new THREE.TextureLoader();
 
 		this.white_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn), transparent: true});
 		this.black_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn), transparent: true});
-		var an=Math.min(maxaniso,anisolevel);
+		const an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_sqr.map.anisotropy=an;
 			this.black_sqr.map.anisotropy=an;
@@ -612,14 +611,14 @@ var materials = {
 	},
 	// updatePieceMaterials after the user changes the piece styles
 	updatePieceMaterials: function(){
-		var loader = new THREE.TextureLoader();
+		const loader = new THREE.TextureLoader();
 		this.piecesLoaded = 0;
 
 		this.black_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn)});
 		this.white_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn)});
 		this.white_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn)});
 		this.black_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn)});
-		var an=Math.min(maxaniso,anisolevel);
+		const an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_piece.map.anisotropy=an;
 			this.black_piece.map.anisotropy=an;
@@ -633,7 +632,7 @@ var materials = {
 		}
 	},
 	updateLetterColor(color){
-		var hexColor = parseInt(color.replace('#', '0x'));
+		const hexColor = parseInt(color.replace('#', '0x'));
 		this.letter.color.setHex(hexColor);
 		settingscounter = (settingscounter + 1) & 15;
 	},
@@ -678,12 +677,12 @@ var materials = {
 	}
 };
 
-var boardFactory = {
+const boardFactory = {
 	boardfont: null,
 	makeSquare: function(file,rankInverse,scene){
-		var geometry = new THREE.BoxGeometry(sq_size,sq_height,sq_size);
+		const geometry = new THREE.BoxGeometry(sq_size,sq_height,sq_size);
 		geometry.center();
-		var square = new THREE.Mesh(geometry,((file+rankInverse) % 2 ? materials.white_sqr : materials.black_sqr));
+		const square = new THREE.Mesh(geometry,((file+rankInverse) % 2 ? materials.white_sqr : materials.black_sqr));
 		square.position.set(
 			board.sq_position.startx + file*sq_size,
 			0,
@@ -754,15 +753,15 @@ var boardFactory = {
 			gotfont(boardFactory.boardfont);
 		}
 		else{
-			var loader = new THREE.FontLoader();
+			const loader = new THREE.FontLoader();
 			loader.load('fonts/helvetiker_regular.typeface.js',gotfont);
 		}
 
 		function gotfont(font){
 			boardFactory.boardfont=font;
 			// add the letters and numbers around the border
-			for(var i = 0;i < gameData.size;i++){
-				var geometry,letter;
+			for(let i = 0;i < gameData.size;i++){
+				let geometry,letter;
 				// Top letters
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('A'.charCodeAt(0) + i),
@@ -830,20 +829,20 @@ var boardFactory = {
 	}
 };
 
-var pieceFactory = {
+const pieceFactory = {
 	makePiece: function(playerNum,pieceNum,scene){
-		var materialMine = (playerNum === WHITE_PLAYER ? materials.white_piece : materials.black_piece);
-		var geometry=piecegeometry(playerNum === WHITE_PLAYER?"white":"black");
+		const materialMine = (playerNum === WHITE_PLAYER ? materials.white_piece : materials.black_piece);
+		const geometry=piecegeometry(playerNum === WHITE_PLAYER?"white":"black");
 
-		var stackno = Math.floor(pieceNum / 10);
-		var stackheight = pieceNum % 10;
-		var piece = new THREE.Mesh(geometry,materialMine);
+		const stackno = Math.floor(pieceNum / 10);
+		const stackheight = pieceNum % 10;
+		const piece = new THREE.Mesh(geometry,materialMine);
 		piece.iswhitepiece = (playerNum === WHITE_PLAYER);
 		// Swap first-to-play flat stone positions for first turn rule
 		// getfromstack returns the highest pieceNum first, so tottiles-1 is first to play
-		var firstToPlayPieceNum = board.tottiles - 1;
-		var isFirstToPlay = (pieceNum === firstToPlayPieceNum);
-		var positionAsWhite = (playerNum === WHITE_PLAYER) !== isFirstToPlay;
+		const firstToPlayPieceNum = board.tottiles - 1;
+		const isFirstToPlay = (pieceNum === firstToPlayPieceNum);
+		const positionAsWhite = (playerNum === WHITE_PLAYER) !== isFirstToPlay;
 		if(positionAsWhite){
 			piece.position.set(
 				board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
@@ -868,8 +867,8 @@ var pieceFactory = {
 		piece.receiveShadow = true;
 		piece.castShadow = false;
 		// Add ambient occlusion shadow plane
-		var aoSize = piece_size + piece_size * aoConfig.padding;
-		var aoPlane = createAOPlane(getFlatAOTexture(), aoSize, aoSize, -piece_height / 2 + aoConfig.yOffset);
+		const aoSize = piece_size + piece_size * aoConfig.padding;
+		const aoPlane = createAOPlane(getFlatAOTexture(), aoSize, aoSize, -piece_height / 2 + aoConfig.yOffset);
 		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
 		aoPlane.visible = shadowsEnabled && (stackheight === 0);
 		aoPlane.material.opacity = (stackheight === 0) ? 1.0 : 0;
@@ -879,10 +878,10 @@ var pieceFactory = {
 		return piece;
 	},
 	makeCap: function(playerNum,capNum,scene){
-		var geometry = capgeometry(playerNum === WHITE_PLAYER?"white":"black");
+		const geometry = capgeometry(playerNum === WHITE_PLAYER?"white":"black");
 
 		// the capstones go at the other end of the row
-		var piece;
+		let piece;
 		if(playerNum === WHITE_PLAYER){
 			piece = new THREE.Mesh(geometry,materials.white_cap);
 			piece.position.set(
@@ -909,8 +908,8 @@ var pieceFactory = {
 		piece.receiveShadow = true;
 		piece.castShadow = false;
 		// Add ambient occlusion shadow plane
-		var aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
-		var aoPlane = createAOPlane(getCapAOTexture(), aoRadius * 2, aoRadius * 2, -capstone_height / 2 + aoConfig.yOffset);
+		const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
+		const aoPlane = createAOPlane(getCapAOTexture(), aoRadius * 2, aoRadius * 2, -capstone_height / 2 + aoConfig.yOffset);
 		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
 		aoPlane.visible = shadowsEnabled;
 		scene.add(aoPlane);
@@ -921,8 +920,8 @@ var pieceFactory = {
 };
 
 function piecegeometry(color){
-	var geometry = new THREE.BoxGeometry(piece_size,piece_height,piece_size);
-	var geometrytype;
+	const geometry = new THREE.BoxGeometry(piece_size,piece_height,piece_size);
+	let geometrytype;
 	if(color=="white"){
 		geometrytype=piecesMap[materials.white_piece_style_name];
 	}
@@ -930,9 +929,8 @@ function piecegeometry(color){
 		geometrytype=piecesMap[materials.black_piece_style_name];
 	}
 	if(!geometrytype.multi_file){
-		var a,b;
-		for(a=0;a<12;a++){
-			for(b=0;b<3;b++){
+		for(let a=0;a<12;a++){
+			for(let b=0;b<3;b++){
 				geometry.faceVertexUvs[0][a][b].x=geometry.faceVertexUvs[0][a][b].x==0?9/16:15/16;
 				if(a>3 && a<8){
 					geometry.faceVertexUvs[0][a][b].y=geometry.faceVertexUvs[0][a][b].y==0?1/32:13/32;
@@ -949,9 +947,8 @@ function piecegeometry(color){
 function capgeometry(color){
 	capstone_radius=piece_size*0.4;
 	capstone_height=Math.min(piece_size*1.1,70);
-	var geometry = new THREE.CylinderGeometry(capstone_radius,capstone_radius,capstone_height,30);
-	var a,b;
-	var geometrytype;
+	const geometry = new THREE.CylinderGeometry(capstone_radius,capstone_radius,capstone_height,30);
+	let geometrytype;
 	if(color=="white"){
 		geometrytype=piecesMap[materials.white_cap_style_name];
 	}
@@ -959,24 +956,24 @@ function capgeometry(color){
 		geometrytype=piecesMap[materials.black_cap_style_name];
 	}
 	if(geometrytype.multi_file){
-		for(a=60;a<120;a++){
-			for(b=0;b<3;b++){
+		for(let a=60;a<120;a++){
+			for(let b=0;b<3;b++){
 				geometry.faceVertexUvs[0][a][b].x=(geometry.faceVertexUvs[0][a][b].x-0.5)*0.25+0.5;
 				geometry.faceVertexUvs[0][a][b].y=(geometry.faceVertexUvs[0][a][b].y-0.5)*0.5+0.5;
 			}
 		}
 	}
 	else{
-		for(a=0;a<60;a++){
-			for(b=0;b<3;b++){
-				var newx=0.5*geometry.faceVertexUvs[0][a][b].y;
-				var newy=1-geometry.faceVertexUvs[0][a][b].x;
+		for(let a=0;a<60;a++){
+			for(let b=0;b<3;b++){
+				const newx=0.5*geometry.faceVertexUvs[0][a][b].y;
+				const newy=1-geometry.faceVertexUvs[0][a][b].x;
 				geometry.faceVertexUvs[0][a][b].x=newx;
 				geometry.faceVertexUvs[0][a][b].y=newy;
 			}
 		}
-		for(a=60;a<120;a++){
-			for(b=0;b<3;b++){
+		for(let a=60;a<120;a++){
+			for(let b=0;b<3;b++){
 				geometry.faceVertexUvs[0][a][b].x=(geometry.faceVertexUvs[0][a][b].x-0.5)*0.375+0.75;
 				geometry.faceVertexUvs[0][a][b].y=(geometry.faceVertexUvs[0][a][b].y-0.5)*0.375+0.78125;
 			}
@@ -990,48 +987,48 @@ function capgeometry(color){
  * as well as burringWidth and burringHeight.
  */
 function constructBurredBox(width, height, depth, burringDepth, burringHeight, burringVertical){
-	var geometry = new THREE.Geometry();
+	const geometry = new THREE.Geometry();
 	geometry.parameters = [];
 	geometry.parameters.width = width;
 	geometry.parameters.height = height;
 	geometry.parameters.depth = depth;
 
 	// calculate relative burrings and side height.
-	var relBurWidth = burringDepth / width;
-	var relativeSideHeight = (height - burringHeight * 2) / width;
+	const relBurWidth = burringDepth / width;
+	const relativeSideHeight = (height - burringHeight * 2) / width;
 
 	// construct UVS points.
-	var tex_area = [
+	const tex_area = [
 		new THREE.Vector2(relBurWidth, relBurWidth),
 		new THREE.Vector2(1 - relBurWidth, relBurWidth),
 		new THREE.Vector2(1 - relBurWidth, 1 - relBurWidth),
 		new THREE.Vector2(relBurWidth, 1 - relBurWidth)
 	];
-	var tex_side_area = [
+	const tex_side_area = [
 		new THREE.Vector2(0, 1 - relativeSideHeight),
 		new THREE.Vector2(1, 1 - relativeSideHeight),
 		new THREE.Vector2(1, 1),
 		new THREE.Vector2(0, 1)
 	];
-	var tex_top = [
+	const tex_top = [
 		new THREE.Vector2(relBurWidth, 1 - relBurWidth),
 		new THREE.Vector2(1 - relBurWidth, 1 - relBurWidth),
 		new THREE.Vector2(1, 1),
 		new THREE.Vector2(0, 1)
 	];
-	var tex_bottom = [
+	const tex_bottom = [
 		new THREE.Vector2(1 - relBurWidth, relBurWidth),
 		new THREE.Vector2(relBurWidth, relBurWidth),
 		new THREE.Vector2(0, 0),
 		new THREE.Vector2(1, 0)
 	];
-	var tex_left = [
+	const tex_left = [
 		new THREE.Vector2(relBurWidth, relBurWidth),
 		new THREE.Vector2(relBurWidth, 1 - relBurWidth),
 		new THREE.Vector2(0, 1),
 		new THREE.Vector2(0, 0)
 	];
-	var tex_right = [
+	const tex_right = [
 		new THREE.Vector2(1 - relBurWidth, 1 - relBurWidth),
 		new THREE.Vector2(1 - relBurWidth, relBurWidth),
 		new THREE.Vector2(1, 0),
@@ -1074,14 +1071,14 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 
 	// construct faces.
 	// areas.
-	for(i = 0; i < 6; ++i){
+	for(let i = 0; i < 6; ++i){
 		geometry.faces.push(
 			new THREE.Face3(i*4 + 2, i*4 + 1, i*4 + 3),
 			new THREE.Face3(i*4 + 1, i*4 + 0, i*4 + 3)
 		);
 	}
 	// texture areas.
-	for(i = 0; i < 6; ++i){
+	for(let i = 0; i < 6; ++i){
 		if(i < 2){
 			geometry.faceVertexUvs[0][i*2 + 0] = [tex_area[2], tex_area[1], tex_area[3]];
 			geometry.faceVertexUvs[0][i*2 + 1] = [tex_area[1], tex_area[0], tex_area[3]];
@@ -1140,7 +1137,7 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 	geometry.faceVertexUvs[0][26] = [tex_right[2], tex_right[1], tex_right[3]];
 	geometry.faceVertexUvs[0][27] = [tex_right[1], tex_right[0], tex_right[3]];
 	// textures edges around.
-	for(i = 0; i < 4; ++i){
+	for(let i = 0; i < 4; ++i){
 		geometry.faceVertexUvs[0][28 + i * 2] = [tex_side_area[3], tex_side_area[3], tex_side_area[0]];
 		geometry.faceVertexUvs[0][28 + i * 2 + 1] = [tex_side_area[3], tex_side_area[0], tex_side_area[0]];
 	}
@@ -1159,7 +1156,7 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 		new THREE.Face3(16, 6, 13)
 	);
 	// texture corners.
-	for(i = 0; i < 2; ++i){
+	for(let i = 0; i < 2; ++i){
 		geometry.faceVertexUvs[0][36 + i * 4] = [tex_left[3], tex_left[0], tex_left[3]];
 		geometry.faceVertexUvs[0][37 + i * 4] = [tex_bottom[3], tex_bottom[0], tex_bottom[3]];
 		geometry.faceVertexUvs[0][38 + i * 4] = [tex_right[3], tex_right[0], tex_right[3]];
@@ -1173,8 +1170,8 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 	return geometry;
 }
 
-var animationsEnabled = true;
-var shadowsEnabled = true;
+let animationsEnabled = true;
+let shadowsEnabled = true;
 
 function updateShadowsVisibility(){
 	if(!scene){return;}
@@ -1202,8 +1199,8 @@ function updateShadowsVisibility(){
 		board.boardAO.visible = shadowsEnabled;
 	}
 	// Update piece AO planes and shadows
-	for(var i = 0; i < board.piece_objects.length; i++){
-		var piece = board.piece_objects[i];
+	for(let i = 0; i < board.piece_objects.length; i++){
+		const piece = board.piece_objects[i];
 		// Update piece shadow receiving
 		piece.receiveShadow = shadowsEnabled;
 		if(piece.aoPlane){
@@ -1217,7 +1214,7 @@ function updateShadowsVisibility(){
 				}
 				else if(piece.onsquare){
 					// Played flats: only bottom of stack shows AO
-					var stack = board.get_stack(piece.onsquare);
+					const stack = board.get_stack(piece.onsquare);
 					piece.aoPlane.visible = (stack.indexOf(piece) === 0);
 				}
 				else{
@@ -1232,19 +1229,19 @@ function updateShadowsVisibility(){
 	if(board.table){
 		board.table.receiveShadow = shadowsEnabled;
 	}
-	for(var i = 0; i < board.board_objects.length; i++){
+	for(let i = 0; i < board.board_objects.length; i++){
 		board.board_objects[i].receiveShadow = shadowsEnabled;
 	}
 }
 
-var animation = {
+const animation = {
 	queue: [], // { objects, from, to, fromRot, toRot, type, duration, onComplete }
 	playing: false,
 	pendingFrom: null, // stores the 'from' positions/rotations for the next animation
 
 	push: function(objects, type, duration, onComplete){
-		var positions = objects.map(function(obj){return obj.position.clone();});
-		var rotations = objects.map(function(obj){return obj.quaternion.clone();});
+		const positions = objects.map(function(obj){return obj.position.clone();});
+		const rotations = objects.map(function(obj){return obj.quaternion.clone();});
 		if(!type){
 			// Store positions/rotations as the starting point for the next animation
 			this.pendingFrom = {objects: objects.slice(), positions: positions, rotations: rotations};
@@ -1256,10 +1253,10 @@ var animation = {
 			if(animationSpeed <= 0 || animationSpeed === undefined || isNaN(animationSpeed)){
 				animationSpeed = 1.0;
 			}
-			var adjustedDuration = duration / animationSpeed;
+			const adjustedDuration = duration / animationSpeed;
 			// This is an animation frame - use pendingFrom as 'from' and current as 'to'
-			var from = this.pendingFrom ? this.pendingFrom.positions : positions;
-			var fromRot = this.pendingFrom ? this.pendingFrom.rotations : rotations;
+			const from = this.pendingFrom ? this.pendingFrom.positions : positions;
+			const fromRot = this.pendingFrom ? this.pendingFrom.rotations : rotations;
 			this.queue.push({
 				objects: objects.slice(),
 				from: from,
@@ -1272,7 +1269,7 @@ var animation = {
 			});
 			// Immediately reset objects to start position to prevent flash at end position
 			if(this.pendingFrom){
-				for(var i = 0; i < objects.length; i++){
+				for(let i = 0; i < objects.length; i++){
 					objects[i].position.copy(from[i]);
 					objects[i].quaternion.copy(fromRot[i]);
 					// Also reset AO plane position
@@ -1297,8 +1294,8 @@ var animation = {
 		if(!animationsEnabled){
 			// Skip animations - just set final positions/rotations and call callback
 			while(this.queue.length > 0){
-				var frame = this.queue.shift();
-				for(var i = 0; i < frame.objects.length; ++i){
+				const frame = this.queue.shift();
+				for(let i = 0; i < frame.objects.length; ++i){
 					frame.objects[i].position.copy(frame.to[i]);
 					frame.objects[i].quaternion.copy(frame.toRot[i]);
 					// Update AO plane position
@@ -1333,13 +1330,13 @@ var animation = {
 		if(this.queue.length === 0){
 			this.playing = false;
 			if(this.onAllComplete){
-				var callback = this.onAllComplete;
+				const callback = this.onAllComplete;
 				this.onAllComplete = null;
 				callback();
 			}
 		}
 		else{
-			var frame = this.queue.shift();
+			const frame = this.queue.shift();
 			this.playFrame(frame, performance.now());
 		}
 	},
@@ -1349,8 +1346,8 @@ var animation = {
 		this.playing = false;
 		this.pendingFrom = null;
 		while(this.queue.length > 0){
-			var frame = this.queue.shift();
-			for(var i = 0; i < frame.objects.length; ++i){
+			const frame = this.queue.shift();
+			for(let i = 0; i < frame.objects.length; ++i){
 				frame.objects[i].position.copy(frame.to[i]);
 				frame.objects[i].quaternion.copy(frame.toRot[i]);
 				// Update AO plane position
@@ -1367,37 +1364,37 @@ var animation = {
 	},
 
 	playFrame: function(frame, startTime){
-		var objects = frame.objects;
-		var from = frame.from;
-		var to = frame.to;
-		var fromRot = frame.fromRot;
-		var toRot = frame.toRot;
-		var type = frame.type;
-		var duration = frame.duration;
+		const objects = frame.objects;
+		const from = frame.from;
+		const to = frame.to;
+		const fromRot = frame.fromRot;
+		const toRot = frame.toRot;
+		const type = frame.type;
+		let duration = frame.duration;
 
 		// Immediately set objects to their starting positions/rotations to prevent snap
-		for(var i = 0; i < objects.length; ++i){
+		for(let i = 0; i < objects.length; ++i){
 			objects[i].position.copy(from[i]);
 			objects[i].quaternion.copy(fromRot[i]);
 		}
 
 		if(type === 'jump'){
-			var dx = to[0].x - from[0].x;
-			var dy = to[0].y - from[0].y;
-			var dz = to[0].z - from[0].z;
-			var distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+			const dx = to[0].x - from[0].x;
+			const dy = to[0].y - from[0].y;
+			const dz = to[0].z - from[0].z;
+			const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
 			duration = Math.max(frame.duration, frame.duration * distance * 0.003);
 		}
 
-		var self = this;
-		var isLastFrame = this.queue.length === 0;
-		var soundPlayed = false;
-		var soundTime = Math.max(0, duration - 100); // Play sound 100ms before end
-		var animate = function(now){
+		const self = this;
+		const isLastFrame = this.queue.length === 0;
+		let soundPlayed = false;
+		const soundTime = Math.max(0, duration - 100); // Play sound 100ms before end
+		const animate = function(now){
 			try{
-				var elapsed = now - startTime;
-				var t = elapsed / duration;
+				const elapsed = now - startTime;
+				let t = elapsed / duration;
 				if(t >= 1){t = 1;}
 
 				// Play sound 100ms before animation ends on last frame
@@ -1407,7 +1404,7 @@ var animation = {
 					self.onAllComplete = null;
 				}
 
-				for(var i = 0; i < objects.length; ++i){
+				for(let i = 0; i < objects.length; ++i){
 					// Interpolate rotation using slerp
 					THREE.Quaternion.slerp(fromRot[i], toRot[i], objects[i].quaternion, t);
 
@@ -1416,17 +1413,17 @@ var animation = {
 					}
 
 					if(type === 'jump'){
-						var obj = objects[i];
+						const obj = objects[i];
 
 						obj.position.x = from[i].x + (to[i].x - from[i].x) * t;
 						obj.position.z = from[i].z + (to[i].z - from[i].z) * t;
 
-						var dx = to[i].x - from[i].x;
-						var dz = to[i].z - from[i].z;
-						var distance = Math.sqrt(dx * dx + dz * dz);
+						const dx = to[i].x - from[i].x;
+						const dz = to[i].z - from[i].z;
+						const distance = Math.sqrt(dx * dx + dz * dz);
 
-						var jumpHeight = 40 + distance * 0.33;
-						var baseY = from[i].y + (to[i].y - from[i].y) * t;
+						const jumpHeight = 40 + distance * 0.33;
+						const baseY = from[i].y + (to[i].y - from[i].y) * t;
 						obj.position.y = baseY + jumpHeight * 4 * t * (1 - t);
 					}
 
@@ -1440,7 +1437,7 @@ var animation = {
 						// Fade in AO during last 30% of animation if flagged for fade-in and visible
 						if(objects[i].aoPlane.fadeIn && objects[i].aoPlane.visible){
 							if(t > 0.7){
-								var fadeT = (t - 0.7) / 0.3; // 0 to 1 during last 30%
+								const fadeT = (t - 0.7) / 0.3; // 0 to 1 during last 30%
 								objects[i].aoPlane.material.opacity = fadeT;
 							}
 							else{
@@ -1455,7 +1452,7 @@ var animation = {
 				}
 				else{
 					// Ensure final position/rotation is exact
-					for(var j = 0; j < objects.length; ++j){
+					for(let j = 0; j < objects.length; ++j){
 						objects[j].position.copy(to[j]);
 						objects[j].quaternion.copy(toRot[j]);
 						// Update AO plane final position and opacity
@@ -1486,7 +1483,7 @@ var animation = {
 	}
 };
 
-var board = {
+const board = {
 	totcaps: 0,
 	tottiles: 0,
 	whitepiecesleft: 0,
@@ -1579,7 +1576,7 @@ var board = {
 	},
 	//remove all scene objects, reset player names, stop time, etc
 	clear: function(){
-		for(var i = scene.children.length - 1;i >= 0;i--){
+		for(let i = scene.children.length - 1;i >= 0;i--){
 			scene.remove(scene.children[i]);
 		}
 		// Re-add shadow light after clearing scene
@@ -1610,11 +1607,11 @@ var board = {
 	addboard: function(){
 		this.calculateBoardPositions();
 		// draw the squares
-		for(i = 0;i < gameData.size;i++){
-			for(j = 0;j < gameData.size;j++){
+		for(let i = 0;i < gameData.size;i++){
+			for(let j = 0;j < gameData.size;j++){
 				// We draw them from the left to right and top to bottom.
 				// But, note, the naming (A1, B1, etc) is left to right and bottom to top.
-				var square = boardFactory.makeSquare(i,j,scene);
+				const square = boardFactory.makeSquare(i,j,scene);
 				this.board_objects.push(square);
 				this.sq[i][j].board_object = square;
 			}
@@ -1630,7 +1627,7 @@ var board = {
 			this.addOverlay(localStorage.getItem('boardOverlay'));
 		}
 		else{
-			var overlayId = localStorage.getItem('boardOverlayId');
+			const overlayId = localStorage.getItem('boardOverlayId');
 			if(overlayId === 'none'){
 				// Explicitly set to no overlay
 			}
@@ -1652,8 +1649,8 @@ var board = {
 			scene.remove(this.boardAO);
 		}
 		// Create AO shadow with blurred square texture
-		var boardSize = sq_size * gameData.size + border_size * 2;
-		var aoSize = boardSize + piece_size * aoConfig.padding;
+		const boardSize = sq_size * gameData.size + border_size * 2;
+		const aoSize = boardSize + piece_size * aoConfig.padding;
 		this.boardAO = createAOPlane(getBoardAOTexture(), aoSize, aoSize, 0);
 		this.boardAO.position.set(0, -sq_height / 2 + aoConfig.yOffset, 0);
 		this.boardAO.ispassive = true;
@@ -1661,16 +1658,16 @@ var board = {
 		scene.add(this.boardAO);
 	},
 	addOverlay: function(value){
-		var overlay_texture = new THREE.TextureLoader().load(value ?? materials.boardOverlayPath);
+		const overlay_texture = new THREE.TextureLoader().load(value ?? materials.boardOverlayPath);
 		overlay_texture.wrapS = overlay_texture.wrapT = THREE.ClampToEdgeWrapping;
 		overlay_texture.offset.set(materials.overlayMap[gameData.size].offset.x, materials.overlayMap[gameData.size].offset.y);
 		overlay_texture.repeat.set(materials.overlayMap[gameData.size].repeat.x, materials.overlayMap[gameData.size].repeat.y);
-		var overlay_material = new THREE.MeshLambertMaterial({map: overlay_texture});
+		const overlay_material = new THREE.MeshLambertMaterial({map: overlay_texture});
 		overlay_texture.magFilter = THREE.LinearFilter;
 		overlay_texture.minFilter = THREE.LinearFilter;
 		overlay_texture.generateMipmaps = true;
 		overlay_texture.anisotropy = 4;
-		var geometry = new THREE.BoxGeometry(materials.overlayMap[gameData.size].size, 2, materials.overlayMap[gameData.size].size);
+		const geometry = new THREE.BoxGeometry(materials.overlayMap[gameData.size].size, 2, materials.overlayMap[gameData.size].size);
 		this.overlay = new THREE.Mesh(geometry, overlay_material);
 		this.overlay.position.set(
 			0,
@@ -1690,12 +1687,12 @@ var board = {
 	},
 	// Add the table
 	addtable: function(){
-		var table_texture = new THREE.TextureLoader().load(materials.table_texture_path);
-		var table_material = new THREE.MeshLambertMaterial({map: table_texture});
+		const table_texture = new THREE.TextureLoader().load(materials.table_texture_path);
+		const table_material = new THREE.MeshLambertMaterial({map: table_texture});
 		table_material.magFilter = THREE.LinearFilter;
 		table_material.minFilter = THREE.LinearMipMapFilter;
 		table_material.anisotropy = 1;
-		var geometry = constructBurredBox(table_width, table_height, table_depth, 5, 5, 5);
+		const geometry = constructBurredBox(table_width, table_height, table_depth, 5, 5, 5);
 		this.table = new THREE.Mesh(geometry, table_material);
 		this.table.position.set(0, -(table_height + sq_height) / 2, -sq_size / 2);
 		this.table.ispassive = true;
@@ -1703,8 +1700,8 @@ var board = {
 		scene.add(this.table);
 		// Create shadow plane for when table is hidden (matches background color)
 		// Use ShadowMaterial which is invisible except for shadows
-		var shadowPlaneGeometry = new THREE.PlaneGeometry(table_width * 2, table_depth * 2);
-		var shadowPlaneMaterial = new THREE.ShadowMaterial({opacity: 0.3});
+		const shadowPlaneGeometry = new THREE.PlaneGeometry(table_width * 2, table_depth * 2);
+		const shadowPlaneMaterial = new THREE.ShadowMaterial({opacity: 0.3});
 		this.shadowPlane = new THREE.Mesh(shadowPlaneGeometry, shadowPlaneMaterial);
 		this.shadowPlane.rotation.x = -Math.PI / 2;
 		this.shadowPlane.position.set(0, -sq_height / 2 - 0.5, -sq_size / 2);
@@ -1712,7 +1709,7 @@ var board = {
 		this.shadowPlane.receiveShadow = true;
 		scene.add(this.shadowPlane);
 		// Show table or shadow plane based on setting (default to hidden)
-		var showTable = localStorage.getItem('show_table') === 'true';
+		const showTable = localStorage.getItem('show_table') === 'true';
 		this.table.visible = showTable;
 		this.shadowPlane.visible = !showTable;
 	},
@@ -1741,7 +1738,7 @@ var board = {
 	updateShadowCamera: function(){
 		if(!shadowLight){return;}
 		// Include extra space for pieces on the table (capstones, unplayed pieces)
-		var shadowCamSize = gameData.size * sq_size / 2 + border_size + stackOffsetFromBorder + piece_size * 2;
+		const shadowCamSize = gameData.size * sq_size / 2 + border_size + stackOffsetFromBorder + piece_size * 2;
 		shadowLight.shadow.camera.left = -shadowCamSize;
 		shadowLight.shadow.camera.right = shadowCamSize;
 		shadowLight.shadow.camera.top = shadowCamSize;
@@ -1753,10 +1750,10 @@ var board = {
 	},
 	// addpieces: add the pieces to the scene, not on the board
 	addpieces: function(){
-		var piece;
-		var stacks=Math.ceil(this.tottiles/10+this.totcaps);
+		let piece;
+		const stacks=Math.ceil(this.tottiles/10+this.totcaps);
 		stack_dist=Math.min((border_size*2+sq_size*gameData.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size);
-		for(var i=0;i < this.tottiles;i++){
+		for(let i=0;i < this.tottiles;i++){
 			piece = pieceFactory.makePiece(WHITE_PLAYER,i,scene);
 			this.piece_objects.push(piece);
 
@@ -1764,7 +1761,7 @@ var board = {
 			this.piece_objects.push(piece);
 		}
 
-		for(var i=0;i < this.totcaps;i++){
+		for(let i=0;i < this.totcaps;i++){
 			piece = pieceFactory.makeCap(WHITE_PLAYER,i,scene);
 			this.piece_objects.push(piece);
 
@@ -1796,23 +1793,23 @@ var board = {
 	},
 	// called if the user changes the texture or size of the pieces
 	updatepieces: function(){
-		var stacks=Math.ceil(this.tottiles/10+this.totcaps);
+		const stacks=Math.ceil(this.tottiles/10+this.totcaps);
 		stack_dist=Math.min((border_size*2+sq_size*gameData.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size);
-		var geometryW=piecegeometry("white");
-		var geometryB=piecegeometry("black");
-		var capGeometryW = capgeometry("white");
-		var capGeometryB = capgeometry("black");
+		const geometryW=piecegeometry("white");
+		const geometryB=piecegeometry("black");
+		const capGeometryW = capgeometry("white");
+		const capGeometryB = capgeometry("black");
 		materials.updatePieceMaterials();
-		var old_size = this.piece_objects[0].geometry.parameters.width;
+		const old_size = this.piece_objects[0].geometry.parameters.width;
 
 		// for all pieces...
-		for(i = 0;i < this.piece_objects.length;i++){
-			var piece=this.piece_objects[i];
+		for(let i = 0;i < this.piece_objects.length;i++){
+			const piece=this.piece_objects[i];
 			// Skip selected unplayed piece, don't reset its position
 			if(piece === this.selected && !piece.onsquare){
 				// Just update geometry and rotation for diagonal walls change
 				if(!piece.iscapstone){
-					var wasStanding = piece.isstanding;
+					const wasStanding = piece.isstanding;
 					piece.rotation.set(0,0,0);
 					piece.isstanding = false;
 					if(piece.iswhitepiece){
@@ -1835,7 +1832,7 @@ var board = {
 				continue;
 			}
 			if(piece.iscapstone){
-				var grow=capstone_height-piece.geometry.parameters.height;
+				const grow=capstone_height-piece.geometry.parameters.height;
 				piece.position.y+=grow/2;
 				if(piece.iswhitepiece){
 					piece.geometry = capGeometryW;
@@ -1847,7 +1844,7 @@ var board = {
 			}
 			else{
 				// Track if piece was standing before reset
-				var wasStanding = piece.isstanding;
+				const wasStanding = piece.isstanding;
 
 				// Reset rotation first
 				piece.rotation.set(0,0,0);
@@ -1875,7 +1872,7 @@ var board = {
 				}
 			}
 			if(!piece.onsquare){
-				var selectionOffset = (piece === this.selected) ? stack_selection_height : 0;
+				const selectionOffset = (piece === this.selected) ? stack_selection_height : 0;
 				if(piece.iscapstone){
 					if(piece.iswhitepiece){
 						piece.position.set(
@@ -1893,11 +1890,11 @@ var board = {
 					}
 				}
 				else{
-					var stackno = Math.floor(piece.pieceNum / 10);
-					var stackheight = piece.pieceNum % 10;
-					var baseY = piece.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
+					const stackno = Math.floor(piece.pieceNum / 10);
+					const stackheight = piece.pieceNum % 10;
+					const baseY = piece.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
 					// Use positionAsWhite to preserve swapped first-turn pieces
-					var posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
+					const posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
 					if(posAsWhite){
 						piece.position.set(
 							board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
@@ -1934,15 +1931,15 @@ var board = {
 	// Each piece is either a:	p=flatstone, c=capstone, w=wall
 	// Uppercase is a whitepiece, Lowercase is a blackpiece
 	save_board_pos: function(){
-		var bp = [];
+		const bp = [];
 		//for all squares, convert stack info to board position info
-		for(var i=0;i<gameData.size;i++){
-			for(var j=0;j<gameData.size;j++){
-				var bp_sq = [];
-				var stk = this.sq[i][j];
-				for(var s=0;s<stk.length;s++){
-					var pc = stk[s];
-					var c = 'p';
+		for(let i=0;i<gameData.size;i++){
+			for(let j=0;j<gameData.size;j++){
+				const bp_sq = [];
+				const stk = this.sq[i][j];
+				for(let s=0;s<stk.length;s++){
+					const pc = stk[s];
+					let c = 'p';
 					if(pc.iscapstone){c = 'c';}
 					else if(pc.isstanding){c = 'w';}
 
@@ -1959,27 +1956,27 @@ var board = {
 	apply_board_pos: function(moveNum){
 		// grab the given board_history
 		// pos is a single dim. array of size*size containing arrays of piece types
-		var pos = this.board_history[moveNum - gameData.move_start];
+		const pos = this.board_history[moveNum - gameData.move_start];
 		if(pos === 'undefined'){
 			console.warn("no board position found for moveNum " + moveNum);
 			return;
 		}
 
 		// scan through each cell in the pos array
-		for(var i=0;i<gameData.size;i++){//file
-			for(var j=0;j<gameData.size;j++){//rank
-				var sq = this.get_board_obj(i,j);
-				var sqpos = pos[i*gameData.size + j];
+		for(let i=0;i<gameData.size;i++){//file
+			for(let j=0;j<gameData.size;j++){//rank
+				const sq = this.get_board_obj(i,j);
+				const sqpos = pos[i*gameData.size + j];
 				// sqpos describes a stack of pieces in that square
 				// scan through those pieces
-				for(var s=0;s<sqpos.length;s++){
-					var pc = sqpos[s];
-					var iscap = (pc==='c' || pc==='C');
-					var iswall = (pc==='w' || pc==='W');
-					var iswhite = (pc===pc.charAt(0).toUpperCase());
+				for(let s=0;s<sqpos.length;s++){
+					const pcType = sqpos[s];
+					const iscap = (pcType==='c' || pcType==='C');
+					const iswall = (pcType==='w' || pcType==='W');
+					const iswhite = (pcType===pcType.charAt(0).toUpperCase());
 
 					// get an available piece
-					var pc = this.getfromstack(iscap,iswhite);
+					const pc = this.getfromstack(iscap,iswhite);
 					// what if there is not a piece available? Maybe that
 					// is not possible, because when we first created the board
 					// we know that there were enough pieces.
@@ -1994,10 +1991,9 @@ var board = {
 	},
 	mousepick: function(){
 		raycaster.setFromCamera(mouse,camera);
-		var intersects = raycaster.intersectObjects(scene.children);
-		var a;
-		for(a=0;a<intersects.length;a++){
-			var potential=intersects[a].object;
+		const intersects = raycaster.intersectObjects(scene.children);
+		for(let a=0;a<intersects.length;a++){
+			const potential=intersects[a].object;
 			if(potential.isboard){
 				return ["board",potential,potential.rank,potential.file];
 			}
@@ -2015,20 +2011,20 @@ var board = {
 		return ["none"];
 	},
 	leftclick: function(){
-		var pick=this.mousepick();
+		const pick=this.mousepick();
 		this.remove_total_highlight();
 		if(!checkIfMyMove()){
 			return;
 		}
 		if(pick[0]=="board"){
-			var destinationstack = this.get_stack(pick[1]);
+			const destinationstack = this.get_stack(pick[1]);
 			if(this.selected){
 				if(destinationstack.length==0){
-					var sel=this.selected;
-					var self=this;
+					const sel=this.selected;
+					const self=this;
 					animation.push([sel]);
 					this.selected = null;
-					var hlt=pick[1];
+					const hlt=pick[1];
 					// Set fadeIn flag BEFORE pushPieceOntoSquare since animation.playing may not be true yet
 					if(sel.aoPlane && animationsEnabled){
 						sel.aoPlane.fadeIn = true;
@@ -2038,7 +2034,7 @@ var board = {
 					animation.push([sel], 'jump', 300, function(){self.hideSelectionShadow();});
 					animation.play(playMoveSound);
 					//check if actually moved
-					var stone = 'Piece';
+					let stone = 'Piece';
 					if(sel.iscapstone){stone = 'Cap';}
 					else if(sel.isstanding){stone = 'Wall';}
 
@@ -2051,13 +2047,13 @@ var board = {
 					this.highlightLastMove_sq(hlt, gameData.move_count);
 					this.lastMovedSquareList.push(hlt);
 
-					var sqname = this.squarename(hlt.file,hlt.rank);
-					var msg = "P " + sqname;
+					const sqname = this.squarename(hlt.file,hlt.rank);
+					let msg = "P " + sqname;
 					if(stone !== 'Piece'){msg += " " + stone.charAt(0);}
 					sendMove(msg);
 					this.notatePmove(sqname,stone.charAt(0));
 
-					var pcs;
+					let pcs;
 					if(gameData.my_color === "white"){
 						this.whitepiecesleft--;
 						pcs = this.whitepiecesleft;
@@ -2067,7 +2063,7 @@ var board = {
 						pcs = this.blackpiecesleft;
 					}
 					if(gameData.is_scratch){
-						var over = this.checkroadwin();
+						let over = this.checkroadwin();
 						if(!over){
 							over = this.checksquaresover();
 							if(!over && pcs <= 0){
@@ -2081,14 +2077,14 @@ var board = {
 			}
 			// Left click move stack
 			else if(this.selectedStack){
-				var tp = this.top_of_stack(pick[1]);
+				const tp = this.top_of_stack(pick[1]);
 				if(tp && (tp.iscapstone || (tp.isstanding && !this.selectedStack[this.selectedStack.length - 1].iscapstone))){
 					console.log('selected stack?');
 				}
 				else{
-					var prev = this.move.squares[this.move.squares.length - 1];
-					var rel = this.sqrel(prev,pick[1]);
-					var goodmove=false;
+					const prev = this.move.squares[this.move.squares.length - 1];
+					const rel = this.sqrel(prev,pick[1]);
+					let goodmove=false;
 					if(this.move.dir === 'U' && rel !== 'OUTSIDE'){
 						goodmove=true;
 					}
@@ -2096,15 +2092,15 @@ var board = {
 						goodmove=true;
 					}
 					if(goodmove){
-						var obj = this.selectedStack.pop();
-						var isLastPiece = this.selectedStack.length === 0;
-						var isSameSquare = pick[1] === this.move.squares[this.move.squares.length - 1];
-						var isMoveCanceled = isLastPiece && pick[1] === this.move.start;
+						const obj = this.selectedStack.pop();
+						const isLastPiece = this.selectedStack.length === 0;
+						const isSameSquare = pick[1] === this.move.squares[this.move.squares.length - 1];
+						const isMoveCanceled = isLastPiece && pick[1] === this.move.start;
 						if(isLastPiece){
-							var wallToFlatten = this.top_of_stack(pick[1]);
-							var hasWallToFlatten = wallToFlatten && wallToFlatten.isstanding && !wallToFlatten.iscapstone && obj.iscapstone;
-							var objectsToAnimate = hasWallToFlatten ? [obj, wallToFlatten] : [obj];
-							var self = this;
+							const wallToFlatten = this.top_of_stack(pick[1]);
+							const hasWallToFlatten = wallToFlatten && wallToFlatten.isstanding && !wallToFlatten.iscapstone && obj.iscapstone;
+							const objectsToAnimate = hasWallToFlatten ? [obj, wallToFlatten] : [obj];
+							const self = this;
 							// Enable drop shadow on wall being flattened
 							if(hasWallToFlatten){
 								wallToFlatten.castShadow = true;
@@ -2117,7 +2113,7 @@ var board = {
 							}
 							animation.push(objectsToAnimate);
 							this.pushPieceOntoSquare(pick[1],obj);
-							var animType = isSameSquare ? 'move' : 'jump';
+							const animType = isSameSquare ? 'move' : 'jump';
 							animation.push(objectsToAnimate, animType, isSameSquare ? 100 : 200, function(){
 								self.hideSelectionShadow();
 								// Disable drop shadow on wall after animation
@@ -2129,7 +2125,7 @@ var board = {
 							animation.play(isMoveCanceled ? null : playMoveSound);
 						}
 						else{
-							var allPieces = [obj].concat(this.selectedStack);
+							const allPieces = [obj].concat(this.selectedStack);
 							// Set fadeIn flag for dropped piece's AO to fade in at end of animation
 							// Don't set visible here - pushPieceOntoSquare will set correct visibility
 							if(obj.aoPlane && animationsEnabled && shadowsEnabled){
@@ -2137,7 +2133,7 @@ var board = {
 								obj.aoPlane.material.opacity = 0;
 							}
 							// Hide AO of the new bottom piece (no longer in contact with piece below)
-							var newBottomPiece = this.selectedStack[this.selectedStack.length - 1];
+							const newBottomPiece = this.selectedStack[this.selectedStack.length - 1];
 							if(newBottomPiece && newBottomPiece.aoPlane){
 								if(animationsEnabled){
 									newBottomPiece.aoPlane.material.opacity = 0;
@@ -2150,7 +2146,7 @@ var board = {
 							this.pushPieceOntoSquare(pick[1],obj);
 							this.move_stack_over(pick[1],this.selectedStack, false);
 							// Update shadow position to follow the stack
-							var bottomPiece = this.selectedStack[this.selectedStack.length - 1];
+							const bottomPiece = this.selectedStack[this.selectedStack.length - 1];
 							if(bottomPiece){
 								this.showSelectionShadow(bottomPiece);
 							}
@@ -2173,7 +2169,7 @@ var board = {
 			}
 			else{
 				if(gameData.move_count >= 2 && !gameData.is_game_end){
-					var stk = this.get_stack(pick[1]);
+					const stk = this.get_stack(pick[1]);
 					if(this.is_top_mine(pick[1]) && stk.length > 0){
 						this.selectStack(stk);
 						this.move.start = pick[1];
@@ -2202,8 +2198,8 @@ var board = {
 						// No capstones on first moves
 						if(!pick[1].iscapstone){
 							// Determine whose turn it is (not what color to pick)
-							var isWhitePlayerTurn = (gameData.move_count % 2 === 0);
-							var pieceToSelect = this.getSwappedFirstPiece(isWhitePlayerTurn);
+							const isWhitePlayerTurn = (gameData.move_count % 2 === 0);
+							const pieceToSelect = this.getSwappedFirstPiece(isWhitePlayerTurn);
 							if(pieceToSelect){
 								pieceToSelect.isFirstTurnPiece = true;
 								this.select(pieceToSelect);
@@ -2214,9 +2210,9 @@ var board = {
 					else{
 						// Normal turns: select your own colored pieces
 						// isWhitePieceToMove returns the color of piece to pick (same as player color after move 2)
-						var myColor = isWhitePieceToMove();
+						const myColor = isWhitePieceToMove();
 						if(pick[1].iswhitepiece === myColor){
-							var pieceToSelect = this.getfromstack(pick[1].iscapstone, pick[1].iswhitepiece);
+							const pieceToSelect = this.getfromstack(pick[1].iscapstone, pick[1].iswhitepiece);
 							if(pieceToSelect){
 								this.select(pieceToSelect);
 								justSelectedPiece = true;
@@ -2229,16 +2225,16 @@ var board = {
 		// Background click cancel is handled in onDocumentMouseUp to allow view rotation
 	},
 	mousemove: function(){
-		var pick=this.mousepick();
+		const pick=this.mousepick();
 		if(pick[0]=="board" && this.selectedStack){
-			var tp = this.top_of_stack(pick[1]);
+			const tp = this.top_of_stack(pick[1]);
 			if(tp && (tp.iscapstone || (tp.isstanding && !this.selectedStack[this.selectedStack.length - 1].iscapstone))){
 				this.unhighlight_sq();
 			}
 			else{
-				var prev = this.move.squares[this.move.squares.length - 1];
-				var rel = this.sqrel(prev,pick[1]);
-				var goodmove=false;
+				const prev = this.move.squares[this.move.squares.length - 1];
+				const rel = this.sqrel(prev,pick[1]);
+				let goodmove=false;
 				if(this.move.dir === 'U' && rel !== 'OUTSIDE'){
 					goodmove=true;
 				}
@@ -2254,7 +2250,7 @@ var board = {
 			}
 		}
 		else if(pick[0]=="board" && this.selected){
-			var destinationstack = this.get_stack(pick[1]);
+			const destinationstack = this.get_stack(pick[1]);
 			if(destinationstack.length==0){
 				this.highlight_sq(pick[1]);
 			}
@@ -2268,8 +2264,8 @@ var board = {
 	},
 	getfromstack: function(cap,iswhite){
 		//	scan through the pieces for the first appropriate one
-		for(i = this.piece_objects.length-1;i >= 0;i--){
-			var obj = this.piece_objects[i];
+		for(let i = this.piece_objects.length-1;i >= 0;i--){
+			const obj = this.piece_objects[i];
 			// not on a square, and matches color, and matches type
 			if(!obj.onsquare &&
 					(obj.iswhitepiece === iswhite) &&
@@ -2284,10 +2280,10 @@ var board = {
 		// The swapped piece has pieceNum = tottiles - 1
 		// For white player: want the BLACK piece (which is positioned on white's side)
 		// For black player: want the WHITE piece (which is positioned on black's side)
-		var wantWhitePiece = !forWhitePlayer;
-		var targetPieceNum = this.tottiles - 1;
-		for(var i = 0; i < this.piece_objects.length; i++){
-			var obj = this.piece_objects[i];
+		const wantWhitePiece = !forWhitePlayer;
+		const targetPieceNum = this.tottiles - 1;
+		for(let i = 0; i < this.piece_objects.length; i++){
+			const obj = this.piece_objects[i];
 			if(!obj.onsquare && !obj.iscapstone &&
 					obj.pieceNum === targetPieceNum &&
 					obj.iswhitepiece === wantWhitePiece){
@@ -2298,14 +2294,14 @@ var board = {
 	},
 	//move the server sends
 	serverPmove: function(file,rank,caporwall,skipAnimation){
-		var oldpos = -1;
+		let oldpos = -1;
 		if(gameData.move_shown!=gameData.move_count){
 			oldpos = gameData.move_shown;
 		}
 
 		dontanimate = true;
 		fastforward();
-		var obj = this.getfromstack((caporwall === 'C'),isWhitePieceToMove());
+		const obj = this.getfromstack((caporwall === 'C'),isWhitePieceToMove());
 
 		if(!obj){
 			console.warn("something is wrong");
@@ -2317,7 +2313,7 @@ var board = {
 			obj.isFirstTurnPiece = true;
 		}
 
-		var hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0),rank - 1);
+		const hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0),rank - 1);
 		if(skipAnimation || oldpos !== -1){
 			// Just place the piece without animation (loading history or viewing earlier position)
 			if(caporwall === 'W'){
@@ -2355,33 +2351,33 @@ var board = {
 	},
 	//Move move the server sends
 	serverMmove: function(f1,r1,f2,r2,nums,skipAnimation){
-		var oldpos = -1;
+		let oldpos = -1;
 		if(gameData.move_shown != gameData.move_count){
 			oldpos = gameData.move_shown;
 		}
 
 		dontanimate = true;
 		fastforward();
-		var tot = 0;
-		for(i = 0;i < nums.length;i++){tot += nums[i];}
+		let tot = 0;
+		for(let i = 0;i < nums.length;i++){tot += nums[i];}
 
-		var tstk = [];
-		var s1 = this.get_board_obj(f1.charCodeAt(0) - 'A'.charCodeAt(0),r1 - 1);
-		var stk = this.get_stack(s1);
-		for(i = 0;i < tot;i++){
+		const tstk = [];
+		const s1 = this.get_board_obj(f1.charCodeAt(0) - 'A'.charCodeAt(0),r1 - 1);
+		const stk = this.get_stack(s1);
+		for(let i = 0;i < tot;i++){
 			tstk.push(stk.pop());
 		}
-		var fi = 0,ri = 0;
+		let fi = 0,ri = 0;
 		if(f1 === f2){ri = r2 > r1 ? 1 : -1;}
 		if(r1 === r2){fi = f2 > f1 ? 1 : -1;}
 
 		// Collect all pieces and their target squares first
-		var allPieces = [];
-		var pieceTargets = [];
-		for(i = 0;i < nums.length;i++){
-			var sq = this.get_board_obj(s1.file + (i + 1) * fi,s1.rank + (i + 1) * ri);
-			for(j = 0;j < nums[i];j++){
-				var piece = tstk.pop();
+		const allPieces = [];
+		const pieceTargets = [];
+		for(let i = 0;i < nums.length;i++){
+			const sq = this.get_board_obj(s1.file + (i + 1) * fi,s1.rank + (i + 1) * ri);
+			for(let j = 0;j < nums[i];j++){
+				const piece = tstk.pop();
 				allPieces.push(piece);
 				pieceTargets.push(sq);
 				this.highlightLastMove_sq(sq, gameData.move_count);
@@ -2391,7 +2387,7 @@ var board = {
 
 		if(skipAnimation || oldpos !== -1){
 			// Just place pieces without animation (loading history or viewing earlier position)
-			for(i = 0; i < allPieces.length; i++){
+			for(let i = 0; i < allPieces.length; i++){
 				this.pushPieceOntoSquare(pieceTargets[i], allPieces[i]);
 			}
 			// Still play sound if viewing earlier position (not loading history)
@@ -2401,46 +2397,46 @@ var board = {
 		}
 		else{
 			// Check if any walls will be flattened (capstone landing on standing wall)
-			var wallsToFlatten = [];
-			for(i = 0; i < allPieces.length; i++){
+			const wallsToFlatten = [];
+			for(let i = 0; i < allPieces.length; i++){
 				if(allPieces[i].iscapstone){
-					var targetStack = this.get_stack(pieceTargets[i]);
-					var topPiece = targetStack.length > 0 ? targetStack[targetStack.length - 1] : null;
+					const targetStack = this.get_stack(pieceTargets[i]);
+					const topPiece = targetStack.length > 0 ? targetStack[targetStack.length - 1] : null;
 					if(topPiece && topPiece.isstanding && !topPiece.iscapstone){
 						wallsToFlatten.push(topPiece);
 					}
 				}
 			}
 			// Find bottom pieces of each new stack (first piece dropped on each target square)
-			var bottomPiecesForShadow = [];
-			var seenTargets = [];
-			for(i = 0; i < allPieces.length; i++){
-				var targetKey = pieceTargets[i].file + '_' + pieceTargets[i].rank;
+			const bottomPiecesForShadow = [];
+			const seenTargets = [];
+			for(let i = 0; i < allPieces.length; i++){
+				const targetKey = pieceTargets[i].file + '_' + pieceTargets[i].rank;
 				if(seenTargets.indexOf(targetKey) === -1){
 					seenTargets.push(targetKey);
 					bottomPiecesForShadow.push(allPieces[i]);
 				}
 			}
 			// Record start positions for all pieces including walls to flatten
-			var objectsToAnimate = allPieces.concat(wallsToFlatten);
+			const objectsToAnimate = allPieces.concat(wallsToFlatten);
 			// Enable drop shadow on walls being flattened and bottom pieces during animation
-			for(i = 0; i < wallsToFlatten.length; i++){
+			for(let i = 0; i < wallsToFlatten.length; i++){
 				wallsToFlatten[i].castShadow = true;
 			}
-			for(i = 0; i < bottomPiecesForShadow.length; i++){
+			for(let i = 0; i < bottomPiecesForShadow.length; i++){
 				bottomPiecesForShadow[i].castShadow = true;
 			}
 			animation.push(objectsToAnimate);
 			// Set end positions for all pieces
-			for(i = 0; i < allPieces.length; i++){
+			for(let i = 0; i < allPieces.length; i++){
 				this.pushPieceOntoSquare(pieceTargets[i], allPieces[i]);
 			}
 			animation.push(objectsToAnimate, 'jump', 300, function(){
 				// Disable drop shadow on walls and bottom pieces after animation
-				for(var j = 0; j < wallsToFlatten.length; j++){
+				for(let j = 0; j < wallsToFlatten.length; j++){
 					wallsToFlatten[j].castShadow = false;
 				}
-				for(var k = 0; k < bottomPiecesForShadow.length; k++){
+				for(let k = 0; k < bottomPiecesForShadow.length; k++){
 					bottomPiecesForShadow[k].castShadow = false;
 				}
 			});
@@ -2459,18 +2455,18 @@ var board = {
 		dontanimate = false;
 	},
 	flatscore: function(ply){
-		var whitec = 0;
-		var blackc = 0;
+		let whitec = 0;
+		let blackc = 0;
 		if(!(ply>=0)){
 			ply=this.board_history.length-1;
 		}
-		var position=this.board_history[ply];
+		const position=this.board_history[ply];
 		if(!position){
 			return [0,0];
 		}
-		for(i = 0;i < gameData.size*gameData.size;i++){
+		for(let i = 0;i < gameData.size*gameData.size;i++){
 			if(position[i].length>0){
-				var toppiece=position[i][position[i].length-1];
+				const toppiece=position[i][position[i].length-1];
 				whitec+=toppiece=="P";
 				blackc+=toppiece=="p";
 			}
@@ -2478,13 +2474,13 @@ var board = {
 		return [whitec,blackc];
 	},
 	findwhowon: function(){
-		var whitec = 0;
-		var blackc = gameData.komi/2;
-		for(i = 0;i < gameData.size;i++){
-			for(j = 0;j < gameData.size;j++){
-				var stk = this.sq[i][j];
+		let whitec = 0;
+		let blackc = gameData.komi/2;
+		for(let i = 0;i < gameData.size;i++){
+			for(let j = 0;j < gameData.size;j++){
+				const stk = this.sq[i][j];
 				if(stk.length === 0){continue;}
-				var top = stk[stk.length - 1];
+				const top = stk[stk.length - 1];
 				if(top.isstanding || top.iscapstone){continue;}
 				if(top.iswhitepiece){whitec++;}
 				else{blackc++;}
@@ -2495,25 +2491,25 @@ var board = {
 		else{gameData.result = "0-F";}
 	},
 	checkroadwin: function(){
-		for(var i = 0;i < gameData.size;i++){
-			for(var j = 0;j < gameData.size;j++){
-				var cur_st = this.sq[i][j];
+		for(let i = 0;i < gameData.size;i++){
+			for(let j = 0;j < gameData.size;j++){
+				const cur_st = this.sq[i][j];
 				cur_st.graph = -1;
 				if(cur_st.length === 0){continue;}
 
-				var ctop = cur_st[cur_st.length - 1];
+				const ctop = cur_st[cur_st.length - 1];
 				if(ctop.isstanding && !ctop.iscapstone){continue;}
 
 				cur_st.graph = (i + j * gameData.size).toString();
 
 				if(i - 1 >= 0){
-					var left_st = this.sq[i - 1][j];
+					const left_st = this.sq[i - 1][j];
 					if(left_st.length !== 0){
-						var ltop = left_st[left_st.length - 1];
+						const ltop = left_st[left_st.length - 1];
 						if(!(ltop.isstanding && !ltop.iscapstone)){
 							if(ctop.iswhitepiece === ltop.iswhitepiece){
-								for(var r = 0;r < gameData.size;r++){
-									for(var c = 0;c < gameData.size;c++){
+								for(let r = 0;r < gameData.size;r++){
+									for(let c = 0;c < gameData.size;c++){
 										if(this.sq[r][c].graph === cur_st.graph){
 											this.sq[r][c].graph = left_st.graph;
 										}
@@ -2524,13 +2520,13 @@ var board = {
 					}
 				}
 				if(j - 1 >= 0){
-					var top_st = this.sq[i][j - 1];
+					const top_st = this.sq[i][j - 1];
 					if(top_st.length !== 0){
-						var ttop = top_st[top_st.length - 1];
+						const ttop = top_st[top_st.length - 1];
 						if(!(ttop.isstanding && !ttop.iscapstone)){
 							if(ctop.iswhitepiece === ttop.iswhitepiece){
-								for(var r = 0;r < gameData.size;r++){
-									for(var c = 0;c < gameData.size;c++){
+								for(let r = 0;r < gameData.size;r++){
+									for(let c = 0;c < gameData.size;c++){
 										if(this.sq[r][c].graph === cur_st.graph){
 											this.sq[r][c].graph = top_st.graph;
 										}
@@ -2542,26 +2538,26 @@ var board = {
 				}
 			}
 		}
-		var whitewin = false;
-		var blackwin = false;
-		for(var tr = 0;tr < gameData.size;tr++){
-			var tsq = this.sq[tr][0];
-			var no = tsq.graph;
+		let whitewin = false;
+		let blackwin = false;
+		for(let tr = 0;tr < gameData.size;tr++){
+			const tsq = this.sq[tr][0];
+			const no = tsq.graph;
 			if(no === -1){continue;}
-			for(var br = 0;br < gameData.size;br++){
-				var brno = this.sq[br][gameData.size - 1].graph;
+			for(let br = 0;br < gameData.size;br++){
+				const brno = this.sq[br][gameData.size - 1].graph;
 				if(no === brno){
 					if(tsq[tsq.length - 1].iswhitepiece){whitewin = true;}
 					else{blackwin = true;}
 				}
 			}
 		}
-		for(var tr = 0;tr < gameData.size;tr++){
-			var tsq = this.sq[0][tr];
-			var no = tsq.graph;
+		for(let tr = 0;tr < gameData.size;tr++){
+			const tsq = this.sq[0][tr];
+			const no = tsq.graph;
 			if(no === -1){continue;}
-			for(var br = 0;br < gameData.size;br++){
-				var brno = this.sq[gameData.size - 1][br].graph;
+			for(let br = 0;br < gameData.size;br++){
+				const brno = this.sq[gameData.size - 1][br].graph;
 				if(no === brno){
 					if(tsq[tsq.length - 1].iswhitepiece){whitewin = true;}
 					else{blackwin = true;}
@@ -2579,8 +2575,8 @@ var board = {
 		return false;
 	},
 	checksquaresover: function(){
-		for(i = 0;i < gameData.size;i++){
-			for(j = 0;j < gameData.size;j++){
+		for(let i = 0;i < gameData.size;i++){
+			for(let j = 0;j < gameData.size;j++){
 				if(this.sq[i][j].length === 0){return false;}
 			}
 		}
@@ -2599,8 +2595,8 @@ var board = {
 		}
 	},
 	setmovedir: function(){
-		var s1 = this.move.start;
-		var s2 = this.move.squares[this.move.squares.length - 1];
+		const s1 = this.move.start;
+		const s2 = this.move.squares[this.move.squares.length - 1];
 		if(s1.file === s2.file && s1.rank === s2.rank){return;}
 
 		if(s1.file === s2.file){
@@ -2621,17 +2617,17 @@ var board = {
 	},
 	//all params are nums
 	calculateMoveNotation: function(stf,str,endf,endr,nos){
-		var dir = '';
+		let dir = '';
 		if(stf === endf){dir = (endr < str) ? '-' : '+';}
 		else{dir = (endf < stf) ? '<' : '>';}
-		var tot = 0;
-		var lst = '';
-		for(var i = 0;i < nos.length;i++){
+		let tot = 0;
+		let lst = '';
+		for(let i = 0;i < nos.length;i++){
 			tot += Number(nos[i]);
 			lst = lst + (nos[i] + '').trim();
 		}
 		if(tot === 1){
-			var s1 = this.get_board_obj(stf,str);
+			const s1 = this.get_board_obj(stf,str);
 			if(this.get_stack(s1).length === 0){
 				tot = '';
 				lst = '';
@@ -2639,19 +2635,19 @@ var board = {
 			else if(tot === Number(lst)){lst = '';}
 		}
 		else if(tot === Number(lst)){lst = '';}
-		var move = tot + this.squarename(stf,str).toLowerCase()
+		const move = tot + this.squarename(stf,str).toLowerCase()
 				+ dir + '' + lst;
 		notate(move);
 		storeNotation();
 	},
 	generateMove: function(){
-		var st = this.squarename(this.move.start.file,this.move.start.rank);
-		var end = this.squarename(this.move.end.file,this.move.end.rank);
-		var lst = [];
-		var prev = null;
+		const st = this.squarename(this.move.start.file,this.move.start.rank);
+		const end = this.squarename(this.move.end.file,this.move.end.rank);
+		const lst = [];
+		let prev = null;
 
-		for(i = 0,c = 0;i < this.move.squares.length;i++){
-			var obj = this.move.squares[i];
+		for(let i = 0,c = 0;i < this.move.squares.length;i++){
+			const obj = this.move.squares[i];
 			if(obj === this.move.start){continue;}
 
 			if(obj === prev){lst[c - 1] = lst[c - 1] + 1;}
@@ -2662,8 +2658,8 @@ var board = {
 			}
 		}
 		if(st !== end){
-			var nos = "";
-			for(i = 0;i < lst.length;i++){nos += lst[i] + " ";}
+			let nos = "";
+			for(let i = 0;i < lst.length;i++){nos += lst[i] + " ";}
 			sendMove("M " + st + " " + end + " " + nos.trim());
 			this.calculateMoveNotation(
 				this.move.start.file,
@@ -2683,9 +2679,9 @@ var board = {
 		this.move = { start: null, end: null, dir: 'U', squares: []};
 	},
 	pushPieceOntoSquare: function(sq,pc){
-		var st = this.get_stack(sq);
-		var top = this.top_of_stack(sq);
-		var flattened = null;
+		const st = this.get_stack(sq);
+		const top = this.top_of_stack(sq);
+		let flattened = null;
 		if(top && top.isstanding && !top.iscapstone && pc.iscapstone){
 			flattened = top;
 			this.rotate(top, false);
@@ -2713,9 +2709,9 @@ var board = {
 		// 1. It's at the bottom of the stack (st.length === 0), OR
 		// 2. It's a standing piece (wall/cap) on top of flats
 		if(pc.aoPlane){
-			var isBottom = (st.length === 0);
-			var isStandingOnFlats = pc.isstanding && st.length > 0;
-			var shouldShowAO = shadowsEnabled && (isBottom || isStandingOnFlats);
+			const isBottom = (st.length === 0);
+			const isStandingOnFlats = pc.isstanding && st.length > 0;
+			const shouldShowAO = shadowsEnabled && (isBottom || isStandingOnFlats);
 			pc.aoPlane.visible = shouldShowAO;
 			// Don't overwrite fadeIn if it was already set (e.g., by leftclick before this call)
 			if(!pc.aoPlane.fadeIn){
@@ -2754,7 +2750,7 @@ var board = {
 		// Update AO plane for flat shape, texture and position
 		resetAOToFlat(piece);
 		if(piece.aoPlane && piece.onsquare){
-			var stack = this.get_stack(piece.onsquare);
+			const stack = this.get_stack(piece.onsquare);
 			// If there are other pieces in the stack, the smashed wall is on top - hide its AO
 			if(stack.length > 1){
 				piece.aoPlane.visible = false;
@@ -2800,14 +2796,14 @@ var board = {
 			this.cancelMove();
 		}
 		else{
-			var pick=this.mousepick();
+			const pick=this.mousepick();
 			if(pick[0]=="piece"){
 				// Right-click on unplayed piece - select it as standing
 				// Only works on your turn, after move 2, and not at game end
 				if(!gameData.is_game_end && gameData.move_count >= 2 && checkIfMyMove()){
 					// After move 2, select your own color pieces
 					if(pick[1].iswhitepiece === isWhitePieceToMove() && !pick[1].iscapstone){
-						var pieceToSelect = this.getfromstack(false, pick[1].iswhitepiece);
+						const pieceToSelect = this.getfromstack(false, pick[1].iswhitepiece);
 						if(pieceToSelect){
 							// Select and standup as a single animation
 							animation.push([pieceToSelect]);
@@ -2833,11 +2829,11 @@ var board = {
 				}
 			}
 			else if(pick[0]=="board"){
-				var square=pick[1];
-				var stack=this.get_stack(square);
-				var i;
+				const square=pick[1];
+				const stack=this.get_stack(square);
+				let i;
 				for(i=0;i<scene.children.length;i++){
-					var obj=scene.children[i];
+					const obj=scene.children[i];
 					if(!obj.isboard && obj.onsquare){
 						obj.visible=false;
 						// Also hide AO plane
@@ -2850,8 +2846,8 @@ var board = {
 					stack[i].visible=true;
 					// Show AO plane based on position in stack and shadows setting
 					if(stack[i].aoPlane && shadowsEnabled){
-						var isBottom = (i === 0);
-						var isStandingOnFlats = stack[i].isstanding && i > 0;
+						const isBottom = (i === 0);
+						const isStandingOnFlats = stack[i].isstanding && i > 0;
 						stack[i].aoPlane.visible = isBottom || isStandingOnFlats;
 					}
 				}
@@ -2861,15 +2857,15 @@ var board = {
 	},
 	remove_total_highlight: function(){
 		if(this.totalhighlighted !== null){
-			for(var i = 0;i < scene.children.length;i++){
-				var obj = scene.children[i];
+			for(let i = 0;i < scene.children.length;i++){
+				const obj = scene.children[i];
 				if(obj.isboard || !obj.onsquare){continue;}
 				obj.visible = true;
 				// Restore AO visibility based on stack position and shadows setting
 				if(obj.aoPlane && shadowsEnabled){
-					var stack = this.get_stack(obj.onsquare);
-					var isBottom = (stack.indexOf(obj) === 0);
-					var isStandingOnFlats = obj.isstanding && stack.indexOf(obj) > 0;
+					const stack = this.get_stack(obj.onsquare);
+					const isBottom = (stack.indexOf(obj) === 0);
+					const isStandingOnFlats = obj.isstanding && stack.indexOf(obj) > 0;
 					obj.aoPlane.visible = isBottom || isStandingOnFlats;
 				}
 			}
@@ -2883,7 +2879,7 @@ var board = {
 	},
 	//bring pieces to original positions,
 	resetpieces: function(){
-		for(var i = this.piece_objects.length - 1;i >= 0;i--){
+		for(let i = this.piece_objects.length - 1;i >= 0;i--){
 			// Remove AO plane from scene if it exists
 			if(this.piece_objects[i].aoPlane){
 				scene.remove(this.piece_objects[i].aoPlane);
@@ -2900,17 +2896,17 @@ var board = {
 		this.selectedStack = null;
 		this.move = { start: null, end: null, dir: 'U', squares: []};
 
-		for(var i = 0;i < gameData.size;i++){
-			for(var j = 0;j < gameData.size;j++){
+		for(let i = 0;i < gameData.size;i++){
+			for(let j = 0;j < gameData.size;j++){
 				this.sq[i][j].length = 0;
 			}
 		}
 		this.addpieces();
 	},
 	resetBoardStacks: function(){
-		for(var i = 0;i < gameData.size;i++){
+		for(let i = 0;i < gameData.size;i++){
 			this.sq[i] = [];
-			for(var j = 0;j < gameData.size;j++){
+			for(let j = 0;j < gameData.size;j++){
 				this.sq[i][j] = [];
 			}
 		}
@@ -2922,7 +2918,7 @@ var board = {
 		if(gameData.move_count <= gameData.move_start || no>gameData.move_count || no<gameData.move_start || (gameData.move_shown === no && !override)){
 			return;
 		}
-		var prevdontanim = dontanimate;
+		const prevdontanim = dontanimate;
 		dontanimate = true;
 		console.log('showmove '+no);
 		setShownMove(no);
@@ -2952,10 +2948,10 @@ var board = {
 		}
 	},
 	sqrel: function(sq1,sq2){
-		var f1 = sq1.file;
-		var r1 = sq1.rank;
-		var f2 = sq2.file;
-		var r2 = sq2.rank;
+		const f1 = sq1.file;
+		const r1 = sq1.rank;
+		const f2 = sq2.file;
+		const r2 = sq2.rank;
 		if(f1 === f2 && r1 === r2){return 'O';}
 
 		if(f1 === f2){
@@ -2983,11 +2979,11 @@ var board = {
 		// Show AO on piece underneath if this was a standing piece on a stack
 		// Only show if the piece underneath is at the bottom of the stack or is standing
 		if(obj.onsquare && (obj.isstanding || obj.iscapstone)){
-			var stack = this.get_stack(obj.onsquare);
-			var objIndex = stack.indexOf(obj);
+			const stack = this.get_stack(obj.onsquare);
+			const objIndex = stack.indexOf(obj);
 			if(objIndex > 0 && stack[objIndex - 1].aoPlane && shadowsEnabled){
-				var pieceBelow = stack[objIndex - 1];
-				var shouldShowBelow = (objIndex === 1) || pieceBelow.isstanding;
+				const pieceBelow = stack[objIndex - 1];
+				const shouldShowBelow = (objIndex === 1) || pieceBelow.isstanding;
 				pieceBelow.aoPlane.visible = shouldShowBelow;
 				pieceBelow.aoPlane.material.opacity = shouldShowBelow ? 1.0 : 0;
 			}
@@ -2996,10 +2992,10 @@ var board = {
 		animation.play();
 	},
 	unselect: function(options){
-		var animate = !options || options.animate !== false;
+		const animate = !options || options.animate !== false;
 		if(this.selected){
-			var self = this;
-			var piece = this.selected;
+			const self = this;
+			const piece = this.selected;
 			animate && animation.push([piece]);
 			// If piece is standing (wall), flatten it back and adjust height accordingly
 			if(piece.isstanding && !piece.iscapstone){
@@ -3023,8 +3019,8 @@ var board = {
 			}
 			// Hide AO on piece underneath if this is a standing piece or capstone going back on a stack
 			if(piece.onsquare && (piece.isstanding || piece.iscapstone)){
-				var stack = this.get_stack(piece.onsquare);
-				var pieceIndex = stack.indexOf(piece);
+				const stack = this.get_stack(piece.onsquare);
+				const pieceIndex = stack.indexOf(piece);
 				if(pieceIndex > 0 && stack[pieceIndex - 1].aoPlane){
 					stack[pieceIndex - 1].aoPlane.visible = false;
 					stack[pieceIndex - 1].aoPlane.material.opacity = 0;
@@ -3050,18 +3046,18 @@ var board = {
 	},
 	selectStack: function(stk){
 		this.selectedStack = [];
-		var objectsToAnimate = [];
+		const objectsToAnimate = [];
 		// Pop pieces from the stack
-		for(i = 0;stk.length > 0 && i < gameData.size;i++){
-			obj = stk.pop();
+		for(let i = 0;stk.length > 0 && i < gameData.size;i++){
+			const obj = stk.pop();
 			objectsToAnimate.push(obj);
 			this.selectedStack.push(obj);
 		}
 		// Hide AO only on bottom piece of lifted stack (no longer in contact with board)
 		// Keep AO visible on other pieces (still in contact with piece below them)
-		var bottomPieceIndex = this.selectedStack.length - 1;
-		for(i = 0; i < this.selectedStack.length; i++){
-			obj = this.selectedStack[i];
+		const bottomPieceIndex = this.selectedStack.length - 1;
+		for(let i = 0; i < this.selectedStack.length; i++){
+			const obj = this.selectedStack[i];
 			if(obj.aoPlane){
 				if(i === bottomPieceIndex){
 					// Bottom piece - hide AO (no contact with board)
@@ -3074,7 +3070,7 @@ var board = {
 				}
 				else{
 					// Other pieces - only show AO if standing (wall/cap), not for flats
-					var shouldShow = shadowsEnabled && obj.isstanding;
+					const shouldShow = shadowsEnabled && obj.isstanding;
 					obj.aoPlane.visible = shouldShow;
 					obj.aoPlane.material.opacity = shouldShow ? 1.0 : 0;
 				}
@@ -3082,34 +3078,34 @@ var board = {
 		}
 		// Show AO on piece that's now at top of remaining stack (only if bottom or standing)
 		if(stk.length > 0 && stk[stk.length - 1].aoPlane && shadowsEnabled){
-			var newTop = stk[stk.length - 1];
-			var shouldShowNewTopAO = (stk.length === 1) || newTop.isstanding;
+			const newTop = stk[stk.length - 1];
+			const shouldShowNewTopAO = (stk.length === 1) || newTop.isstanding;
 			newTop.aoPlane.visible = shouldShowNewTopAO;
 			newTop.aoPlane.material.opacity = shouldShowNewTopAO ? 1.0 : 0;
 		}
 		if(objectsToAnimate.length > 0){
 			animation.push(objectsToAnimate);
-			for(i = 0;i < objectsToAnimate.length;i++){
+			for(let i = 0;i < objectsToAnimate.length;i++){
 				objectsToAnimate[i].position.y += stack_selection_height;
 			}
 			// Bottom piece of selected stack is the last one in the array
-			var bottomPiece = this.selectedStack[this.selectedStack.length - 1];
+			const bottomPiece = this.selectedStack[this.selectedStack.length - 1];
 			this.showSelectionShadow(bottomPiece);
 			animation.push(objectsToAnimate, 'move', 100);
 			animation.play();
 		}
 	},
 	unselectStackElem: function(obj, options){
-		var animate = !options || options.animate !== false;
+		const animate = !options || options.animate !== false;
 		if(animate){animation.push([obj]);}
 		obj.position.y -= stack_selection_height;
 		if(animate){animation.push([obj], 'move', 75);}
 	},
 	unselectStack: function(){
-		var stk = this.selectedStack.reverse();
-		var lastsq = this.move.squares[this.move.squares.length - 1];
+		const stk = this.selectedStack.reverse();
+		const lastsq = this.move.squares[this.move.squares.length - 1];
 		//push unselected stack elems onto last moved square
-		for(i = 0;i < stk.length;i++){
+		for(let i = 0;i < stk.length;i++){
 			this.unselectStackElem(stk[i], {animate: false});
 			this.pushPieceOntoSquare(lastsq,stk[i]);
 			this.move.squares.push(lastsq);
@@ -3119,13 +3115,13 @@ var board = {
 	cancelMove: function(){
 		// Animate unplayed piece back down (and reset to flat if standing)
 		if(this.selected && !this.selected.onsquare){
-			var piece = this.selected;
-			var needsFlatten = piece.isstanding && !piece.iscapstone;
+			const piece = this.selected;
+			const needsFlatten = piece.isstanding && !piece.iscapstone;
 			// Record current position for animation start
 			animation.push([piece]);
 			// Calculate absolute final position (not relative to current)
-			var stackheight = piece.pieceNum % 10;
-			var finalY;
+			const stackheight = piece.pieceNum % 10;
+			let finalY;
 			if(piece.iscapstone){
 				finalY = capstone_height/2 - sq_height/2;
 			}
@@ -3142,7 +3138,7 @@ var board = {
 				resetAOToFlat(piece);
 			}
 			// Restore AO visibility only if piece is at bottom of unplayed stack and shadows enabled
-			var isBottomOfStack = (stackheight === 0);
+			const isBottomOfStack = (stackheight === 0);
 			if(piece.aoPlane){
 				if(isBottomOfStack && shadowsEnabled){
 					piece.aoPlane.visible = true;
@@ -3154,7 +3150,7 @@ var board = {
 					piece.aoPlane.material.opacity = 0;
 				}
 			}
-			var self = this;
+			const self = this;
 			animation.push([piece], 'move', 100, function(){
 				self.hideSelectionShadow();
 				// Ensure AO is visible after animation completes (only for bottom pieces)
@@ -3169,18 +3165,18 @@ var board = {
 		}
 		// Animate selected stack back to starting position
 		if(this.move.start){
-			var startSq = this.move.start;
-			var lastSq = this.move.squares[this.move.squares.length - 1];
-			var isSameSquare = startSq === lastSq;
-			var allPieces = [];
+			const startSq = this.move.start;
+			const lastSq = this.move.squares[this.move.squares.length - 1];
+			const isSameSquare = startSq === lastSq;
+			let allPieces = [];
 
 			// Collect pieces from dropped squares (in order they were dropped)
-			for(var i = 1; i < this.move.squares.length; i++){
-				var sq = this.move.squares[i];
+			for(let i = 1; i < this.move.squares.length; i++){
+				const sq = this.move.squares[i];
 				if(sq !== startSq){
-					var stack = this.get_stack(sq);
+					const stack = this.get_stack(sq);
 					if(stack.length > 0){
-						var piece = stack.pop();
+						const piece = stack.pop();
 						piece.onsquare = null;
 						allPieces.push(piece);
 					}
@@ -3190,7 +3186,7 @@ var board = {
 			// Collect pieces still in selectedStack (top to bottom order in selectedStack)
 			// We want bottom pieces first, so reverse
 			if(this.selectedStack && this.selectedStack.length > 0){
-				var remaining = this.selectedStack.slice().reverse();
+				const remaining = this.selectedStack.slice().reverse();
 				allPieces = allPieces.concat(remaining);
 			}
 
@@ -3198,21 +3194,21 @@ var board = {
 				// Record start positions for animation (at current positions)
 				animation.push(allPieces);
 				// Lower selected pieces and set final positions
-				for(var j = 0; j < allPieces.length; j++){
+				for(let j = 0; j < allPieces.length; j++){
 					if(this.selectedStack && this.selectedStack.indexOf(allPieces[j]) !== -1){
 						allPieces[j].position.y -= stack_selection_height;
 					}
 				}
 				// Use pushPieceOntoSquare to set correct final positions
-				for(var k = 0; k < allPieces.length; k++){
+				for(let k = 0; k < allPieces.length; k++){
 					// Reset fadeIn flag so pushPieceOntoSquare can set correct AO visibility
 					if(allPieces[k].aoPlane){
 						allPieces[k].aoPlane.fadeIn = false;
 					}
 					this.pushPieceOntoSquare(startSq, allPieces[k]);
 				}
-				var animType = isSameSquare ? 'move' : 'jump';
-				var self = this;
+				const animType = isSameSquare ? 'move' : 'jump';
+				const self = this;
 				animation.push(allPieces, animType, isSameSquare ? 100 : 200, function(){self.hideSelectionShadow();});
 				animation.play();
 				this.selectedStack = null;
@@ -3232,9 +3228,9 @@ var board = {
 
 		// Set color based on who made the move
 		// If moveNum is provided, use it; otherwise use move_shown
-		var moveNumber = (moveNum !== undefined) ? moveNum : gameData.move_shown;
+		const moveNumber = (moveNum !== undefined) ? moveNum : gameData.move_shown;
 		// Even move numbers (0, 2, 4...) are white's moves
-		var lastMoveWasWhite = (moveNumber % 2 === 0);
+		const lastMoveWasWhite = (moveNumber % 2 === 0);
 		lastMoveHighlighter.material.color.setHex(lastMoveWasWhite ? 0xffffff : 0x000000);
 
 		lastMoveHighlighter.position.x = sq.position.x;
@@ -3251,7 +3247,7 @@ var board = {
 		this.highlighted = sq;
 
 		// Set color based on whose turn it is (even move_count = white's turn)
-		var isWhiteTurn = (gameData.move_count % 2 === 0);
+		const isWhiteTurn = (gameData.move_count % 2 === 0);
 		highlighter.material.color.setHex(isWhiteTurn ? 0xffffff : 0x000000);
 
 		highlighter.position.x = sq.position.x;
@@ -3271,7 +3267,7 @@ var board = {
 	},
 	hideSelectionShadow: function(){
 		// Disable shadow casting on all pieces
-		for(var i = 0; i < this.piece_objects.length; i++){
+		for(let i = 0; i < this.piece_objects.length; i++){
 			this.piece_objects[i].castShadow = false;
 		}
 	},
@@ -3279,12 +3275,12 @@ var board = {
 		return this.sq[sq.file][sq.rank];
 	},
 	top_of_stack: function(sq){
-		var st = this.get_stack(sq);
+		const st = this.get_stack(sq);
 		if(st.length === 0){return null;}
 		return st[st.length - 1];
 	},
 	is_top_mine: function(sq){
-		var ts = this.top_of_stack(sq);
+		const ts = this.top_of_stack(sq);
 		if(!ts){return true;}
 		if(ts.iswhitepiece && gameData.my_color === "white"){return true;}
 		if(!ts.iswhitepiece && gameData.my_color !== "white"){return true;}
@@ -3295,9 +3291,9 @@ var board = {
 			if(animate){animation.play();}
 			return;
 		}
-		var top = this.top_of_stack(sq);
+		const top = this.top_of_stack(sq);
 
-		var ts = stk[stk.length - 1];
+		const ts = stk[stk.length - 1];
 		if(ts.onsquare === sq){
 			if(animate){animation.play();}
 			return;
@@ -3306,7 +3302,7 @@ var board = {
 		// Calculate the target Y position for the bottom piece of the selected stack
 		// It should be stack_selection_height above the top of the destination stack
 		// Note: top piece's position.y is already set to its FINAL position by pushPieceOntoSquare
-		var topY;
+		let topY;
 		if(top){
 			// Top of existing stack - use piece's final position plus half its height
 			if(top.iscapstone){
@@ -3325,19 +3321,19 @@ var board = {
 		}
 		// Bottom of selected stack should be at topY + stack_selection_height + half piece height
 		// But the bottom piece of stk is a flat, so use piece_height / 2
-		var bottomPieceHalfHeight = piece_height / 2;
+		let bottomPieceHalfHeight = piece_height / 2;
 		if(ts.iscapstone){
 			bottomPieceHalfHeight = capstone_height / 2;
 		}
 		else if(ts.isstanding){
 			bottomPieceHalfHeight = piece_size / 2;
 		}
-		var bottomPieceTargetY = topY + stack_selection_height + bottomPieceHalfHeight;
-		var currentBottomY = ts.position.y;
-		var deltaY = bottomPieceTargetY - currentBottomY;
+		const bottomPieceTargetY = topY + stack_selection_height + bottomPieceHalfHeight;
+		const currentBottomY = ts.position.y;
+		const deltaY = bottomPieceTargetY - currentBottomY;
 
 		if(animate){animation.push(stk);}
-		for(i = 0;i < stk.length;i++){
+		for(let i = 0;i < stk.length;i++){
 			stk[i].position.x = sq.position.x;
 			stk[i].position.z = sq.position.z;
 			stk[i].position.y += deltaY;
@@ -3349,7 +3345,7 @@ var board = {
 		}
 	},
 	loadptn: function(parsed){
-		var size = parseInt(parsed.tags.Size,10);
+		const size = parseInt(parsed.tags.Size,10);
 		if(!(size >= 3 && size <= 8)){
 			alert('warning','invalid PTN: invalid size');
 			return;
@@ -3358,14 +3354,14 @@ var board = {
 		this.create(size,+parsed.tags.Flats,+parsed.tags.Caps);
 		this.initEmpty();
 
-		for(var ply = 0;ply < parsed.moves.length;ply++){
-			var move = parsed.moves[ply];
-			var match;
+		for(let ply = 0;ply < parsed.moves.length;ply++){
+			const move = parsed.moves[ply];
+			let match;
 			if((match = /^([SFC]?)([a-h])([0-8])$/.exec(move)) !== null){
-				var piece = match[1];
-				var file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
-				var rank = parseInt(match[3]) - 1;
-				var obj = this.getfromstack((piece === 'C'),isWhitePieceToMove());
+				const piece = match[1];
+				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
+				const rank = parseInt(match[3]) - 1;
+				const obj = this.getfromstack((piece === 'C'),isWhitePieceToMove());
 				if(!obj){
 					console.warn("bad PTN: too many pieces");
 					return;
@@ -3373,15 +3369,15 @@ var board = {
 				if(piece === 'S'){
 					this.standup(obj);
 				}
-				var hlt = this.get_board_obj(file,rank);
+				const hlt = this.get_board_obj(file,rank);
 				this.pushPieceOntoSquare(hlt,obj);
 			}
 			else if((match = /^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(move)) !== null){
-				var count = match[1];
-				var file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
-				var rank = parseInt(match[3]) - 1;
-				var dir = match[4];
-				var drops = match[5];
+				const count = match[1];
+				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
+				const rank = parseInt(match[3]) - 1;
+				const dir = match[4];
+				let drops = match[5];
 
 				if(drops === ''){
 					if(count == ''){drops = [1];}
@@ -3390,11 +3386,10 @@ var board = {
 				else{
 					drops = drops.split('');
 				}
-				var tot = 0;
-				var i,j;
-				for(i = 0;i < drops.length;i++){tot += parseInt(drops[i]);}
+				let tot = 0;
+				for(let i = 0;i < drops.length;i++){tot += parseInt(drops[i]);}
 
-				var df = 0,dr = 0;
+				let df = 0,dr = 0;
 				if(dir == '<'){
 					df = -1;
 				}
@@ -3408,18 +3403,18 @@ var board = {
 					dr = 1;
 				}
 
-				var s1 = this.get_board_obj(file,rank);
-				var stk = this.get_stack(s1);
-				var tstk = [];
+				const s1 = this.get_board_obj(file,rank);
+				const stk = this.get_stack(s1);
+				const tstk = [];
 
-				for(i = 0;i < tot;i++){tstk.push(stk.pop());}
+				for(let i = 0;i < tot;i++){tstk.push(stk.pop());}
 
-				for(i = 0;i < drops.length;i++){
-					var sq = this.get_board_obj(
+				for(let i = 0;i < drops.length;i++){
+					const sq = this.get_board_obj(
 						s1.file + (i + 1) * df,
 						s1.rank + (i + 1) * dr
 					);
-					for(j = 0;j < parseInt(drops[i]);j++){
+					for(let j = 0;j < parseInt(drops[i]);j++){
 						this.pushPieceOntoSquare(sq,tstk.pop());
 					}
 				}
@@ -3470,14 +3465,14 @@ var board = {
 		if(this.checkroadwin()){return;}
 		if(this.checksquaresover()){return;}
 
-		var assumedMoveCount = this.moveCountCalc(moveNumber,moveNumber,playerToMove);
+		const assumedMoveCount = this.moveCountCalc(moveNumber,moveNumber,playerToMove);
 
-		var infoMsg = "";
-		var playMsg = "";
+		let infoMsg = "";
+		let playMsg = "";
 
 		// We want to make some sense of the moveCount...
-		var p1Cnt = this.count_pieces_on_board(WHITE_PLAYER);
-		var p2Cnt = this.count_pieces_on_board(BLACK_PLAYER);
+		const p1Cnt = this.count_pieces_on_board(WHITE_PLAYER);
+		const p2Cnt = this.count_pieces_on_board(BLACK_PLAYER);
 		if(p1Cnt == 0 && p2Cnt == 0){
 			// nothing played yet
 			initCounters(0);
@@ -3504,13 +3499,12 @@ var board = {
 			// There is at least one of each piece on the board.
 			// The move count must be at least as high as 2 times
 			// the number of pieces that one player has on the board
-			var minMoves = this.moveCountCalc(p1Cnt,p2Cnt,playerToMove);
+			const minMoves = this.moveCountCalc(p1Cnt,p2Cnt,playerToMove);
 			if(assumedMoveCount < minMoves){
-				assumedMoveCount = minMoves;
+				initCounters(minMoves);
 				infoMsg = "Initializing move number to correpond with the number of pieces on the board.";
 			}
 			playMsg = "It is " + gameData.my_color + "'s turn to play.";
-			initCounters(assumedMoveCount);
 		}
 
 		// player-opp is white, player-me is black. Seems like those
@@ -3543,12 +3537,12 @@ var board = {
 	// assumes that the movecount and movestart have been initialized meaningfully
 	// and 0,0 is OK
 	count_pieces_on_board: function(player){
-		var count = 0;
-		var pos = this.board_history[gameData.move_count - gameData.move_start];
-		for(i=0;i < pos.length;i++){
-			var pieces = pos[i];
+		let count = 0;
+		const pos = this.board_history[gameData.move_count - gameData.move_start];
+		for(let i=0;i < pos.length;i++){
+			const pieces = pos[i];
 			// remember, upper case is white(p1) and lower case is black(p2),
-			for(s=0;s < pieces.length;s++){
+			for(let s=0;s < pieces.length;s++){
 				if(player === WHITE_PLAYER && pieces[s] === pieces[s].toUpperCase() ||
 					player === BLACK_PLAYER && pieces[s] === pieces[s].toLowerCase()){
 					count++;
@@ -3561,10 +3555,10 @@ var board = {
 		return Math.max(p1Turns,p2Turns)*2 + (playerToMove===2 ? 1 : 0);
 	},
 	pushInitialEmptyBoard: function(size){
-		var bp = [];
-		for(var i = 0;i < size;i++){
+		const bp = [];
+		for(let i = 0;i < size;i++){
 			this.sq[i] = [];
-			for(var j = 0;j < size;j++){
+			for(let j = 0;j < size;j++){
 				this.sq[i][j] = [];
 				bp.push([]);
 			}
@@ -3662,24 +3656,24 @@ function onWindowResize(){
 }
 
 function onDocumentMouseMove(e){
-	var x = e.clientX - canvas.offsetLeft;
-	var y = e.clientY - canvas.offsetTop;
+	const x = e.clientX - canvas.offsetLeft;
+	const y = e.clientY - canvas.offsetTop;
 	mouse.x = (pixelratio * x / canvas.width) * 2 - 1;
 	mouse.y = -(pixelratio * y / canvas.height) * 2 + 1;
 
 	board.mousemove();
 }
 
-var mouseDownPos = { x: 0, y: 0 };
-var mouseDragThreshold = 5;
-var justRotatedPiece = false;
-var justSelectedPiece = false;
+const mouseDownPos = { x: 0, y: 0 };
+const mouseDragThreshold = 5;
+let justRotatedPiece = false;
+let justSelectedPiece = false;
 
 function onDocumentMouseDown(e){
 	justRotatedPiece = false;
 	justSelectedPiece = false;
-	var x = e.clientX - canvas.offsetLeft;
-	var y = e.clientY - canvas.offsetTop;
+	const x = e.clientX - canvas.offsetLeft;
+	const y = e.clientY - canvas.offsetTop;
 	mouse.x = (pixelratio * x / canvas.width) * 2 - 1;
 	mouse.y = -(pixelratio * y / canvas.height) * 2 + 1;
 	mouseDownPos.x = e.clientX;
@@ -3702,13 +3696,13 @@ function onDocumentMouseUp(e){
 	}
 	else if(e.button === 0){
 		// Check if this was a click (not a drag) on background
-		var dx = e.clientX - mouseDownPos.x;
-		var dy = e.clientY - mouseDownPos.y;
-		var dist = Math.sqrt(dx * dx + dy * dy);
+		const dx = e.clientX - mouseDownPos.x;
+		const dy = e.clientY - mouseDownPos.y;
+		const dist = Math.sqrt(dx * dx + dy * dy);
 		if(dist < mouseDragThreshold && !justRotatedPiece && !justSelectedPiece){
 			// This was a click, not a drag - cancel move if on background
 			// Don't cancel if we just rotated or selected a piece (raycaster might miss moved piece)
-			var pick = board.mousepick();
+			const pick = board.mousepick();
 			if(pick[0] === "none" && (board.selected || board.selectedStack)){
 				board.cancelMove();
 			}
@@ -3732,23 +3726,23 @@ function init3DBoard(){
 	window.addEventListener("keyup", onKeyUp, false);
 
 	rendererdone = true;
-	var geometry = new THREE.TorusGeometry(sq_size / 2 + 5, 3, 16, 100);
+	const geometry = new THREE.TorusGeometry(sq_size / 2 + 5, 3, 16, 100);
 	highlighter = new THREE.Mesh(geometry, materials.highlighter);
 	highlighter.rotateX(Math.PI / 2);
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
 	// Create radial gradient texture for AO shadow (DEBUG: very obvious for testing)
-	var aoCanvas = document.createElement('canvas');
+	const aoCanvas = document.createElement('canvas');
 	aoCanvas.width = 64;
 	aoCanvas.height = 64;
-	var aoCtx = aoCanvas.getContext('2d');
-	var gradient = aoCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+	const aoCtx = aoCanvas.getContext('2d');
+	const gradient = aoCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
 	gradient.addColorStop(0, 'rgba(255,0,0,0.8)');
 	gradient.addColorStop(0.5, 'rgba(255,0,0,0.5)');
 	gradient.addColorStop(1, 'rgba(255,0,0,0)');
 	aoCtx.fillStyle = gradient;
 	aoCtx.fillRect(0, 0, 64, 64);
-	var aoTexture = new THREE.CanvasTexture(aoCanvas);
+	const aoTexture = new THREE.CanvasTexture(aoCanvas);
 	materials.aoShadow = new THREE.MeshBasicMaterial({map: aoTexture, transparent: true, depthWrite: false});
 	// Enable shadow mapping on renderer
 	renderer.shadowMap.enabled = true;

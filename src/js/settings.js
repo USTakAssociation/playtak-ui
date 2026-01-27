@@ -21,9 +21,9 @@ const default2DThemes = [
 
 // sound controls
 function turnsoundon(){
-	var movesound = document.getElementById("move-sound");
-	var chimesound = document.getElementById("chime-sound");
-	var hurrysound = document.getElementById("hurry-sound");
+	const movesound = document.getElementById("move-sound");
+	const chimesound = document.getElementById("chime-sound");
+	const hurrysound = document.getElementById("hurry-sound");
 	movesound.muted = false;
 	chimesound.muted = false;
 	hurrysound.muted = false;
@@ -35,9 +35,9 @@ function turnsoundon(){
 }
 
 function turnsoundoff(){
-	var movesound = document.getElementById("move-sound");
-	var chimesound = document.getElementById("chime-sound");
-	var hurrysound = document.getElementById("hurry-sound");
+	const movesound = document.getElementById("move-sound");
+	const chimesound = document.getElementById("chime-sound");
+	const hurrysound = document.getElementById("hurry-sound");
 	movesound.muted = true;
 	chimesound.muted = true;
 	hurrysound.muted = true;
@@ -64,7 +64,7 @@ function disableLanding(){
  *	 Dark Mode
  */
 function checkboxDarkMode(){
-	var body = document.body;
+	const body = document.body;
 	// Handle switching from light to dark
 	if(document.getElementById('dark-mode').checked){
 		localStorage.setItem('theme','dark-theme');
@@ -125,7 +125,7 @@ function sliderPieceSize(newSize){
  *	 Enable or disable animations
  */
 function toggleAnimations(event){
-	var enabled = event.target.checked;
+	const enabled = event.target.checked;
 	localStorage.setItem('animations_enabled', enabled ? 'true' : 'false');
 	animationsEnabled = enabled;
 }
@@ -134,7 +134,7 @@ function toggleAnimations(event){
  * Update animation speed
  */
 function updateAnimationSpeed(value){
-	var speed = parseFloat(value);
+	const speed = parseFloat(value);
 	animationSpeed = speed;
 	localStorage.setItem('animation_speed', speed.toString());
 	document.getElementById('animation-speed-value').textContent = speed.toFixed(1) + 'x';
@@ -145,7 +145,7 @@ function updateAnimationSpeed(value){
  *	 Enable or disable shadows
  */
 function toggleShadows(event){
-	var enabled = event.target.checked;
+	const enabled = event.target.checked;
 	localStorage.setItem('shadows_enabled', enabled ? 'true' : 'false');
 	shadowsEnabled = enabled;
 	updateShadowsVisibility();
@@ -192,7 +192,7 @@ function perspectiveChange(newPerspective){
 
 document.getElementById("piecetexture").onchange=gotnewtexturefile;
 function gotnewtexturefile(){
-	var reader = new FileReader();
+	const reader = new FileReader();
 	let fileName;
 	if(this.files.length){
 		fileName = this.files[0].name;
@@ -261,7 +261,7 @@ function checkboxAntialiasing(){
 *
 */
 function notifyBorderColorChange(){
-	var val = document.getElementById("borderColor").value;
+	const val = document.getElementById("borderColor").value;
 	if(val && val.length < 7){return;}
 	localStorage["borderColor"] = val;
 	board.updateBorderColor(val);
@@ -320,7 +320,7 @@ function hideBorderText(event){
 }
 
 function notifyLetterColorChange(){
-	var val = document.getElementById("letterColor").value;
+	const val = document.getElementById("letterColor").value;
 	localStorage["letterColor"] = val;
 	board.updateLetterColor(val);
 }
@@ -333,7 +333,7 @@ function setNewOverlay(){
 		this.value = "";
 		return;
 	}
-	var reader = new FileReader();
+	const reader = new FileReader();
 	if(this.files.length){
 		reader.addEventListener("load",fileLoaded,false);
 		reader.readAsDataURL(this.files[0]);
@@ -417,7 +417,7 @@ function checkboxHover(){
 
 function clearcolorchange(value){
 	if(value && value.length < 7){return;}
-	var val = document.getElementById("clearcolorbox").value;
+	const val = document.getElementById("clearcolorbox").value;
 	localStorage["clearcolor"] = val;
 	clearcolor = parseInt(val.replace('#', '0x'));
 	if(renderer){
@@ -720,7 +720,7 @@ function load3DSettings(){
 		}
 		// load animation speed setting
 		if(localStorage.getItem("animation_speed") !== null){
-			var speed = parseFloat(localStorage.getItem("animation_speed"));
+			const speed = parseFloat(localStorage.getItem("animation_speed"));
 			animationSpeed = speed;
 			document.getElementById("animation-speed-slider").value = speed;
 			document.getElementById("animation-speed-value").textContent = speed.toFixed(1) + 'x';
@@ -868,7 +868,7 @@ function load3DSettings(){
 			document.getElementById('hide-border-text').checked = true;
 		}
 		// load letter color setting
-		var letterColor = localStorage["letterColor"] || boardDefaults.letterColor;
+		const letterColor = localStorage["letterColor"] || boardDefaults.letterColor;
 		document.getElementById("letterColor").value = letterColor;
 		board.updateLetterColor(letterColor);
 		// board overlay setting
@@ -925,11 +925,11 @@ function loadInterfaceSettings(){
 		document.getElementById("show-landing").checked = false;
 	}
 	// Load theme setting
-	var storedTheme =
+	const storedTheme =
 		localStorage.getItem("theme") ||
 		(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
 	if(storedTheme === "dark-theme"){
-		var body = document.body;
+		const body = document.body;
 		body.classList.add(storedTheme);
 		document.getElementById("dark-mode").checked = true;
 		if(!localStorage.getItem("clearcolor")){
