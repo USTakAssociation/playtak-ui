@@ -443,7 +443,7 @@ function generateCamera(){
 		controls.enableZoom=false;
 		board.boardside="white";
 	}
-	if(!gameData.isScratch && (gameData.my_color=="black") != (board.boardside=="black")){
+	if(!gameData.is_scratch && (gameData.my_color=="black") != (board.boardside=="black")){
 		board.reverseboard();
 	}
 }
@@ -1573,7 +1573,7 @@ var board = {
 		this.updateShadowCamera();
 		updateShadowsVisibility();
 
-		if(!gameData.isScratch && ((gameData.my_color=="black") != (this.boardside=="black"))){
+		if(!gameData.is_scratch && ((gameData.my_color=="black") != (this.boardside=="black"))){
 			this.reverseboard();
 		}
 	},
