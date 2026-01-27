@@ -265,8 +265,6 @@ function notifyBorderColorChange(){
 	if(val && val.length < 7){return;}
 	localStorage["borderColor"] = val;
 	board.updateBorderColor(val);
-	removeBorderTexture();
-	document.getElementById("border-texture").value = '';
 }
 
 // Border texture change
