@@ -85,22 +85,22 @@ const gamePresets = {
 	}
 };
 
-var ismobile=false;
-var isidevice=false;
-var fixedcamera=false;
-var clickthrough=true;
-var hovertext=true;
-var pixelratio=1;
-var rendererdone=false;
-var clearcolor=0xdddddd;
+let ismobile=false;
+let isidevice=false;
+let fixedcamera=false;
+let clickthrough=true;
+let hovertext=true;
+let pixelratio=1;
+let rendererdone=false;
+let clearcolor=parseInt(boardDefaults.backgroundColor.replace('#', '0x'));
 
-var settingscounter=0;
-var is2DBoard = false;
-var fson = false;
+let settingscounter=0;
+let is2DBoard = false;
+let fson = false;
 
 function alert(type,msg){
 	$('#alert-text').text(msg);
-	var $alert = $('#alert');
+	const $alert = $('#alert');
 	$alert.removeClass("alert-success alert-info alert-warning alert-danger");
 
 	$alert.addClass("alert-"+type);
@@ -122,7 +122,7 @@ function togglefs(){
 }
 
 function init(){
-	var ua = navigator.userAgent.toLowerCase();
+	const ua = navigator.userAgent.toLowerCase();
 	if(ua.indexOf("android") > -1 || ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
 		ismobile = true;
 	}
@@ -177,11 +177,11 @@ function init(){
 }
 
 function adjustsidemenu(notation,chat){
-	var vertical = window.screen.width<window.screen.height;
-	var notationstore = "shownotation"+(vertical?"v":"h");
-	var chatstore = "showchat"+(vertical?"v":"h");
+	const vertical = window.screen.width<window.screen.height;
+	const notationstore = "shownotation"+(vertical?"v":"h");
+	const chatstore = "showchat"+(vertical?"v":"h");
 
-	var notationstate=localStorage[notationstore];
+	let notationstate=localStorage[notationstore];
 	if(notation=="show"){
 		notationstate="show";
 	}
@@ -215,7 +215,7 @@ function adjustsidemenu(notation,chat){
 		adjustBoardWidth();
 	}
 
-	var chatstate=localStorage[chatstore];
+	let chatstate=localStorage[chatstore];
 	if(chat=="show"){
 		chatstate="show";
 	}
@@ -263,7 +263,7 @@ function toggleSettingsDrawer(){
 	adjustBoardWidth();
 }
 
-var menuToggle = false;
+let menuToggle = false;
 function toggleMobileMenu(){
 	const header = document.getElementById('header');
 	if(!menuToggle){
@@ -304,7 +304,7 @@ function openGameOverModal(){
 }
 
 function copyGameIdToClipboard(){
-	var gameId = gameData.id || "";
+	const gameId = gameData.id || "";
 	navigator.clipboard.writeText(gameId).then(() => {
 		alert('success','Copied Game ID: ' + gameId);
 	}, () => {
@@ -335,9 +335,9 @@ function getNotation(id){
 	res += '\r\n';
 
 	$('#moveslist tr').each(function(){
-		var line="";
+		let line="";
 		$('td',this).each(function(){
-			var val = $(this).text();
+			const val = $(this).text();
 			if(line && val){
 				line += ' ';
 			}
@@ -354,7 +354,7 @@ function downloadNotation(id){
 }
 
 function copyNotationToClipboard(){
-	var ptn = getNotation();
+	const ptn = getNotation();
 	navigator.clipboard.writeText(ptn).then(() => {
 		alert('success','Copied PTN!');
 	}, () => {
@@ -363,12 +363,12 @@ function copyNotationToClipboard(){
 }
 
 function openInPtnNinja(){
-	var link = 'http://ptn.ninja/' + encodeURIComponent(getNotation());
+	const link = 'http://ptn.ninja/' + encodeURIComponent(getNotation());
 	window.open(link,'_blank');
 }
 
 function copyNotationLink(){
-	var link = 'http://www.playtak.com/?load=' + encodeURIComponent(getNotation());
+	const link = 'http://www.playtak.com/?load=' + encodeURIComponent(getNotation());
 
 	navigator.clipboard.writeText(link).then(() => {
 		alert('success','Copied PTN Link!');
@@ -476,8 +476,8 @@ function changePreset(event){
 }
 
 function changeboardsize(){
-	var size=document.getElementById("boardsize").value;
-	var piecescaps = {"3": [10,0], "4": [15,0], "5": [21,1], "6": [30,1], "7": [40,2], "8": [50,2]}[size];
+	const size=document.getElementById("boardsize").value;
+	const piecescaps = {"3": [10,0], "4": [15,0], "5": [21,1], "6": [30,1], "7": [40,2], "8": [50,2]}[size];
 	if(piecescaps){
 		document.getElementById("piececount").value=piecescaps[0];
 		document.getElementById("capcount").value=piecescaps[1];

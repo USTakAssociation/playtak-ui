@@ -575,6 +575,26 @@
 						</div>
 						<div id="3d-settings" class="flex flex-column gap--8">
 							<h4>3D Settings</h4>
+							<div>
+								<label>
+									<input id="animations-checkbox" type="checkbox" onChange="toggleAnimations(event)" checked />
+									Animations
+								</label>
+							</div>
+							<div>
+								<label for="animation-speed-slider" style="display: block; margin-bottom: 5px;">
+									Animation Speed: <span id="animation-speed-value">1.0x</span>
+								</label>
+								<input type="range" id="animation-speed-slider" min="0.5" max="3" step="0.1" value="1" 
+									style="width: 100%; margin-bottom: 10px;" 
+									oninput="updateAnimationSpeed(this.value)" />
+							</div>
+							<div>
+								<label>
+									<input id="shadows-checkbox" type="checkbox" onChange="toggleShadows(event)" checked />
+									Shadows
+								</label>
+							</div>
 							<div data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
 								<label for="clearcolorbox">
 									Background color
@@ -664,6 +684,24 @@
 									<ul id="black_square_options" class="dropdown-menu settings-drop-down"></ul>
 								</div>
 							</div>
+							<div id="overlay_form">
+								Board Overlay<br />
+								<div class="dropdown">
+									<button id="overlay_select" class="btn btn-secondary select dropdown-toggle form-control text-left" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										Select an option
+									</button>
+									<ul id="overlay_options" class="dropdown-menu settings-drop-down"></ul>
+								</div>
+							</div>
+							<div class="flex flex-column gap--8">
+								Custom Board Overlay
+								<div id="remove-overlay" style="display:none;">
+									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();" style="height: 3em">Remove Custom Overlay</button>
+								</div>
+								<div id="board-overlay-form">
+									<input type="file" id="board-overlay" accept="image/*" />
+								</div>
+							</div>
 							<div>
 								<label>
 									Border Color
@@ -679,27 +717,29 @@
 							</div>
 							<!-- border texture -->
 							<div class="flex flex-column gap--8">
-								Border Texture
+								<!-- Border Texture
 								<div id="remove-border-texture" style="display:none;">
 									<button type="button" class="btn btn-pill btn-secondary" onclick="removeBorderTexture();">Remove Texture</button>
 								</div>
 								<div id="border-texture-form">
 									<input type="file" id="border-texture" accept="image/*" />
-								</div>
+								</div> -->
 								<div>
 									<label>
 										<input id="hide-border-text" type="checkbox" onChange="hideBorderText(event)" />
 										Hide border text
 									</label>
 								</div>
-							</div>
-							<div class="flex flex-column gap--8">
-								Board Overlay
-								<div id="remove-overlay" style="display:none;">
-									<button type="button" class="btn btn-pill btn-secondary" onclick="removeOverlay();">Remove Overlay</button>
-								</div>
-								<div id="board-overlay-form">
-									<input type="file" id="board-overlay" accept="image/*" />
+								<div>
+									<label>
+										Border Text Color
+										<input
+											type="color"
+											id="letterColor"
+											class="form-control"
+											oninput="notifyLetterColorChange()"
+										/>
+									</label>
 								</div>
 							</div>
 							<!-- advanced settings -->

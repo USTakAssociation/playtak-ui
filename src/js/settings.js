@@ -21,9 +21,9 @@ const default2DThemes = [
 
 // sound controls
 function turnsoundon(){
-	var movesound = document.getElementById("move-sound");
-	var chimesound = document.getElementById("chime-sound");
-	var hurrysound = document.getElementById("hurry-sound");
+	const movesound = document.getElementById("move-sound");
+	const chimesound = document.getElementById("chime-sound");
+	const hurrysound = document.getElementById("hurry-sound");
 	movesound.muted = false;
 	chimesound.muted = false;
 	hurrysound.muted = false;
@@ -35,9 +35,9 @@ function turnsoundon(){
 }
 
 function turnsoundoff(){
-	var movesound = document.getElementById("move-sound");
-	var chimesound = document.getElementById("chime-sound");
-	var hurrysound = document.getElementById("hurry-sound");
+	const movesound = document.getElementById("move-sound");
+	const chimesound = document.getElementById("chime-sound");
+	const hurrysound = document.getElementById("hurry-sound");
 	movesound.muted = true;
 	chimesound.muted = true;
 	hurrysound.muted = true;
@@ -64,7 +64,7 @@ function disableLanding(){
  *	 Dark Mode
  */
 function checkboxDarkMode(){
-	var body = document.body;
+	const body = document.body;
 	// Handle switching from light to dark
 	if(document.getElementById('dark-mode').checked){
 		localStorage.setItem('theme','dark-theme');
@@ -72,13 +72,13 @@ function checkboxDarkMode(){
 		body.classList.add('dark-theme');
 		if(localStorage.getItem('clearcolor') === '#dddddd'){
 			localStorage.removeItem('clearcolor');
-			document.getElementById("clearcolorbox").value = '#152028';
+			document.getElementById("clearcolorbox").value = boardDefaults.backgroundColor;
 			clearcolorchange();
 		}
 	}
 	else{
 		// Handle switching from dark to light
-		if(localStorage.getItem('clearcolor') === '#152028'){
+		if(localStorage.getItem('clearcolor') === boardDefaults.backgroundColor){
 			localStorage.removeItem('clearcolor');
 			document.getElementById("clearcolorbox").value = '#dddddd';
 			clearcolorchange();
@@ -122,11 +122,45 @@ function sliderPieceSize(newSize){
 
 /*
  * Notify checkbox change for checkbox:
+ *	 Enable or disable animations
+ */
+function toggleAnimations(event){
+	const enabled = event.target.checked;
+	localStorage.setItem('animations_enabled', enabled ? 'true' : 'false');
+	animationsEnabled = enabled;
+}
+
+/*
+ * Update animation speed
+ */
+function updateAnimationSpeed(value){
+	const speed = parseFloat(value);
+	animationSpeed = speed;
+	localStorage.setItem('animation_speed', speed.toString());
+	document.getElementById('animation-speed-value').textContent = speed.toFixed(1) + 'x';
+}
+
+/*
+ * Notify checkbox change for checkbox:
+ *	 Enable or disable shadows
+ */
+function toggleShadows(event){
+	const enabled = event.target.checked;
+	localStorage.setItem('shadows_enabled', enabled ? 'true' : 'false');
+	shadowsEnabled = enabled;
+	updateShadowsVisibility();
+}
+
+/*
+ * Notify checkbox change for checkbox:
  *	 Show or hide table
  */
 function showTable(event){
 	localStorage.setItem('show_table', event.target.checked);
 	board.table.visible = event.target.checked;
+	if(board.shadowPlane){
+		board.shadowPlane.visible = !event.target.checked;
+	}
 }
 
 /*
@@ -138,6 +172,12 @@ function showLastMoveHighlighter(event){
 	board.lastMoveHighlighterVisible = event.target.checked;
 	if(!event.target.checked){
 		board.unHighlightLastMove_sq();
+	}
+	else{
+		// Re-highlight the last moved square when turning on
+		if(board.lastMovedSquareList.length > 0){
+			board.highlightLastMove_sq(board.lastMovedSquareList.at(-1));
+		}
 	}
 }
 
@@ -152,7 +192,7 @@ function perspectiveChange(newPerspective){
 
 document.getElementById("piecetexture").onchange=gotnewtexturefile;
 function gotnewtexturefile(){
-	var reader = new FileReader();
+	const reader = new FileReader();
 	let fileName;
 	if(this.files.length){
 		fileName = this.files[0].name;
@@ -221,16 +261,14 @@ function checkboxAntialiasing(){
 *
 */
 function notifyBorderColorChange(){
-	var val = document.getElementById("borderColor").value;
+	const val = document.getElementById("borderColor").value;
 	if(val && val.length < 7){return;}
 	localStorage["borderColor"] = val;
 	board.updateBorderColor(val);
-	removeBorderTexture();
-	document.getElementById("border-texture").value = '';
 }
 
 // Border texture change
-document.getElementById("border-texture").onchange = setBorderTexture;
+/* document.getElementById("border-texture").onchange = setBorderTexture;
 function setBorderTexture(){
 	if(this.files[0].size > 2097152){
 		alert("danger", "File is too big! must be less than 2MB");
@@ -261,7 +299,7 @@ function removeBorderTexture(){
 	board.removeBorderTexture();
 	document.getElementById('border-texture-form').style.display = "block";
 	document.getElementById('remove-border-texture').style.display = "none";
-}
+} */
 
 /*
 *
@@ -281,6 +319,12 @@ function hideBorderText(event){
 	board.updateLetterVisibility(!event.target.checked);
 }
 
+function notifyLetterColorChange(){
+	const val = document.getElementById("letterColor").value;
+	localStorage["letterColor"] = val;
+	board.updateLetterColor(val);
+}
+
 document.getElementById("board-overlay").onchange = setNewOverlay;
 function setNewOverlay(){
 	if(this.files[0].size > 2097152){
@@ -289,7 +333,7 @@ function setNewOverlay(){
 		this.value = "";
 		return;
 	}
-	var reader = new FileReader();
+	const reader = new FileReader();
 	if(this.files.length){
 		reader.addEventListener("load",fileLoaded,false);
 		reader.readAsDataURL(this.files[0]);
@@ -307,9 +351,22 @@ function removeOverlay(){
 	// update the settings state to hide the button and show the upload
 	document.getElementById("board-overlay").value = '';
 	localStorage.removeItem('boardOverlay');
+	localStorage.setItem('boardOverlayId', 'none');
 	board.removeOverlay();
 	document.getElementById('board-overlay-form').style.display = "block";
 	document.getElementById('remove-overlay').style.display = "none";
+	// Reset overlay selector UI to None
+	const overlaySelect = document.getElementById('overlay_select');
+	if(overlaySelect){overlaySelect.innerText = 'None';}
+	const options = document.getElementById("overlay_options");
+	if(options){
+		for(let i = 0; i < options.children.length; i++){
+			const element = options.children[i].querySelector("button");
+			if(element){element.classList.remove("active");}
+		}
+	}
+	const noneOverlay = document.getElementById('none_overlay');
+	if(noneOverlay){noneOverlay.classList.add('active');}
 }
 
 /*
@@ -360,7 +417,7 @@ function checkboxHover(){
 
 function clearcolorchange(value){
 	if(value && value.length < 7){return;}
-	var val = document.getElementById("clearcolorbox").value;
+	const val = document.getElementById("clearcolorbox").value;
 	localStorage["clearcolor"] = val;
 	clearcolor = parseInt(val.replace('#', '0x'));
 	if(renderer){
@@ -656,11 +713,28 @@ function load2DSettings(){
  */
 function load3DSettings(){
 	if(!is2DBoard){
+		// load animations setting
+		if(localStorage.getItem("animations_enabled") !== null){
+			animationsEnabled = localStorage.getItem("animations_enabled") === 'true';
+			document.getElementById("animations-checkbox").checked = animationsEnabled;
+		}
+		// load animation speed setting
+		if(localStorage.getItem("animation_speed") !== null){
+			const speed = parseFloat(localStorage.getItem("animation_speed"));
+			animationSpeed = speed;
+			document.getElementById("animation-speed-slider").value = speed;
+			document.getElementById("animation-speed-value").textContent = speed.toFixed(1) + 'x';
+		}
+		// load shadows setting
+		if(localStorage.getItem("shadows_enabled") !== null){
+			shadowsEnabled = localStorage.getItem("shadows_enabled") === 'true';
+			document.getElementById("shadows-checkbox").checked = shadowsEnabled;
+		}
 		// load background color setting
 		document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
 		clearcolorchange();
 		// diagonal walls
-		if(localStorage.getItem("diagonal_walls") === "true" || (!localStorage.getItem("diagonal_walls") && ismobile)){
+		if(localStorage.getItem("diagonal_walls") !== "false"){
 			document.getElementById("wall-orientation").checked = true;
 			diagonal_walls = true;
 		}
@@ -670,25 +744,33 @@ function load3DSettings(){
 			document.getElementById("piece-size-display").innerHTML = piece_size;
 			document.getElementById("piece-size-slider").value = piece_size;
 		}
-		// show table
-		if(localStorage.getItem("show_table") !== null || ismobile){
-			show_table = JSON.parse(localStorage.getItem("show_table"));
-			let storedTheme =
-				localStorage.getItem("theme") ||
-				(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
-			if(show_table === null && ismobile && storedTheme === "dark-theme"){
-				show_table = true;
-				localStorage.setItem("show_table", true);
+		// show table - default to hidden
+		show_table = localStorage.getItem("show_table") === 'true';
+		let storedTheme =
+			localStorage.getItem("theme") ||
+			(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
+		if(localStorage.getItem("show_table") === null && ismobile && storedTheme === "dark-theme"){
+			show_table = true;
+			localStorage.setItem("show_table", true);
+		}
+		document.getElementById("show-table").checked = show_table;
+		// Apply table visibility setting
+		if(board && board.table){
+			board.table.visible = show_table;
+			if(board.shadowPlane){
+				board.shadowPlane.visible = !show_table;
 			}
-			document.getElementById("show-table").checked = show_table;
 		}
 		// show last move highlighter
-		if(localStorage.getItem("show_last_move_highlight") !== null){
+		if(localStorage.getItem("show_last_move_highlight") === null){
+			showLastMove = true;
+			document.getElementById("show-last-move").checked = true;
+		}
+		else{
 			showLastMove = JSON.parse(localStorage.getItem("show_last_move_highlight"));
 			document.getElementById("show-last-move").checked = showLastMove;
-			// TODO test readding this
-			//showLastMoveHighlighter(showLastMove);
 		}
+		board.lastMoveHighlighterVisible = showLastMove;
 		// load white piece style setting
 		if(localStorage.getItem("piece_style_white3") !== null){
 			const styleName = localStorage.getItem("piece_style_white3");
@@ -704,6 +786,11 @@ function load3DSettings(){
 				document.getElementById(`white_piece_select`).innerText = piecesMap[materials.white_piece_style_name].name;
 			}
 		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`white_${materials.white_piece_style_name}_piece`)?.classList.add('active');
+			document.getElementById(`white_piece_select`).innerText = piecesMap[materials.white_piece_style_name]?.name || 'White by Archvenison';
+		}
 		// load black piece style setting
 		if(localStorage.getItem("piece_style_black3") !== null){
 			const styleName = localStorage.getItem("piece_style_black3");
@@ -717,6 +804,11 @@ function load3DSettings(){
 				document.getElementById(`black_${materials.black_piece_style_name}_piece`).classList.add('active');
 				document.getElementById(`black_piece_select`).innerText = piecesMap[materials.black_piece_style_name].name;
 			}
+		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`black_${materials.black_piece_style_name}_piece`)?.classList.add('active');
+			document.getElementById(`black_piece_select`).innerText = piecesMap[materials.black_piece_style_name]?.name || 'Black by Archvenison';
 		}
 
 		// load white board style setting
@@ -735,6 +827,11 @@ function load3DSettings(){
 				document.getElementById(`white_square_select`).innerText = squaresMap[materials.white_sqr_style_name].name;
 			}
 		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`white_${materials.white_sqr_style_name}_square`)?.classList.add('active');
+			document.getElementById(`white_square_select`).innerText = squaresMap[materials.white_sqr_style_name]?.name || 'Velvet Sand Diamonds';
+		}
 		// load black board style setting
 		if(localStorage.getItem("board_style_black2") !== null){
 			let styleName = localStorage.getItem("board_style_black2");
@@ -751,6 +848,11 @@ function load3DSettings(){
 				document.getElementById(`black_square_select`).innerText = squaresMap[materials.black_sqr_style_name].name;
 			}
 		}
+		else{
+			// Set default from boardDefaults
+			document.getElementById(`black_${materials.black_sqr_style_name}_square`)?.classList.add('active');
+			document.getElementById(`black_square_select`).innerText = squaresMap[materials.black_sqr_style_name]?.name || 'Velvet Sand Diamonds';
+		}
 		// border color setting
 		if(localStorage["borderColor"]){
 			document.getElementById("borderColor").value = localStorage["borderColor"];
@@ -765,13 +867,22 @@ function load3DSettings(){
 			board.updateLetterVisibility(false);
 			document.getElementById('hide-border-text').checked = true;
 		}
+		// load letter color setting
+		const letterColor = localStorage["letterColor"] || boardDefaults.letterColor;
+		document.getElementById("letterColor").value = letterColor;
+		board.updateLetterColor(letterColor);
 		// board overlay setting
-		if(localStorage.getItem("boardOverlay")){
+		initOverlaySelector();
+		// Only show custom overlay remove button if there's a custom overlay (not a preset)
+		if(localStorage.getItem("boardOverlay") && !localStorage.getItem("boardOverlayId")){
 			document.getElementById("remove-overlay").style.display = "inline-block";
 			document.getElementById('board-overlay-form').style.display = "none";
 		}
 		// auto rotate board when player 2 setting
-		if(localStorage.getItem("auto_rotate") === "false"){
+		if(localStorage.getItem("auto_rotate") !== "false"){
+			document.getElementById("auto-rotate-checkbox").checked = true;
+		}
+		else{
 			document.getElementById("auto-rotate-checkbox").checked = false;
 		}
 		// load antialiasing setting
@@ -814,16 +925,16 @@ function loadInterfaceSettings(){
 		document.getElementById("show-landing").checked = false;
 	}
 	// Load theme setting
-	var storedTheme =
+	const storedTheme =
 		localStorage.getItem("theme") ||
 		(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-theme" : null);
 	if(storedTheme === "dark-theme"){
-		var body = document.body;
+		const body = document.body;
 		body.classList.add(storedTheme);
 		document.getElementById("dark-mode").checked = true;
 		if(!localStorage.getItem("clearcolor")){
-			localStorage.setItem("clearcolor", "#152028");
-			document.getElementById("clearcolorbox").value = "#152028";
+			localStorage.setItem("clearcolor", boardDefaults.backgroundColor);
+			document.getElementById("clearcolorbox").value = boardDefaults.backgroundColor;
 			clearcolorchange();
 		}
 	}

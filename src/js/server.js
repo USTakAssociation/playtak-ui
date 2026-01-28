@@ -1,26 +1,28 @@
+let loadingGameHistory = false;
+
 function randomtoken(){
-	var a,b;
-	var s=Math.random()+";"+Math.random()+";"+Math.random()+";"+(+new Date())+";";
+	let a,b;
+	let s=Math.random()+";"+Math.random()+";"+Math.random()+";"+(+new Date())+";";
 	if(window.crypto){
-		var a = new Uint8Array(16);
-		crypto.getRandomValues(a);
+		const arr = new Uint8Array(16);
+		crypto.getRandomValues(arr);
 		for(b=0;b<16;b++){
-			s+=a[b]+";";
+			s+=arr[b]+";";
 		}
 	}
 	if(window.performance && performance.now){
 		s+=performance.now()+";";
 	}
-	var rands=[0,0,0,0];
-	var muls=[10007,10069,10093,10099];
-	var mods=[2000000011,2000000063,2000000099,2000000333];
+	const rands=[0,0,0,0];
+	const muls=[10007,10069,10093,10099];
+	const mods=[2000000011,2000000063,2000000099,2000000333];
 	for(a=0;a<s.length;a++){
 		for(b=0;b<4;b++){
-			var cc=s.charCodeAt(a);
+			const cc=s.charCodeAt(a);
 			rands[b]=((rands[b]^cc)*muls[b])%mods[b];
 		}
 	}
-	var out="";
+	let out="";
 	for(a=0;a<4;a++){
 		for(b=0;b<5;b++){
 			out+=String.fromCharCode(97+rands[a]%26);
@@ -30,8 +32,8 @@ function randomtoken(){
 	return out;
 }
 function refreshguesttoken(){
-	var now=+new Date();
-	var tokenexpire=+localStorage["guesttokendecay"];
+	const now=+new Date();
+	const tokenexpire=+localStorage["guesttokendecay"];
 	if(tokenexpire && now<tokenexpire){
 		localStorage.setItem("guesttokendecay",now+3600*1000*4);
 	}
@@ -40,12 +42,12 @@ refreshguesttoken();
 setInterval(refreshguesttoken,3600*1000);
 
 function decode_utf8(ar){
-	var a;
-	out="";
-	var intermediate=0;
-	var missing=0;
+	let a;
+	let out="";
+	let intermediate=0;
+	let missing=0;
 	for(a=0;a<ar.length;a++){
-		var code=ar[a];
+		const code=ar[a];
 		if(missing==0){
 			if(code<128){
 				out+=String.fromCharCode(code);
@@ -94,7 +96,7 @@ function decode_utf8(ar){
 	return out;
 }
 
-waitinginterval=null;
+let waitinginterval=null;
 function waitforreply(){
 	if(waitinginterval===null){
 		waitinginterval=setInterval(waitedtoolong,4000);
@@ -119,7 +121,7 @@ function invarianttime(){
 
 function minuteseconds(seconds){
 	seconds=+seconds;
-	var minutes=Math.floor(seconds/60);
+	const minutes=Math.floor(seconds/60);
 	seconds=seconds%60;
 	return (minutes>0?minutes:"")+":"+(seconds<10?"0":"")+seconds;
 }
@@ -168,6 +170,7 @@ async function getPlayersRating(playerName){
 	}
 }
 
+// Must use 'var' because inline HTML onclick handlers access this via window.server
 var server = {
 	connection: null,
 	timeoutvar: null,
@@ -192,8 +195,8 @@ var server = {
 			return;
 		}
 		if(!this.connection){
-			var proto = 'wss://';
-			var url = window.location.host + '/ws';
+			let proto = 'wss://';
+			let url = window.location.host + '/ws';
 			if(window.location.hostname==="localhost" || window.location.hostname==="127.0.0.1" || window.location.hostname.indexOf("192.168.")==0){
 				proto = 'ws://';
 				url=window.location.hostname+":9999" + '/ws';
@@ -205,11 +208,11 @@ var server = {
 				console.error("Connection error: " + e);
 			};
 			this.connection.onmessage = function(e){
-				var blob = e.data;
-				var reader = new FileReader();
+				const blob = e.data;
+				const reader = new FileReader();
 				reader.onload = function(event){
-					var ui8a=new Uint8Array(reader.result);
-					var res_text=decode_utf8(ui8a);
+					const ui8a=new Uint8Array(reader.result);
+					const res_text=decode_utf8(ui8a);
 					server.msg(res_text);
 				};
 				reader.readAsArrayBuffer(blob);
@@ -301,8 +304,8 @@ var server = {
 			this.connection.onopen=function(){server.login();};
 		}
 		else if(this.connection.readyState==1){
-			var name = $('#login-username').val().replace(/\s/g,"");
-			var pass = $('#login-pwd').val();
+			const name = $('#login-username').val().replace(/\s/g,"");
+			const pass = $('#login-pwd').val();
 
 			server.sendClient();
 			this.send("Login " + name + " " + pass);
@@ -315,9 +318,9 @@ var server = {
 			this.connection.onopen=function(){server.guestlogin();};
 		}
 		else if(this.connection.readyState==1){
-			var now=+new Date();
-			var tokenexpire=+localStorage["guesttokendecay"];
-			var token;
+			const now=+new Date();
+			const tokenexpire=+localStorage["guesttokendecay"];
+			let token;
 			if(tokenexpire && now<tokenexpire){
 				token=localStorage["guesttoken"];
 			}
@@ -339,9 +342,9 @@ var server = {
 		else if(this.connection.readyState==1){
 			hideElement("sign-up");
 			showElement("loading");
-			var name = $('#register-username').val();
-			var email = $('#register-email').val();
-			var retyped_email = $('#retype-register-email').val();
+			const name = $('#register-username').val();
+			const email = $('#register-email').val();
+			const retyped_email = $('#retype-register-email').val();
 
 			if(email !== retyped_email){
 				alert("danger","Email addresses don't match");
@@ -360,9 +363,9 @@ var server = {
 			this.connection.onopen=function(){server.changepassword();};
 		}
 		else if(this.connection.readyState==1){
-			var curpass = $('#cur-pwd').val();
-			var newpass = $('#new-pwd').val();
-			var retypenewpass = $('#retype-new-pwd').val();
+			const curpass = $('#cur-pwd').val();
+			const newpass = $('#new-pwd').val();
+			const retypenewpass = $('#retype-new-pwd').val();
 
 			if(newpass !== retypenewpass){
 				alert("danger","Passwords don't match");
@@ -381,8 +384,8 @@ var server = {
 		else if(this.connection.readyState==1){
 			hideElement("send-token");
 			showElement('loading');
-			var name = $('#resettoken-username').val();
-			var email = $('#resettoken-email').val();
+			const name = $('#resettoken-username').val();
+			const email = $('#resettoken-email').val();
 			this.send('SendResetToken '+name+' '+email);
 		}
 	},
@@ -393,10 +396,10 @@ var server = {
 			this.connection.onopen=function(){server.resetpwd();};
 		}
 		else if(this.connection.readyState==1){
-			var name = $('#resetpwd-username').val();
-			var token = $('#resetpwd-token').val();
-			var npwd = $('#reset-new-pwd').val();
-			var rnpwd = $('#reset-retype-new-pwd').val();
+			const name = $('#resetpwd-username').val();
+			const token = $('#resetpwd-token').val();
+			const npwd = $('#reset-new-pwd').val();
+			const rnpwd = $('#reset-retype-new-pwd').val();
 			if(npwd !== rnpwd){
 				alert("danger","Passwords don't match");
 			}
@@ -427,7 +430,7 @@ var server = {
 			document.getElementById("removeSeek").setAttribute("hidden", "true");
 			$('#joingame-modal').modal('hide');
 			//Game Start ID size player_white vs player_black your color time
-			var spl = e.split(" ");
+			const spl = e.split(" ");
 			const p1 = spl[3];
 			const p2 = spl[5];
 			const opponent = (p1 === this.myname) ? p2 : p1;
@@ -449,6 +452,7 @@ var server = {
 			gameData.observing = false;
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
+			loadingGameHistory = true;
 			// store the game object in local storage
 			localStorage.setItem("current-game-data", JSON.stringify(gameData));
 			console.log("Game ID " + gameData.id);
@@ -501,10 +505,10 @@ var server = {
 			$(".player2-name:first").html(p2);
 			document.title = "Tak: " + p1 + " vs " + p2;
 
-			var time = gameData.time;
+			const time = gameData.time;
 			settimers(time * 1000, time * 1000);
 
-			var opponentname;
+			let opponentname;
 			if(spl[6] === "white"){
 				//I am white
 				opponentname = p2;
@@ -529,10 +533,10 @@ var server = {
 			clearStoredNotation();
 			clearNotationMenu();
 			//Observe GameId player1 player2 5 300 10 0 21 1 0 0 0 0
-			var spl = e.split(" ");
+			const spl = e.split(" ");
 
-			var p1 = spl[2];
-			var p2 = spl[3];
+			const p1 = spl[2];
+			const p2 = spl[3];
 			gameData.id = +spl[1];
 			gameData.opponent = "";
 			gameData.my_color = "white";
@@ -551,6 +555,7 @@ var server = {
 			gameData.is_scratch = false;
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
+			loadingGameHistory = true;
 			if(is2DBoard){
 				setDisable2DBoard(true);
 			}
@@ -560,12 +565,12 @@ var server = {
 			document.getElementById('2d-board-checkbox').setAttribute("disabled", "true");
 			document.title = "Tak: " + p1 + " vs " + p2;
 			document.getElementById('rematch').style.display = "none";
-			var time = +spl[5];
+			const time = +spl[5];
 			settimers(time * 1000, time * 1000);
 		}
 		else if(e.startsWith("GameList Add ")){
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
-			var spl = e.split(" ");
+			const spl = e.split(" ");
 			const game = {
 				id: +spl[2],
 				time: +spl[6],
@@ -586,8 +591,8 @@ var server = {
 		}
 		else if(e.startsWith("GameList Remove ")){
 			//GameList Remove Game#1 player1 vs player2, 4x4, 180, 0 half-moves played, player1 to move
-			var spl = e.split(" ");
-			var id = +spl[2];
+			const spl = e.split(" ");
+			const id = +spl[2];
 			const index = this.gameslist.findIndex(game => game.id === id);
 			if(index !== -1){
 				this.gameslist.splice(index, 1);
@@ -595,8 +600,8 @@ var server = {
 			this.removeGameFromWatchList(id);
 		}
 		else if(e.startsWith("Game#")){
-			var spl = e.split(" ");
-			var gameId = Number(e.split("Game#")[1].split(" ")[0]);
+			const spl = e.split(" ");
+			const gameId = Number(e.split("Game#")[1].split(" ")[0]);
 			//Game#1 ...
 			if(gameId === gameData.id){
 				//Game#1 P A4 (C|W)
@@ -615,7 +620,7 @@ var server = {
 						}
 					}
 					else{
-						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3]);
+						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3], loadingGameHistory);
 					}
 				}
 				//Game#1 M A2 A5 2 1
@@ -644,14 +649,16 @@ var server = {
 							Number(spl[2].charAt(1)),
 							spl[3].charAt(0),
 							Number(spl[3].charAt(1)),
-							nums
+							nums,
+							loadingGameHistory
 						);
 					}
 				}
 				//Game#1 Time 170 200
 				else if(spl[1] === "Time"){
-					var wt = Math.max(+spl[2] || 0, 0) * 1000;
-					var bt = Math.max(+spl[3] || 0, 0) * 1000;
+					loadingGameHistory = false;
+					const wt = Math.max(+spl[2] || 0, 0) * 1000;
+					const bt = Math.max(+spl[3] || 0, 0) * 1000;
 					lastWt = wt;
 					lastBt = bt;
 
@@ -660,8 +667,9 @@ var server = {
 				}
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
-					var wt = Math.max(+spl[2] || 0, 0);
-					var bt = Math.max(+spl[3] || 0, 0);
+					loadingGameHistory = false;
+					const wt = Math.max(+spl[2] || 0, 0);
+					const bt = Math.max(+spl[3] || 0, 0);
 					lastWt = wt;
 					lastBt = bt;
 
@@ -720,7 +728,7 @@ var server = {
 						gameData.result = "0-1";
 					}
 
-					var msg = "Game abandoned by " + spl[2] + ".";
+					let msg = "Game abandoned by " + spl[2] + ".";
 					if(!gameData.observing){
 						msg += " You win!";
 					}
@@ -738,8 +746,8 @@ var server = {
 			clearInterval(this.timeoutvar);
 			this.timeoutvar = setInterval(this.keepalive, 10000);
 			if(localStorage.getItem("keeploggedin") === "true" && this.tries < 3){
-				var uname = localStorage.getItem("usr");
-				var token = localStorage.getItem("token");
+				const uname = localStorage.getItem("usr");
+				const token = localStorage.getItem("token");
 				server.sendClient();
 				server.send("Login " + uname + " " + token);
 				this.tries++;
@@ -813,10 +821,10 @@ var server = {
 			document.title = "Play Tak";
 			server.loggedin = true;
 			this.updatePlayerRatingInfo(await getPlayersRating(this.myname));
-			var rem = $("#keeploggedin").is(":checked");
+			const rem = $("#keeploggedin").is(":checked");
 			if(rem === true && !this.myname.startsWith("Guest")){
-				var name = $("#login-username").val();
-				var token = $("#login-pwd").val();
+				const name = $("#login-username").val();
+				const token = $("#login-pwd").val();
 
 				localStorage.setItem("keeploggedin", "true");
 				localStorage.setItem("usr", name);
@@ -830,7 +838,7 @@ var server = {
 			alert("success", "Password changed!");
 		}
 		else if(e.startsWith("Message")){
-			var msg = e.split("Message ");
+			const msg = e.split("Message ");
 
 			if(e.includes("You've logged in from another window. Disconnecting")){
 				server.anotherlogin = true;
@@ -845,49 +853,49 @@ var server = {
 			alert("info", "Server says: " + msg[1]);
 		}
 		else if(e.startsWith("Error")){
-			var msg = e.split("Error:")[1];
+			const msg = e.split("Error:")[1];
 			alert("danger", "Server says: " + msg);
 		}
 		//Shout <name> msg
 		else if(e.startsWith("Shout ")){
-			var regex = /Shout <([^\s]*)> (.*)/g;
-			var match = regex.exec(e);
+			const regex = /Shout <([^\s]*)> (.*)/g;
+			const match = regex.exec(e);
 			chathandler.received("global", "", match[1], match[2]);
 		}
 		//ShoutRoom name <name> msg
 		else if(e.startsWith("ShoutRoom")){
-			var regex = /ShoutRoom ([^\s]*) <([^\s]*)> (.*)/g;
-			var match = regex.exec(e);
+			const regex = /ShoutRoom ([^\s]*) <([^\s]*)> (.*)/g;
+			const match = regex.exec(e);
 
 			chathandler.received("room", match[1], match[2], match[3]);
 		}
 		//Tell <name> msg
 		else if(e.startsWith("Tell")){
-			var regex = /Tell <([^\s]*)> (.*)/g;
-			var match = regex.exec(e);
+			const regex = /Tell <([^\s]*)> (.*)/g;
+			const match = regex.exec(e);
 
 			chathandler.received("priv", match[1], match[1], match[2]);
 		}
 		//Told <name> msg
 		else if(e.startsWith("Told")){
-			var regex = /Told <([^\s]*)> (.*)/g;
-			var match = regex.exec(e);
+			const regex = /Told <([^\s]*)> (.*)/g;
+			const match = regex.exec(e);
 
 			chathandler.received("priv", match[1], this.myname, match[2]);
 		}
 		else if(e.startsWith("CmdReply")){
-			var msg = e.split("CmdReply ")[1];
+			let msg = e.split("CmdReply ")[1];
 			msg = '<span class="cmdreply">' + msg + "</span>";
 		}
 		else if(e.startsWith("sudoReply")){
-			var msg = e.split("sudoReply ")[1];
+			const msg = e.split("sudoReply ")[1];
 
 			chathandler.received("admin", "admin", "&gt;", msg);
 		}
 		//new seek
 		else if(e.startsWith("Seek new")){
 			// Seek new 1 {player} 5 900 20 A 0 21 1 0 0 0 0 {oppoenent}
-			var spl = e.split(" ");
+			const spl = e.split(" ");
 			let playerRating = await getPlayersRating(spl[3]);
 			this.seekslist.push({
 				id: +spl[2],
@@ -912,11 +920,10 @@ var server = {
 		//remove seek
 		else if(e.startsWith("Seek remove")){
 			//Seek remove 1 chaitu 5 15
-			var spl = e.split(" ");
-			var id = +spl[2];
-			var newseekslist = [];
-			var a;
-			for(a = 0; a < this.seekslist.length; a++){
+			const spl = e.split(" ");
+			const id = +spl[2];
+			const newseekslist = [];
+			for(let a = 0; a < this.seekslist.length; a++){
 				if(id != this.seekslist[a].id){
 					newseekslist.push(this.seekslist[a]);
 				}
@@ -962,10 +969,10 @@ var server = {
 			showElement("landing-login");
 		}
 		else if(e.startsWith("Joined room ")){
-			var spl = e.split(" ");
-			var roomname = spl[2];
-			var players = roomname.split("-");
-			var id = "room-" + roomname;
+			const spl = e.split(" ");
+			const roomname = spl[2];
+			const players = roomname.split("-");
+			const id = "room-" + roomname;
 			if(players.length == 2){
 				chathandler.createRoom(id, "<div><b>" + players[0] + "</b> vs <b>" + players[1] + "</b></div>");
 			}
@@ -1001,12 +1008,12 @@ var server = {
 	},
 	addGameToWatchList: async function(game){
 		if(!game || !game.id){return;}
-		var p1 = game.player1;
+		const p1 = game.player1;
 		let p1Rating = await getPlayersRating(p1);
 		if(!p1Rating){
 			p1Rating = "";
 		}
-		var p2 = game.player2;
+		const p2 = game.player2;
 		let p2Rating = await getPlayersRating(p2);
 		if(!p2Rating){
 			p2Rating = "";
@@ -1035,7 +1042,7 @@ var server = {
 		const actionButton = document.createElement("button");
 		actionButton.className = "btn btn-transparent";
 		actionButton.innerHTML = `<svg viewBox="0 0 576 512"><path d="M160 256C160 185.3 217.3 128 288 128C358.7 128 416 185.3 416 256C416 326.7 358.7 384 288 384C217.3 384 160 326.7 160 256zM288 336C332.2 336 368 300.2 368 256C368 211.8 332.2 176 288 176C287.3 176 286.7 176 285.1 176C287.3 181.1 288 186.5 288 192C288 227.3 259.3 256 224 256C218.5 256 213.1 255.3 208 253.1C208 254.7 208 255.3 208 255.1C208 300.2 243.8 336 288 336L288 336zM95.42 112.6C142.5 68.84 207.2 32 288 32C368.8 32 433.5 68.84 480.6 112.6C527.4 156 558.7 207.1 573.5 243.7C576.8 251.6 576.8 260.4 573.5 268.3C558.7 304 527.4 355.1 480.6 399.4C433.5 443.2 368.8 480 288 480C207.2 480 142.5 443.2 95.42 399.4C48.62 355.1 17.34 304 2.461 268.3C-.8205 260.4-.8205 251.6 2.461 243.7C17.34 207.1 48.62 156 95.42 112.6V112.6zM288 80C222.8 80 169.2 109.6 128.1 147.7C89.6 183.5 63.02 225.1 49.44 256C63.02 286 89.6 328.5 128.1 364.3C169.2 402.4 222.8 432 288 432C353.2 432 406.8 402.4 447.9 364.3C486.4 328.5 512.1 286 526.6 256C512.1 225.1 486.4 183.5 447.9 147.7C406.8 109.6 353.2 80 288 80V80z"/></svg>`;
-		var row = $('<tr/>').attr("id", "game-" + game.id).addClass('game'+game.id).appendTo($('#gamelist'));
+		const row = $('<tr/>').attr("id", "game-" + game.id).addClass('game'+game.id).appendTo($('#gamelist'));
 		$('<td/>').append(actionButton).attr("data-toggle", "tooltip").attr("title", "Watch game").click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		// game details
@@ -1124,7 +1131,7 @@ var server = {
 	},
 	removeGameFromWatchList: function(gameId){
 		if(!gameId){return;}
-		var gameRow = document.getElementById("game-" + gameId);
+		const gameRow = document.getElementById("game-" + gameId);
 		if(gameRow){
 			gameRow.remove();
 			document.getElementById("gamecount").innerHTML = this.gameslist.length;
@@ -1134,25 +1141,24 @@ var server = {
 		document.getElementById("seeklist").innerHTML = "";
 		document.getElementById("seeklistbot").innerHTML = "";
 		this.seekslist.sort(function(a,b){return b.player_rating - a.player_rating || ((a.player.toLowerCase()+" "+a.player)>(b.player.toLowerCase()+" "+b.player)?1:-1);});
-		var a;
-		var playercount=0;
-		var botcount=0;
-		var myrating=1000;
-		var levelgap=150;
+		let playercount=0;
+		let botcount=0;
+		let myrating=1000;
+		const levelgap=150;
 		if(this.myname && this.myRating){
 			myrating=this.myRating || 1000;
 		}
 		// remove private seek badge
 		const seekBadge = document.getElementById("seekcount");
 		seekBadge.classList.remove("seek-badge");
-		for(a=0;a<this.seekslist.length;a++){
-			var seek=this.seekslist[a];
+		for(let a=0;a<this.seekslist.length;a++){
+			const seek=this.seekslist[a];
 			const mySeek = seek.player.toLowerCase() == this.myname.toLowerCase();
 			if(seek.opponent != "0" && seek.opponent != "" && seek.opponent.toLowerCase() != this.myname.toLowerCase() && seek.player.toLowerCase() != this.myname.toLowerCase()){
 				continue;
 			}
-			var colourleft="white";
-			var colourright="black";
+			let colourleft="white";
+			let colourright="black";
 			let yourColor = 'random';
 			if(seek.color=="W"){
 				colourright="white";
@@ -1168,9 +1174,9 @@ var server = {
 					yourColor = colourleft;
 				}
 			}
-			var imgstring='<svg class="colourcircle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourleft+'"></circle><clipPath id="g-clip"><rect height="16" width="8" x="8" y="0"></rect></clipPath><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourright+'" clip-path="url(#g-clip)"></circle></svg>';
-			var sizespan = "<span class='badge'>"+seek.size+"</span>";
-			var row = $('<tr/>')
+			const imgstring='<svg class="colourcircle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourleft+'"></circle><clipPath id="g-clip"><rect height="16" width="8" x="8" y="0"></rect></clipPath><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourright+'" clip-path="url(#g-clip)"></circle></svg>';
+			const sizespan = "<span class='badge'>"+seek.size+"</span>";
+			const row = $('<tr/>')
 				.addClass('seek'+seek.id);
 			if(seek.opponent != "" && seek.opponent != "0"){
 				row.addClass("privateseek");
@@ -1187,8 +1193,8 @@ var server = {
 				playercount++;
 			}
 			const rating = seek.player_rating;
-			var ratingdecoration="";
-			var ratingtext="";
+			let ratingdecoration="";
+			let ratingtext="";
 			if(rating && seek.player.toLowerCase() != this.myname.toLowerCase() && !this.myname.startsWith("Guest")){
 				if(rating>=myrating+levelgap){
 					ratingdecoration="<span class='ratingup'>"+("↑".slice(0,Math.min(Math.floor((rating-myrating)/levelgap),3)))+"</span>";
@@ -1553,7 +1559,7 @@ var server = {
 		}
 		this.unobserve();
 		this.send("Observe " + game.id);
-		var players=[game.player1,game.player2];
+		const players=[game.player1,game.player2];
 		players.sort();
 		this.send("JoinRoom " + players.join("-"));
 	},
