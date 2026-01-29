@@ -758,7 +758,7 @@ function load3DSettings(){
 		// crazy martin pieces
 		if(localStorage.getItem("crazy_martin") !== "false"){
 			document.getElementById("crazy-martin-pieces").checked = true;
-			crazy_martin = true;
+			crazy_martin_mode = true;
 		}
 		// load piece size setting
 		if(localStorage.getItem("piece_size") !== null){
