@@ -201,7 +201,7 @@ var server = {
 				proto = 'ws://';
 				url=window.location.hostname+":9999" + '/ws';
 				// uncomment to play locally against the live server
-				//url = "www.playtak.com:9999/ws";
+				url = "www.playtak.com:9999/ws";
 			}
 			this.connection = new WebSocket(proto+url,"binary");
 			this.connection.onerror = function(e){

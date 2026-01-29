@@ -106,6 +106,23 @@ function checkboxDiagonalWalls(){
 }
 
 /*
+ * Notify checkbox change for checkbox:
+ *  Crazy Martin pieces
+ */
+function checkBoxCrazyMartin(){
+	console.log('toggled crazy martin pieces');
+	if(document.getElementById('crazy-martin-pieces').checked){
+		localStorage.setItem('crazy_martin','true');
+		crazy_martin_mode=true;
+	}
+	else{
+		localStorage.setItem('crazy_martin','false');
+		crazy_martin_mode=false;
+	}
+	board.updatepieces();
+}
+
+/*
  * Notify slider movement:
  *	 Piece size
  */
@@ -737,6 +754,11 @@ function load3DSettings(){
 		if(localStorage.getItem("diagonal_walls") !== "false"){
 			document.getElementById("wall-orientation").checked = true;
 			diagonal_walls = true;
+		}
+		// crazy martin pieces
+		if(localStorage.getItem("crazy_martin") !== "false"){
+			document.getElementById("crazy-martin-pieces").checked = true;
+			crazy_martin_mode = true;
 		}
 		// load piece size setting
 		if(localStorage.getItem("piece_size") !== null){
