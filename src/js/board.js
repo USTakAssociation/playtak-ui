@@ -13,6 +13,7 @@ let borderOffset = 27;
 let stackOffsetFromBorder = 50;
 let letter_size = 12;
 let diagonal_walls = false;
+let crazy_martin_mode = true;
 let table_width = 1280;
 let table_depth = 920;
 let table_height = 50;
@@ -28,8 +29,8 @@ const mouse = new THREE.Vector2();
 const offset = new THREE.Vector3();
 
 let antialiasing_mode = true;
-let maxaniso=1;
-let anisolevel=16;
+let maxaniso = 1;
+let anisolevel = 16;
 let dontanimate = false;
 
 // Initialize animation speed from localStorage or default to 1.0
@@ -84,6 +85,23 @@ const aoConfig = {
 	}
 };
 
+function recalcAOBottomOffset(piece){
+	if(!piece.aoPlane){return;}
+
+	// Ensure world matrices are current
+	piece.updateMatrixWorld(true);
+
+	// Get real lowest point of the mesh in world space
+	const box = new THREE.Box3().setFromObject(piece);
+
+	// Keep the plane slightly above contact to prevent z-fighting
+	const contactY = box.min.y + aoConfig.yOffset;
+
+	// Store offset so animation loop can keep using (pos.y + aoYOffset)
+	piece.aoPlane.aoYOffset = contactY - piece.position.y;
+}
+
+
 // Create a blurred AO shadow texture using canvas blur filter
 function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
 	const canvas = document.createElement('canvas');
@@ -102,6 +120,37 @@ function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
 		ctx.arc(centerX, centerY, shapeWidth / 2, 0, Math.PI * 2);
 		ctx.fill();
 	}
+	else if(shape === 'trapezoid'){
+		const topWidth = shapeWidth * 0.66;
+		ctx.beginPath();
+		ctx.moveTo(centerX - topWidth / 2, centerY + shapeHeight / 2);
+		ctx.lineTo(centerX + topWidth / 2, centerY + shapeHeight / 2);
+		ctx.lineTo(centerX + shapeWidth / 2, centerY - shapeHeight / 2);
+		ctx.lineTo(centerX - shapeWidth / 2, centerY - shapeHeight / 2);
+		ctx.closePath();
+		ctx.fill();
+	}
+	else if(shape === 'notched_disk'){
+		const radius = shapeWidth / 2;
+		const notchAngle = Math.PI / 2;
+		const segs = 48;
+		const totalAngle = Math.PI * 2 - notchAngle;
+		const thetaStart = notchAngle / 2;
+		ctx.beginPath();
+		for(let i = 0; i <= segs; i++){
+			const t = thetaStart + (i / segs) * totalAngle;
+			const x = centerX + radius * Math.cos(t);
+			const y = centerY + radius * Math.sin(t);
+			if(i === 0){
+				ctx.moveTo(x, y);
+			}
+			else{
+				ctx.lineTo(x, y);
+			}
+		}
+		ctx.closePath();
+		ctx.fill();
+	}
 	else{
 		ctx.fillRect(centerX - shapeWidth / 2, centerY - shapeHeight / 2, shapeWidth, shapeHeight);
 	}
@@ -116,8 +165,32 @@ let aoTextureFlat = null;
 let aoTextureCap = null;
 let aoTextureWall = null;
 let aoTextureBoard = null;
+let aoTextureNotchedDisk = null;
+let aoTextureTrapezoid = null;
 
-function getFlatAOTexture(){
+function getFlatAOTexture(shape){
+	if(shape === 'square'){
+		if(!aoTextureFlat){
+			const c = aoConfig.flat;
+			aoTextureFlat = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, shape);
+		}
+		return aoTextureFlat;
+	}
+	else if(shape === 'notched_disk'){
+		if(!aoTextureNotchedDisk){
+			const c = aoConfig.flat;
+			aoTextureNotchedDisk = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, shape);
+		}
+		return aoTextureNotchedDisk;
+	}
+	else if(shape === 'trapezoid'){
+		if(!aoTextureTrapezoid){
+			const c = aoConfig.flat;
+			aoTextureTrapezoid = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, shape);
+		}
+		return aoTextureTrapezoid;
+	}
+	// Default to square
 	if(!aoTextureFlat){
 		const c = aoConfig.flat;
 		aoTextureFlat = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, 'square');
@@ -188,71 +261,236 @@ function updatePieceAOVisibility(piece){
 	}
 }
 
+
+// --- AO footprint helpers (non-square piece support) ---
+function makeRectAOShape(width, depth){
+	const s = new THREE.Shape();
+	s.moveTo(-width/2, -depth/2);
+	s.lineTo(width/2, -depth/2);
+	s.lineTo(width/2, depth/2);
+	s.lineTo(-width/2 ,depth/2);
+	s.closePath();
+	return s;
+}
+
+// White pieces are tapered toward +Z (front). Approximate the contact footprint as a trapezoid.
+function makeWhiteFlatAOShape(paddedSize){
+	const backW = paddedSize;
+	const frontW = paddedSize * 0.8;
+	const zBack = -paddedSize/2;
+	const zFront = (paddedSize/2) * 0.8;
+
+	const s = new THREE.Shape();
+	s.moveTo(-backW/2, zBack);
+	s.lineTo(backW/2, zBack);
+	s.lineTo(frontW/2, zFront);
+	s.lineTo(-frontW/2, zFront);
+	s.closePath();
+	return s;
+}
+
+// Black pieces are a disk with a missing 90° wedge. Approximate the footprint with a notched circle.
+function makeNotchedDiskAOShape(radius, notchAngle, segments){
+	const notch = notchAngle !== undefined ? notchAngle : (Math.PI/2);
+	const segs = segments !== undefined ? segments : 48;
+	const totalAngle = Math.PI * 2 - notch;
+	const thetaStart = notch / 2;
+
+	const s = new THREE.Shape();
+	for(let i = 0; i <= segs; i++){
+		const t = thetaStart + (i / segs) * totalAngle;
+		const x = radius * Math.cos(t);
+		const y = radius * Math.sin(t);
+		if(i === 0){
+			s.moveTo(x, y);
+		}
+		else{
+			s.lineTo(x, y);
+		}
+	}
+	// Close across the chord (cut)
+	s.closePath();
+	return s;
+}
+
+function applyPlanarUVsToGeometry(geom){
+	// Supports both THREE.Geometry and THREE.BufferGeometry
+	if(geom && geom.isBufferGeometry){
+		geom.computeBoundingBox();
+		const bb = geom.boundingBox;
+		const sx = (bb.max.x - bb.min.x) || 1;
+		const sy = (bb.max.y - bb.min.y) || 1;
+
+		const pos = geom.attributes.position;
+		const uv = new Float32Array(pos.count * 2);
+		for(let i = 0; i < pos.count; i++){
+			const x = pos.getX(i);
+			const y = pos.getY(i);
+			uv[i*2] = (x - bb.min.x) / sx;
+			uv[i*2+1] = (y - bb.min.y) / sy;
+		}
+		geom.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+		geom.attributes.uv.needsUpdate = true;
+		return;
+	}
+
+	// THREE.Geometry path
+	if(!geom || !geom.vertices || !geom.faces){return;}
+	geom.computeBoundingBox();
+	const bb = geom.boundingBox;
+	const sx = (bb.max.x - bb.min.x) || 1;
+	const sy = (bb.max.y - bb.min.y) || 1;
+
+	geom.faceVertexUvs[0] = [];
+	for(let i = 0; i < geom.faces.length; i++){
+		const f = geom.faces[i];
+		const va = geom.vertices[f.a];
+		const vb = geom.vertices[f.b];
+		const vc = geom.vertices[f.c];
+
+		geom.faceVertexUvs[0].push([
+			new THREE.Vector2((va.x - bb.min.x) / sx, (va.y - bb.min.y) / sy),
+			new THREE.Vector2((vb.x - bb.min.x) / sx, (vb.y - bb.min.y) / sy),
+			new THREE.Vector2((vc.x - bb.min.x) / sx, (vc.y - bb.min.y) / sy)
+		]);
+	}
+	geom.uvsNeedUpdate = true;
+}
+
 // Reset AO plane to flat piece shape and texture
+
 function resetAOToFlat(piece){
 	if(!piece.aoPlane){return;}
-	piece.aoPlane.aoYOffset = -piece_height / 2 + aoConfig.yOffset;
+
+	// Rebuild AO geometry as a footprint-matching shape (not a square plane)
 	piece.aoPlane.geometry.dispose();
-	const aoSize = piece_size + piece_size * aoConfig.padding;
-	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoSize, aoSize);
-	piece.aoPlane.material.map = getFlatAOTexture();
+	const aoPadding = piece_size * aoConfig.padding;
+
+	let shape;
+	let tex;
+
+	if(piece.iscapstone){
+		// Capstones: circular footprint
+		const r = capstone_radius + aoPadding / 2;
+		shape = new THREE.Shape();
+		shape.absarc(0, 0, r, 0, Math.PI * 2, false);
+		tex = getCapAOTexture();
+	}
+	else if(piece.iswhitepiece){
+		// White flats: tapered trapezoid footprint (matches the piece taper toward +Z)
+		const s = piece_size + aoPadding;
+		if(crazy_martin_mode){
+			shape = makeWhiteFlatAOShape(s);
+			tex = getFlatAOTexture('trapezoid');
+		}
+		else{
+			shape = makeRectAOShape(s, s);
+			tex = getFlatAOTexture('square');
+		}
+	}
+	else{
+		// Black flats: notched disk footprint
+		const r = (piece_size / 2) + aoPadding / 2;
+		if(crazy_martin_mode){
+			shape = makeNotchedDiskAOShape(r, Math.PI/2, 48);
+			tex = getFlatAOTexture('notched_disk');
+		}
+		else{
+			const s = piece_size + aoPadding;
+			shape = makeRectAOShape(s, s);
+			tex = getFlatAOTexture('square');
+		}
+	}
+
+	const newGeom = new THREE.ShapeGeometry(shape, 32);
+	applyPlanarUVsToGeometry(newGeom);
+
+	// Preserve current visibility and opacity before updating
+	const wasVisible = piece.aoPlane.visible;
+	const currentOpacity = piece.aoPlane.material.opacity;
+
+	piece.aoPlane.geometry = newGeom;
+	piece.aoPlane.material.map = tex;
 	piece.aoPlane.material.needsUpdate = true;
 	piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
+
+	// Restore visibility and opacity
+	piece.aoPlane.visible = wasVisible;
+	piece.aoPlane.material.opacity = currentOpacity;
+
+	// Use true mesh bottom so custom pieces don't hover/sink
+	recalcAOBottomOffset(piece);
 }
 
 // Update AO plane to wall shape and texture
 function setAOToWall(piece){
 	if(!piece.aoPlane){return;}
-	piece.aoPlane.aoYOffset = -piece_size / 2 + aoConfig.yOffset;
+
+	// Rebuild AO geometry as a footprint-matching shape (thin rectangle contact)
 	piece.aoPlane.geometry.dispose();
 	const aoPadding = piece_size * aoConfig.padding;
-	const aoWidth = piece_size + aoPadding;
-	const aoDepth = piece_height + aoPadding;
-	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
+
+	// Standing pieces contact the board along an edge:
+	// length ~ piece_size, thickness ~ piece_height
+	const aoLength = piece_size + aoPadding;
+	const aoThickness = piece_height + aoPadding;
+
+	// Rectangle (not square): better for both tapered white walls and notched black walls.
+	const shape = makeRectAOShape(aoLength, aoThickness);
+
+	const newGeom = new THREE.ShapeGeometry(shape, 16);
+	applyPlanarUVsToGeometry(newGeom);
+
+	piece.aoPlane.geometry = newGeom;
 	piece.aoPlane.material.map = getWallAOTexture();
 	piece.aoPlane.material.needsUpdate = true;
+
 	piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
 	if(diagonal_walls){
 		piece.aoPlane.rotation.z = -Math.PI / 4;
 	}
-	// Rotate black walls 90 degrees
+	// Rotate black walls 90 degrees (to align AO with their wall direction)
 	if(!piece.iswhitepiece){
 		piece.aoPlane.rotation.z += Math.PI / 2;
 	}
+
+	// Use true mesh bottom so custom pieces don't darken incorrectly
+	recalcAOBottomOffset(piece);
 }
+
 let scenehash = 0;
 let lastanimate = 0;
-let camera,scene,renderer,light,canvas,controls = null;
+let camera, scene, renderer, light, canvas, controls = null;
 let perspective;
 
 function animate(){
 	if(is2DBoard){return;}
 	if(!dontanimate){
 		controls.update();
-		const newscenehash=floathashscene();
-		const now=Date.now();
-		if(scenehash!=newscenehash || lastanimate+1000<=now){
-			scenehash=newscenehash;
-			lastanimate=now;
-			renderer.render(scene,camera);
+		const newscenehash = floathashscene();
+		const now = Date.now();
+		if(scenehash != newscenehash || lastanimate + 1000 <= now){
+			scenehash = newscenehash;
+			lastanimate = now;
+			renderer.render(scene, camera);
 		}
 	}
 	requestAnimationFrame(animate);
 }
 
-function combinefrustumvectors(a,b){
-	const a2=a.dot(a);
-	const b2=b.dot(b);
-	const ab=a.dot(b);
-	const a2b2=a2*b2;
-	const div=a2b2-ab*ab;
-	const bmul=(a2b2-a2*ab)/div;
-	const amul=(a2b2-b2*ab)/div;
-	return a.clone().multiplyScalar(amul).addScaledVector(b,bmul);
+function combinefrustumvectors(a, b){
+	const a2 = a.dot(a);
+	const b2 = b.dot(b);
+	const ab = a.dot(b);
+	const a2b2 = a2 * b2;
+	const div = a2b2 - ab * ab;
+	const bmul = (a2b2 - a2 * ab) / div;
+	const amul = (a2b2 - b2 * ab) / div;
+	return a.clone().multiplyScalar(amul).addScaledVector(b, bmul);
 }
 
-function frustumprojectionhelper(invcam,fv){
-	return fv.dot(fv)/fv.dot(invcam);
+function frustumprojectionhelper(invcam, fv){
+	return fv.dot(fv) / fv.dot(invcam);
 }
 
 function generateCamera(){
@@ -260,135 +498,135 @@ function generateCamera(){
 		return;
 	}
 
-	settingscounter = (settingscounter+1) & 15;
+	settingscounter = (settingscounter + 1) & 15;
 	const cuttop = $('header').height() + BOARD_PADDING;
 	const cutleft = getLeftPadding();
 	const cutright = getRightPadding();
 	const cutbottom = 0 + BOARD_PADDING;
 
 	const pointlist = [];
-	const xsizea = gameData.size*sq_size/2+border_size+stackOffsetFromBorder+piece_size;
-	const xsizeb = (gameData.size-1)*sq_size/2+piece_size/2;
-	const yneg = sq_height/2;
-	const yposa = 10*piece_height-yneg;
-	const yposb = 20*piece_height+yneg;
-	const zsizea = gameData.size*sq_size/2+border_size;
+	const xsizea = gameData.size * sq_size / 2 + border_size + stackOffsetFromBorder + piece_size;
+	const xsizeb = (gameData.size - 1) * sq_size / 2 + piece_size / 2;
+	const yneg = sq_height / 2;
+	const yposa = 10 * piece_height - yneg;
+	const yposb = 20 * piece_height + yneg;
+	const zsizea = gameData.size * sq_size / 2 + border_size;
 	const zsizeb = xsizeb;
 
 	for(let a = -1; a < 2; a += 2){
 		for(let b = -1; b < 2; b += 2){
-			pointlist.push(new THREE.Vector3(a*xsizea,-yneg,b*zsizea));
-			pointlist.push(new THREE.Vector3(a*xsizea,yposa,b*zsizea));
-			pointlist.push(new THREE.Vector3(a*xsizeb,yposb,b*zsizeb));
+			pointlist.push(new THREE.Vector3(a * xsizea, -yneg, b * zsizea));
+			pointlist.push(new THREE.Vector3(a * xsizea, yposa, b * zsizea));
+			pointlist.push(new THREE.Vector3(a * xsizeb, yposb, b * zsizeb));
 		}
 	}
 	let invcamdir;
 	if(camera && !fixedcamera){
-		invcamdir=camera.position.clone().sub(controls.center).normalize();
+		invcamdir = camera.position.clone().sub(controls.center).normalize();
 	}
 	else{
-		invcamdir=new THREE.Vector3(-4,25,25).normalize();
+		invcamdir = new THREE.Vector3(-4, 25, 25).normalize();
 	}
-	const camdir=invcamdir.clone().negate();
-	const up=new THREE.Vector3(0,1,0);
-	const camleft=new THREE.Vector3();
-	camleft.crossVectors(up,camdir).normalize();
-	const camup=new THREE.Vector3();
-	camup.crossVectors(camdir,camleft).normalize();
-	const camright=camleft.clone().negate();
-	const camdown=camup.clone().negate();
-	if(perspective>0){
-		const fw=pixelratio*(window.innerWidth+Math.abs(cutleft-cutright));
-		const fh=pixelratio*(window.innerHeight+Math.abs(cuttop-cutbottom));
-		const ox=pixelratio*(Math.max(0,cutright-cutleft));
-		const oy=pixelratio*(Math.max(0,cutbottom-cuttop));
-		const xv=pixelratio*(window.innerWidth-cutleft-cutright);
-		const yv=pixelratio*(window.innerHeight-cuttop-cutbottom);
-		const perspectiveheight=fh*perspective/(yv+xv)/90;
-		const perspectivewidth=perspectiveheight*fw/fh;
-		const perspectiveangle=Math.atan(perspectiveheight)*360/Math.PI;
-		const scaletop=perspectiveheight*yv/fh;
-		const scalebottom=scaletop;
-		const scaleleft=perspectivewidth*xv/fw;
-		const scaleright=scaleleft;
-		const fvtop=camup.clone().divideScalar(scaletop).add(invcamdir).normalize();
-		const fvbottom=camdown.clone().divideScalar(scalebottom).add(invcamdir).normalize();
-		const fvleft=camleft.clone().divideScalar(scaleleft).add(invcamdir).normalize();
-		const fvright=camright.clone().divideScalar(scaleright).add(invcamdir).normalize();
-		let maxleft=0;
-		let maxright=0;
-		let maxtop=0;
-		let maxbottom=0;
-		for(let a=0;a<pointlist.length;a++){
-			let newdist=fvleft.dot(pointlist[a]);
-			maxleft=Math.max(maxleft,newdist);
-			newdist=fvright.dot(pointlist[a]);
-			maxright=Math.max(maxright,newdist);
-			newdist=fvtop.dot(pointlist[a]);
-			maxtop=Math.max(maxtop,newdist);
-			newdist=fvbottom.dot(pointlist[a]);
-			maxbottom=Math.max(maxbottom,newdist);
+	const camdir = invcamdir.clone().negate();
+	const up = new THREE.Vector3(0, 1, 0);
+	const camleft = new THREE.Vector3();
+	camleft.crossVectors(up, camdir).normalize();
+	const camup = new THREE.Vector3();
+	camup.crossVectors(camdir, camleft).normalize();
+	const camright = camleft.clone().negate();
+	const camdown = camup.clone().negate();
+	if(perspective > 0){
+		const fw = pixelratio * (window.innerWidth + Math.abs(cutleft - cutright));
+		const fh = pixelratio * (window.innerHeight + Math.abs(cuttop - cutbottom));
+		const ox = pixelratio * (Math.max(0, cutright - cutleft));
+		const oy = pixelratio * (Math.max(0, cutbottom - cuttop));
+		const xv = pixelratio * (window.innerWidth - cutleft - cutright);
+		const yv = pixelratio * (window.innerHeight - cuttop - cutbottom);
+		const perspectiveheight = fh * perspective / (yv + xv) / 90;
+		const perspectivewidth = perspectiveheight * fw / fh;
+		const perspectiveangle = Math.atan(perspectiveheight) * 360 / Math.PI;
+		const scaletop = perspectiveheight * yv / fh;
+		const scalebottom = scaletop;
+		const scaleleft = perspectivewidth * xv / fw;
+		const scaleright = scaleleft;
+		const fvtop = camup.clone().divideScalar(scaletop).add(invcamdir).normalize();
+		const fvbottom = camdown.clone().divideScalar(scalebottom).add(invcamdir).normalize();
+		const fvleft = camleft.clone().divideScalar(scaleleft).add(invcamdir).normalize();
+		const fvright = camright.clone().divideScalar(scaleright).add(invcamdir).normalize();
+		let maxleft = 0;
+		let maxright = 0;
+		let maxtop = 0;
+		let maxbottom = 0;
+		for(let a = 0; a < pointlist.length; a++){
+			let newdist = fvleft.dot(pointlist[a]);
+			maxleft = Math.max(maxleft, newdist);
+			newdist = fvright.dot(pointlist[a]);
+			maxright = Math.max(maxright, newdist);
+			newdist = fvtop.dot(pointlist[a]);
+			maxtop = Math.max(maxtop, newdist);
+			newdist = fvbottom.dot(pointlist[a]);
+			maxbottom = Math.max(maxbottom, newdist);
 		}
 
-		let camdist=0;
-		let camcenter=new THREE.Vector3(0,0,0);
+		let camdist = 0;
+		let camcenter = new THREE.Vector3(0, 0, 0);
 
 		if(fixedcamera){
-			let lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft),fvright.clone().multiplyScalar(maxright));
-			let tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop),fvbottom.clone().multiplyScalar(maxbottom));
-			let lrlen=lrcampos.dot(invcamdir);
-			let tblen=tbcampos.dot(invcamdir);
+			let lrcampos = combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft), fvright.clone().multiplyScalar(maxright));
+			let tbcampos = combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop), fvbottom.clone().multiplyScalar(maxbottom));
+			let lrlen = lrcampos.dot(invcamdir);
+			let tblen = tbcampos.dot(invcamdir);
 
-			if(lrlen<tblen){
-				let addin=(maxleft+maxright)*(tblen/lrlen-1)/2;
-				lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft+addin),fvright.clone().multiplyScalar(maxright+addin));
+			if(lrlen < tblen){
+				let addin = (maxleft + maxright) * (tblen / lrlen - 1) / 2;
+				lrcampos = combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft + addin), fvright.clone().multiplyScalar(maxright + addin));
 
-				lrlen=lrcampos.dot(invcamdir);
-				addin+=(maxleft+maxright+addin*2)*(tblen/lrlen-1)/2;
-				lrcampos=combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft+addin),fvright.clone().multiplyScalar(maxright+addin));
+				lrlen = lrcampos.dot(invcamdir);
+				addin += (maxleft + maxright + addin * 2) * (tblen / lrlen - 1) / 2;
+				lrcampos = combinefrustumvectors(fvleft.clone().multiplyScalar(maxleft + addin), fvright.clone().multiplyScalar(maxright + addin));
 
 			}
 			else{
-				let addin=(maxtop+maxbottom)*(lrlen/tblen-1)/2;
-				tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop+addin),fvbottom.clone().multiplyScalar(maxbottom+addin));
+				let addin = (maxtop + maxbottom) * (lrlen / tblen - 1) / 2;
+				tbcampos = combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop + addin), fvbottom.clone().multiplyScalar(maxbottom + addin));
 
-				tblen=tbcampos.dot(invcamdir);
-				addin+=(maxtop+maxbottom+addin*2)*(lrlen/tblen-1)/2;
-				tbcampos=combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop+addin),fvbottom.clone().multiplyScalar(maxbottom+addin));
+				tblen = tbcampos.dot(invcamdir);
+				addin += (maxtop + maxbottom + addin * 2) * (lrlen / tblen - 1) / 2;
+				tbcampos = combinefrustumvectors(fvtop.clone().multiplyScalar(maxtop + addin), fvbottom.clone().multiplyScalar(maxbottom + addin));
 
 			}
 
-			camdist=lrcampos.dot(invcamdir);
-			const camdiff=tbcampos.clone().sub(lrcampos);
-			const lradjust=camup.clone().multiplyScalar(camdiff.dot(camup));
-			const finalcampos=lrcampos.clone().add(lradjust);
+			camdist = lrcampos.dot(invcamdir);
+			const camdiff = tbcampos.clone().sub(lrcampos);
+			const lradjust = camup.clone().multiplyScalar(camdiff.dot(camup));
+			const finalcampos = lrcampos.clone().add(lradjust);
 
-			const centeroffset=camdir.clone().multiplyScalar(finalcampos.dot(invcamdir));
-			camcenter=finalcampos.clone().add(centeroffset);
+			const centeroffset = camdir.clone().multiplyScalar(finalcampos.dot(invcamdir));
+			camcenter = finalcampos.clone().add(centeroffset);
 
-			camera = new THREE.PerspectiveCamera(perspectiveangle,canvas.width / canvas.height,Math.max(camdist-800,10),camdist+800);
-			camera.setViewOffset(fw,fh,ox,oy,canvas.width,canvas.height);
-			camera.position.set(finalcampos.x,finalcampos.y,finalcampos.z);
+			camera = new THREE.PerspectiveCamera(perspectiveangle, canvas.width / canvas.height, Math.max(camdist - 800, 10), camdist + 800);
+			camera.setViewOffset(fw, fh, ox, oy, canvas.width, canvas.height);
+			camera.position.set(finalcampos.x, finalcampos.y, finalcampos.z);
 		}
 		else{
-			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvleft.clone().multiplyScalar(maxleft)));
-			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvright.clone().multiplyScalar(maxright)));
-			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvtop.clone().multiplyScalar(maxtop)));
-			camdist=Math.max(camdist,frustumprojectionhelper(invcamdir,fvbottom.clone().multiplyScalar(maxbottom)));
+			camdist = Math.max(camdist, frustumprojectionhelper(invcamdir, fvleft.clone().multiplyScalar(maxleft)));
+			camdist = Math.max(camdist, frustumprojectionhelper(invcamdir, fvright.clone().multiplyScalar(maxright)));
+			camdist = Math.max(camdist, frustumprojectionhelper(invcamdir, fvtop.clone().multiplyScalar(maxtop)));
+			camdist = Math.max(camdist, frustumprojectionhelper(invcamdir, fvbottom.clone().multiplyScalar(maxbottom)));
 
-			const finalcampos=invcamdir.clone().multiplyScalar(camdist);
+			const finalcampos = invcamdir.clone().multiplyScalar(camdist);
 
-			camera = new THREE.PerspectiveCamera(perspectiveangle,canvas.width / canvas.height,Math.max(camdist/5-800,10),camdist*3+800);
-			camera.setViewOffset(fw,fh,ox,oy,canvas.width,canvas.height);
-			camera.position.set(finalcampos.x,finalcampos.y,finalcampos.z);
+			camera = new THREE.PerspectiveCamera(perspectiveangle, canvas.width / canvas.height, Math.max(camdist / 5 - 800, 10), camdist * 3 + 800);
+			camera.setViewOffset(fw, fh, ox, oy, canvas.width, canvas.height);
+			camera.position.set(finalcampos.x, finalcampos.y, finalcampos.z);
 		}
 
-		controls = new THREE.OrbitControls(camera,renderer.domElement);
-		controls.minDistance = camdist/5;
-		controls.maxDistance = camdist*3;
+		controls = new THREE.OrbitControls(camera, renderer.domElement);
+		controls.minDistance = camdist / 5;
+		controls.maxDistance = camdist * 3;
 		controls.enableKeys = false;
-		controls.center.set(camcenter.x,camcenter.y,camcenter.z);
-		controls.enablePan=false;
+		controls.center.set(camcenter.x, camcenter.y, camcenter.z);
+		controls.enablePan = false;
 		// Limit vertical rotation to prevent seeing below the board
 		controls.minPolarAngle = 0.1; // Just above horizontal
 		controls.maxPolarAngle = Math.PI / 2 - 0.05; // Just above looking straight down
@@ -398,38 +636,38 @@ function generateCamera(){
 		}
 	}
 	else{
-		let maxleft=0;
-		let maxright=0;
-		let maxtop=0;
-		let maxbottom=0;
-		for(let a=0;a<pointlist.length;a++){
-			const newleft=camleft.dot(pointlist[a]);
-			maxleft=Math.max(maxleft,newleft);
-			maxright=Math.min(maxright,newleft);
-			const newtop=camup.dot(pointlist[a]);
-			maxtop=Math.max(maxtop,newtop);
-			maxbottom=Math.min(maxbottom,newtop);
+		let maxleft = 0;
+		let maxright = 0;
+		let maxtop = 0;
+		let maxbottom = 0;
+		for(let a = 0; a < pointlist.length; a++){
+			const newleft = camleft.dot(pointlist[a]);
+			maxleft = Math.max(maxleft, newleft);
+			maxright = Math.min(maxright, newleft);
+			const newtop = camup.dot(pointlist[a]);
+			maxtop = Math.max(maxtop, newtop);
+			maxbottom = Math.min(maxbottom, newtop);
 		}
-		const scalex=(maxleft-maxright)/(window.innerWidth-cutleft-cutright);
-		const scaley=(maxtop-maxbottom)/(window.innerHeight-cuttop-cutbottom);
-		const scale=Math.max(scalex,scaley);
-		const xpadding=(window.innerWidth-cutleft-cutright)*(1-scalex/scale);
-		const ypadding=(window.innerHeight-cuttop-cutbottom)*(1-scaley/scale);
-		cutleft+=xpadding/2;
-		cutright+=xpadding/2;
-		cuttop+=ypadding/2;
-		cutbottom+=ypadding/2;
+		const scalex = (maxleft - maxright) / (window.innerWidth - cutleft - cutright);
+		const scaley = (maxtop - maxbottom) / (window.innerHeight - cuttop - cutbottom);
+		const scale = Math.max(scalex, scaley);
+		const xpadding = (window.innerWidth - cutleft - cutright) * (1 - scalex / scale);
+		const ypadding = (window.innerHeight - cuttop - cutbottom) * (1 - scaley / scale);
+		cutleft += xpadding / 2;
+		cutright += xpadding / 2;
+		cuttop += ypadding / 2;
+		cutbottom += ypadding / 2;
 
-		camera = new THREE.OrthographicCamera(-maxleft-cutleft*scale,-maxright+cutright*scale,maxtop+cuttop*scale,maxbottom-cutbottom*scale,2000,5000);
-		const campos=invcamdir.multiplyScalar(3500);
-		camera.position.set(campos.x,campos.y,campos.z);
+		camera = new THREE.OrthographicCamera(-maxleft - cutleft * scale, -maxright + cutright * scale, maxtop + cuttop * scale, maxbottom - cutbottom * scale, 2000, 5000);
+		const campos = invcamdir.multiplyScalar(3500);
+		camera.position.set(campos.x, campos.y, campos.z);
 
-		controls = new THREE.OrbitControls(camera,renderer.domElement);
+		controls = new THREE.OrbitControls(camera, renderer.domElement);
 		controls.minZoom = 0.5;
 		controls.maxZoom = 3;
 		controls.enableKeys = false;
-		controls.center.set(0,0,0);
-		controls.enablePan=false;
+		controls.center.set(0, 0, 0);
+		controls.enablePan = false;
 		// Limit vertical rotation to prevent seeing below the board
 		controls.minPolarAngle = 0.1;
 		controls.maxPolarAngle = Math.PI / 2 - 0.05;
@@ -439,22 +677,22 @@ function generateCamera(){
 		}
 	}
 	if(fixedcamera){
-		controls.enableRotate=false;
-		controls.enableZoom=false;
-		board.boardside="white";
+		controls.enableRotate = false;
+		controls.enableZoom = false;
+		board.boardside = "white";
 	}
-	if(!gameData.is_scratch && (gameData.my_color=="black") != (board.boardside=="black")){
+	if(!gameData.is_scratch && (gameData.my_color == "black") != (board.boardside == "black")){
 		board.reverseboard();
 	}
 }
 
 function floathashscene(){
-	let hash=0;
-	let multiplier=1;
+	let hash = 0;
+	let multiplier = 1;
 	updatepoint(camera.position);
 	updatepoint(controls.center);
 	update(camera.zoom);
-	for(let a=0;a<board.piece_objects.length;a++){
+	for(let a = 0; a < board.piece_objects.length; a++){
 		updatepoint(board.piece_objects[a].position);
 	}
 	update(window.innerWidth);
@@ -474,8 +712,8 @@ function floathashscene(){
 		update(p.z);
 	}
 	function update(n){
-		hash+=n*multiplier;
-		multiplier*=1.0010472219;
+		hash += n * multiplier;
+		multiplier *= 1.0010472219;
 	}
 	return hash;
 }
@@ -495,13 +733,13 @@ const materials = {
 	borderColor: parseInt(boardDefaults.borderColor.replace('#', '0x')),
 	borders: [],
 	letters: [],
-	white_piece: new THREE.MeshLambertMaterial({color: 0xd4b375}),
-	black_piece: new THREE.MeshLambertMaterial({color: 0x573312}),
-	white_cap: new THREE.MeshLambertMaterial({color: 0xd4b375}),
-	black_cap: new THREE.MeshLambertMaterial({color: 0x573312}),
-	white_sqr: new THREE.MeshLambertMaterial({color: 0xe6d4a7}),
-	black_sqr: new THREE.MeshLambertMaterial({color: 0xba6639}),
-	boardOverlay: new THREE.MeshBasicMaterial({map: {}}),
+	white_piece: new THREE.MeshLambertMaterial({ color: 0xd4b375 }),
+	black_piece: new THREE.MeshLambertMaterial({ color: 0x573312 }),
+	white_cap: new THREE.MeshLambertMaterial({ color: 0xd4b375 }),
+	black_cap: new THREE.MeshLambertMaterial({ color: 0x573312 }),
+	white_sqr: new THREE.MeshLambertMaterial({ color: 0xe6d4a7 }),
+	black_sqr: new THREE.MeshLambertMaterial({ color: 0xba6639 }),
+	boardOverlay: new THREE.MeshBasicMaterial({ map: {} }),
 	overlayMap: {
 		3: { "size": 270, "offset": { "x": 0.5333, "y": 0.0556 }, "repeat": { "x": 0.2, "y": 0.1667 } },
 		4: { "size": 360, "offset": { "x": 0, "y": 0 }, "repeat": { "x": 0.2667, "y": 0.2222 } },
@@ -510,11 +748,11 @@ const materials = {
 		7: { "size": 630, "offset": { "x": 0.5333, "y": 0.6111 }, "repeat": { "x": 0.4667, "y": 0.3889 } },
 		8: { "size": 720, "offset": { "x": 0.0007, "y": 0.5556 }, "repeat": { "x": 0.5333, "y": 0.4444 } }
 	},
-	border: new THREE.MeshLambertMaterial({color: 0x6f4734}),
-	letter: new THREE.MeshBasicMaterial({color: 0xffffff}),
+	border: new THREE.MeshLambertMaterial({ color: 0x6f4734 }),
+	letter: new THREE.MeshBasicMaterial({ color: 0xffffff }),
 	aoShadow: null, // Will be created with gradient texture in init3DBoard
-	highlighter: new THREE.MeshBasicMaterial({color: 0xffffff}),
-	lastMoveHighlighter: new THREE.MeshBasicMaterial({color: 0x000000}),
+	highlighter: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+	lastMoveHighlighter: new THREE.MeshBasicMaterial({ color: 0x000000 }),
 	getWhiteSquareTextureName: function(){
 		return this.board_texture_path + squaresMap[this.white_sqr_style_name].file + '.png';
 	},
@@ -549,7 +787,7 @@ const materials = {
 		}
 		if(piecesMap[materials.black_cap_style_name].multi_file){
 			// load cap texture
-			return `images/pieces/${piecesMap[materials.black_cap_style_name].file.replace('pieces','caps')}.png`;
+			return `images/pieces/${piecesMap[materials.black_cap_style_name].file.replace('pieces', 'caps')}.png`;
 		}
 		return `images/pieces/${piecesMap[materials.black_cap_style_name].file}.png`;
 	},
@@ -558,12 +796,12 @@ const materials = {
 		this.boardLoaded = 0;
 		const loader = new THREE.TextureLoader();
 
-		this.white_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn), transparent: true});
-		this.black_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn), transparent: true});
-		const an=Math.min(maxaniso,anisolevel);
-		if(an>1){
-			this.white_sqr.map.anisotropy=an;
-			this.black_sqr.map.anisotropy=an;
+		this.white_sqr = new THREE.MeshLambertMaterial({ map: loader.load(this.getWhiteSquareTextureName(), this.boardLoadedFn), transparent: true });
+		this.black_sqr = new THREE.MeshLambertMaterial({ map: loader.load(this.getBlackSquareTextureName(), this.boardLoadedFn), transparent: true });
+		const an = Math.min(maxaniso, anisolevel);
+		if(an > 1){
+			this.white_sqr.map.anisotropy = an;
+			this.black_sqr.map.anisotropy = an;
 		}
 	},
 	updateBorderColor: function(val){
@@ -578,7 +816,7 @@ const materials = {
 	},
 	updateBorderTexture: function(val){
 		const loader = new THREE.TextureLoader();
-		let mesh = new THREE.MeshLambertMaterial({ map: loader.load(val), transparent: true});
+		let mesh = new THREE.MeshLambertMaterial({ map: loader.load(val), transparent: true });
 		for(let i = 0; i < this.borders.length; i++){
 			this.borders[i].material = mesh;
 			this.borders[i].receiveShadow = true;
@@ -594,7 +832,7 @@ const materials = {
 			}
 			color = colorVal;
 		}
-		const mesh = new THREE.MeshLambertMaterial({color: color});
+		const mesh = new THREE.MeshLambertMaterial({ color: color });
 		mesh.color.setHex(color);
 		for(let i = 0; i < this.borders.length; i++){
 			this.borders[i].material = mesh;
@@ -614,16 +852,16 @@ const materials = {
 		const loader = new THREE.TextureLoader();
 		this.piecesLoaded = 0;
 
-		this.black_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn)});
-		this.white_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn)});
-		this.white_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn)});
-		this.black_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn)});
-		const an=Math.min(maxaniso,anisolevel);
-		if(an>1){
-			this.white_piece.map.anisotropy=an;
-			this.black_piece.map.anisotropy=an;
-			this.white_cap.map.anisotropy=an;
-			this.black_cap.map.anisotropy=an;
+		this.black_piece = new THREE.MeshLambertMaterial({ map: loader.load(this.getBlackPieceTextureName(), this.piecesLoadedFn) });
+		this.white_piece = new THREE.MeshLambertMaterial({ map: loader.load(this.getWhitePieceTextureName(), this.piecesLoadedFn) });
+		this.white_cap = new THREE.MeshLambertMaterial({ map: loader.load(this.getWhiteCapTextureName(), this.piecesLoadedFn) });
+		this.black_cap = new THREE.MeshLambertMaterial({ map: loader.load(this.getBlackCapTextureName(), this.piecesLoadedFn) });
+		const an = Math.min(maxaniso, anisolevel);
+		if(an > 1){
+			this.white_piece.map.anisotropy = an;
+			this.black_piece.map.anisotropy = an;
+			this.white_cap.map.anisotropy = an;
+			this.black_cap.map.anisotropy = an;
 		}
 	},
 	updateLetterVisibility(val){
@@ -639,13 +877,13 @@ const materials = {
 	piecesLoaded: 0,
 	//callback on loading piece textures
 	piecesLoadedFn: function(){
-		settingscounter=(settingscounter+1)&15;
+		settingscounter = (settingscounter + 1) & 15;
 		materials.piecesLoaded++;
 
 		if(materials.piecesLoaded === 4){
 			materials.piecesLoaded = 0;
 			// reapply texture.
-			for(i = 0;i < board.piece_objects.length;i++){
+			for(i = 0; i < board.piece_objects.length; i++){
 				if(board.piece_objects[i].iscapstone){
 					board.piece_objects[i].material = (board.piece_objects[i].iswhitepiece)
 						? materials.white_cap : materials.black_cap;
@@ -660,16 +898,16 @@ const materials = {
 	boardLoaded: 0,
 	//callback on loading board textures
 	boardLoadedFn: function(){
-		settingscounter=(settingscounter+1)&15;
+		settingscounter = (settingscounter + 1) & 15;
 		materials.boardLoaded++;
 
 		if(materials.boardLoaded === 2){
 			materials.boardLoaded = 0;
-			for(i = 0;i < gameData.size * gameData.size;++i){
-				if(board.board_objects[i].isboard===true){
+			for(i = 0; i < gameData.size * gameData.size; ++i){
+				if(board.board_objects[i].isboard === true){
 					board.board_objects[i].material =
-					((i + Math.floor(i / gameData.size) * ((gameData.size - 1) % 2)) % 2)
-						? materials.white_sqr : materials.black_sqr;
+						((i + Math.floor(i / gameData.size) * ((gameData.size - 1) % 2)) % 2)
+							? materials.white_sqr : materials.black_sqr;
 					board.board_objects[i].receiveShadow = true;
 				}
 			}
@@ -679,14 +917,14 @@ const materials = {
 
 const boardFactory = {
 	boardfont: null,
-	makeSquare: function(file,rankInverse,scene){
-		const geometry = new THREE.BoxGeometry(sq_size,sq_height,sq_size);
+	makeSquare: function(file, rankInverse, scene){
+		const geometry = new THREE.BoxGeometry(sq_size, sq_height, sq_size);
 		geometry.center();
-		const square = new THREE.Mesh(geometry,((file+rankInverse) % 2 ? materials.white_sqr : materials.black_sqr));
+		const square = new THREE.Mesh(geometry, ((file + rankInverse) % 2 ? materials.white_sqr : materials.black_sqr));
 		square.position.set(
-			board.sq_position.startx + file*sq_size,
+			board.sq_position.startx + file * sq_size,
 			0,
-			board.sq_position.startz + rankInverse*sq_size
+			board.sq_position.startz + rankInverse * sq_size
 		);
 		square.file = file;
 		square.rank = gameData.size - 1 - rankInverse;
@@ -699,12 +937,12 @@ const boardFactory = {
 		materials.borders = [];
 		if(localStorage.getItem('borderTexture')){
 			const loader = new THREE.TextureLoader();
-			materials.border = new THREE.MeshLambertMaterial({ map: loader.load(localStorage.getItem('borderTexture')), transparent: true}, materials.boardLoadedFn());
+			materials.border = new THREE.MeshLambertMaterial({ map: loader.load(localStorage.getItem('borderTexture')), transparent: true }, materials.boardLoadedFn());
 		}
 		// We use the same geometry for all 4 borders. This means the borders
 		// overlap each other at the corners. Probably OK at this point, but
 		// maybe there are cases where that would not be good.
-		let geometry = new THREE.BoxGeometry(board.length,piece_height,border_size);
+		let geometry = new THREE.BoxGeometry(board.length, piece_height, border_size);
 		geometry.center();
 		let border;
 		if(localStorage["borderColor"] && !localStorage.getItem('borderTexture')){
@@ -716,25 +954,25 @@ const boardFactory = {
 			materials.border.color.setHex(color);
 		}
 		// Top border
-		border = new THREE.Mesh(geometry,materials.border);
-		border.position.set(0,0,board.corner_position.z + border_size/2);
+		border = new THREE.Mesh(geometry, materials.border);
+		border.position.set(0, 0, board.corner_position.z + border_size / 2);
 		border.receiveShadow = true;
 		materials.borders.push(border);
 		// Bottom border
-		border = new THREE.Mesh(geometry,materials.border);
-		border.position.set(0,0,board.corner_position.endz - border_size/2);
+		border = new THREE.Mesh(geometry, materials.border);
+		border.position.set(0, 0, board.corner_position.endz - border_size / 2);
 		border.rotateY(Math.PI);
 		border.receiveShadow = true;
 		materials.borders.push(border);
 		// Left border
-		border = new THREE.Mesh(geometry,materials.border);
-		border.position.set(board.corner_position.x + border_size/2,0,0);
-		border.rotateY(Math.PI/2);
+		border = new THREE.Mesh(geometry, materials.border);
+		border.position.set(board.corner_position.x + border_size / 2, 0, 0);
+		border.rotateY(Math.PI / 2);
 		border.receiveShadow = true;
 		materials.borders.push(border);
 		// Right border
-		border = new THREE.Mesh(geometry,materials.border);
-		border.position.set(board.corner_position.endx - border_size/2,0,0);
+		border = new THREE.Mesh(geometry, materials.border);
+		border.position.set(board.corner_position.endx - border_size / 2, 0, 0);
 		border.rotateY(-Math.PI / 2);
 		border.receiveShadow = true;
 		materials.borders.push(border);
@@ -754,89 +992,89 @@ const boardFactory = {
 		}
 		else{
 			const loader = new THREE.FontLoader();
-			loader.load('fonts/helvetiker_regular.typeface.js',gotfont);
+			loader.load('fonts/helvetiker_regular.typeface.js', gotfont);
 		}
 
 		function gotfont(font){
-			boardFactory.boardfont=font;
+			boardFactory.boardfont = font;
 			// add the letters and numbers around the border
-			for(let i = 0;i < gameData.size;i++){
-				let geometry,letter;
+			for(let i = 0; i < gameData.size; i++){
+				let geometry, letter;
 				// Top letters
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('A'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{ size: letter_size, height: 1, font: font, weight: 'normal' }
 				);
-				letter = new THREE.Mesh(geometry,materials.letter);
+				letter = new THREE.Mesh(geometry, materials.letter);
 				letter.visible = visible;
 				letter.rotateX(Math.PI / 2);
 				letter.rotateY(Math.PI);
 				letter.position.set(
-					board.sq_position.startx + letter_size/2 + i*sq_size,
-					sq_height/2,
+					board.sq_position.startx + letter_size / 2 + i * sq_size,
+					sq_height / 2,
 					board.sq_position.startz - borderOffset * 2 - letter_size
 				);
 				materials.letters.push(letter);
 				// Bottom letters
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('A'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{ size: letter_size, height: 1, font: font, weight: 'normal' }
 				);
-				letter = new THREE.Mesh(geometry,materials.letter);
+				letter = new THREE.Mesh(geometry, materials.letter);
 				letter.rotateX(-Math.PI / 2);
 				letter.visible = visible;
 				letter.position.set(
-					board.sq_position.startx - letter_size/2 + i*sq_size,
-					sq_height/2,
+					board.sq_position.startx - letter_size / 2 + i * sq_size,
+					sq_height / 2,
 					board.sq_position.endz + borderOffset * 2 + letter_size
 				);
 				materials.letters.push(letter);
 				// Left side numbers
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('1'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{ size: letter_size, height: 1, font: font, weight: 'normal' }
 				);
-				letter = new THREE.Mesh(geometry,materials.letter);
+				letter = new THREE.Mesh(geometry, materials.letter);
 				letter.rotateX(-Math.PI / 2);
 				letter.visible = visible;
 				letter.position.set(
 					board.sq_position.startx - borderOffset * 2 - letter_size,
 					sq_height / 2,
-					board.sq_position.endz + letter_size/2 - i*sq_size
+					board.sq_position.endz + letter_size / 2 - i * sq_size
 				);
 				materials.letters.push(letter);
 				// Right side numbers
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('1'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{ size: letter_size, height: 1, font: font, weight: 'normal' }
 				);
-				letter = new THREE.Mesh(geometry,materials.letter);
+				letter = new THREE.Mesh(geometry, materials.letter);
 				letter.rotateX(-Math.PI / 2);
 				letter.rotateZ(Math.PI);
 				letter.visible = visible;
 				letter.position.set(
 					board.sq_position.endx + borderOffset * 2 + letter_size,
 					sq_height / 2,
-					board.sq_position.endz - letter_size/2 - i*sq_size
+					board.sq_position.endz - letter_size / 2 - i * sq_size
 				);
 				materials.letters.push(letter);
 			}
 			for(let i = 0; i < materials.letters.length; i++){
 				scene.add(materials.letters[i]);
 			}
-			settingscounter=(settingscounter+1)&15;
+			settingscounter = (settingscounter + 1) & 15;
 		}
 	}
 };
 
 const pieceFactory = {
-	makePiece: function(playerNum,pieceNum,scene){
+	makePiece: function(playerNum, pieceNum, scene){
 		const materialMine = (playerNum === WHITE_PLAYER ? materials.white_piece : materials.black_piece);
-		const geometry=piecegeometry(playerNum === WHITE_PLAYER?"white":"black");
+		const geometry = piecegeometry(playerNum === WHITE_PLAYER ? "white" : "black");
 
 		const stackno = Math.floor(pieceNum / 10);
 		const stackheight = pieceNum % 10;
-		const piece = new THREE.Mesh(geometry,materialMine);
+		const piece = new THREE.Mesh(geometry, materialMine);
 		piece.iswhitepiece = (playerNum === WHITE_PLAYER);
 		// Swap first-to-play flat stone positions for first turn rule
 		// getfromstack returns the highest pieceNum first, so tottiles-1 is first to play
@@ -845,16 +1083,16 @@ const pieceFactory = {
 		const positionAsWhite = (playerNum === WHITE_PLAYER) !== isFirstToPlay;
 		if(positionAsWhite){
 			piece.position.set(
-				board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
-				stackheight*piece_height+piece_height/2-sq_height/2,
-				board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+				board.corner_position.endx + stackOffsetFromBorder + piece_size / 2,
+				stackheight * piece_height + piece_height / 2 - sq_height / 2,
+				board.corner_position.endz - piece_size / 2 - stackno * (stack_dist + piece_size)
 			);
 		}
 		else{
 			piece.position.set(
-				board.corner_position.x - stackOffsetFromBorder - piece_size/2,
-				stackheight*piece_height+piece_height/2-sq_height/2,
-				board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+				board.corner_position.x - stackOffsetFromBorder - piece_size / 2,
+				stackheight * piece_height + piece_height / 2 - sq_height / 2,
+				board.corner_position.z + piece_size / 2 + stackno * (stack_dist + piece_size)
 			);
 		}
 
@@ -862,41 +1100,59 @@ const pieceFactory = {
 		piece.onsquare = null;
 		piece.isboard = false;
 		piece.iscapstone = false;
-		piece.pieceNum=pieceNum;
+		piece.pieceNum = pieceNum;
 		piece.positionAsWhite = positionAsWhite;
-		piece.receiveShadow = true;
+		piece.receiveShadow = false;
 		piece.castShadow = false;
 		// Add ambient occlusion shadow plane
 		const aoSize = piece_size + piece_size * aoConfig.padding;
-		const aoPlane = createAOPlane(getFlatAOTexture(), aoSize, aoSize, -piece_height / 2 + aoConfig.yOffset);
+		let aoPlane = createAOPlane(getFlatAOTexture('square'), aoSize, aoSize, -piece_height / 2 + aoConfig.yOffset);
+		// update aoPlane for crazy martin mode
+		if(crazy_martin_mode){
+			if(piece.iswhitepiece){
+				aoPlane = createAOPlane(getFlatAOTexture('trapezoid'), aoSize, aoSize, -piece_height / 2 + aoConfig.yOffset);
+			}
+			else{
+				aoPlane = createAOPlane(getFlatAOTexture('notched_disk'), aoSize, aoSize, -piece_height / 2 + aoConfig.yOffset);
+			}
+		}
 		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
 		aoPlane.visible = shadowsEnabled && (stackheight === 0);
-		aoPlane.material.opacity = (stackheight === 0) ? 1.0 : 0;
+		aoPlane.material.opacity = (stackheight === 0) ? 1.0 : 0.0;
 		scene.add(aoPlane);
 		piece.aoPlane = aoPlane;
+		// Rebuild AO footprint geometry to match the (possibly non-square) piece shape
+		if(piece.isstanding && !piece.iscapstone){
+			setAOToWall(piece);
+		}
+		else{
+			resetAOToFlat(piece);
+		}
+		// After AO geometry rebuild, aoYOffset may change, so snap plane to piece again
+		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
 		scene.add(piece);
 		return piece;
 	},
-	makeCap: function(playerNum,capNum,scene){
-		const geometry = capgeometry(playerNum === WHITE_PLAYER?"white":"black");
+	makeCap: function(playerNum, capNum, scene){
+		const geometry = capgeometry(playerNum === WHITE_PLAYER ? "white" : "black");
 
 		// the capstones go at the other end of the row
 		let piece;
 		if(playerNum === WHITE_PLAYER){
-			piece = new THREE.Mesh(geometry,materials.white_cap);
+			piece = new THREE.Mesh(geometry, materials.white_cap);
 			piece.position.set(
 				board.corner_position.endx + capstone_radius + stackOffsetFromBorder,
-				capstone_height/2-sq_height/2,
-				board.corner_position.z + capstone_radius + capNum*(stack_dist+capstone_radius*2)
+				capstone_height / 2 - sq_height / 2,
+				board.corner_position.z + capstone_radius + capNum * (stack_dist + capstone_radius * 2)
 			);
 			piece.iswhitepiece = true;
 		}
 		else{
-			piece = new THREE.Mesh(geometry,materials.black_cap);
+			piece = new THREE.Mesh(geometry, materials.black_cap);
 			piece.position.set(
 				board.corner_position.x - capstone_radius - stackOffsetFromBorder,
-				capstone_height/2-sq_height/2,
-				board.corner_position.endz - capstone_radius - capNum*(stack_dist+capstone_radius*2)
+				capstone_height / 2 - sq_height / 2,
+				board.corner_position.endz - capstone_radius - capNum * (stack_dist + capstone_radius * 2)
 			);
 			piece.iswhitepiece = false;
 		}
@@ -904,7 +1160,7 @@ const pieceFactory = {
 		piece.onsquare = null;
 		piece.isboard = false;
 		piece.iscapstone = true;
-		piece.pieceNum=capNum;
+		piece.pieceNum = capNum;
 		piece.receiveShadow = true;
 		piece.castShadow = false;
 		// Add ambient occlusion shadow plane
@@ -914,68 +1170,484 @@ const pieceFactory = {
 		aoPlane.visible = shadowsEnabled;
 		scene.add(aoPlane);
 		piece.aoPlane = aoPlane;
+		// Rebuild AO footprint geometry to match the (possibly non-square) piece shape
+		if(piece.isstanding && !piece.iscapstone){
+			setAOToWall(piece);
+		}
+		else{
+			resetAOToFlat(piece);
+		}
+		// After AO geometry rebuild, aoYOffset may change, so snap plane to piece again
+		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
 		scene.add(piece);
 		return piece;
 	}
 };
 
-function piecegeometry(color){
-	const geometry = new THREE.BoxGeometry(piece_size,piece_height,piece_size);
-	let geometrytype;
-	if(color=="white"){
-		geometrytype=piecesMap[materials.white_piece_style_name];
-	}
-	else{
-		geometrytype=piecesMap[materials.black_piece_style_name];
-	}
-	if(!geometrytype.multi_file){
-		for(let a=0;a<12;a++){
-			for(let b=0;b<3;b++){
-				geometry.faceVertexUvs[0][a][b].x=geometry.faceVertexUvs[0][a][b].x==0?9/16:15/16;
-				if(a>3 && a<8){
-					geometry.faceVertexUvs[0][a][b].y=geometry.faceVertexUvs[0][a][b].y==0?1/32:13/32;
-				}
-				else{
-					geometry.faceVertexUvs[0][a][b].y=geometry.faceVertexUvs[0][a][b].y==0?29/64:35/64;
-				}
+
+function subdivideGeometry(geometry, iterations){
+	for(let iter = 0; iter < iterations; iter++){
+		const newVertices = [...geometry.vertices];
+		const newFaces = [];
+		const newUVs = [];
+		const edgeMap = new Map();
+
+		function getEdgeMidpoint(v1Idx, v2Idx){
+			const key = v1Idx < v2Idx ? `${v1Idx}_${v2Idx}` : `${v2Idx}_${v1Idx}`;
+			if(edgeMap.has(key)){
+				return edgeMap.get(key);
 			}
+			const v1 = geometry.vertices[v1Idx];
+			const v2 = geometry.vertices[v2Idx];
+			const mid = new THREE.Vector3(
+				(v1.x + v2.x) / 2,
+				(v1.y + v2.y) / 2,
+				(v1.z + v2.z) / 2
+			);
+			const newIdx = newVertices.length;
+			newVertices.push(mid);
+			edgeMap.set(key, newIdx);
+			return newIdx;
 		}
+
+		for(let i = 0; i < geometry.faces.length; i++){
+			const face = geometry.faces[i];
+			const a = face.a;
+			const b = face.b;
+			const c = face.c;
+
+			// Get original UVs
+			const uvs = geometry.faceVertexUvs[0][i];
+			const uv_a = uvs[0];
+			const uv_b = uvs[1];
+			const uv_c = uvs[2];
+
+			// Get midpoints of each edge
+			const ab = getEdgeMidpoint(a, b);
+			const bc = getEdgeMidpoint(b, c);
+			const ca = getEdgeMidpoint(c, a);
+
+			// Calculate midpoint UVs
+			const uv_ab = new THREE.Vector2((uv_a.x + uv_b.x) / 2, (uv_a.y + uv_b.y) / 2);
+			const uv_bc = new THREE.Vector2((uv_b.x + uv_c.x) / 2, (uv_b.y + uv_c.y) / 2);
+			const uv_ca = new THREE.Vector2((uv_c.x + uv_a.x) / 2, (uv_c.y + uv_a.y) / 2);
+
+			// Create 4 new faces with UVs
+			newFaces.push(new THREE.Face3(a, ab, ca));
+			newUVs.push([uv_a, uv_ab, uv_ca]);
+
+			newFaces.push(new THREE.Face3(ab, b, bc));
+			newUVs.push([uv_ab, uv_b, uv_bc]);
+
+			newFaces.push(new THREE.Face3(ca, bc, c));
+			newUVs.push([uv_ca, uv_bc, uv_c]);
+
+			newFaces.push(new THREE.Face3(ab, bc, ca));
+			newUVs.push([uv_ab, uv_bc, uv_ca]);
+		}
+
+		geometry.vertices = newVertices;
+		geometry.faces = newFaces;
+		geometry.faceVertexUvs[0] = newUVs;
 	}
 	return geometry;
 }
 
-function capgeometry(color){
-	capstone_radius=piece_size*0.4;
-	capstone_height=Math.min(piece_size*1.1,70);
-	const geometry = new THREE.CylinderGeometry(capstone_radius,capstone_radius,capstone_height,30);
+function makeNotchedDiskGeometry(radius, height){
+	const notchAngle = Math.PI / 2;
+	const totalAngle = Math.PI * 2 - notchAngle;
+	const thetaStart = notchAngle / 2;
+	const segments = 24;
+	const geom = new THREE.Geometry();
+	geom.faceVertexUvs[0] = [];
+
+	// Build geometry centered at origin first
+	const yBottom = -height / 2;
+	const yTop = height / 2;
+
+	// UV mapping to specific texture regions
+	const uLeft = 9/16;
+	const uRight = 15/16;
+	const vSideBottom = 29/64;
+	const vSideTop = 35/64;
+	const vCapBottom = 1/32;
+	const vCapTop = 13/32;
+
+	function uvPlanar(v){
+		// Map to cap region
+		const u = uLeft + ((v.x / (radius * 2)) + 0.5) * (uRight - uLeft);
+		const vCoord = vCapBottom + ((v.z / (radius * 2)) + 0.5) * (vCapTop - vCapBottom);
+		return new THREE.Vector2(u, vCoord);
+	}
+
+	function uvSide(u, v){
+		// Map to side region
+		const mappedU = uLeft + u * (uRight - uLeft);
+		const mappedV = vSideBottom + v * (vSideTop - vSideBottom);
+		return new THREE.Vector2(mappedU, mappedV);
+	}
+
+	// Build boundary vertices along the remaining arc
+	const bottomIdx = [];
+	const topIdx = [];
+	for(let i = 0; i <= segments; i++){
+		const t = thetaStart + (i / segments) * totalAngle;
+		const v = new THREE.Vector3(radius * Math.cos(t), yBottom, radius * Math.sin(t));
+		bottomIdx.push(geom.vertices.length);
+		geom.vertices.push(v);
+	}
+	for(let i = 0; i <= segments; i++){
+		const t = thetaStart + (i / segments) * totalAngle;
+		const v = new THREE.Vector3(radius * Math.cos(t), yTop, radius * Math.sin(t));
+		topIdx.push(geom.vertices.length);
+		geom.vertices.push(v);
+	}
+
+	// Curved outer wall
+	for(let i = 0; i < segments; i++){
+		const a = bottomIdx[i];
+		const b = bottomIdx[i + 1];
+		const c = topIdx[i];
+		const d = topIdx[i + 1];
+
+		geom.faces.push(new THREE.Face3(a, c, b));
+		geom.faceVertexUvs[0].push([
+			uvSide(i / segments, 0),
+			uvSide(i / segments, 1),
+			uvSide((i + 1) / segments, 0)
+		]);
+
+		geom.faces.push(new THREE.Face3(b, c, d));
+		geom.faceVertexUvs[0].push([
+			uvSide((i + 1) / segments, 0),
+			uvSide(i / segments, 1),
+			uvSide((i + 1) / segments, 1)
+		]);
+	}
+
+	// Top Cap
+	const top0 = topIdx[0];
+	for(let i = 1; i < segments; i++){
+		const v1 = topIdx[i];
+		const v2 = topIdx[i + 1];
+		geom.faces.push(new THREE.Face3(top0, v2, v1));
+		geom.faceVertexUvs[0].push([
+			uvPlanar(geom.vertices[top0]),
+			uvPlanar(geom.vertices[v2]),
+			uvPlanar(geom.vertices[v1])
+		]);
+	}
+
+	// Bottom Cap
+	const bot0 = bottomIdx[0];
+	for(let i = 1; i < segments; i++){
+		const v1 = bottomIdx[i];
+		const v2 = bottomIdx[i + 1];
+		geom.faces.push(new THREE.Face3(bot0, v1, v2));
+		geom.faceVertexUvs[0].push([
+			uvPlanar(geom.vertices[bot0]),
+			uvPlanar(geom.vertices[v1]),
+			uvPlanar(geom.vertices[v2])
+		]);
+	}
+
+	// Chord wall
+	const bStart = bottomIdx[0];
+	const bEnd = bottomIdx[segments];
+	const tStart = topIdx[0];
+	const tEnd = topIdx[segments];
+
+	geom.faces.push(new THREE.Face3(bStart, bEnd, tStart));
+	geom.faceVertexUvs[0].push([
+		uvSide(0, 0),
+		uvSide(1, 0),
+		uvSide(0, 1)
+	]);
+
+	geom.faces.push(new THREE.Face3(bEnd, tEnd, tStart));
+	geom.faceVertexUvs[0].push([
+		uvSide(1, 0),
+		uvSide(1, 1),
+		uvSide(0, 1)
+	]);
+
+	subdivideGeometry(geom, 4);
+
+	geom.rotateY(Math.PI / 2);
+
+	geom.computeBoundingBox();
+	const centerX = (geom.boundingBox.max.x + geom.boundingBox.min.x) / 2;
+	const centerZ = (geom.boundingBox.max.z + geom.boundingBox.min.z) / 2;
+
+	// Center in X/Z only. Leave Y centered at 0 (minY=-height/2, maxY=+height/2)
+	geom.translate(-centerX, 0, -centerZ);
+
+	geom.computeFaceNormals();
+	geom.computeVertexNormals();
+
+	// Fix normals for horizontal faces
+	for(let i = 0; i < geom.faces.length; i++){
+		const face = geom.faces[i];
+		const normal = face.normal;
+		if(Math.abs(normal.y) > 0.99){
+			face.normal.set(0, normal.y > 0 ? 1 : -1, 0);
+			if(face.vertexNormals && face.vertexNormals.length >= 3){
+				face.vertexNormals[0].set(0, normal.y > 0 ? 1 : -1, 0);
+				face.vertexNormals[1].set(0, normal.y > 0 ? 1 : -1, 0);
+				face.vertexNormals[2].set(0, normal.y > 0 ? 1 : -1, 0);
+			}
+		}
+	}
+
+	geom.normalsNeedUpdate = true;
+	geom.uvsNeedUpdate = true;
+
+	return geom;
+}
+
+function makeTrapezoidGeometry(width, height, depth, taperScale){
+	const geom = new THREE.Geometry();
+	geom.faceVertexUvs[0] = [];
+
+	const w = width;
+	const h = height;
+	const d = depth;
+	const scale = taperScale;
+
+	// Bottom face (y = -h/2)
+	geom.vertices.push(
+		new THREE.Vector3(-w/2, -h/2, -d/2), // 0
+		new THREE.Vector3(w/2, -h/2, -d/2), // 1
+		new THREE.Vector3(w/2 * scale, -h/2, d/2 * scale), // 2
+		new THREE.Vector3(-w/2 * scale, -h/2, d/2 * scale) // 3
+	);
+
+	// Top face (y = h/2)
+	geom.vertices.push(
+		new THREE.Vector3(-w/2, h/2, -d/2), // 4
+		new THREE.Vector3(w/2, h/2, -d/2), // 5
+		new THREE.Vector3(w/2 * scale, h/2, d/2 * scale), // 6
+		new THREE.Vector3(-w/2 * scale, h/2, d/2 * scale) // 7
+	);
+
+	// Faces
+	geom.faces.push(new THREE.Face3(0, 1, 2));
+	geom.faces.push(new THREE.Face3(0, 2, 3));
+
+	geom.faces.push(new THREE.Face3(4, 6, 5));
+	geom.faces.push(new THREE.Face3(4, 7, 6));
+
+	geom.faces.push(new THREE.Face3(0, 5, 1));
+	geom.faces.push(new THREE.Face3(0, 4, 5));
+
+	geom.faces.push(new THREE.Face3(3, 2, 6));
+	geom.faces.push(new THREE.Face3(3, 6, 7));
+
+	geom.faces.push(new THREE.Face3(0, 3, 7));
+	geom.faces.push(new THREE.Face3(0, 7, 4));
+
+	geom.faces.push(new THREE.Face3(1, 6, 2));
+	geom.faces.push(new THREE.Face3(1, 5, 6));
+
+	const u0 = 9/16;
+	const u1 = 15/16;
+	const vSide0 = 29/64;
+	const vSide1 = 35/64;
+	const vCap0 = 1/32;
+	const vCap1 = 13/32;
+
+	// Cap planar UV (XZ), using bounds of that cap
+	function makeCapUVGetter(vertexIndices, uMin, uMax, vMin, vMax){
+		let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+		for(const idx of vertexIndices){
+			const v = geom.vertices[idx];
+			minX = Math.min(minX, v.x); maxX = Math.max(maxX, v.x);
+			minZ = Math.min(minZ, v.z); maxZ = Math.max(maxZ, v.z);
+		}
+
+		const cx = (minX + maxX) * 0.25;
+		const cz = (minZ + maxZ) * 0.25;
+
+		const dx = (maxX - minX) || 1;
+		const dz = (maxZ - minZ) || 1;
+
+		// uniform scale to preserve square texels
+		const s = Math.max(dx, dz);
+
+		return (v3) => {
+			const u01 = ((v3.x - cx) / s) + 0.5; // 0..1 with padding
+			const v01 = ((v3.z - cz) / s) + 0.5;
+
+			const uu = uMin + u01 * (uMax - uMin);
+			const vv = vMin + v01 * (vMax - vMin);
+			return new THREE.Vector2(uu, vv);
+		};
+	}
+
+	// Side UV from quad bottom edge (BL->BR) + height
+	// U = along bottom edge, V = (y - yBottom)/h
+	function makeSideUVGetter(idxBL, idxBR, uMin, uMax, vMin, vMax){
+		const pBL = geom.vertices[idxBL].clone();
+		const pBR = geom.vertices[idxBR].clone();
+		const axis = pBR.clone().sub(pBL);
+		const len = axis.length() || 1;
+		axis.normalize();
+
+		const yBottom = -h/2;
+		const invH = 1 / (h || 1);
+
+		return (p) => {
+			const along = p.clone().sub(pBL).dot(axis); // 0..len
+			let u = along / len;
+			let v = (p.y - yBottom) * invH;
+
+			// clamp numeric noise
+			u = Math.min(1, Math.max(0, u));
+			v = Math.min(1, Math.max(0, v));
+
+			const uu = uMin + u * (uMax - uMin);
+			const vv = vMin + v * (vMax - vMin);
+			return new THREE.Vector2(uu, vv);
+		};
+	}
+
+	// Build UVs in the exact same order as faces were pushed
+	const uvs = [];
+
+	// Bottom cap (faces 0-1)
+	const uvBottomCap = makeCapUVGetter([0,1,2,3], u0, u1, vCap0, vCap1);
+	uvs.push([uvBottomCap(geom.vertices[0]), uvBottomCap(geom.vertices[1]), uvBottomCap(geom.vertices[2])]);
+	uvs.push([uvBottomCap(geom.vertices[0]), uvBottomCap(geom.vertices[2]), uvBottomCap(geom.vertices[3])]);
+
+	// Top cap (faces 2-3)
+	const uvTopCap = makeCapUVGetter([4,5,6,7], u0, u1, vCap0, vCap1);
+	uvs.push([uvTopCap(geom.vertices[4]), uvTopCap(geom.vertices[6]), uvTopCap(geom.vertices[5])]);
+	uvs.push([uvTopCap(geom.vertices[4]), uvTopCap(geom.vertices[7]), uvTopCap(geom.vertices[6])]);
+
+	// Front side quad is (0,1,5,4). Bottom edge is 0->1
+	const uvFront = makeSideUVGetter(0, 1, u0, u1, vSide0, vSide1);
+	uvs.push([uvFront(geom.vertices[0]), uvFront(geom.vertices[5]), uvFront(geom.vertices[1])]); // face 4: (0,5,1)
+	uvs.push([uvFront(geom.vertices[0]), uvFront(geom.vertices[4]), uvFront(geom.vertices[5])]); // face 5: (0,4,5)
+
+	// Back side quad is (3,2,6,7). Bottom edge is 3->2
+	const uvBack = makeSideUVGetter(3, 2, u0, u1, vSide0, vSide1);
+	uvs.push([uvBack(geom.vertices[3]), uvBack(geom.vertices[2]), uvBack(geom.vertices[6])]); // face 6: (3,2,6)
+	uvs.push([uvBack(geom.vertices[3]), uvBack(geom.vertices[6]), uvBack(geom.vertices[7])]); // face 7: (3,6,7)
+
+	// Left side quad is (0,3,7,4). Bottom edge is 0->3
+	const uvLeft = makeSideUVGetter(0, 3, u0, u1, vSide0, vSide1);
+	uvs.push([uvLeft(geom.vertices[0]), uvLeft(geom.vertices[3]), uvLeft(geom.vertices[7])]); // face 8: (0,3,7)
+	uvs.push([uvLeft(geom.vertices[0]), uvLeft(geom.vertices[7]), uvLeft(geom.vertices[4])]); // face 9: (0,7,4)
+
+	// Right side quad is (1,2,6,5). Bottom edge is 1->2
+	const uvRight = makeSideUVGetter(1, 2, u0, u1, vSide0, vSide1);
+	uvs.push([uvRight(geom.vertices[1]), uvRight(geom.vertices[6]), uvRight(geom.vertices[2])]); // face 10: (1,6,2)
+	uvs.push([uvRight(geom.vertices[1]), uvRight(geom.vertices[5]), uvRight(geom.vertices[6])]); // face 11: (1,5,6)
+
+	geom.faceVertexUvs[0] = uvs;
+
+	// Subdivide for smoothness (UVs will interpolate correctly)
+	subdivideGeometry(geom, 4);
+
+	geom.computeFaceNormals();
+	geom.computeVertexNormals();
+
+	// Fix normals for horizontal faces (your existing logic)
+	for(let i = 0; i < geom.faces.length; i++){
+		const face = geom.faces[i];
+		const normal = face.normal;
+		if(Math.abs(normal.y) > 0.99){
+			face.normal.set(0, normal.y > 0 ? 1 : -1, 0);
+			if(face.vertexNormals && face.vertexNormals.length >= 3){
+				face.vertexNormals[0].set(0, normal.y > 0 ? 1 : -1, 0);
+				face.vertexNormals[1].set(0, normal.y > 0 ? 1 : -1, 0);
+				face.vertexNormals[2].set(0, normal.y > 0 ? 1 : -1, 0);
+			}
+		}
+	}
+
+	geom.normalsNeedUpdate = true;
+	geom.uvsNeedUpdate = true;
+
+	return geom;
+}
+
+function piecegeometry(color){
+	let geometry;
 	let geometrytype;
-	if(color=="white"){
-		geometrytype=piecesMap[materials.white_cap_style_name];
+
+	if(crazy_martin_mode){
+		if(color == "white"){
+			geometrytype = piecesMap[materials.white_piece_style_name];
+			geometry = makeTrapezoidGeometry(piece_size, piece_height, piece_size, 0.66);
+		}
+		else{
+			geometrytype = piecesMap[materials.black_piece_style_name];
+			geometry = makeNotchedDiskGeometry(piece_size / 2, piece_height);
+		}
+		return geometry;
 	}
 	else{
-		geometrytype=piecesMap[materials.black_cap_style_name];
+		geometry = new THREE.BoxGeometry(piece_size, piece_height, piece_size);
+
+		if(color == "white"){
+			geometrytype = piecesMap[materials.white_piece_style_name];
+		}
+		else{
+			geometrytype = piecesMap[materials.black_piece_style_name];
+		}
+
+		if(!geometrytype.multi_file){
+			for(let a = 0; a < 12; a++){
+				for(let b = 0; b < 3; b++){
+					geometry.faceVertexUvs[0][a][b].x = geometry.faceVertexUvs[0][a][b].x == 0 ? 9 / 16 : 15 / 16;
+					if(a > 3 && a < 8){
+						geometry.faceVertexUvs[0][a][b].y = geometry.faceVertexUvs[0][a][b].y == 0 ? 1 / 32 : 13 / 32;
+					}
+					else{
+						geometry.faceVertexUvs[0][a][b].y = geometry.faceVertexUvs[0][a][b].y == 0 ? 29 / 64 : 35 / 64;
+					}
+				}
+			}
+			geometry.uvsNeedUpdate = true;
+		}
+
+		return geometry;
+	}
+}
+
+function capgeometry(color){
+	capstone_radius = piece_size * 0.4;
+	capstone_height = Math.min(piece_size * 1.1, 70);
+	const geometry = new THREE.CylinderGeometry(capstone_radius, capstone_radius, capstone_height, 30);
+	let geometrytype;
+	if(color == "white"){
+		geometrytype = piecesMap[materials.white_cap_style_name];
+	}
+	else{
+		geometrytype = piecesMap[materials.black_cap_style_name];
 	}
 	if(geometrytype.multi_file){
-		for(let a=60;a<120;a++){
-			for(let b=0;b<3;b++){
-				geometry.faceVertexUvs[0][a][b].x=(geometry.faceVertexUvs[0][a][b].x-0.5)*0.25+0.5;
-				geometry.faceVertexUvs[0][a][b].y=(geometry.faceVertexUvs[0][a][b].y-0.5)*0.5+0.5;
+		for(let a = 60; a < 120; a++){
+			for(let b = 0; b < 3; b++){
+				geometry.faceVertexUvs[0][a][b].x = (geometry.faceVertexUvs[0][a][b].x - 0.5) * 0.25 + 0.5;
+				geometry.faceVertexUvs[0][a][b].y = (geometry.faceVertexUvs[0][a][b].y - 0.5) * 0.5 + 0.5;
 			}
 		}
 	}
 	else{
-		for(let a=0;a<60;a++){
-			for(let b=0;b<3;b++){
-				const newx=0.5*geometry.faceVertexUvs[0][a][b].y;
-				const newy=1-geometry.faceVertexUvs[0][a][b].x;
-				geometry.faceVertexUvs[0][a][b].x=newx;
-				geometry.faceVertexUvs[0][a][b].y=newy;
+		for(let a = 0; a < 60; a++){
+			for(let b = 0; b < 3; b++){
+				const newx = 0.5 * geometry.faceVertexUvs[0][a][b].y;
+				const newy = 1 - geometry.faceVertexUvs[0][a][b].x;
+				geometry.faceVertexUvs[0][a][b].x = newx;
+				geometry.faceVertexUvs[0][a][b].y = newy;
 			}
 		}
-		for(let a=60;a<120;a++){
-			for(let b=0;b<3;b++){
-				geometry.faceVertexUvs[0][a][b].x=(geometry.faceVertexUvs[0][a][b].x-0.5)*0.375+0.75;
-				geometry.faceVertexUvs[0][a][b].y=(geometry.faceVertexUvs[0][a][b].y-0.5)*0.375+0.78125;
+		for(let a = 60; a < 120; a++){
+			for(let b = 0; b < 3; b++){
+				geometry.faceVertexUvs[0][a][b].x = (geometry.faceVertexUvs[0][a][b].x - 0.5) * 0.375 + 0.75;
+				geometry.faceVertexUvs[0][a][b].y = (geometry.faceVertexUvs[0][a][b].y - 0.5) * 0.375 + 0.78125;
 			}
 		}
 	}
@@ -1073,19 +1745,19 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 	// areas.
 	for(let i = 0; i < 6; ++i){
 		geometry.faces.push(
-			new THREE.Face3(i*4 + 2, i*4 + 1, i*4 + 3),
-			new THREE.Face3(i*4 + 1, i*4 + 0, i*4 + 3)
+			new THREE.Face3(i * 4 + 2, i * 4 + 1, i * 4 + 3),
+			new THREE.Face3(i * 4 + 1, i * 4 + 0, i * 4 + 3)
 		);
 	}
 	// texture areas.
 	for(let i = 0; i < 6; ++i){
 		if(i < 2){
-			geometry.faceVertexUvs[0][i*2 + 0] = [tex_area[2], tex_area[1], tex_area[3]];
-			geometry.faceVertexUvs[0][i*2 + 1] = [tex_area[1], tex_area[0], tex_area[3]];
+			geometry.faceVertexUvs[0][i * 2 + 0] = [tex_area[2], tex_area[1], tex_area[3]];
+			geometry.faceVertexUvs[0][i * 2 + 1] = [tex_area[1], tex_area[0], tex_area[3]];
 		}
 		else{
-			geometry.faceVertexUvs[0][i*2 + 0] = [tex_side_area[2], tex_side_area[1], tex_side_area[3]];
-			geometry.faceVertexUvs[0][i*2 + 1] = [tex_side_area[1], tex_side_area[0], tex_side_area[3]];
+			geometry.faceVertexUvs[0][i * 2 + 0] = [tex_side_area[2], tex_side_area[1], tex_side_area[3]];
+			geometry.faceVertexUvs[0][i * 2 + 1] = [tex_side_area[1], tex_side_area[0], tex_side_area[3]];
 		}
 	}
 	// edges.
@@ -1221,6 +1893,7 @@ function updateShadowsVisibility(){
 					// Unplayed pieces: only bottom of unplayed stack shows AO
 					// This is handled by stackheight during creation
 					piece.aoPlane.visible = (piece.aoPlane.material.opacity > 0);
+					resetAOToFlat(piece);
 				}
 			}
 		}
@@ -1244,7 +1917,7 @@ const animation = {
 		const rotations = objects.map(function(obj){return obj.quaternion.clone();});
 		if(!type){
 			// Store positions/rotations as the starting point for the next animation
-			this.pendingFrom = {objects: objects.slice(), positions: positions, rotations: rotations};
+			this.pendingFrom = { objects: objects.slice(), positions: positions, rotations: rotations };
 		}
 		else{
 			// Apply animation speed multiplier to duration
@@ -1483,6 +2156,14 @@ const animation = {
 	}
 };
 
+// Snap a standing piece to the given ground Y based on its actual geometry
+function snapStandingToGround(piece, groundY){
+	piece.updateMatrixWorld(true);
+	const box = new THREE.Box3().setFromObject(piece);
+	piece.position.y += (groundY - box.min.y);
+	piece.updateMatrixWorld(true);
+}
+
 const board = {
 	totcaps: 0,
 	tottiles: 0,
@@ -1495,7 +2176,7 @@ const board = {
 	// visual objects representing the pieces
 	piece_objects: [],
 	lastMovedSquareList: [],
-	move: {start: null,end: null,dir: 'U',squares: []},
+	move: { start: null, end: null, dir: 'U', squares: [] },
 	highlighted: null,
 	lastMoveHighlighted: null,
 	lastMoveHighlighterVisible: false,
@@ -1507,13 +2188,13 @@ const board = {
 	isBot: false,
 
 	// Keep track of some important positions
-	sq_position: {startx: 0,startz: 0,endx: 0,endz: 0},
-	corner_position: {x: 0,z: 0,endx: 0,endz: 0},
+	sq_position: { startx: 0, startz: 0, endx: 0, endz: 0 },
+	corner_position: { x: 0, z: 0, endx: 0, endz: 0 },
 
 	// a stack of board layouts,
 	board_history: [],
 
-	create: function(sz,pieces,capstones){
+	create: function(sz, pieces, capstones){
 		if(sz === 3){
 			this.totcaps = 0;
 			this.tottiles = 10;
@@ -1538,11 +2219,11 @@ const board = {
 			this.totcaps = 2;
 			this.tottiles = 50;
 		}
-		if(pieces>=10){
-			this.tottiles=pieces;
+		if(pieces >= 10){
+			this.tottiles = pieces;
 		}
-		if(capstones>=0){
-			this.totcaps=capstones;
+		if(capstones >= 0){
+			this.totcaps = capstones;
 		}
 		this.whitepiecesleft = this.tottiles + this.totcaps;
 		this.blackpiecesleft = this.tottiles + this.totcaps;
@@ -1553,7 +2234,7 @@ const board = {
 		this.lastMoveHighlighted = null;
 		this.selected = null;
 		this.selectedStack = null;
-		this.move = {start: null, end: null, dir: 'U', squares: []};
+		this.move = { start: null, end: null, dir: 'U', squares: [] };
 		//gameData.observing = typeof obs !== 'undefined' ? obs : false
 		this.board_history = [];
 		generateCamera();
@@ -1570,13 +2251,13 @@ const board = {
 		this.updateShadowCamera();
 		updateShadowsVisibility();
 
-		if(!gameData.is_scratch && ((gameData.my_color=="black") != (this.boardside=="black"))){
+		if(!gameData.is_scratch && ((gameData.my_color == "black") != (this.boardside == "black"))){
 			this.reverseboard();
 		}
 	},
 	//remove all scene objects, reset player names, stop time, etc
 	clear: function(){
-		for(let i = scene.children.length - 1;i >= 0;i--){
+		for(let i = scene.children.length - 1; i >= 0; i--){
 			scene.remove(scene.children[i]);
 		}
 		// Re-add shadow light after clearing scene
@@ -1585,19 +2266,19 @@ const board = {
 			scene.add(shadowLight.target);
 		}
 	},
-	newOnlinegame: function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
+	newOnlinegame: function(sz, col, komi, pieces, capstones, triggerMove, timeAmount){
 		this.clear();
-		this.create(sz,col,false,false,komi,pieces,capstones, triggerMove, timeAmount);
+		this.create(sz, col, false, false, komi, pieces, capstones, triggerMove, timeAmount);
 		this.initEmpty();
 	},
 	calculateBoardPositions: function(){
-		this.length = gameData.size*sq_size + border_size*2;
-		this.sq_position.endx = ((gameData.size-1)*sq_size) / 2.0;
-		this.sq_position.endz = ((gameData.size-1)*sq_size) / 2.0;
+		this.length = gameData.size * sq_size + border_size * 2;
+		this.sq_position.endx = ((gameData.size - 1) * sq_size) / 2.0;
+		this.sq_position.endz = ((gameData.size - 1) * sq_size) / 2.0;
 		this.sq_position.startx = -this.sq_position.endx;
 		this.sq_position.startz = -this.sq_position.endz;
-		this.corner_position.endx = this.length/2;
-		this.corner_position.endz = this.length/2;
+		this.corner_position.endx = this.length / 2;
+		this.corner_position.endz = this.length / 2;
 		this.corner_position.x = -this.corner_position.endx;
 		this.corner_position.z = -this.corner_position.endz;
 	},
@@ -1607,11 +2288,11 @@ const board = {
 	addboard: function(){
 		this.calculateBoardPositions();
 		// draw the squares
-		for(let i = 0;i < gameData.size;i++){
-			for(let j = 0;j < gameData.size;j++){
+		for(let i = 0; i < gameData.size; i++){
+			for(let j = 0; j < gameData.size; j++){
 				// We draw them from the left to right and top to bottom.
 				// But, note, the naming (A1, B1, etc) is left to right and bottom to top.
-				const square = boardFactory.makeSquare(i,j,scene);
+				const square = boardFactory.makeSquare(i, j, scene);
 				this.board_objects.push(square);
 				this.sq[i][j].board_object = square;
 			}
@@ -1662,7 +2343,7 @@ const board = {
 		overlay_texture.wrapS = overlay_texture.wrapT = THREE.ClampToEdgeWrapping;
 		overlay_texture.offset.set(materials.overlayMap[gameData.size].offset.x, materials.overlayMap[gameData.size].offset.y);
 		overlay_texture.repeat.set(materials.overlayMap[gameData.size].repeat.x, materials.overlayMap[gameData.size].repeat.y);
-		const overlay_material = new THREE.MeshLambertMaterial({map: overlay_texture});
+		const overlay_material = new THREE.MeshLambertMaterial({ map: overlay_texture });
 		overlay_texture.magFilter = THREE.LinearFilter;
 		overlay_texture.minFilter = THREE.LinearFilter;
 		overlay_texture.generateMipmaps = true;
@@ -1688,7 +2369,7 @@ const board = {
 	// Add the table
 	addtable: function(){
 		const table_texture = new THREE.TextureLoader().load(materials.table_texture_path);
-		const table_material = new THREE.MeshLambertMaterial({map: table_texture});
+		const table_material = new THREE.MeshLambertMaterial({ map: table_texture });
 		table_material.magFilter = THREE.LinearFilter;
 		table_material.minFilter = THREE.LinearMipMapFilter;
 		table_material.anisotropy = 1;
@@ -1701,7 +2382,7 @@ const board = {
 		// Create shadow plane for when table is hidden (matches background color)
 		// Use ShadowMaterial which is invisible except for shadows
 		const shadowPlaneGeometry = new THREE.PlaneGeometry(table_width * 2, table_depth * 2);
-		const shadowPlaneMaterial = new THREE.ShadowMaterial({opacity: 0.3});
+		const shadowPlaneMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
 		this.shadowPlane = new THREE.Mesh(shadowPlaneGeometry, shadowPlaneMaterial);
 		this.shadowPlane.rotation.x = -Math.PI / 2;
 		this.shadowPlane.position.set(0, -sq_height / 2 - 0.5, -sq_size / 2);
@@ -1751,21 +2432,21 @@ const board = {
 	// addpieces: add the pieces to the scene, not on the board
 	addpieces: function(){
 		let piece;
-		const stacks=Math.ceil(this.tottiles/10+this.totcaps);
-		stack_dist=Math.min((border_size*2+sq_size*gameData.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size);
-		for(let i=0;i < this.tottiles;i++){
-			piece = pieceFactory.makePiece(WHITE_PLAYER,i,scene);
+		const stacks = Math.ceil(this.tottiles / 10 + this.totcaps);
+		stack_dist = Math.min((border_size * 2 + sq_size * gameData.size - stacks * piece_size) / Math.max(stacks - 1, 1), piece_size);
+		for(let i = 0; i < this.tottiles; i++){
+			piece = pieceFactory.makePiece(WHITE_PLAYER, i, scene);
 			this.piece_objects.push(piece);
 
-			piece = pieceFactory.makePiece(BLACK_PLAYER,i,scene);
+			piece = pieceFactory.makePiece(BLACK_PLAYER, i, scene);
 			this.piece_objects.push(piece);
 		}
 
-		for(let i=0;i < this.totcaps;i++){
-			piece = pieceFactory.makeCap(WHITE_PLAYER,i,scene);
+		for(let i = 0; i < this.totcaps; i++){
+			piece = pieceFactory.makeCap(WHITE_PLAYER, i, scene);
 			this.piece_objects.push(piece);
 
-			piece = pieceFactory.makeCap(BLACK_PLAYER,i,scene);
+			piece = pieceFactory.makeCap(BLACK_PLAYER, i, scene);
 			this.piece_objects.push(piece);
 		}
 	},
@@ -1793,134 +2474,119 @@ const board = {
 	},
 	// called if the user changes the texture or size of the pieces
 	updatepieces: function(){
-		const stacks=Math.ceil(this.tottiles/10+this.totcaps);
-		stack_dist=Math.min((border_size*2+sq_size*gameData.size-stacks*piece_size)/Math.max(stacks-1,1),piece_size);
-		const geometryW=piecegeometry("white");
-		const geometryB=piecegeometry("black");
+		const stacks = Math.ceil(this.tottiles / 10 + this.totcaps);
+
+		// Current stack dist
+		stack_dist = Math.min(
+			(border_size * 2 + sq_size * gameData.size - stacks * piece_size) / Math.max(stacks - 1, 1),
+			piece_size
+		);
+
+		const geometryW = piecegeometry("white");
+		const geometryB = piecegeometry("black");
 		const capGeometryW = capgeometry("white");
 		const capGeometryB = capgeometry("black");
 		materials.updatePieceMaterials();
-		const old_size = this.piece_objects[0].geometry.parameters.width;
+
+		const OFFBOARD_GROUND_Y = sq_height / 2;
+
+		// Helper function to rotate a standing piece correctly
+		function applyStandingRotation(piece){
+			// Rotate black walls 90 degrees (before X rotation)
+			if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
+			piece.rotateX(-Math.PI / 2);
+			if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
+			setAOToWall(piece);
+		}
 
 		// for all pieces...
-		for(let i = 0;i < this.piece_objects.length;i++){
-			const piece=this.piece_objects[i];
-			// Skip selected unplayed piece, don't reset its position
-			if(piece === this.selected && !piece.onsquare){
-				// Just update geometry and rotation for diagonal walls change
-				if(!piece.iscapstone){
-					const wasStanding = piece.isstanding;
-					piece.rotation.set(0,0,0);
-					piece.isstanding = false;
-					if(piece.iswhitepiece){
-						piece.geometry = geometryW;
-					}
-					else{
-						piece.geometry = geometryB;
-					}
-					piece.updateMatrix();
-					if(wasStanding){
-						piece.isstanding = true;
-						// Rotate black walls 90 degrees (before X rotation)
-						if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
-						piece.rotateX(-Math.PI / 2);
-						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
-						// Update AO plane rotation and texture for wall
-						setAOToWall(piece);
-					}
-				}
-				continue;
-			}
+		for(let i = 0; i < this.piece_objects.length; i++){
+			const piece = this.piece_objects[i];
 			if(piece.iscapstone){
-				const grow=capstone_height-piece.geometry.parameters.height;
-				piece.position.y+=grow/2;
-				if(piece.iswhitepiece){
-					piece.geometry = capGeometryW;
-				}
-				else{
-					piece.geometry = capGeometryB;
-				}
-				piece.updateMatrix();
+				const grow = capstone_height - piece.geometry.parameters.height;
+				piece.position.y += grow / 2;
+
+				piece.geometry = piece.iswhitepiece ? capGeometryW : capGeometryB;
 			}
 			else{
-				// Track if piece was standing before reset
 				const wasStanding = piece.isstanding;
 
 				// Reset rotation first
-				piece.rotation.set(0,0,0);
-				piece.updateMatrix();
+				piece.rotation.set(0, 0, 0);
 				piece.isstanding = false;
 
-				// reapply geometry.
-				if(piece.iswhitepiece){
-					piece.geometry = geometryW;
-				}
-				else{
-					piece.geometry = geometryB;
-				}
-				piece.updateMatrix();
+				// Reapply geometry
+				piece.geometry = piece.iswhitepiece ? geometryW : geometryB;
 
 				// Reapply standing orientation if it was standing
 				if(wasStanding){
 					piece.isstanding = true;
-					// Rotate black walls 90 degrees (before X rotation)
-					if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
-					piece.rotateX(-Math.PI / 2);
-					if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
-					// Update AO plane rotation and texture for wall
-					setAOToWall(piece);
+					applyStandingRotation(piece);
+					if(piece.onsquare){
+						const new_y = sq_height / 2 + piece_height * (board.get_stack(piece.onsquare).indexOf(piece));
+						snapStandingToGround(piece, new_y);
+					}
+					else{
+
+					}
 				}
 			}
 			if(!piece.onsquare){
 				const selectionOffset = (piece === this.selected) ? stack_selection_height : 0;
+
 				if(piece.iscapstone){
 					if(piece.iswhitepiece){
 						piece.position.set(
 							board.corner_position.endx + capstone_radius + stackOffsetFromBorder,
-							capstone_height/2-sq_height/2 + selectionOffset,
-							board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
+							capstone_height / 2 - sq_height / 2 + selectionOffset,
+							board.corner_position.z + capstone_radius + piece.pieceNum * (stack_dist + capstone_radius * 2)
 						);
 					}
 					else{
 						piece.position.set(
 							board.corner_position.x - capstone_radius - stackOffsetFromBorder,
-							capstone_height/2-sq_height/2 + selectionOffset,
-							board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2)
+							capstone_height / 2 - sq_height / 2 + selectionOffset,
+							board.corner_position.endz - capstone_radius - piece.pieceNum * (stack_dist + capstone_radius * 2)
 						);
 					}
 				}
 				else{
 					const stackno = Math.floor(piece.pieceNum / 10);
 					const stackheight = piece.pieceNum % 10;
-					const baseY = piece.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
+
+					const baseY = (stackheight * piece_height + piece_height / 2 - sq_height / 2);
+
 					// Use positionAsWhite to preserve swapped first-turn pieces
-					const posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
+					const posAsWhite = (piece.positionAsWhite !== undefined) ? piece.positionAsWhite : piece.iswhitepiece;
+
 					if(posAsWhite){
 						piece.position.set(
-							board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
+							board.corner_position.endx + stackOffsetFromBorder + piece_size / 2,
 							baseY + selectionOffset,
-							board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+							board.corner_position.endz - piece_size / 2 - stackno * (stack_dist + piece_size)
 						);
 					}
 					else{
 						piece.position.set(
-							board.corner_position.x - stackOffsetFromBorder - piece_size/2,
+							board.corner_position.x - stackOffsetFromBorder - piece_size / 2,
 							baseY + selectionOffset,
-							board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+							board.corner_position.z + piece_size / 2 + stackno * (stack_dist + piece_size)
 						);
 					}
 				}
 			}
 		}
 	},
+
+
 	file: function(no){
 		return String.fromCharCode('A'.charCodeAt(0) + no);
 	},
 	//file is no. rank is no.
-	squarename: function(file,rank){
+	squarename: function(file, rank){
 		return this.file(file) + (rank + 1);
 	},
-	get_board_obj: function(file,rank){
+	get_board_obj: function(file, rank){
 		return this.sq[file][gameData.size - 1 - rank].board_object;
 	},
 	incmovecnt: function(){
@@ -1933,11 +2599,11 @@ const board = {
 	save_board_pos: function(){
 		const bp = [];
 		//for all squares, convert stack info to board position info
-		for(let i=0;i<gameData.size;i++){
-			for(let j=0;j<gameData.size;j++){
+		for(let i = 0; i < gameData.size; i++){
+			for(let j = 0; j < gameData.size; j++){
 				const bp_sq = [];
 				const stk = this.sq[i][j];
-				for(let s=0;s<stk.length;s++){
+				for(let s = 0; s < stk.length; s++){
 					const pc = stk[s];
 					let c = 'p';
 					if(pc.iscapstone){c = 'c';}
@@ -1963,26 +2629,26 @@ const board = {
 		}
 
 		// scan through each cell in the pos array
-		for(let i=0;i<gameData.size;i++){//file
-			for(let j=0;j<gameData.size;j++){//rank
-				const sq = this.get_board_obj(i,j);
-				const sqpos = pos[i*gameData.size + j];
+		for(let i = 0; i < gameData.size; i++){//file
+			for(let j = 0; j < gameData.size; j++){//rank
+				const sq = this.get_board_obj(i, j);
+				const sqpos = pos[i * gameData.size + j];
 				// sqpos describes a stack of pieces in that square
 				// scan through those pieces
-				for(let s=0;s<sqpos.length;s++){
+				for(let s = 0; s < sqpos.length; s++){
 					const pcType = sqpos[s];
-					const iscap = (pcType==='c' || pcType==='C');
-					const iswall = (pcType==='w' || pcType==='W');
-					const iswhite = (pcType===pcType.charAt(0).toUpperCase());
+					const iscap = (pcType === 'c' || pcType === 'C');
+					const iswall = (pcType === 'w' || pcType === 'W');
+					const iswhite = (pcType === pcType.charAt(0).toUpperCase());
 
 					// get an available piece
-					const pc = this.getfromstack(iscap,iswhite);
+					const pc = this.getfromstack(iscap, iswhite);
 					// what if there is not a piece available? Maybe that
 					// is not possible, because when we first created the board
 					// we know that there were enough pieces.
 					if(iswall){this.standup(pc);}
 
-					this.pushPieceOntoSquare(sq,pc);
+					this.pushPieceOntoSquare(sq, pc);
 					if(iswhite){this.whitepiecesleft--;}
 					else{this.blackpiecesleft--;}
 				}
@@ -1990,47 +2656,47 @@ const board = {
 		}
 	},
 	mousepick: function(){
-		raycaster.setFromCamera(mouse,camera);
+		raycaster.setFromCamera(mouse, camera);
 		const intersects = raycaster.intersectObjects(scene.children);
-		for(let a=0;a<intersects.length;a++){
-			const potential=intersects[a].object;
+		for(let a = 0; a < intersects.length; a++){
+			const potential = intersects[a].object;
 			if(potential.isboard){
-				return ["board",potential,potential.rank,potential.file];
+				return ["board", potential, potential.rank, potential.file];
 			}
-			else if(potential.isboard===false){
+			else if(potential.isboard === false){
 				if(potential.onsquare){
 					if(!clickthrough){
-						return ["board",potential.onsquare,potential.onsquare.rank,potential.onsquare.file];
+						return ["board", potential.onsquare, potential.onsquare.rank, potential.onsquare.file];
 					}
 				}
 				else{
-					return ["piece",potential];
+					return ["piece", potential];
 				}
 			}
 		}
 		return ["none"];
 	},
 	leftclick: function(){
-		const pick=this.mousepick();
+		const pick = this.mousepick();
 		this.remove_total_highlight();
 		if(!checkIfMyMove()){
 			return;
 		}
-		if(pick[0]=="board"){
+		if(pick[0] == "board"){
 			const destinationstack = this.get_stack(pick[1]);
 			if(this.selected){
-				if(destinationstack.length==0){
-					const sel=this.selected;
-					const self=this;
+				if(destinationstack.length == 0){
+					const sel = this.selected;
+					const self = this;
 					animation.push([sel]);
 					this.selected = null;
-					const hlt=pick[1];
+					const hlt = pick[1];
 					// Set fadeIn flag BEFORE pushPieceOntoSquare since animation.playing may not be true yet
 					if(sel.aoPlane && animationsEnabled){
 						sel.aoPlane.fadeIn = true;
 						sel.aoPlane.material.opacity = 0;
 					}
-					this.pushPieceOntoSquare(hlt,sel);
+					this.pushPieceOntoSquare(hlt, sel);
 					animation.push([sel], 'jump', 300, function(){self.hideSelectionShadow();});
 					animation.play(playMoveSound);
 					//check if actually moved
@@ -2042,16 +2708,16 @@ const board = {
 						"Place " + gameData.move_count,
 						sel.iswhitepiece ? 'White' : 'Black',
 						stone,
-						this.squarename(hlt.file,hlt.rank)
+						this.squarename(hlt.file, hlt.rank)
 					);
 					this.highlightLastMove_sq(hlt, gameData.move_count);
 					this.lastMovedSquareList.push(hlt);
 
-					const sqname = this.squarename(hlt.file,hlt.rank);
+					const sqname = this.squarename(hlt.file, hlt.rank);
 					let msg = "P " + sqname;
 					if(stone !== 'Piece'){msg += " " + stone.charAt(0);}
 					sendMove(msg);
-					this.notatePmove(sqname,stone.charAt(0));
+					this.notatePmove(sqname, stone.charAt(0));
 
 					let pcs;
 					if(gameData.my_color === "white"){
@@ -2083,13 +2749,13 @@ const board = {
 				}
 				else{
 					const prev = this.move.squares[this.move.squares.length - 1];
-					const rel = this.sqrel(prev,pick[1]);
-					let goodmove=false;
+					const rel = this.sqrel(prev, pick[1]);
+					let goodmove = false;
 					if(this.move.dir === 'U' && rel !== 'OUTSIDE'){
-						goodmove=true;
+						goodmove = true;
 					}
 					else if(this.move.dir === rel || rel === 'O'){
-						goodmove=true;
+						goodmove = true;
 					}
 					if(goodmove){
 						const obj = this.selectedStack.pop();
@@ -2112,7 +2778,7 @@ const board = {
 								obj.aoPlane.material.opacity = 0;
 							}
 							animation.push(objectsToAnimate);
-							this.pushPieceOntoSquare(pick[1],obj);
+							this.pushPieceOntoSquare(pick[1], obj);
 							const animType = isSameSquare ? 'move' : 'jump';
 							animation.push(objectsToAnimate, animType, isSameSquare ? 100 : 200, function(){
 								self.hideSelectionShadow();
@@ -2143,8 +2809,8 @@ const board = {
 								}
 							}
 							animation.push(allPieces);
-							this.pushPieceOntoSquare(pick[1],obj);
-							this.move_stack_over(pick[1],this.selectedStack, false);
+							this.pushPieceOntoSquare(pick[1], obj);
+							this.move_stack_over(pick[1], this.selectedStack, false);
 							// Update shadow position to follow the stack
 							const bottomPiece = this.selectedStack[this.selectedStack.length - 1];
 							if(bottomPiece){
@@ -2178,9 +2844,9 @@ const board = {
 				}
 			}
 		}
-		else if(pick[0]=="piece"){
+		else if(pick[0] == "piece"){
 			if(this.selected){
-				if(this.selected === pick[1] && gameData.move_count>=2){
+				if(this.selected === pick[1] && gameData.move_count >= 2){
 					this.rotate(pick[1], true);
 					justRotatedPiece = true;
 				}
@@ -2225,21 +2891,21 @@ const board = {
 		// Background click cancel is handled in onDocumentMouseUp to allow view rotation
 	},
 	mousemove: function(){
-		const pick=this.mousepick();
-		if(pick[0]=="board" && this.selectedStack){
+		const pick = this.mousepick();
+		if(pick[0] == "board" && this.selectedStack){
 			const tp = this.top_of_stack(pick[1]);
 			if(tp && (tp.iscapstone || (tp.isstanding && !this.selectedStack[this.selectedStack.length - 1].iscapstone))){
 				this.unhighlight_sq();
 			}
 			else{
 				const prev = this.move.squares[this.move.squares.length - 1];
-				const rel = this.sqrel(prev,pick[1]);
-				let goodmove=false;
+				const rel = this.sqrel(prev, pick[1]);
+				let goodmove = false;
 				if(this.move.dir === 'U' && rel !== 'OUTSIDE'){
-					goodmove=true;
+					goodmove = true;
 				}
 				else if(this.move.dir === rel || rel === 'O'){
-					goodmove=true;
+					goodmove = true;
 				}
 				if(goodmove){
 					this.highlight_sq(pick[1]);
@@ -2249,9 +2915,9 @@ const board = {
 				}
 			}
 		}
-		else if(pick[0]=="board" && this.selected){
+		else if(pick[0] == "board" && this.selected){
 			const destinationstack = this.get_stack(pick[1]);
-			if(destinationstack.length==0){
+			if(destinationstack.length == 0){
 				this.highlight_sq(pick[1]);
 			}
 			else{
@@ -2262,14 +2928,14 @@ const board = {
 			this.unhighlight_sq();
 		}
 	},
-	getfromstack: function(cap,iswhite){
+	getfromstack: function(cap, iswhite){
 		//	scan through the pieces for the first appropriate one
-		for(let i = this.piece_objects.length-1;i >= 0;i--){
+		for(let i = this.piece_objects.length - 1; i >= 0; i--){
 			const obj = this.piece_objects[i];
 			// not on a square, and matches color, and matches type
 			if(!obj.onsquare &&
-					(obj.iswhitepiece === iswhite) &&
-					(cap === obj.iscapstone)){
+                (obj.iswhitepiece === iswhite) &&
+                (cap === obj.iscapstone)){
 				return obj;
 			}
 		}
@@ -2285,23 +2951,23 @@ const board = {
 		for(let i = 0; i < this.piece_objects.length; i++){
 			const obj = this.piece_objects[i];
 			if(!obj.onsquare && !obj.iscapstone &&
-					obj.pieceNum === targetPieceNum &&
-					obj.iswhitepiece === wantWhitePiece){
+                obj.pieceNum === targetPieceNum &&
+                obj.iswhitepiece === wantWhitePiece){
 				return obj;
 			}
 		}
 		return null;
 	},
 	//move the server sends
-	serverPmove: function(file,rank,caporwall,skipAnimation){
+	serverPmove: function(file, rank, caporwall, skipAnimation){
 		let oldpos = -1;
-		if(gameData.move_shown!=gameData.move_count){
+		if(gameData.move_shown != gameData.move_count){
 			oldpos = gameData.move_shown;
 		}
 
 		dontanimate = true;
 		fastforward();
-		const obj = this.getfromstack((caporwall === 'C'),isWhitePieceToMove());
+		const obj = this.getfromstack((caporwall === 'C'), isWhitePieceToMove());
 
 		if(!obj){
 			console.warn("something is wrong");
@@ -2313,13 +2979,13 @@ const board = {
 			obj.isFirstTurnPiece = true;
 		}
 
-		const hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0),rank - 1);
+		const hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0), rank - 1);
 		if(skipAnimation || oldpos !== -1){
 			// Just place the piece without animation (loading history or viewing earlier position)
 			if(caporwall === 'W'){
 				this.standup(obj);
 			}
-			this.pushPieceOntoSquare(hlt,obj);
+			this.pushPieceOntoSquare(hlt, obj);
 			// Still play sound if viewing earlier position (not loading history)
 			if(oldpos !== -1 && !skipAnimation){
 				playMoveSound();
@@ -2334,7 +3000,7 @@ const board = {
 			if(caporwall === 'W'){
 				this.standup(obj);
 			}
-			this.pushPieceOntoSquare(hlt,obj);
+			this.pushPieceOntoSquare(hlt, obj);
 			animation.push([obj], 'jump', 300, function(){
 				obj.castShadow = false;
 			});
@@ -2343,14 +3009,14 @@ const board = {
 		this.highlightLastMove_sq(hlt, gameData.move_count);
 		this.lastMovedSquareList.push(hlt);
 
-		this.notatePmove(file + rank,caporwall);
+		this.notatePmove(file + rank, caporwall);
 		this.incmovecnt();
 
 		if(oldpos !== -1){board.showmove(oldpos, true);}
 		dontanimate = false;
 	},
 	//Move move the server sends
-	serverMmove: function(f1,r1,f2,r2,nums,skipAnimation){
+	serverMmove: function(f1, r1, f2, r2, nums, skipAnimation){
 		let oldpos = -1;
 		if(gameData.move_shown != gameData.move_count){
 			oldpos = gameData.move_shown;
@@ -2359,24 +3025,24 @@ const board = {
 		dontanimate = true;
 		fastforward();
 		let tot = 0;
-		for(let i = 0;i < nums.length;i++){tot += nums[i];}
+		for(let i = 0; i < nums.length; i++){tot += nums[i];}
 
 		const tstk = [];
-		const s1 = this.get_board_obj(f1.charCodeAt(0) - 'A'.charCodeAt(0),r1 - 1);
+		const s1 = this.get_board_obj(f1.charCodeAt(0) - 'A'.charCodeAt(0), r1 - 1);
 		const stk = this.get_stack(s1);
-		for(let i = 0;i < tot;i++){
+		for(let i = 0; i < tot; i++){
 			tstk.push(stk.pop());
 		}
-		let fi = 0,ri = 0;
+		let fi = 0, ri = 0;
 		if(f1 === f2){ri = r2 > r1 ? 1 : -1;}
 		if(r1 === r2){fi = f2 > f1 ? 1 : -1;}
 
 		// Collect all pieces and their target squares first
 		const allPieces = [];
 		const pieceTargets = [];
-		for(let i = 0;i < nums.length;i++){
-			const sq = this.get_board_obj(s1.file + (i + 1) * fi,s1.rank + (i + 1) * ri);
-			for(let j = 0;j < nums[i];j++){
+		for(let i = 0; i < nums.length; i++){
+			const sq = this.get_board_obj(s1.file + (i + 1) * fi, s1.rank + (i + 1) * ri);
+			for(let j = 0; j < nums[i]; j++){
 				const piece = tstk.pop();
 				allPieces.push(piece);
 				pieceTargets.push(sq);
@@ -2457,27 +3123,27 @@ const board = {
 	flatscore: function(ply){
 		let whitec = 0;
 		let blackc = 0;
-		if(!(ply>=0)){
-			ply=this.board_history.length-1;
+		if(!(ply >= 0)){
+			ply = this.board_history.length - 1;
 		}
-		const position=this.board_history[ply];
+		const position = this.board_history[ply];
 		if(!position){
-			return [0,0];
+			return [0, 0];
 		}
-		for(let i = 0;i < gameData.size*gameData.size;i++){
-			if(position[i].length>0){
-				const toppiece=position[i][position[i].length-1];
-				whitec+=toppiece=="P";
-				blackc+=toppiece=="p";
+		for(let i = 0; i < gameData.size * gameData.size; i++){
+			if(position[i].length > 0){
+				const toppiece = position[i][position[i].length - 1];
+				whitec += toppiece == "P";
+				blackc += toppiece == "p";
 			}
 		}
-		return [whitec,blackc];
+		return [whitec, blackc];
 	},
 	findwhowon: function(){
 		let whitec = 0;
-		let blackc = gameData.komi/2;
-		for(let i = 0;i < gameData.size;i++){
-			for(let j = 0;j < gameData.size;j++){
+		let blackc = gameData.komi / 2;
+		for(let i = 0; i < gameData.size; i++){
+			for(let j = 0; j < gameData.size; j++){
 				const stk = this.sq[i][j];
 				if(stk.length === 0){continue;}
 				const top = stk[stk.length - 1];
@@ -2491,8 +3157,8 @@ const board = {
 		else{gameData.result = "0-F";}
 	},
 	checkroadwin: function(){
-		for(let i = 0;i < gameData.size;i++){
-			for(let j = 0;j < gameData.size;j++){
+		for(let i = 0; i < gameData.size; i++){
+			for(let j = 0; j < gameData.size; j++){
 				const cur_st = this.sq[i][j];
 				cur_st.graph = -1;
 				if(cur_st.length === 0){continue;}
@@ -2508,8 +3174,8 @@ const board = {
 						const ltop = left_st[left_st.length - 1];
 						if(!(ltop.isstanding && !ltop.iscapstone)){
 							if(ctop.iswhitepiece === ltop.iswhitepiece){
-								for(let r = 0;r < gameData.size;r++){
-									for(let c = 0;c < gameData.size;c++){
+								for(let r = 0; r < gameData.size; r++){
+									for(let c = 0; c < gameData.size; c++){
 										if(this.sq[r][c].graph === cur_st.graph){
 											this.sq[r][c].graph = left_st.graph;
 										}
@@ -2525,8 +3191,8 @@ const board = {
 						const ttop = top_st[top_st.length - 1];
 						if(!(ttop.isstanding && !ttop.iscapstone)){
 							if(ctop.iswhitepiece === ttop.iswhitepiece){
-								for(let r = 0;r < gameData.size;r++){
-									for(let c = 0;c < gameData.size;c++){
+								for(let r = 0; r < gameData.size; r++){
+									for(let c = 0; c < gameData.size; c++){
 										if(this.sq[r][c].graph === cur_st.graph){
 											this.sq[r][c].graph = top_st.graph;
 										}
@@ -2540,11 +3206,11 @@ const board = {
 		}
 		let whitewin = false;
 		let blackwin = false;
-		for(let tr = 0;tr < gameData.size;tr++){
+		for(let tr = 0; tr < gameData.size; tr++){
 			const tsq = this.sq[tr][0];
 			const no = tsq.graph;
 			if(no === -1){continue;}
-			for(let br = 0;br < gameData.size;br++){
+			for(let br = 0; br < gameData.size; br++){
 				const brno = this.sq[br][gameData.size - 1].graph;
 				if(no === brno){
 					if(tsq[tsq.length - 1].iswhitepiece){whitewin = true;}
@@ -2552,11 +3218,11 @@ const board = {
 				}
 			}
 		}
-		for(let tr = 0;tr < gameData.size;tr++){
+		for(let tr = 0; tr < gameData.size; tr++){
 			const tsq = this.sq[0][tr];
 			const no = tsq.graph;
 			if(no === -1){continue;}
-			for(let br = 0;br < gameData.size;br++){
+			for(let br = 0; br < gameData.size; br++){
 				const brno = this.sq[gameData.size - 1][br].graph;
 				if(no === brno){
 					if(tsq[tsq.length - 1].iswhitepiece){whitewin = true;}
@@ -2564,7 +3230,7 @@ const board = {
 				}
 			}
 		}
-		if(whitewin && blackwin){gameData.result = (gameData.move_count%2 == 0)?"R-0":"0-R";}
+		if(whitewin && blackwin){gameData.result = (gameData.move_count % 2 == 0) ? "R-0" : "0-R";}
 		else if(whitewin){gameData.result = "R-0";}
 		else if(blackwin){gameData.result = "0-R";}
 
@@ -2575,8 +3241,8 @@ const board = {
 		return false;
 	},
 	checksquaresover: function(){
-		for(let i = 0;i < gameData.size;i++){
-			for(let j = 0;j < gameData.size;j++){
+		for(let i = 0; i < gameData.size; i++){
+			for(let j = 0; j < gameData.size; j++){
 				if(this.sq[i][j].length === 0){return false;}
 			}
 		}
@@ -2586,12 +3252,12 @@ const board = {
 		return true;
 	},
 	reverseboard: function(){
-		if(localStorage.getItem('auto_rotate')!=='false'){
+		if(localStorage.getItem('auto_rotate') !== 'false'){
 			this.boardside = (this.boardside === "white") ? "black" : "white";
 			camera.position.z = -camera.position.z;
 			camera.position.x = -camera.position.x;
-			controls.center.z=-controls.center.z;
-			controls.center.x=-controls.center.x;
+			controls.center.z = -controls.center.z;
+			controls.center.x = -controls.center.x;
 		}
 	},
 	setmovedir: function(){
@@ -2608,7 +3274,7 @@ const board = {
 			else{this.move.dir = 'W';}
 		}
 	},
-	notatePmove: function(sqname,pos){
+	notatePmove: function(sqname, pos){
 		if(pos === 'W'){pos = 'S';}
 		else if(pos === 'C'){pos = 'C';}
 		else{pos = '';}
@@ -2616,18 +3282,18 @@ const board = {
 		storeNotation();
 	},
 	//all params are nums
-	calculateMoveNotation: function(stf,str,endf,endr,nos){
+	calculateMoveNotation: function(stf, str, endf, endr, nos){
 		let dir = '';
 		if(stf === endf){dir = (endr < str) ? '-' : '+';}
 		else{dir = (endf < stf) ? '<' : '>';}
 		let tot = 0;
 		let lst = '';
-		for(let i = 0;i < nos.length;i++){
+		for(let i = 0; i < nos.length; i++){
 			tot += Number(nos[i]);
 			lst = lst + (nos[i] + '').trim();
 		}
 		if(tot === 1){
-			const s1 = this.get_board_obj(stf,str);
+			const s1 = this.get_board_obj(stf, str);
 			if(this.get_stack(s1).length === 0){
 				tot = '';
 				lst = '';
@@ -2635,18 +3301,18 @@ const board = {
 			else if(tot === Number(lst)){lst = '';}
 		}
 		else if(tot === Number(lst)){lst = '';}
-		const move = tot + this.squarename(stf,str).toLowerCase()
-				+ dir + '' + lst;
+		const move = tot + this.squarename(stf, str).toLowerCase()
+            + dir + '' + lst;
 		notate(move);
 		storeNotation();
 	},
 	generateMove: function(){
-		const st = this.squarename(this.move.start.file,this.move.start.rank);
-		const end = this.squarename(this.move.end.file,this.move.end.rank);
+		const st = this.squarename(this.move.start.file, this.move.start.rank);
+		const end = this.squarename(this.move.end.file, this.move.end.rank);
 		const lst = [];
 		let prev = null;
 
-		for(let i = 0,c = 0;i < this.move.squares.length;i++){
+		for(let i = 0, c = 0; i < this.move.squares.length; i++){
 			const obj = this.move.squares[i];
 			if(obj === this.move.start){continue;}
 
@@ -2659,7 +3325,7 @@ const board = {
 		}
 		if(st !== end){
 			let nos = "";
-			for(let i = 0;i < lst.length;i++){nos += lst[i] + " ";}
+			for(let i = 0; i < lst.length; i++){nos += lst[i] + " ";}
 			sendMove("M " + st + " " + end + " " + nos.trim());
 			this.calculateMoveNotation(
 				this.move.start.file,
@@ -2676,9 +3342,9 @@ const board = {
 			this.highlightLastMove_sq(this.move.end, gameData.move_count - 1);
 			this.lastMovedSquareList.push(this.move.end);
 		}
-		this.move = { start: null, end: null, dir: 'U', squares: []};
+		this.move = { start: null, end: null, dir: 'U', squares: [] };
 	},
-	pushPieceOntoSquare: function(sq,pc){
+	pushPieceOntoSquare: function(sq, pc){
 		const st = this.get_stack(sq);
 		const top = this.top_of_stack(sq);
 		let flattened = null;
@@ -2699,8 +3365,12 @@ const board = {
 		pc.position.x = sq.position.x;
 
 		if(pc.isstanding){
-			if(pc.iscapstone){pc.position.y = sq_height/2 + capstone_height/2 + piece_height*st.length;}
-			else{pc.position.y = sq_height/2 + piece_size/2 + piece_height * st.length;}
+			const stackBaseY = sq_height / 2 + piece_height * st.length;
+			if(pc.iscapstone){pc.position.y = sq_height / 2 + capstone_height / 2 + piece_height * st.length;}
+			else{
+				pc.position.y = stackBaseY + piece_size / 2;
+				snapStandingToGround(pc, stackBaseY);
+			}
 		}
 		else{pc.position.y = sq_height + st.length * piece_height;}
 		pc.position.z = sq.position.z;
@@ -2718,6 +3388,7 @@ const board = {
 				pc.aoPlane.fadeIn = false;
 				pc.aoPlane.material.opacity = shouldShowAO ? 1.0 : 0;
 			}
+			recalcAOBottomOffset(pc);
 			// Update AO plane position to match piece
 			pc.aoPlane.position.set(pc.position.x, pc.position.y + pc.aoPlane.aoYOffset, pc.position.z);
 		}
@@ -2788,16 +3459,16 @@ const board = {
 		}
 	},
 	rightclick: function(){
-		settingscounter=(settingscounter+1)&15;
-		if(this.selected && gameData.move_count>=2){
+		settingscounter = (settingscounter + 1) & 15;
+		if(this.selected && gameData.move_count >= 2){
 			this.rotate(this.selected, true);
 		}
 		else if(this.selectedStack){
 			this.cancelMove();
 		}
 		else{
-			const pick=this.mousepick();
-			if(pick[0]=="piece"){
+			const pick = this.mousepick();
+			if(pick[0] == "piece"){
 				// Right-click on unplayed piece - select it as standing
 				// Only works on your turn, after move 2, and not at game end
 				if(!gameData.is_game_end && gameData.move_count >= 2 && checkIfMyMove()){
@@ -2828,22 +3499,22 @@ const board = {
 					}
 				}
 			}
-			else if(pick[0]=="board"){
-				const square=pick[1];
-				const stack=this.get_stack(square);
+			else if(pick[0] == "board"){
+				const square = pick[1];
+				const stack = this.get_stack(square);
 				let i;
-				for(i=0;i<scene.children.length;i++){
-					const obj=scene.children[i];
+				for(i = 0; i < scene.children.length; i++){
+					const obj = scene.children[i];
 					if(!obj.isboard && obj.onsquare){
-						obj.visible=false;
+						obj.visible = false;
 						// Also hide AO plane
 						if(obj.aoPlane){
-							obj.aoPlane.visible=false;
+							obj.aoPlane.visible = false;
 						}
 					}
 				}
-				for(i=0;i<stack.length;i++){
-					stack[i].visible=true;
+				for(i = 0; i < stack.length; i++){
+					stack[i].visible = true;
 					// Show AO plane based on position in stack and shadows setting
 					if(stack[i].aoPlane && shadowsEnabled){
 						const isBottom = (i === 0);
@@ -2851,13 +3522,13 @@ const board = {
 						stack[i].aoPlane.visible = isBottom || isStandingOnFlats;
 					}
 				}
-				this.totalhighlighted=square;
+				this.totalhighlighted = square;
 			}
 		}
 	},
 	remove_total_highlight: function(){
 		if(this.totalhighlighted !== null){
-			for(let i = 0;i < scene.children.length;i++){
+			for(let i = 0; i < scene.children.length; i++){
 				const obj = scene.children[i];
 				if(obj.isboard || !obj.onsquare){continue;}
 				obj.visible = true;
@@ -2873,13 +3544,13 @@ const board = {
 		}
 	},
 	rightup: function(){
-		settingscounter=(settingscounter+1)&15;
+		settingscounter = (settingscounter + 1) & 15;
 		console.log('right up');
 		this.remove_total_highlight();
 	},
 	//bring pieces to original positions,
 	resetpieces: function(){
-		for(let i = this.piece_objects.length - 1;i >= 0;i--){
+		for(let i = this.piece_objects.length - 1; i >= 0; i--){
 			// Remove AO plane from scene if it exists
 			if(this.piece_objects[i].aoPlane){
 				scene.remove(this.piece_objects[i].aoPlane);
@@ -2894,19 +3565,19 @@ const board = {
 		this.highlighted = null;
 		this.selected = null;
 		this.selectedStack = null;
-		this.move = { start: null, end: null, dir: 'U', squares: []};
+		this.move = { start: null, end: null, dir: 'U', squares: [] };
 
-		for(let i = 0;i < gameData.size;i++){
-			for(let j = 0;j < gameData.size;j++){
+		for(let i = 0; i < gameData.size; i++){
+			for(let j = 0; j < gameData.size; j++){
 				this.sq[i][j].length = 0;
 			}
 		}
 		this.addpieces();
 	},
 	resetBoardStacks: function(){
-		for(let i = 0;i < gameData.size;i++){
+		for(let i = 0; i < gameData.size; i++){
 			this.sq[i] = [];
-			for(let j = 0;j < gameData.size;j++){
+			for(let j = 0; j < gameData.size; j++){
 				this.sq[i][j] = [];
 			}
 		}
@@ -2914,13 +3585,13 @@ const board = {
 		this.addboard();
 		this.addpieces();
 	},
-	showmove: function(no,override){
-		if(gameData.move_count <= gameData.move_start || no>gameData.move_count || no<gameData.move_start || (gameData.move_shown === no && !override)){
+	showmove: function(no, override){
+		if(gameData.move_count <= gameData.move_start || no > gameData.move_count || no < gameData.move_start || (gameData.move_shown === no && !override)){
 			return;
 		}
 		const prevdontanim = dontanimate;
 		dontanimate = true;
-		console.log('showmove '+no);
+		console.log('showmove ' + no);
 		setShownMove(no);
 		this.unhighlight_sq();
 		this.resetpieces();
@@ -2947,7 +3618,7 @@ const board = {
 			this.highlightLastMove_sq(this.lastMovedSquareList.at(-1), gameData.move_count - 1);
 		}
 	},
-	sqrel: function(sq1,sq2){
+	sqrel: function(sq1, sq2){
 		const f1 = sq1.file;
 		const r1 = sq1.rank;
 		const f2 = sq2.file;
@@ -3048,7 +3719,7 @@ const board = {
 		this.selectedStack = [];
 		const objectsToAnimate = [];
 		// Pop pieces from the stack
-		for(let i = 0;stk.length > 0 && i < gameData.size;i++){
+		for(let i = 0; stk.length > 0 && i < gameData.size; i++){
 			const obj = stk.pop();
 			objectsToAnimate.push(obj);
 			this.selectedStack.push(obj);
@@ -3085,7 +3756,7 @@ const board = {
 		}
 		if(objectsToAnimate.length > 0){
 			animation.push(objectsToAnimate);
-			for(let i = 0;i < objectsToAnimate.length;i++){
+			for(let i = 0; i < objectsToAnimate.length; i++){
 				objectsToAnimate[i].position.y += stack_selection_height;
 			}
 			// Bottom piece of selected stack is the last one in the array
@@ -3105,9 +3776,9 @@ const board = {
 		const stk = this.selectedStack.reverse();
 		const lastsq = this.move.squares[this.move.squares.length - 1];
 		//push unselected stack elems onto last moved square
-		for(let i = 0;i < stk.length;i++){
-			this.unselectStackElem(stk[i], {animate: false});
-			this.pushPieceOntoSquare(lastsq,stk[i]);
+		for(let i = 0; i < stk.length; i++){
+			this.unselectStackElem(stk[i], { animate: false });
+			this.pushPieceOntoSquare(lastsq, stk[i]);
 			this.move.squares.push(lastsq);
 		}
 		this.selectedStack = null;
@@ -3123,11 +3794,11 @@ const board = {
 			const stackheight = piece.pieceNum % 10;
 			let finalY;
 			if(piece.iscapstone){
-				finalY = capstone_height/2 - sq_height/2;
+				finalY = capstone_height / 2 - sq_height / 2;
 			}
 			else{
 				// Flat position (standing pieces get flattened)
-				finalY = stackheight * piece_height + piece_height/2 - sq_height/2;
+				finalY = stackheight * piece_height + piece_height / 2 - sq_height / 2;
 			}
 			piece.position.y = finalY;
 			// Reset rotation to flat
@@ -3212,7 +3883,7 @@ const board = {
 				animation.push(allPieces, animType, isSameSquare ? 100 : 200, function(){self.hideSelectionShadow();});
 				animation.play();
 				this.selectedStack = null;
-				this.move = { start: null, end: null, dir: 'U', squares: []};
+				this.move = { start: null, end: null, dir: 'U', squares: [] };
 				this.unhighlight_sq();
 				return;
 			}
@@ -3286,7 +3957,7 @@ const board = {
 		if(!ts.iswhitepiece && gameData.my_color !== "white"){return true;}
 		return false;
 	},
-	move_stack_over: function(sq,stk,animate){
+	move_stack_over: function(sq, stk, animate){
 		if(stk.length === 0){
 			if(animate){animation.play();}
 			return;
@@ -3333,7 +4004,7 @@ const board = {
 		const deltaY = bottomPieceTargetY - currentBottomY;
 
 		if(animate){animation.push(stk);}
-		for(let i = 0;i < stk.length;i++){
+		for(let i = 0; i < stk.length; i++){
 			stk[i].position.x = sq.position.x;
 			stk[i].position.z = sq.position.z;
 			stk[i].position.y += deltaY;
@@ -3345,23 +4016,23 @@ const board = {
 		}
 	},
 	loadptn: function(parsed){
-		const size = parseInt(parsed.tags.Size,10);
+		const size = parseInt(parsed.tags.Size, 10);
 		if(!(size >= 3 && size <= 8)){
-			alert('warning','invalid PTN: invalid size');
+			alert('warning', 'invalid PTN: invalid size');
 			return;
 		}
 		this.clear();
-		this.create(size,+parsed.tags.Flats,+parsed.tags.Caps);
+		this.create(size, +parsed.tags.Flats, +parsed.tags.Caps);
 		this.initEmpty();
 
-		for(let ply = 0;ply < parsed.moves.length;ply++){
+		for(let ply = 0; ply < parsed.moves.length; ply++){
 			const move = parsed.moves[ply];
 			let match;
 			if((match = /^([SFC]?)([a-h])([0-8])$/.exec(move)) !== null){
 				const piece = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
-				const obj = this.getfromstack((piece === 'C'),isWhitePieceToMove());
+				const obj = this.getfromstack((piece === 'C'), isWhitePieceToMove());
 				if(!obj){
 					console.warn("bad PTN: too many pieces");
 					return;
@@ -3369,8 +4040,8 @@ const board = {
 				if(piece === 'S'){
 					this.standup(obj);
 				}
-				const hlt = this.get_board_obj(file,rank);
-				this.pushPieceOntoSquare(hlt,obj);
+				const hlt = this.get_board_obj(file, rank);
+				this.pushPieceOntoSquare(hlt, obj);
 			}
 			else if((match = /^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(move)) !== null){
 				const count = match[1];
@@ -3387,9 +4058,9 @@ const board = {
 					drops = drops.split('');
 				}
 				let tot = 0;
-				for(let i = 0;i < drops.length;i++){tot += parseInt(drops[i]);}
+				for(let i = 0; i < drops.length; i++){tot += parseInt(drops[i]);}
 
-				let df = 0,dr = 0;
+				let df = 0, dr = 0;
 				if(dir == '<'){
 					df = -1;
 				}
@@ -3403,19 +4074,19 @@ const board = {
 					dr = 1;
 				}
 
-				const s1 = this.get_board_obj(file,rank);
+				const s1 = this.get_board_obj(file, rank);
 				const stk = this.get_stack(s1);
 				const tstk = [];
 
-				for(let i = 0;i < tot;i++){tstk.push(stk.pop());}
+				for(let i = 0; i < tot; i++){tstk.push(stk.pop());}
 
-				for(let i = 0;i < drops.length;i++){
+				for(let i = 0; i < drops.length; i++){
 					const sq = this.get_board_obj(
 						s1.file + (i + 1) * df,
 						s1.rank + (i + 1) * dr
 					);
-					for(let j = 0;j < parseInt(drops[i]);j++){
-						this.pushPieceOntoSquare(sq,tstk.pop());
+					for(let j = 0; j < parseInt(drops[i]); j++){
+						this.pushPieceOntoSquare(sq, tstk.pop());
 					}
 				}
 			}
@@ -3452,20 +4123,20 @@ const board = {
 			playerToMove = 1;
 		}
 		else if(playerToMove != WHITE_PLAYER && playerToMove != BLACK_PLAYER){
-			alert('warning','Invalid TPS - player turn must be 1 or 2 - not ' + parsed.player);
+			alert('warning', 'Invalid TPS - player turn must be 1 or 2 - not ' + parsed.player);
 			return;
 		}
 		if(!moveNumber){
 			moveNumber = 1;
 		}
 		else if(moveNumber < 1){
-			alert('warning','Invalid TPS - move number must be positive integer');
+			alert('warning', 'Invalid TPS - move number must be positive integer');
 			return;
 		}
 		if(this.checkroadwin()){return;}
 		if(this.checksquaresover()){return;}
 
-		const assumedMoveCount = this.moveCountCalc(moveNumber,moveNumber,playerToMove);
+		const assumedMoveCount = this.moveCountCalc(moveNumber, moveNumber, playerToMove);
 
 		let infoMsg = "";
 		let playMsg = "";
@@ -3481,7 +4152,7 @@ const board = {
 		}
 		else if(p1Cnt == 1 && p2Cnt == 0){
 			// someone has placed a lone white piece
-			alert('danger','Invalid TPS - player 1 must place a black piece first.');
+			alert('danger', 'Invalid TPS - player 1 must place a black piece first.');
 			this.clear();
 			this.initEmpty();
 			return;
@@ -3499,7 +4170,7 @@ const board = {
 			// There is at least one of each piece on the board.
 			// The move count must be at least as high as 2 times
 			// the number of pieces that one player has on the board
-			const minMoves = this.moveCountCalc(p1Cnt,p2Cnt,playerToMove);
+			const minMoves = this.moveCountCalc(p1Cnt, p2Cnt, playerToMove);
 			if(assumedMoveCount < minMoves){
 				initCounters(minMoves);
 				infoMsg = "Initializing move number to correpond with the number of pieces on the board.";
@@ -3515,16 +4186,16 @@ const board = {
 		this.whitepiecesleft = this.tottiles + this.totcaps - p1Cnt;
 		this.blackpiecesleft = this.tottiles + this.totcaps - p2Cnt;
 		if(this.whitepiecesleft <= 0 && this.blackpiecesleft <= 0){
-			alert('danger','TPS nonsense - all pieces used up by both players');
+			alert('danger', 'TPS nonsense - all pieces used up by both players');
 			gameData.is_game_end = true;
 			return;
 		}
-		if(this.whitepiecesleft <=0){
+		if(this.whitepiecesleft <= 0){
 			gameData.result = "F-0";
 			gameOver('All white pieces used.');
 			return;
 		}
-		if(this.blackpiecesleft <=0){
+		if(this.blackpiecesleft <= 0){
 			gameData.result = "0-F";
 			gameOver('All black pieces used.');
 			return;
@@ -3532,33 +4203,33 @@ const board = {
 		notate("load");
 
 		this.showmove(gameData.move_shown);
-		alert('info',infoMsg + " " + playMsg);
+		alert('info', infoMsg + " " + playMsg);
 	},
 	// assumes that the movecount and movestart have been initialized meaningfully
 	// and 0,0 is OK
 	count_pieces_on_board: function(player){
 		let count = 0;
 		const pos = this.board_history[gameData.move_count - gameData.move_start];
-		for(let i=0;i < pos.length;i++){
+		for(let i = 0; i < pos.length; i++){
 			const pieces = pos[i];
 			// remember, upper case is white(p1) and lower case is black(p2),
-			for(let s=0;s < pieces.length;s++){
+			for(let s = 0; s < pieces.length; s++){
 				if(player === WHITE_PLAYER && pieces[s] === pieces[s].toUpperCase() ||
-					player === BLACK_PLAYER && pieces[s] === pieces[s].toLowerCase()){
+                    player === BLACK_PLAYER && pieces[s] === pieces[s].toLowerCase()){
 					count++;
 				}
 			}
 		}
 		return count;
 	},
-	moveCountCalc: function(p1Turns,p2Turns,playerToMove){
-		return Math.max(p1Turns,p2Turns)*2 + (playerToMove===2 ? 1 : 0);
+	moveCountCalc: function(p1Turns, p2Turns, playerToMove){
+		return Math.max(p1Turns, p2Turns) * 2 + (playerToMove === 2 ? 1 : 0);
 	},
 	pushInitialEmptyBoard: function(size){
 		const bp = [];
-		for(let i = 0;i < size;i++){
+		for(let i = 0; i < size; i++){
 			this.sq[i] = [];
-			for(let j = 0;j < size;j++){
+			for(let j = 0; j < size; j++){
 				this.sq[i][j] = [];
 				bp.push([]);
 			}
@@ -3602,39 +4273,39 @@ const board = {
 						// handle top of the stack
 						if(k === cellValues.pieces.length - 1){
 							if(cellValues.hasS){
-								const pc = this.getfromstack(false,cellValues.pieces[k] === 1);
+								const pc = this.getfromstack(false, cellValues.pieces[k] === 1);
 								if(pc === null || typeof pc === 'undefined'){
-									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
+									alert('danger', 'Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
 									return;
 								}
 								this.standup(pc);
-								this.pushPieceOntoSquare(square,pc);
+								this.pushPieceOntoSquare(square, pc);
 							}
 							else if(cellValues.hasC){
-								const pc = this.getfromstack(true,cellValues.pieces[k] === 1);
+								const pc = this.getfromstack(true, cellValues.pieces[k] === 1);
 								if(pc === null || typeof pc === 'undefined'){
-									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
+									alert('danger', 'Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
 									return;
 								}
-								this.pushPieceOntoSquare(square,pc);
+								this.pushPieceOntoSquare(square, pc);
 							}
 							else{
 								console.log('regular flat', cellValues.pieces[k]);
-								const pc = this.getfromstack(false,cellValues.pieces[k] === 1);
+								const pc = this.getfromstack(false, cellValues.pieces[k] === 1);
 								if(pc === null || typeof pc === 'undefined'){
-									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
+									alert('danger', 'Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
 									return;
 								}
-								this.pushPieceOntoSquare(square,pc);
+								this.pushPieceOntoSquare(square, pc);
 							}
 						}
 						else{
-							const pc = this.getfromstack(false,cellValues.pieces[k] === 1);
+							const pc = this.getfromstack(false, cellValues.pieces[k] === 1);
 							if(pc === null || typeof pc === 'undefined'){
-								alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
+								alert('danger', 'Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
 								return;
 							}
-							this.pushPieceOntoSquare(square,pc);
+							this.pushPieceOntoSquare(square, pc);
 						}
 					}
 				}
@@ -3647,7 +4318,7 @@ const board = {
 function onWindowResize(){
 	if(rendererdone){
 		renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
-		pixelratio=(window.devicePixelRatio||1)*scalelevel;
+		pixelratio = (window.devicePixelRatio || 1) * scalelevel;
 		renderer.setPixelRatio(pixelratio);
 		adjustsidemenu();
 		closeMobileMenu();
@@ -3743,7 +4414,7 @@ function init3DBoard(){
 	aoCtx.fillStyle = gradient;
 	aoCtx.fillRect(0, 0, 64, 64);
 	const aoTexture = new THREE.CanvasTexture(aoCanvas);
-	materials.aoShadow = new THREE.MeshBasicMaterial({map: aoTexture, transparent: true, depthWrite: false});
+	materials.aoShadow = new THREE.MeshBasicMaterial({ map: aoTexture, transparent: true, depthWrite: false });
 	// Enable shadow mapping on renderer
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -3779,7 +4450,7 @@ function init3DBoard(){
 	materials.updateBoardMaterials();
 	materials.updatePieceMaterials();
 
-	if(location.search.slice(0,6)===('?load=')){
+	if(location.search.slice(0, 6) === ('?load=')){
 		const text = decodeURIComponent(location.search.split('?load=')[1]);
 		document.getElementById("loadptntext").value = text;
 		document.title = "Tak Review";
