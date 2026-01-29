@@ -117,6 +117,7 @@ function sliderPieceSize(newSize){
 		if(fixedcamera || true){
 			generateCamera();
 		}
+		board.updatepieces();
 	}
 }
 

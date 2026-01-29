@@ -1805,28 +1805,78 @@ const board = {
 		// for all pieces...
 		for(let i = 0;i < this.piece_objects.length;i++){
 			const piece=this.piece_objects[i];
-			// Skip selected unplayed piece, don't reset its position
+			// Handle selected unplayed piece - update geometry, rotation, AND position
 			if(piece === this.selected && !piece.onsquare){
-				// Just update geometry and rotation for diagonal walls change
-				if(!piece.iscapstone){
+				if(piece.iscapstone){
+					piece.geometry = piece.iswhitepiece ? capGeometryW : capGeometryB;
+					piece.updateMatrix();
+					// Update position with selection offset
+					const posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
+					if(posAsWhite){
+						piece.position.set(
+							board.corner_position.endx + capstone_radius + stackOffsetFromBorder,
+							capstone_height/2-sq_height/2 + stack_selection_height,
+							board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
+						);
+					}
+					else{
+						piece.position.set(
+							board.corner_position.x - capstone_radius - stackOffsetFromBorder,
+							capstone_height/2-sq_height/2 + stack_selection_height,
+							board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2)
+						);
+					}
+					// Update AO plane for capstone
+					if(piece.aoPlane){
+						piece.aoPlane.aoYOffset = -capstone_height / 2 + aoConfig.yOffset;
+						piece.aoPlane.geometry.dispose();
+						const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
+						piece.aoPlane.geometry = new THREE.PlaneGeometry(aoRadius * 2, aoRadius * 2);
+						piece.aoPlane.material.map = getCapAOTexture();
+						piece.aoPlane.material.needsUpdate = true;
+						piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
+					}
+				}
+				else{
 					const wasStanding = piece.isstanding;
 					piece.rotation.set(0,0,0);
 					piece.isstanding = false;
-					if(piece.iswhitepiece){
-						piece.geometry = geometryW;
-					}
-					else{
-						piece.geometry = geometryB;
-					}
+					piece.geometry = piece.iswhitepiece ? geometryW : geometryB;
 					piece.updateMatrix();
 					if(wasStanding){
 						piece.isstanding = true;
-						// Rotate black walls 90 degrees (before X rotation)
 						if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
 						piece.rotateX(-Math.PI / 2);
 						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
-						// Update AO plane rotation and texture for wall
 						setAOToWall(piece);
+					}
+					else if(piece.aoPlane){
+						resetAOToFlat(piece);
+					}
+					// Update position with selection offset
+					const stackno = Math.floor(piece.pieceNum / 10);
+					const stackheight = piece.pieceNum % 10;
+					// Standing stones float above the stack (stackheight pieces below), flats sit in the stack
+					const baseY = wasStanding
+						? (stackheight*piece_height + piece_size/2 - sq_height/2)
+						: (stackheight*piece_height + piece_height/2 - sq_height/2);
+					const posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
+					if(posAsWhite){
+						piece.position.set(
+							board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
+							baseY + stack_selection_height,
+							board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+						);
+					}
+					else{
+						piece.position.set(
+							board.corner_position.x - stackOffsetFromBorder - piece_size/2,
+							baseY + stack_selection_height,
+							board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+						);
+					}
+					if(piece.aoPlane){
+						piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
 					}
 				}
 				continue;
@@ -1841,6 +1891,15 @@ const board = {
 					piece.geometry = capGeometryB;
 				}
 				piece.updateMatrix();
+				// Update AO plane for capstone
+				if(piece.aoPlane){
+					piece.aoPlane.aoYOffset = -capstone_height / 2 + aoConfig.yOffset;
+					piece.aoPlane.geometry.dispose();
+					const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
+					piece.aoPlane.geometry = new THREE.PlaneGeometry(aoRadius * 2, aoRadius * 2);
+					piece.aoPlane.material.map = getCapAOTexture();
+					piece.aoPlane.material.needsUpdate = true;
+				}
 			}
 			else{
 				// Track if piece was standing before reset
@@ -1870,8 +1929,31 @@ const board = {
 					// Update AO plane rotation and texture for wall
 					setAOToWall(piece);
 				}
+				// Update AO plane for flat pieces (walls already handled by setAOToWall)
+				else if(piece.aoPlane){
+					resetAOToFlat(piece);
+				}
 			}
-			if(!piece.onsquare){
+			// Update Y position for pieces on squares (piece_size may have changed)
+			if(piece.onsquare){
+				const sq = piece.onsquare;
+				const st = this.get_stack(sq);
+				const stackIndex = st.indexOf(piece);
+				if(piece.iscapstone){
+					piece.position.y = sq_height/2 + capstone_height/2 + piece_height * stackIndex;
+				}
+				else if(piece.isstanding){
+					piece.position.y = sq_height/2 + piece_size/2 + piece_height * stackIndex;
+				}
+				else{
+					piece.position.y = sq_height + stackIndex * piece_height;
+				}
+				// Update AO plane position
+				if(piece.aoPlane){
+					piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
+				}
+			}
+			else if(!piece.onsquare){
 				const selectionOffset = (piece === this.selected) ? stack_selection_height : 0;
 				if(piece.iscapstone){
 					if(piece.iswhitepiece){
@@ -1909,6 +1991,10 @@ const board = {
 							board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
 						);
 					}
+				}
+				// Update AO plane position for unplayed pieces
+				if(piece.aoPlane){
+					piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
 				}
 			}
 		}
@@ -2966,7 +3052,50 @@ const board = {
 	},
 	select: function(obj){
 		animation.push([obj]);
-		obj.position.y += stack_selection_height;
+		// Reposition unplayed pieces to correct location before lifting
+		// (piece_size may have changed since piece was created)
+		if(!obj.onsquare){
+			if(obj.iscapstone){
+				const posAsWhite = obj.positionAsWhite !== undefined ? obj.positionAsWhite : obj.iswhitepiece;
+				if(posAsWhite){
+					obj.position.set(
+						board.corner_position.endx + capstone_radius + stackOffsetFromBorder,
+						capstone_height/2-sq_height/2 + stack_selection_height,
+						board.corner_position.z + capstone_radius + obj.pieceNum*(stack_dist+capstone_radius*2)
+					);
+				}
+				else{
+					obj.position.set(
+						board.corner_position.x - capstone_radius - stackOffsetFromBorder,
+						capstone_height/2-sq_height/2 + stack_selection_height,
+						board.corner_position.endz - capstone_radius - obj.pieceNum*(stack_dist+capstone_radius*2)
+					);
+				}
+			}
+			else{
+				const stackno = Math.floor(obj.pieceNum / 10);
+				const stackheight = obj.pieceNum % 10;
+				const baseY = obj.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
+				const posAsWhite = obj.positionAsWhite !== undefined ? obj.positionAsWhite : obj.iswhitepiece;
+				if(posAsWhite){
+					obj.position.set(
+						board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
+						baseY + stack_selection_height,
+						board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+					);
+				}
+				else{
+					obj.position.set(
+						board.corner_position.x - stackOffsetFromBorder - piece_size/2,
+						baseY + stack_selection_height,
+						board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+					);
+				}
+			}
+		}
+		else{
+			obj.position.y += stack_selection_height;
+		}
 		this.selected = obj;
 		this.showSelectionShadow(obj);
 		// Fade out AO shadow when lifting
