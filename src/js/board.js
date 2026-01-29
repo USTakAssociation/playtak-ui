@@ -13,7 +13,7 @@ let borderOffset = 27;
 let stackOffsetFromBorder = 50;
 let letter_size = 12;
 let diagonal_walls = false;
-let crazy_martin_mode = true;
+let crazy_martin_mode = false;
 let table_width = 1280;
 let table_depth = 920;
 let table_height = 50;
@@ -262,7 +262,7 @@ function updatePieceAOVisibility(piece){
 }
 
 
-// --- AO footprint helpers (non-square piece support) ---
+// AO footprint helpers (non-square piece support)
 function makeRectAOShape(width, depth){
 	const s = new THREE.Shape();
 	s.moveTo(-width/2, -depth/2);
@@ -273,12 +273,12 @@ function makeRectAOShape(width, depth){
 	return s;
 }
 
-// White pieces are tapered toward +Z (front). Approximate the contact footprint as a trapezoid.
+// White pieces are trapazoids.
 function makeWhiteFlatAOShape(paddedSize){
 	const backW = paddedSize;
-	const frontW = paddedSize * 0.8;
+	const frontW = paddedSize * 0.66;
 	const zBack = -paddedSize/2;
-	const zFront = (paddedSize/2) * 0.8;
+	const zFront = (paddedSize/2) * 0.66;
 
 	const s = new THREE.Shape();
 	s.moveTo(-backW/2, zBack);
@@ -289,7 +289,7 @@ function makeWhiteFlatAOShape(paddedSize){
 	return s;
 }
 
-// Black pieces are a disk with a missing 90° wedge. Approximate the footprint with a notched circle.
+// Black pieces are a disk with a missing 90° wedge
 function makeNotchedDiskAOShape(radius, notchAngle, segments){
 	const notch = notchAngle !== undefined ? notchAngle : (Math.PI/2);
 	const segs = segments !== undefined ? segments : 48;
@@ -314,7 +314,6 @@ function makeNotchedDiskAOShape(radius, notchAngle, segments){
 }
 
 function applyPlanarUVsToGeometry(geom){
-	// Supports both THREE.Geometry and THREE.BufferGeometry
 	if(geom && geom.isBufferGeometry){
 		geom.computeBoundingBox();
 		const bb = geom.boundingBox;
@@ -334,7 +333,6 @@ function applyPlanarUVsToGeometry(geom){
 		return;
 	}
 
-	// THREE.Geometry path
 	if(!geom || !geom.vertices || !geom.faces){return;}
 	geom.computeBoundingBox();
 	const bb = geom.boundingBox;
@@ -358,7 +356,6 @@ function applyPlanarUVsToGeometry(geom){
 }
 
 // Reset AO plane to flat piece shape and texture
-
 function resetAOToFlat(piece){
 	if(!piece.aoPlane){return;}
 
@@ -377,7 +374,7 @@ function resetAOToFlat(piece){
 		tex = getCapAOTexture();
 	}
 	else if(piece.iswhitepiece){
-		// White flats: tapered trapezoid footprint (matches the piece taper toward +Z)
+		// White flats: tapered trapezoid footprint
 		const s = piece_size + aoPadding;
 		if(crazy_martin_mode){
 			shape = makeWhiteFlatAOShape(s);
@@ -435,7 +432,6 @@ function setAOToWall(piece){
 	const aoLength = piece_size + aoPadding;
 	const aoThickness = piece_height + aoPadding;
 
-	// Rectangle (not square): better for both tapered white walls and notched black walls.
 	const shape = makeRectAOShape(aoLength, aoThickness);
 
 	const newGeom = new THREE.ShapeGeometry(shape, 16);
@@ -1184,7 +1180,7 @@ const pieceFactory = {
 	}
 };
 
-
+// Used to subdivide crazy martin geometries for better normals and lighting
 function subdivideGeometry(geometry, iterations){
 	for(let iter = 0; iter < iterations; iter++){
 		const newVertices = [...geometry.vertices];
