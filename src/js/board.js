@@ -2505,6 +2505,7 @@ const board = {
 				piece.geometry = piece.iswhitepiece ? capGeometryW : capGeometryB;
 			}
 			else{
+				resetAOToFlat(piece);
 				const wasStanding = piece.isstanding;
 
 				// Reset rotation first
@@ -2521,9 +2522,6 @@ const board = {
 					if(piece.onsquare){
 						const new_y = sq_height / 2 + piece_height * (board.get_stack(piece.onsquare).indexOf(piece));
 						snapStandingToGround(piece, new_y);
-					}
-					else{
-
 					}
 				}
 			}
@@ -2547,6 +2545,7 @@ const board = {
 					}
 				}
 				else{
+					resetAOToFlat(piece);
 					const stackno = Math.floor(piece.pieceNum / 10);
 					const stackheight = piece.pieceNum % 10;
 
@@ -2567,6 +2566,14 @@ const board = {
 							board.corner_position.x - stackOffsetFromBorder - piece_size / 2,
 							baseY + selectionOffset,
 							board.corner_position.z + piece_size / 2 + stackno * (stack_dist + piece_size)
+						);
+					}
+					// move ao plane to match new y position
+					if(piece.aoPlane){
+						piece.aoPlane.position.set(
+							piece.position.x,
+							piece.position.y + piece.aoPlane.aoYOffset,
+							piece.position.z
 						);
 					}
 				}
