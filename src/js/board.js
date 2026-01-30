@@ -829,6 +829,12 @@ const boardFactory = {
 	}
 };
 
+// When auto-rotate is disabled, invert z-positions of player 2's (black) pieces
+// so they appear the same as player 1's layout (just on the opposite side of the board)
+function shouldInvertBlackPiecesZ(){
+	return localStorage.getItem('auto_rotate') === 'false';
+}
+
 const pieceFactory = {
 	makePiece: function(playerNum,pieceNum,scene){
 		const materialMine = (playerNum === WHITE_PLAYER ? materials.white_piece : materials.black_piece);
@@ -843,6 +849,7 @@ const pieceFactory = {
 		const firstToPlayPieceNum = board.tottiles - 1;
 		const isFirstToPlay = (pieceNum === firstToPlayPieceNum);
 		const positionAsWhite = (playerNum === WHITE_PLAYER) !== isFirstToPlay;
+		const invertBlackZ = shouldInvertBlackPiecesZ();
 		if(positionAsWhite){
 			piece.position.set(
 				board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
@@ -851,10 +858,14 @@ const pieceFactory = {
 			);
 		}
 		else{
+			// When invertBlackZ, mirror white's layout: flats at endz decreasing
+			const zPos = invertBlackZ
+				? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+				: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
 			piece.position.set(
 				board.corner_position.x - stackOffsetFromBorder - piece_size/2,
 				stackheight*piece_height+piece_height/2-sq_height/2,
-				board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+				zPos
 			);
 		}
 
@@ -882,6 +893,7 @@ const pieceFactory = {
 
 		// the capstones go at the other end of the row
 		let piece;
+		const invertBlackZ = shouldInvertBlackPiecesZ();
 		if(playerNum === WHITE_PLAYER){
 			piece = new THREE.Mesh(geometry,materials.white_cap);
 			piece.position.set(
@@ -893,10 +905,14 @@ const pieceFactory = {
 		}
 		else{
 			piece = new THREE.Mesh(geometry,materials.black_cap);
+			// When invertBlackZ, mirror white's layout: caps at z increasing
+			const zPos = invertBlackZ
+				? board.corner_position.z + capstone_radius + capNum*(stack_dist+capstone_radius*2)
+				: board.corner_position.endz - capstone_radius - capNum*(stack_dist+capstone_radius*2);
 			piece.position.set(
 				board.corner_position.x - capstone_radius - stackOffsetFromBorder,
 				capstone_height/2-sq_height/2,
-				board.corner_position.endz - capstone_radius - capNum*(stack_dist+capstone_radius*2)
+				zPos
 			);
 			piece.iswhitepiece = false;
 		}
@@ -1584,6 +1600,14 @@ const board = {
 			scene.add(shadowLight);
 			scene.add(shadowLight.target);
 		}
+		// Reset board orientation so rotation logic works correctly on rematch
+		if(this.boardside === "black"){
+			this.boardside = "white";
+			camera.position.z = -camera.position.z;
+			camera.position.x = -camera.position.x;
+			controls.center.z = -controls.center.z;
+			controls.center.x = -controls.center.x;
+		}
 	},
 	newOnlinegame: function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
 		this.clear();
@@ -1820,10 +1844,14 @@ const board = {
 						);
 					}
 					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
+							: board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2);
 						piece.position.set(
 							board.corner_position.x - capstone_radius - stackOffsetFromBorder,
 							capstone_height/2-sq_height/2 + stack_selection_height,
-							board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2)
+							zPos
 						);
 					}
 					// Update AO plane for capstone
@@ -1845,11 +1873,14 @@ const board = {
 					piece.updateMatrix();
 					if(wasStanding){
 						piece.isstanding = true;
+						// Rotate black walls 90 degrees (before X rotation)
 						if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
 						piece.rotateX(-Math.PI / 2);
 						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
+						// Update AO plane rotation and texture for wall
 						setAOToWall(piece);
 					}
+					// Update AO plane for flat pieces (walls already handled by setAOToWall)
 					else if(piece.aoPlane){
 						resetAOToFlat(piece);
 					}
@@ -1869,12 +1900,17 @@ const board = {
 						);
 					}
 					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+							: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
 						piece.position.set(
 							board.corner_position.x - stackOffsetFromBorder - piece_size/2,
 							baseY + stack_selection_height,
-							board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+							zPos
 						);
 					}
+					// Update AO plane position
 					if(piece.aoPlane){
 						piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
 					}
@@ -1964,10 +2000,14 @@ const board = {
 						);
 					}
 					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
+							: board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2);
 						piece.position.set(
 							board.corner_position.x - capstone_radius - stackOffsetFromBorder,
 							capstone_height/2-sq_height/2 + selectionOffset,
-							board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2)
+							zPos
 						);
 					}
 				}
@@ -1985,10 +2025,14 @@ const board = {
 						);
 					}
 					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+							: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
 						piece.position.set(
 							board.corner_position.x - stackOffsetFromBorder - piece_size/2,
 							baseY + selectionOffset,
-							board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+							zPos
 						);
 					}
 				}
@@ -3069,10 +3113,14 @@ const board = {
 					);
 				}
 				else{
+					const invertBlackZ = shouldInvertBlackPiecesZ();
+					const zPos = invertBlackZ
+						? board.corner_position.z + capstone_radius + obj.pieceNum*(stack_dist+capstone_radius*2)
+						: board.corner_position.endz - capstone_radius - obj.pieceNum*(stack_dist+capstone_radius*2);
 					obj.position.set(
 						board.corner_position.x - capstone_radius - stackOffsetFromBorder,
 						capstone_height/2-sq_height/2 + stack_selection_height,
-						board.corner_position.endz - capstone_radius - obj.pieceNum*(stack_dist+capstone_radius*2)
+						zPos
 					);
 				}
 			}
@@ -3089,10 +3137,14 @@ const board = {
 					);
 				}
 				else{
+					const invertBlackZ = shouldInvertBlackPiecesZ();
+					const zPos = invertBlackZ
+						? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+						: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
 					obj.position.set(
 						board.corner_position.x - stackOffsetFromBorder - piece_size/2,
 						baseY + stack_selection_height,
-						board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+						zPos
 					);
 				}
 			}
