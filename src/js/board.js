@@ -85,14 +85,15 @@ const aoConfig = {
 };
 
 // Create a blurred AO shadow texture using canvas blur filter
-function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
+function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape, customBlur){
 	const canvas = document.createElement('canvas');
 	canvas.width = width;
 	canvas.height = height;
 	const ctx = canvas.getContext('2d');
 
+	const blur = customBlur !== undefined ? customBlur : aoConfig.blur;
 	ctx.clearRect(0, 0, width, height);
-	ctx.filter = 'blur(' + aoConfig.blur + 'px)';
+	ctx.filter = 'blur(' + blur + 'px)';
 	ctx.fillStyle = 'rgba(0, 0, 0, ' + aoConfig.opacity + ')';
 	const centerX = width / 2;
 	const centerY = height / 2;
@@ -1674,7 +1675,9 @@ const board = {
 		}
 		// Create AO shadow with blurred square texture
 		const boardSize = sq_size * gameData.size + border_size * 2;
-		const aoSize = boardSize + piece_size * aoConfig.padding;
+		const referenceSize = 6;
+		const scaledPadding = piece_size * aoConfig.padding * (gameData.size / referenceSize);
+		const aoSize = boardSize + scaledPadding;
 		this.boardAO = createAOPlane(getBoardAOTexture(), aoSize, aoSize, 0);
 		this.boardAO.position.set(0, -sq_height / 2 + aoConfig.yOffset, 0);
 		this.boardAO.ispassive = true;
