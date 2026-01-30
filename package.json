@@ -3,7 +3,7 @@
 	"version": "1.4.0",
 	"description": "playtak web client",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "vitest run",
 		"dev": "http-server ./src -p 3000 -o -c-1",
 		"lint": "eslint ./src --ext .js --ignore-pattern './src/js/thirdparty/*' --ignore-pattern './src/fonts/*'"
 	},
@@ -24,6 +24,7 @@
 	"homepage": "https://github.com/USTakAssociation/playtak-ui#readme",
 	"devDependencies": {
 		"eslint": "^9.31.0",
-		"http-server": "^14.1.1"
+		"http-server": "^14.1.1",
+		"vitest": "^4.0.18"
 	}
 }

@@ -2178,6 +2178,10 @@ const board = {
 						goodmove=true;
 					}
 					if(goodmove){
+						// Stop any playing animation to prevent race conditions when clicking rapidly
+						if(animation.playing){
+							animation.stop();
+						}
 						const obj = this.selectedStack.pop();
 						const isLastPiece = this.selectedStack.length === 0;
 						const isSameSquare = pick[1] === this.move.squares[this.move.squares.length - 1];
@@ -3299,17 +3303,34 @@ const board = {
 			const isSameSquare = startSq === lastSq;
 			let allPieces = [];
 
-			// Collect pieces from dropped squares (in order they were dropped)
+			// Collect pieces from dropped squares
+			// For each unique square, we need to pop pieces and reverse them
+			// (because popping gives reverse order of how they were dropped on that square)
+			// But across different squares, we keep the forward order
+			let prevSq = null;
+			let currentSquarePieces = [];
 			for(let i = 1; i < this.move.squares.length; i++){
 				const sq = this.move.squares[i];
 				if(sq !== startSq){
+					// If we've moved to a new square, flush the previous square's pieces
+					if(prevSq !== null && sq !== prevSq){
+						currentSquarePieces.reverse();
+						allPieces = allPieces.concat(currentSquarePieces);
+						currentSquarePieces = [];
+					}
 					const stack = this.get_stack(sq);
 					if(stack.length > 0){
 						const piece = stack.pop();
 						piece.onsquare = null;
-						allPieces.push(piece);
+						currentSquarePieces.push(piece);
 					}
+					prevSq = sq;
 				}
+			}
+			// Flush the last square's pieces
+			if(currentSquarePieces.length > 0){
+				currentSquarePieces.reverse();
+				allPieces = allPieces.concat(currentSquarePieces);
 			}
 
 			// Collect pieces still in selectedStack (top to bottom order in selectedStack)
