@@ -1255,6 +1255,7 @@ const animation = {
 	queue: [], // { objects, from, to, fromRot, toRot, type, duration, onComplete }
 	playing: false,
 	pendingFrom: null, // stores the 'from' positions/rotations for the next animation
+	pendingCallbacks: [], // callbacks waiting for animation to complete
 
 	push: function(objects, type, duration, onComplete){
 		const positions = objects.map(function(obj){return obj.position.clone();});
@@ -1351,10 +1352,25 @@ const animation = {
 				this.onAllComplete = null;
 				callback();
 			}
+			// Call any pending callbacks waiting for animation to complete
+			while(this.pendingCallbacks.length > 0){
+				const cb = this.pendingCallbacks.shift();
+				cb();
+			}
 		}
 		else{
 			const frame = this.queue.shift();
 			this.playFrame(frame, performance.now());
+		}
+	},
+
+	// Call callback when current animation completes (or immediately if not playing)
+	whenComplete: function(callback){
+		if(!this.playing || !animationsEnabled){
+			callback();
+		}
+		else{
+			this.pendingCallbacks.push(callback);
 		}
 	},
 
@@ -1378,6 +1394,11 @@ const animation = {
 			}
 		}
 		this.onAllComplete = null;
+		// Call pending callbacks since animation is now complete
+		while(this.pendingCallbacks.length > 0){
+			const cb = this.pendingCallbacks.shift();
+			cb();
+		}
 	},
 
 	playFrame: function(frame, startTime){
@@ -1597,6 +1618,7 @@ const board = {
 			scene.remove(scene.children[i]);
 		}
 		this.lastMovedSquareList = [];
+		animation.pendingCallbacks = [];
 		// Re-add shadow light after clearing scene
 		if(shadowLight){
 			scene.add(shadowLight);

@@ -708,9 +708,12 @@ var server = {
 					stopTime();
 					document.title = "Play Tak";
 					if(!is2DBoard || !gameData.is_game_end){
-						handleGameOverState();
-						gameOver();
-						$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw");
+						// Wait for animation to complete before showing game-over dialog
+						animation.whenComplete(function(){
+							handleGameOverState();
+							gameOver();
+							$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw");
+						});
 					}
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
@@ -728,16 +731,16 @@ var server = {
 						gameData.result = "0-1";
 					}
 
-					let msg = "Game abandoned by " + spl[2] + ".";
-					if(!gameData.observing){
-						msg += " You win!";
-					}
+					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
 					stopTime();
 
-					$("#gameoveralert-text").html(msg);
-					$("#gameoveralert").modal("show");
-					gameOver();
+					// Wait for animation to complete before showing game-over dialog
+					animation.whenComplete(function(){
+						$("#gameoveralert-text").html(msg);
+						$("#gameoveralert").modal("show");
+						gameOver();
+					});
 				}
 			}
 		}
