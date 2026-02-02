@@ -258,16 +258,16 @@ describe('Animation System', () => {
 		animation.simulatePartialAnimation(0.5);
 
 		// Verify piece1 is at intermediate position before the fix kicks in
-		const intermediateY = piece1.position.y;
-		console.log('Before second drop - piece1 Y:', intermediateY);
+		// const intermediateY = piece1.position.y;
+		// console.log('Before second drop - piece1 Y:', intermediateY);
 
 		// When we drop the second piece WITH the fix, animation.stop() is called FIRST
 		// This should jump piece1 to its FINAL position (y=15) before anything else
-		const piece2 = dropPiece(true);
+		dropPiece(true);
 
 		// After the second drop completes its setup, piece1 should be at final position
 		// because animation.stop() was called at the start of dropPiece
-		console.log('After second drop - piece1 Y:', piece1.position.y);
+		// console.log('After second drop - piece1 Y:', piece1.position.y);
 
 		// THE KEY ASSERTION: piece1 should be at its final position (15)
 		// because animation.stop() jumped it there before the second drop processed
