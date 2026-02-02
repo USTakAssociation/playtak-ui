@@ -1596,6 +1596,7 @@ const board = {
 		for(let i = scene.children.length - 1;i >= 0;i--){
 			scene.remove(scene.children[i]);
 		}
+		this.lastMovedSquareList = [];
 		// Re-add shadow light after clearing scene
 		if(shadowLight){
 			scene.add(shadowLight);
@@ -2178,7 +2179,7 @@ const board = {
 						this.squarename(hlt.file,hlt.rank)
 					);
 					this.highlightLastMove_sq(hlt, gameData.move_count);
-					this.lastMovedSquareList.push(hlt);
+					this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 
 					const sqname = this.squarename(hlt.file,hlt.rank);
 					let msg = "P " + sqname;
@@ -2478,7 +2479,7 @@ const board = {
 			animation.play(playMoveSound);
 		}
 		this.highlightLastMove_sq(hlt, gameData.move_count);
-		this.lastMovedSquareList.push(hlt);
+		this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 
 		this.notatePmove(file + rank,caporwall);
 		this.incmovecnt();
@@ -2511,16 +2512,19 @@ const board = {
 		// Collect all pieces and their target squares first
 		const allPieces = [];
 		const pieceTargets = [];
+		let finalSq = null;
 		for(let i = 0;i < nums.length;i++){
 			const sq = this.get_board_obj(s1.file + (i + 1) * fi,s1.rank + (i + 1) * ri);
 			for(let j = 0;j < nums[i];j++){
 				const piece = tstk.pop();
 				allPieces.push(piece);
 				pieceTargets.push(sq);
-				this.highlightLastMove_sq(sq, gameData.move_count);
-				this.lastMovedSquareList.push(sq);
 			}
+			finalSq = sq;
 		}
+		// Highlight and record only the final destination square (once per move)
+		this.highlightLastMove_sq(finalSq, gameData.move_count);
+		this.lastMovedSquareList.push({file: finalSq.file, rank: finalSq.rank});
 
 		if(skipAnimation || oldpos !== -1){
 			// Just place pieces without animation (loading history or viewing earlier position)
@@ -2811,7 +2815,7 @@ const board = {
 			}
 			this.incmovecnt();
 			this.highlightLastMove_sq(this.move.end, gameData.move_count - 1);
-			this.lastMovedSquareList.push(this.move.end);
+			this.lastMovedSquareList.push({file: this.move.end.file, rank: this.move.end.rank});
 		}
 		this.move = { start: null, end: null, dir: 'U', squares: []};
 	},
@@ -3066,7 +3070,8 @@ const board = {
 		this.unHighlightLastMove_sq();
 		if(no > gameData.move_start && this.lastMovedSquareList.length >= no - gameData.move_start){
 			// Pass the move number (no - 1) since we're showing the move that led to position 'no'
-			this.highlightLastMove_sq(this.lastMovedSquareList[no - gameData.move_start - 1], no - 1);
+			const coords = this.lastMovedSquareList[no - gameData.move_start - 1];
+			this.highlightLastMove_sq(this.get_board_obj(coords.file, coords.rank), no - 1);
 		}
 		dontanimate = prevdontanim;
 	},
@@ -3081,7 +3086,8 @@ const board = {
 		this.lastMovedSquareList.pop();
 		// Highlight the previous move if there is one
 		if(this.lastMovedSquareList.length > 0){
-			this.highlightLastMove_sq(this.lastMovedSquareList.at(-1), gameData.move_count - 1);
+			const coords = this.lastMovedSquareList.at(-1);
+			this.highlightLastMove_sq(this.get_board_obj(coords.file, coords.rank), gameData.move_count - 1);
 		}
 	},
 	sqrel: function(sq1,sq2){
