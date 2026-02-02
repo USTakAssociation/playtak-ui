@@ -45,12 +45,12 @@ const piecesMap = {
 	"blossom_Levi_Huillet": { id: "blossom_Levi_Huillet", name: "Blossom by Levi", multi_file: false, fix_position: true, file: "blossom_Levi_Huillet", order: 7 },
 	"hummingbird_Levi_Huillet": { id: "hummingbird_Levi_Huillet", name: "Hummingbird by Levi", multi_file: false, fix_position: true, file: "hummingbird_Levi_Huillet", order: 7 },
 	"stained_glass_venat": { id: "stained_glass_venat", name: "Stained Glass by Venat", multi_file: false, fix_position: true, file: "stained_glass_venat", order: 8 },
-	"white_coral": { id: "white_coral", name: "White Coral", multi_file: true, fix_position: false, file: "white_coral_pieces", order: 9 },
-	"white_simple": { id: "white_simple", name: "Plain White", multi_file: true, fix_position: false, file: "white_simple_pieces", order: 10 },
-	"white_marble": { id: "white_marble", name: "White Marble", multi_file: false, fix_position: true, file: "white_marble", order: 11 },
-	"red_marble": { id: "red_marble", name: "Red Marble", multi_file: false, fix_position: true, file: "red_marble", order: 12 },
+	"red_marble": { id: "red_marble", name: "Red Marble", multi_file: false, fix_position: true, file: "red_marble", order: 9 },
+	"white_simple": { id: "white_simple", name: "Sand", multi_file: true, fix_position: false, file: "white_simple_pieces", order: 10 },
+	"black_simple": { id: "black_simple", name: "Mud", multi_file: true, fix_position: false, file: "black_simple_pieces", order: 11 },
+	"white_coral": { id: "white_coral", name: "White Coral", multi_file: true, fix_position: false, file: "white_coral_pieces", order: 12 },
 	"black_pietersite": { id: "black_pietersite", name: "Black Pietersite", multi_file: true, fix_position: false, file: "black_pietersite_pieces", order: 13 },
-	"black_simple": { id: "black_simple", name: "Plain Black", multi_file: true, fix_position: false, file: "black_simple_pieces", order: 14 },
+	"white_marble": { id: "white_marble", name: "White Marble", multi_file: false, fix_position: true, file: "white_marble", order: 14 },
 	"black_marble": { id: "black_marble", name: "Black Marble", multi_file: false, fix_position: true, file: "black_marble", order: 15 }
 };
 
