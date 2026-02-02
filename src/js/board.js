@@ -85,14 +85,15 @@ const aoConfig = {
 };
 
 // Create a blurred AO shadow texture using canvas blur filter
-function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape){
+function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape, customBlur){
 	const canvas = document.createElement('canvas');
 	canvas.width = width;
 	canvas.height = height;
 	const ctx = canvas.getContext('2d');
 
+	const blur = customBlur !== undefined ? customBlur : aoConfig.blur;
 	ctx.clearRect(0, 0, width, height);
-	ctx.filter = 'blur(' + aoConfig.blur + 'px)';
+	ctx.filter = 'blur(' + blur + 'px)';
 	ctx.fillStyle = 'rgba(0, 0, 0, ' + aoConfig.opacity + ')';
 	const centerX = width / 2;
 	const centerY = height / 2;
@@ -829,6 +830,12 @@ const boardFactory = {
 	}
 };
 
+// When auto-rotate is disabled, invert z-positions of player 2's (black) pieces
+// so they appear the same as player 1's layout (just on the opposite side of the board)
+function shouldInvertBlackPiecesZ(){
+	return localStorage.getItem('auto_rotate') === 'false';
+}
+
 const pieceFactory = {
 	makePiece: function(playerNum,pieceNum,scene){
 		const materialMine = (playerNum === WHITE_PLAYER ? materials.white_piece : materials.black_piece);
@@ -843,6 +850,7 @@ const pieceFactory = {
 		const firstToPlayPieceNum = board.tottiles - 1;
 		const isFirstToPlay = (pieceNum === firstToPlayPieceNum);
 		const positionAsWhite = (playerNum === WHITE_PLAYER) !== isFirstToPlay;
+		const invertBlackZ = shouldInvertBlackPiecesZ();
 		if(positionAsWhite){
 			piece.position.set(
 				board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
@@ -851,10 +859,14 @@ const pieceFactory = {
 			);
 		}
 		else{
+			// When invertBlackZ, mirror white's layout: flats at endz decreasing
+			const zPos = invertBlackZ
+				? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+				: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
 			piece.position.set(
 				board.corner_position.x - stackOffsetFromBorder - piece_size/2,
 				stackheight*piece_height+piece_height/2-sq_height/2,
-				board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+				zPos
 			);
 		}
 
@@ -882,6 +894,7 @@ const pieceFactory = {
 
 		// the capstones go at the other end of the row
 		let piece;
+		const invertBlackZ = shouldInvertBlackPiecesZ();
 		if(playerNum === WHITE_PLAYER){
 			piece = new THREE.Mesh(geometry,materials.white_cap);
 			piece.position.set(
@@ -893,10 +906,14 @@ const pieceFactory = {
 		}
 		else{
 			piece = new THREE.Mesh(geometry,materials.black_cap);
+			// When invertBlackZ, mirror white's layout: caps at z increasing
+			const zPos = invertBlackZ
+				? board.corner_position.z + capstone_radius + capNum*(stack_dist+capstone_radius*2)
+				: board.corner_position.endz - capstone_radius - capNum*(stack_dist+capstone_radius*2);
 			piece.position.set(
 				board.corner_position.x - capstone_radius - stackOffsetFromBorder,
 				capstone_height/2-sq_height/2,
-				board.corner_position.endz - capstone_radius - capNum*(stack_dist+capstone_radius*2)
+				zPos
 			);
 			piece.iswhitepiece = false;
 		}
@@ -1584,6 +1601,14 @@ const board = {
 			scene.add(shadowLight);
 			scene.add(shadowLight.target);
 		}
+		// Reset board orientation so rotation logic works correctly on rematch
+		if(this.boardside === "black"){
+			this.boardside = "white";
+			camera.position.z = -camera.position.z;
+			camera.position.x = -camera.position.x;
+			controls.center.z = -controls.center.z;
+			controls.center.x = -controls.center.x;
+		}
 	},
 	newOnlinegame: function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
 		this.clear();
@@ -1650,7 +1675,9 @@ const board = {
 		}
 		// Create AO shadow with blurred square texture
 		const boardSize = sq_size * gameData.size + border_size * 2;
-		const aoSize = boardSize + piece_size * aoConfig.padding;
+		const referenceSize = 6;
+		const scaledPadding = piece_size * aoConfig.padding * (gameData.size / referenceSize);
+		const aoSize = boardSize + scaledPadding;
 		this.boardAO = createAOPlane(getBoardAOTexture(), aoSize, aoSize, 0);
 		this.boardAO.position.set(0, -sq_height / 2 + aoConfig.yOffset, 0);
 		this.boardAO.ispassive = true;
@@ -1805,19 +1832,47 @@ const board = {
 		// for all pieces...
 		for(let i = 0;i < this.piece_objects.length;i++){
 			const piece=this.piece_objects[i];
-			// Skip selected unplayed piece, don't reset its position
+			// Handle selected unplayed piece - update geometry, rotation, AND position
 			if(piece === this.selected && !piece.onsquare){
-				// Just update geometry and rotation for diagonal walls change
-				if(!piece.iscapstone){
+				if(piece.iscapstone){
+					piece.geometry = piece.iswhitepiece ? capGeometryW : capGeometryB;
+					piece.updateMatrix();
+					// Update position with selection offset
+					const posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
+					if(posAsWhite){
+						piece.position.set(
+							board.corner_position.endx + capstone_radius + stackOffsetFromBorder,
+							capstone_height/2-sq_height/2 + stack_selection_height,
+							board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
+						);
+					}
+					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
+							: board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2);
+						piece.position.set(
+							board.corner_position.x - capstone_radius - stackOffsetFromBorder,
+							capstone_height/2-sq_height/2 + stack_selection_height,
+							zPos
+						);
+					}
+					// Update AO plane for capstone
+					if(piece.aoPlane){
+						piece.aoPlane.aoYOffset = -capstone_height / 2 + aoConfig.yOffset;
+						piece.aoPlane.geometry.dispose();
+						const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
+						piece.aoPlane.geometry = new THREE.PlaneGeometry(aoRadius * 2, aoRadius * 2);
+						piece.aoPlane.material.map = getCapAOTexture();
+						piece.aoPlane.material.needsUpdate = true;
+						piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
+					}
+				}
+				else{
 					const wasStanding = piece.isstanding;
 					piece.rotation.set(0,0,0);
 					piece.isstanding = false;
-					if(piece.iswhitepiece){
-						piece.geometry = geometryW;
-					}
-					else{
-						piece.geometry = geometryB;
-					}
+					piece.geometry = piece.iswhitepiece ? geometryW : geometryB;
 					piece.updateMatrix();
 					if(wasStanding){
 						piece.isstanding = true;
@@ -1827,6 +1882,40 @@ const board = {
 						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 						// Update AO plane rotation and texture for wall
 						setAOToWall(piece);
+					}
+					// Update AO plane for flat pieces (walls already handled by setAOToWall)
+					else if(piece.aoPlane){
+						resetAOToFlat(piece);
+					}
+					// Update position with selection offset
+					const stackno = Math.floor(piece.pieceNum / 10);
+					const stackheight = piece.pieceNum % 10;
+					// Standing stones float above the stack (stackheight pieces below), flats sit in the stack
+					const baseY = wasStanding
+						? (stackheight*piece_height + piece_size/2 - sq_height/2)
+						: (stackheight*piece_height + piece_height/2 - sq_height/2);
+					const posAsWhite = piece.positionAsWhite !== undefined ? piece.positionAsWhite : piece.iswhitepiece;
+					if(posAsWhite){
+						piece.position.set(
+							board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
+							baseY + stack_selection_height,
+							board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+						);
+					}
+					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+							: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
+						piece.position.set(
+							board.corner_position.x - stackOffsetFromBorder - piece_size/2,
+							baseY + stack_selection_height,
+							zPos
+						);
+					}
+					// Update AO plane position
+					if(piece.aoPlane){
+						piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
 					}
 				}
 				continue;
@@ -1841,6 +1930,15 @@ const board = {
 					piece.geometry = capGeometryB;
 				}
 				piece.updateMatrix();
+				// Update AO plane for capstone
+				if(piece.aoPlane){
+					piece.aoPlane.aoYOffset = -capstone_height / 2 + aoConfig.yOffset;
+					piece.aoPlane.geometry.dispose();
+					const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
+					piece.aoPlane.geometry = new THREE.PlaneGeometry(aoRadius * 2, aoRadius * 2);
+					piece.aoPlane.material.map = getCapAOTexture();
+					piece.aoPlane.material.needsUpdate = true;
+				}
 			}
 			else{
 				// Track if piece was standing before reset
@@ -1870,8 +1968,31 @@ const board = {
 					// Update AO plane rotation and texture for wall
 					setAOToWall(piece);
 				}
+				// Update AO plane for flat pieces (walls already handled by setAOToWall)
+				else if(piece.aoPlane){
+					resetAOToFlat(piece);
+				}
 			}
-			if(!piece.onsquare){
+			// Update Y position for pieces on squares (piece_size may have changed)
+			if(piece.onsquare){
+				const sq = piece.onsquare;
+				const st = this.get_stack(sq);
+				const stackIndex = st.indexOf(piece);
+				if(piece.iscapstone){
+					piece.position.y = sq_height/2 + capstone_height/2 + piece_height * stackIndex;
+				}
+				else if(piece.isstanding){
+					piece.position.y = sq_height/2 + piece_size/2 + piece_height * stackIndex;
+				}
+				else{
+					piece.position.y = sq_height + stackIndex * piece_height;
+				}
+				// Update AO plane position
+				if(piece.aoPlane){
+					piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
+				}
+			}
+			else if(!piece.onsquare){
 				const selectionOffset = (piece === this.selected) ? stack_selection_height : 0;
 				if(piece.iscapstone){
 					if(piece.iswhitepiece){
@@ -1882,10 +2003,14 @@ const board = {
 						);
 					}
 					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.z + capstone_radius + piece.pieceNum*(stack_dist+capstone_radius*2)
+							: board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2);
 						piece.position.set(
 							board.corner_position.x - capstone_radius - stackOffsetFromBorder,
 							capstone_height/2-sq_height/2 + selectionOffset,
-							board.corner_position.endz - capstone_radius - piece.pieceNum*(stack_dist+capstone_radius*2)
+							zPos
 						);
 					}
 				}
@@ -1903,12 +2028,20 @@ const board = {
 						);
 					}
 					else{
+						const invertBlackZ = shouldInvertBlackPiecesZ();
+						const zPos = invertBlackZ
+							? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+							: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
 						piece.position.set(
 							board.corner_position.x - stackOffsetFromBorder - piece_size/2,
 							baseY + selectionOffset,
-							board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size)
+							zPos
 						);
 					}
+				}
+				// Update AO plane position for unplayed pieces
+				if(piece.aoPlane){
+					piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
 				}
 			}
 		}
@@ -2092,6 +2225,10 @@ const board = {
 						goodmove=true;
 					}
 					if(goodmove){
+						// Stop any playing animation to prevent race conditions when clicking rapidly
+						if(animation.playing){
+							animation.stop();
+						}
 						const obj = this.selectedStack.pop();
 						const isLastPiece = this.selectedStack.length === 0;
 						const isSameSquare = pick[1] === this.move.squares[this.move.squares.length - 1];
@@ -2966,7 +3103,58 @@ const board = {
 	},
 	select: function(obj){
 		animation.push([obj]);
-		obj.position.y += stack_selection_height;
+		// Reposition unplayed pieces to correct location before lifting
+		// (piece_size may have changed since piece was created)
+		if(!obj.onsquare){
+			if(obj.iscapstone){
+				const posAsWhite = obj.positionAsWhite !== undefined ? obj.positionAsWhite : obj.iswhitepiece;
+				if(posAsWhite){
+					obj.position.set(
+						board.corner_position.endx + capstone_radius + stackOffsetFromBorder,
+						capstone_height/2-sq_height/2 + stack_selection_height,
+						board.corner_position.z + capstone_radius + obj.pieceNum*(stack_dist+capstone_radius*2)
+					);
+				}
+				else{
+					const invertBlackZ = shouldInvertBlackPiecesZ();
+					const zPos = invertBlackZ
+						? board.corner_position.z + capstone_radius + obj.pieceNum*(stack_dist+capstone_radius*2)
+						: board.corner_position.endz - capstone_radius - obj.pieceNum*(stack_dist+capstone_radius*2);
+					obj.position.set(
+						board.corner_position.x - capstone_radius - stackOffsetFromBorder,
+						capstone_height/2-sq_height/2 + stack_selection_height,
+						zPos
+					);
+				}
+			}
+			else{
+				const stackno = Math.floor(obj.pieceNum / 10);
+				const stackheight = obj.pieceNum % 10;
+				const baseY = obj.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
+				const posAsWhite = obj.positionAsWhite !== undefined ? obj.positionAsWhite : obj.iswhitepiece;
+				if(posAsWhite){
+					obj.position.set(
+						board.corner_position.endx + stackOffsetFromBorder + piece_size/2,
+						baseY + stack_selection_height,
+						board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+					);
+				}
+				else{
+					const invertBlackZ = shouldInvertBlackPiecesZ();
+					const zPos = invertBlackZ
+						? board.corner_position.endz - piece_size/2 - stackno*(stack_dist+piece_size)
+						: board.corner_position.z + piece_size/2 + stackno*(stack_dist+piece_size);
+					obj.position.set(
+						board.corner_position.x - stackOffsetFromBorder - piece_size/2,
+						baseY + stack_selection_height,
+						zPos
+					);
+				}
+			}
+		}
+		else{
+			obj.position.y += stack_selection_height;
+		}
 		this.selected = obj;
 		this.showSelectionShadow(obj);
 		// Fade out AO shadow when lifting
@@ -3170,17 +3358,34 @@ const board = {
 			const isSameSquare = startSq === lastSq;
 			let allPieces = [];
 
-			// Collect pieces from dropped squares (in order they were dropped)
+			// Collect pieces from dropped squares
+			// For each unique square, we need to pop pieces and reverse them
+			// (because popping gives reverse order of how they were dropped on that square)
+			// But across different squares, we keep the forward order
+			let prevSq = null;
+			let currentSquarePieces = [];
 			for(let i = 1; i < this.move.squares.length; i++){
 				const sq = this.move.squares[i];
 				if(sq !== startSq){
+					// If we've moved to a new square, flush the previous square's pieces
+					if(prevSq !== null && sq !== prevSq){
+						currentSquarePieces.reverse();
+						allPieces = allPieces.concat(currentSquarePieces);
+						currentSquarePieces = [];
+					}
 					const stack = this.get_stack(sq);
 					if(stack.length > 0){
 						const piece = stack.pop();
 						piece.onsquare = null;
-						allPieces.push(piece);
+						currentSquarePieces.push(piece);
 					}
+					prevSq = sq;
 				}
+			}
+			// Flush the last square's pieces
+			if(currentSquarePieces.length > 0){
+				currentSquarePieces.reverse();
+				allPieces = allPieces.concat(currentSquarePieces);
 			}
 
 			// Collect pieces still in selectedStack (top to bottom order in selectedStack)

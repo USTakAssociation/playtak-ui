@@ -117,6 +117,7 @@ function sliderPieceSize(newSize){
 		if(fixedcamera || true){
 			generateCamera();
 		}
+		board.updatepieces();
 	}
 }
 
@@ -446,11 +447,37 @@ function checkboxHideSend(){
  *	 Rotate board when player 2
  */
 function checkboxAutoRotate(){
-	if(document.getElementById('auto-rotate-checkbox').checked){
+	const wasEnabled = localStorage.getItem('auto_rotate') !== 'false';
+	const isEnabled = document.getElementById('auto-rotate-checkbox').checked;
+	if(isEnabled){
 		localStorage.setItem('auto_rotate','true');
 	}
 	else{
 		localStorage.setItem('auto_rotate','false');
+	}
+	// Rotate board and reposition pieces when setting is toggled mid-game
+	if(wasEnabled !== isEnabled && typeof board !== 'undefined' && board.piece_objects && board.piece_objects.length > 0){
+		// Determine if board should be rotated based on player color
+		const shouldBeRotated = !gameData.is_scratch && gameData.my_color === 'black';
+		const isRotated = board.boardside === 'black';
+		// When enabling auto-rotate: rotate if player is black and board isn't rotated
+		// When disabling auto-rotate: unrotate if board is currently rotated
+		if(isEnabled && shouldBeRotated && !isRotated){
+			board.boardside = 'black';
+			camera.position.z = -camera.position.z;
+			camera.position.x = -camera.position.x;
+			controls.center.z = -controls.center.z;
+			controls.center.x = -controls.center.x;
+		}
+		else if(!isEnabled && isRotated){
+			board.boardside = 'white';
+			camera.position.z = -camera.position.z;
+			camera.position.x = -camera.position.x;
+			controls.center.z = -controls.center.z;
+			controls.center.x = -controls.center.x;
+		}
+		// Reposition unplayed pieces to reflect new layout
+		board.updatepieces();
 	}
 }
 
