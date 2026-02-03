@@ -708,9 +708,12 @@ var server = {
 					stopTime();
 					document.title = "Play Tak";
 					if(!is2DBoard || !gameData.is_game_end){
-						handleGameOverState();
-						gameOver();
-						$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw");
+						// Wait for animation to complete before showing game-over dialog
+						animation.whenComplete(function(){
+							handleGameOverState();
+							gameOver();
+							$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw");
+						});
 					}
 					server.newSeek = false;
 					document.getElementById('createSeek').removeAttribute("disabled");
@@ -728,16 +731,16 @@ var server = {
 						gameData.result = "0-1";
 					}
 
-					let msg = "Game abandoned by " + spl[2] + ".";
-					if(!gameData.observing){
-						msg += " You win!";
-					}
+					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
 					stopTime();
 
-					$("#gameoveralert-text").html(msg);
-					$("#gameoveralert").modal("show");
-					gameOver();
+					// Wait for animation to complete before showing game-over dialog
+					animation.whenComplete(function(){
+						$("#gameoveralert-text").html(msg);
+						$("#gameoveralert").modal("show");
+						gameOver();
+					});
 				}
 			}
 		}
@@ -1528,8 +1531,8 @@ var server = {
 
 		this.send("Game#" + gameData.id + " Resign");
 	},
-	acceptseek: function(e){
-		if(this.changeseektime+800>Date.now()){
+	acceptseek: function(e, skipDebounce){
+		if(!skipDebounce && this.changeseektime+800>Date.now()){
 			return;
 		}
 		this.send("Accept " + e);
@@ -1569,10 +1572,10 @@ var server = {
 		const localGameData = localStorage.getItem("current-game-data");
 		if(localGameData){
 			const game = JSON.parse(localGameData);
-			// check the seek list for the game id and accept it
-			const seekIndex = this.seekslist.findIndex(seek => seek.id === game.id);
+			// check the seek list for a rematch seek from the opponent targeted at us
+			const seekIndex = this.seekslist.findIndex(seek => seek.player.toLowerCase() === game.opponent.toLowerCase() && seek.opponent.toLowerCase() === this.myname.toLowerCase() && seek.size === game.size + "x" + game.size);
 			if(seekIndex !== -1){
-				this.acceptseek(this.seekslist[seekIndex].id);
+				this.acceptseek(this.seekslist[seekIndex].id, true);
 				return;
 			}
 			// swap the player color for the new seek
