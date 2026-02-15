@@ -3604,6 +3604,7 @@ const board = {
 				}
 				const hlt = this.get_board_obj(file,rank);
 				this.pushPieceOntoSquare(hlt,obj);
+				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 			}
 			else if((match = /^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(move)) !== null){
 				const count = match[1];
@@ -3642,6 +3643,7 @@ const board = {
 
 				for(let i = 0;i < tot;i++){tstk.push(stk.pop());}
 
+				let finalSq;
 				for(let i = 0;i < drops.length;i++){
 					const sq = this.get_board_obj(
 						s1.file + (i + 1) * df,
@@ -3650,7 +3652,9 @@ const board = {
 					for(let j = 0;j < parseInt(drops[i]);j++){
 						this.pushPieceOntoSquare(sq,tstk.pop());
 					}
+					finalSq = sq;
 				}
+				this.lastMovedSquareList.push({file: finalSq.file, rank: finalSq.rank});
 			}
 			else{
 				console.warn("unparseable: " + move);
@@ -3658,6 +3662,11 @@ const board = {
 			}
 			notate(move);
 			this.incmovecnt();
+		}
+		// Highlight the last move after loading
+		if(this.lastMovedSquareList.length > 0){
+			const coords = this.lastMovedSquareList.at(-1);
+			this.highlightLastMove_sq(this.get_board_obj(coords.file, coords.rank), gameData.move_count - 1);
 		}
 		if(parsed.tags.Result !== undefined){
 			gameData.result = parsed.tags.Result;
