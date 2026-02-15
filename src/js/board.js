@@ -1428,7 +1428,7 @@ const animation = {
 		const self = this;
 		const isLastFrame = this.queue.length === 0;
 		let soundPlayed = false;
-		const soundTime = Math.max(0, duration - 100); // Play sound 100ms before end
+		const soundTime = Math.max(0, duration - SOUND_OFFSET_BEFORE_ANIMATION_END); // Play sound before animation ends
 		const animate = function(now){
 			try{
 				const elapsed = now - startTime;

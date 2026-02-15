@@ -1,5 +1,7 @@
 // this file contains all the global variables and functions for the play tak game interface
 const BOARD_PADDING = 10;
+const SOUND_OFFSET_BEFORE_ANIMATION_END = 100; // Play sound this many ms before animation ends
+const PTN_NINJA_ANIMATION_DURATION = 300; // PTN Ninja's fixed animation duration
 let gameData = {
 	id: 0,
 	opponent: null,
