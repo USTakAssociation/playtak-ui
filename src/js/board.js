@@ -2176,59 +2176,9 @@ const board = {
 			const destinationstack = this.get_stack(pick[1]);
 			if(this.selected){
 				if(destinationstack.length==0){
-					const sel=this.selected;
-					const self=this;
-					animation.push([sel]);
+					const sel = this.selected;
 					this.selected = null;
-					const hlt=pick[1];
-					// Set fadeIn flag BEFORE pushPieceOntoSquare since animation.playing may not be true yet
-					if(sel.aoPlane && animationsEnabled){
-						sel.aoPlane.fadeIn = true;
-						sel.aoPlane.material.opacity = 0;
-					}
-					this.pushPieceOntoSquare(hlt,sel);
-					animation.push([sel], 'jump', 300, function(){self.hideSelectionShadow();});
-					animation.play(playMoveSound);
-					//check if actually moved
-					let stone = 'Piece';
-					if(sel.iscapstone){stone = 'Cap';}
-					else if(sel.isstanding){stone = 'Wall';}
-
-					console.log(
-						"Place " + gameData.move_count,
-						sel.iswhitepiece ? 'White' : 'Black',
-						stone,
-						this.squarename(hlt.file,hlt.rank)
-					);
-					this.highlightLastMove_sq(hlt, gameData.move_count);
-					this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
-
-					const sqname = this.squarename(hlt.file,hlt.rank);
-					let msg = "P " + sqname;
-					if(stone !== 'Piece'){msg += " " + stone.charAt(0);}
-					sendMove(msg);
-					this.notatePmove(sqname,stone.charAt(0));
-
-					let pcs;
-					if(gameData.my_color === "white"){
-						this.whitepiecesleft--;
-						pcs = this.whitepiecesleft;
-					}
-					else{
-						this.blackpiecesleft--;
-						pcs = this.blackpiecesleft;
-					}
-					if(gameData.is_scratch){
-						let over = this.checkroadwin();
-						if(!over){
-							over = this.checksquaresover();
-							if(!over && pcs <= 0){
-								this.findwhowon();
-								gameOver();
-							}
-						}
-					}
-					this.incmovecnt();
+					this.placePieceOnSquare(sel, pick[1], true);
 				}
 			}
 			// Left click move stack
@@ -2328,9 +2278,17 @@ const board = {
 				}
 			}
 			else{
-				if(gameData.move_count >= 2 && !gameData.is_game_end){
+				if(!gameData.is_game_end){
 					const stk = this.get_stack(pick[1]);
-					if(this.is_top_mine(pick[1]) && stk.length > 0){
+					if(stk.length === 0){
+						// Click on empty square: auto-select and place a flat
+						const isWhiteToMove = isWhitePieceToMove();
+						const pieceToPlace = this.getfromstack(false, isWhiteToMove);
+						if(pieceToPlace){
+							this.placePieceOnSquare(pieceToPlace, pick[1], false);
+						}
+					}
+					else if(gameData.move_count >= 2 && this.is_top_mine(pick[1])){
 						this.selectStack(stk);
 						this.move.start = pick[1];
 						this.move.squares.push(pick[1]);
@@ -2418,6 +2376,16 @@ const board = {
 				this.unhighlight_sq();
 			}
 		}
+		else if(pick[0]=="board" && checkIfMyMove() && !gameData.is_game_end){
+			// Highlight empty squares or player-controlled squares when it's the player's turn
+			const stk = this.get_stack(pick[1]);
+			if(stk.length === 0 || this.is_top_mine(pick[1])){
+				this.highlight_sq(pick[1]);
+			}
+			else{
+				this.unhighlight_sq();
+			}
+		}
 		else{
 			this.unhighlight_sq();
 		}
@@ -2434,6 +2402,60 @@ const board = {
 			}
 		}
 		return null;
+	},
+	placePieceOnSquare: function(piece, sq, hideSelectionShadowAfter){
+		const self = this;
+		animation.push([piece]);
+		if(piece.aoPlane && animationsEnabled){
+			piece.aoPlane.fadeIn = true;
+			piece.aoPlane.material.opacity = 0;
+		}
+		this.pushPieceOntoSquare(sq, piece);
+		if(hideSelectionShadowAfter){
+			animation.push([piece], 'jump', 300, function(){self.hideSelectionShadow();});
+		}
+		else{
+			animation.push([piece], 'jump', 300);
+		}
+		animation.play(playMoveSound);
+
+		let stone = 'Piece';
+		if(piece.iscapstone){stone = 'Cap';}
+		else if(piece.isstanding){stone = 'Wall';}
+
+		console.log(
+			"Place " + gameData.move_count,
+			piece.iswhitepiece ? 'White' : 'Black',
+			stone,
+			this.squarename(sq.file, sq.rank)
+		);
+		this.highlightLastMove_sq(sq, gameData.move_count);
+		this.lastMovedSquareList.push({file: sq.file, rank: sq.rank});
+
+		const sqname = this.squarename(sq.file, sq.rank);
+		let msg = "P " + sqname;
+		if(stone !== 'Piece'){msg += " " + stone.charAt(0);}
+		sendMove(msg);
+		this.notatePmove(sqname, stone === 'Piece' ? '' : stone.charAt(0));
+
+		if(piece.iswhitepiece){
+			this.whitepiecesleft--;
+		}
+		else{
+			this.blackpiecesleft--;
+		}
+		if(gameData.is_scratch){
+			let over = this.checkroadwin();
+			if(!over){
+				over = this.checksquaresover();
+				const pcs = piece.iswhitepiece ? this.whitepiecesleft : this.blackpiecesleft;
+				if(!over && pcs <= 0){
+					this.findwhowon();
+					gameOver();
+				}
+			}
+		}
+		this.incmovecnt();
 	},
 	// Get the swapped first-turn piece (opponent's color positioned on player's side)
 	getSwappedFirstPiece: function(forWhitePlayer){
@@ -3479,6 +3501,11 @@ const board = {
 		this.unhighlight_sq(this.highlighted);
 		this.highlighted = sq;
 
+		// Temporarily hide last move highlighter if hovering over the same square
+		if(this.lastMoveHighlighted === sq){
+			scene.remove(lastMoveHighlighter);
+		}
+
 		// Set color based on whose turn it is (even move_count = white's turn)
 		const isWhiteTurn = (gameData.move_count % 2 === 0);
 		highlighter.material.color.setHex(isWhiteTurn ? 0xffffff : 0x000000);
@@ -3490,6 +3517,10 @@ const board = {
 	},
 	unhighlight_sq: function(){
 		if(this.highlighted){
+			// Restore last move highlighter if it was hidden
+			if(this.lastMoveHighlighted === this.highlighted && this.lastMoveHighlighterVisible){
+				scene.add(lastMoveHighlighter);
+			}
 			this.highlighted = null;
 			scene.remove(highlighter);
 		}
