@@ -2185,7 +2185,7 @@ const board = {
 			else if(this.selectedStack){
 				const tp = this.top_of_stack(pick[1]);
 				if(tp && (tp.iscapstone || (tp.isstanding && !this.selectedStack[this.selectedStack.length - 1].iscapstone))){
-					console.log('selected stack?');
+					// Can't drop on capstone or standing stone (unless flattening with capstone)
 				}
 				else{
 					const prev = this.move.squares[this.move.squares.length - 1];
@@ -2422,13 +2422,6 @@ const board = {
 		let stone = 'Piece';
 		if(piece.iscapstone){stone = 'Cap';}
 		else if(piece.isstanding){stone = 'Wall';}
-
-		console.log(
-			"Place " + gameData.move_count,
-			piece.iswhitepiece ? 'White' : 'Black',
-			stone,
-			this.squarename(sq.file, sq.rank)
-		);
 		this.highlightLastMove_sq(sq, gameData.move_count);
 		this.lastMovedSquareList.push({file: sq.file, rank: sq.rank});
 
@@ -3059,7 +3052,6 @@ const board = {
 	},
 	rightup: function(){
 		settingscounter=(settingscounter+1)&15;
-		console.log('right up');
 		this.remove_total_highlight();
 	},
 	//bring pieces to original positions,
@@ -3105,7 +3097,6 @@ const board = {
 		}
 		const prevdontanim = dontanimate;
 		dontanimate = true;
-		console.log('showmove '+no);
 		setShownMove(no);
 		this.unhighlight_sq();
 		this.resetpieces();
@@ -3892,7 +3883,6 @@ const board = {
 								this.pushPieceOntoSquare(square,pc);
 							}
 							else{
-								console.log('regular flat', cellValues.pieces[k]);
 								const pc = this.getfromstack(false,cellValues.pieces[k] === 1);
 								if(pc === null || typeof pc === 'undefined'){
 									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
