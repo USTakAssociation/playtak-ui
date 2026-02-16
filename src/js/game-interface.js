@@ -1,5 +1,7 @@
 // this file contains all the global variables and functions for the play tak game interface
 const BOARD_PADDING = 10;
+const SOUND_OFFSET_BEFORE_ANIMATION_END = 100; // Play sound this many ms before animation ends
+const PTN_NINJA_ANIMATION_DURATION = 300; // PTN Ninja's fixed animation duration
 let gameData = {
 	id: 0,
 	opponent: null,
@@ -39,6 +41,10 @@ const defaultPiecesAndCaps = {
 	8: [50, 2]
 };
 let hasPlayedHurry = false;
+
+// Board mode switching state
+let isSwitchingBoardMode = false;
+let pendingServerMoves = [];
 
 function resetGameDataToDefault(){
 	gameData = {
@@ -275,6 +281,14 @@ function loadCurrentGameState(){
 	if(parsed.tags){
 		$(".player1-name:first").html(parsed.tags.Player1 || 'You');
 		$(".player2-name:first").html(parsed.tags.Player2 || 'You');
+	}
+}
+
+function processPendingServerMoves(){
+	isSwitchingBoardMode = false;
+	while(pendingServerMoves.length > 0){
+		const moveData = pendingServerMoves.shift();
+		server.processGameMove(moveData);
 	}
 }
 
@@ -762,7 +776,6 @@ function handleGameOverState(){
 	$("#gameoveralert-text").html(msg);
 	$("#gameoveralert").modal("show");
 	gameData.is_scratch = true;
-	document.getElementById("2d-board-checkbox").removeAttribute("disabled");
 }
 
 function onKeyUp(e){
