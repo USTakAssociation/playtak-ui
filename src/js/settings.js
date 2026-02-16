@@ -511,6 +511,7 @@ function sliderScale(scaleIn,lazy){
 }
 
 function toggle2DBoard(){
+	isSwitchingBoardMode = true;
 	removeBoardMessageHandler();
 	removeEventListeners();
 	if(document.getElementById('2d-board-checkbox').checked){
@@ -544,7 +545,11 @@ function toggle2DBoard(){
 	if(localStorage.getItem("currentGame")){
 		setTimeout(() => {
 			loadCurrentGameState();
+			processPendingServerMoves();
 		}, 400);
+	}
+	else{
+		processPendingServerMoves();
 	}
 }
 

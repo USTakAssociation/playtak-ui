@@ -187,6 +187,59 @@ var server = {
 	changeseektime: 0,
 	newSeek: false,
 
+	processGameMove: function(moveData){
+		const e = moveData.message;
+		const spl = moveData.spl;
+		if(moveData.type === 'P'){
+			// file,rank,caporwall
+			if(is2DBoard){
+				appendPly(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
+				notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2].toLowerCase()}`);
+				incrementMoveCounter();
+				storeNotation();
+				if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
+					setDisable2DBoard(true);
+				}
+				else{
+					setDisable2DBoard(false);
+				}
+			}
+			else{
+				board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3], loadingGameHistory);
+			}
+		}
+		else if(moveData.type === 'M'){
+			if(is2DBoard){
+				// split after game#{game id}
+				const psn = e.split("M")[1];
+				appendPly(toPTN('M' + psn));
+				notate(toPTN('M' + psn));
+				incrementMoveCounter();
+				storeNotation();
+				if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
+					setDisable2DBoard(true);
+				}
+				else{
+					setDisable2DBoard(false);
+				}
+			}
+			else{
+				const nums = [];
+				for(let i = 4; i < spl.length; i++){
+					nums.push(Number(spl[i]));
+				}
+				board.serverMmove(
+					spl[2].charAt(0),
+					Number(spl[2].charAt(1)),
+					spl[3].charAt(0),
+					Number(spl[3].charAt(1)),
+					nums,
+					loadingGameHistory
+				);
+			}
+		}
+	},
+
 	connect: function(){
 		if(this.connection && this.connection.readyState>1){
 			this.connection = null;
@@ -525,8 +578,6 @@ var server = {
 
 			document.getElementById("createSeek").setAttribute("disabled", "disabled");
 			document.getElementById("removeSeek").setAttribute("disabled", "disabled");
-			// disable board toggle
-			document.getElementById('2d-board-checkbox').setAttribute("disabled", "true");
 		}
 		else if(e.startsWith("Observe ")){
 			resetGameDataToDefault();
@@ -561,8 +612,6 @@ var server = {
 			}
 			$(".player1-name:first").html(p1);
 			$(".player2-name:first").html(p2);
-			// disable board toggle
-			document.getElementById('2d-board-checkbox').setAttribute("disabled", "true");
 			document.title = "Tak: " + p1 + " vs " + p2;
 			document.getElementById('rematch').style.display = "none";
 			const time = +spl[5];
@@ -606,52 +655,20 @@ var server = {
 			if(gameId === gameData.id){
 				//Game#1 P A4 (C|W)
 				if(spl[1] === "P"){
-					// file,rank,caporwall
-					if(is2DBoard){
-						appendPly(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
-						notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2].toLowerCase()}`);
-						incrementMoveCounter();
-						storeNotation();
-						if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
-							setDisable2DBoard(true);
-						}
-						else{
-							setDisable2DBoard(false);
-						}
+					if(isSwitchingBoardMode){
+						pendingServerMoves.push({type: 'P', message: e, spl: spl});
 					}
 					else{
-						board.serverPmove(spl[2].charAt(0), Number(spl[2].charAt(1)), spl[3], loadingGameHistory);
+						this.processGameMove({type: 'P', message: e, spl: spl});
 					}
 				}
 				//Game#1 M A2 A5 2 1
 				else if(spl[1] === "M"){
-					if(is2DBoard){
-						// split after game#{game id}
-						const psn = e.split("M")[1];
-						appendPly(toPTN('M' + psn));
-						notate(toPTN('M' + psn));
-						incrementMoveCounter();
-						storeNotation();
-						if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
-							setDisable2DBoard(true);
-						}
-						else{
-							setDisable2DBoard(false);
-						}
+					if(isSwitchingBoardMode){
+						pendingServerMoves.push({type: 'M', message: e, spl: spl});
 					}
 					else{
-						const nums = [];
-						for(i = 4; i < spl.length; i++){
-							nums.push(Number(spl[i]));
-						}
-						board.serverMmove(
-							spl[2].charAt(0),
-							Number(spl[2].charAt(1)),
-							spl[3].charAt(0),
-							Number(spl[3].charAt(1)),
-							nums,
-							loadingGameHistory
-						);
+						this.processGameMove({type: 'M', message: e, spl: spl});
 					}
 				}
 				//Game#1 Time 170 200

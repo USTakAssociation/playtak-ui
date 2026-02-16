@@ -42,6 +42,10 @@ const defaultPiecesAndCaps = {
 };
 let hasPlayedHurry = false;
 
+// Board mode switching state
+let isSwitchingBoardMode = false;
+let pendingServerMoves = [];
+
 function resetGameDataToDefault(){
 	gameData = {
 		id: 0,
@@ -277,6 +281,14 @@ function loadCurrentGameState(){
 	if(parsed.tags){
 		$(".player1-name:first").html(parsed.tags.Player1 || 'You');
 		$(".player2-name:first").html(parsed.tags.Player2 || 'You');
+	}
+}
+
+function processPendingServerMoves(){
+	isSwitchingBoardMode = false;
+	while(pendingServerMoves.length > 0){
+		const moveData = pendingServerMoves.shift();
+		server.processGameMove(moveData);
 	}
 }
 
@@ -764,7 +776,6 @@ function handleGameOverState(){
 	$("#gameoveralert-text").html(msg);
 	$("#gameoveralert").modal("show");
 	gameData.is_scratch = true;
-	document.getElementById("2d-board-checkbox").removeAttribute("disabled");
 }
 
 function onKeyUp(e){
