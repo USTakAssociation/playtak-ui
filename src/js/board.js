@@ -2176,9 +2176,9 @@ const board = {
 			const destinationstack = this.get_stack(pick[1]);
 			if(this.selected){
 				if(destinationstack.length==0){
-					const sel = this.selected;
+					// Defer placement until mouseup confirms it was a click, not a drag
+					pendingPlacement = { sq: pick[1], piece: this.selected, hideSelectionShadow: true };
 					this.selected = null;
-					this.placePieceOnSquare(sel, pick[1], true);
 				}
 			}
 			// Left click move stack
@@ -2281,11 +2281,11 @@ const board = {
 				if(!gameData.is_game_end){
 					const stk = this.get_stack(pick[1]);
 					if(stk.length === 0){
-						// Click on empty square: auto-select and place a flat
+						// Defer placement until mouseup confirms it was a click, not a drag
 						const isWhiteToMove = isWhitePieceToMove();
 						const pieceToPlace = this.getfromstack(false, isWhiteToMove);
 						if(pieceToPlace){
-							this.placePieceOnSquare(pieceToPlace, pick[1], false);
+							pendingPlacement = { sq: pick[1], piece: pieceToPlace, hideSelectionShadow: false };
 						}
 					}
 					else if(gameData.move_count >= 2 && this.is_top_mine(pick[1])){
@@ -3941,6 +3941,7 @@ const mouseDownPos = { x: 0, y: 0 };
 const mouseDragThreshold = 5;
 let justRotatedPiece = false;
 let justSelectedPiece = false;
+let pendingPlacement = null; // { sq, piece, hideSelectionShadow } - deferred until mouseup confirms click
 
 function onDocumentMouseDown(e){
 	justRotatedPiece = false;
@@ -3968,11 +3969,25 @@ function onDocumentMouseUp(e){
 		board.rightup();
 	}
 	else if(e.button === 0){
-		// Check if this was a click (not a drag) on background
+		// Check if this was a click (not a drag)
 		const dx = e.clientX - mouseDownPos.x;
 		const dy = e.clientY - mouseDownPos.y;
 		const dist = Math.sqrt(dx * dx + dy * dy);
-		if(dist < mouseDragThreshold && !justRotatedPiece && !justSelectedPiece){
+		const wasClick = dist < mouseDragThreshold;
+
+		// Handle pending piece placement (deferred from mousedown)
+		if(pendingPlacement){
+			if(wasClick && checkIfMyMove() && !gameData.is_game_end){
+				board.placePieceOnSquare(pendingPlacement.piece, pendingPlacement.sq, pendingPlacement.hideSelectionShadow);
+			}
+			else if(pendingPlacement.hideSelectionShadow){
+				// Was a drag with a selected piece - restore the selection
+				board.selected = pendingPlacement.piece;
+			}
+			pendingPlacement = null;
+		}
+
+		if(wasClick && !justRotatedPiece && !justSelectedPiece){
 			// This was a click, not a drag - cancel move if on background
 			// Don't cancel if we just rotated or selected a piece (raycaster might miss moved piece)
 			const pick = board.mousepick();
