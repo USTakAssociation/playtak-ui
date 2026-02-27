@@ -83,6 +83,13 @@ async function messageHandler(event){
 			notate(value);
 			incrementMoveCounter();
 			storeNotation();
+			// Play sound: if animations enabled, delay to sync with PTN Ninja animation
+			if(localStorage.getItem('2d-animations') === 'true'){
+				setTimeout(playMoveSound, PTN_NINJA_ANIMATION_DURATION - SOUND_OFFSET_BEFORE_ANIMATION_END);
+			}
+			else{
+				playMoveSound();
+			}
 			break;
 		case "DELETE_PLY":
 			if(!gameData.observing && checkIfMyMove()){

@@ -1428,7 +1428,7 @@ const animation = {
 		const self = this;
 		const isLastFrame = this.queue.length === 0;
 		let soundPlayed = false;
-		const soundTime = Math.max(0, duration - 100); // Play sound 100ms before end
+		const soundTime = Math.max(0, duration - SOUND_OFFSET_BEFORE_ANIMATION_END); // Play sound before animation ends
 		const animate = function(now){
 			try{
 				const elapsed = now - startTime;
@@ -2176,66 +2176,16 @@ const board = {
 			const destinationstack = this.get_stack(pick[1]);
 			if(this.selected){
 				if(destinationstack.length==0){
-					const sel=this.selected;
-					const self=this;
-					animation.push([sel]);
+					// Defer placement until mouseup confirms it was a click, not a drag
+					pendingPlacement = { sq: pick[1], piece: this.selected, hideSelectionShadow: true };
 					this.selected = null;
-					const hlt=pick[1];
-					// Set fadeIn flag BEFORE pushPieceOntoSquare since animation.playing may not be true yet
-					if(sel.aoPlane && animationsEnabled){
-						sel.aoPlane.fadeIn = true;
-						sel.aoPlane.material.opacity = 0;
-					}
-					this.pushPieceOntoSquare(hlt,sel);
-					animation.push([sel], 'jump', 300, function(){self.hideSelectionShadow();});
-					animation.play(playMoveSound);
-					//check if actually moved
-					let stone = 'Piece';
-					if(sel.iscapstone){stone = 'Cap';}
-					else if(sel.isstanding){stone = 'Wall';}
-
-					console.log(
-						"Place " + gameData.move_count,
-						sel.iswhitepiece ? 'White' : 'Black',
-						stone,
-						this.squarename(hlt.file,hlt.rank)
-					);
-					this.highlightLastMove_sq(hlt, gameData.move_count);
-					this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
-
-					const sqname = this.squarename(hlt.file,hlt.rank);
-					let msg = "P " + sqname;
-					if(stone !== 'Piece'){msg += " " + stone.charAt(0);}
-					sendMove(msg);
-					this.notatePmove(sqname,stone.charAt(0));
-
-					let pcs;
-					if(gameData.my_color === "white"){
-						this.whitepiecesleft--;
-						pcs = this.whitepiecesleft;
-					}
-					else{
-						this.blackpiecesleft--;
-						pcs = this.blackpiecesleft;
-					}
-					if(gameData.is_scratch){
-						let over = this.checkroadwin();
-						if(!over){
-							over = this.checksquaresover();
-							if(!over && pcs <= 0){
-								this.findwhowon();
-								gameOver();
-							}
-						}
-					}
-					this.incmovecnt();
 				}
 			}
 			// Left click move stack
 			else if(this.selectedStack){
 				const tp = this.top_of_stack(pick[1]);
 				if(tp && (tp.iscapstone || (tp.isstanding && !this.selectedStack[this.selectedStack.length - 1].iscapstone))){
-					console.log('selected stack?');
+					// Can't drop on capstone or standing stone (unless flattening with capstone)
 				}
 				else{
 					const prev = this.move.squares[this.move.squares.length - 1];
@@ -2328,9 +2278,17 @@ const board = {
 				}
 			}
 			else{
-				if(gameData.move_count >= 2 && !gameData.is_game_end){
+				if(!gameData.is_game_end){
 					const stk = this.get_stack(pick[1]);
-					if(this.is_top_mine(pick[1]) && stk.length > 0){
+					if(stk.length === 0){
+						// Defer placement until mouseup confirms it was a click, not a drag
+						const isWhiteToMove = isWhitePieceToMove();
+						const pieceToPlace = this.getfromstack(false, isWhiteToMove);
+						if(pieceToPlace){
+							pendingPlacement = { sq: pick[1], piece: pieceToPlace, hideSelectionShadow: false };
+						}
+					}
+					else if(gameData.move_count >= 2 && this.is_top_mine(pick[1])){
 						this.selectStack(stk);
 						this.move.start = pick[1];
 						this.move.squares.push(pick[1]);
@@ -2418,6 +2376,16 @@ const board = {
 				this.unhighlight_sq();
 			}
 		}
+		else if(pick[0]=="board" && checkIfMyMove() && !gameData.is_game_end){
+			// Highlight empty squares or player-controlled squares when it's the player's turn
+			const stk = this.get_stack(pick[1]);
+			if(stk.length === 0 || this.is_top_mine(pick[1])){
+				this.highlight_sq(pick[1]);
+			}
+			else{
+				this.unhighlight_sq();
+			}
+		}
 		else{
 			this.unhighlight_sq();
 		}
@@ -2434,6 +2402,53 @@ const board = {
 			}
 		}
 		return null;
+	},
+	placePieceOnSquare: function(piece, sq, hideSelectionShadowAfter){
+		const self = this;
+		animation.push([piece]);
+		if(piece.aoPlane && animationsEnabled){
+			piece.aoPlane.fadeIn = true;
+			piece.aoPlane.material.opacity = 0;
+		}
+		this.pushPieceOntoSquare(sq, piece);
+		if(hideSelectionShadowAfter){
+			animation.push([piece], 'jump', 300, function(){self.hideSelectionShadow();});
+		}
+		else{
+			animation.push([piece], 'jump', 300);
+		}
+		animation.play(playMoveSound);
+
+		let stone = 'Piece';
+		if(piece.iscapstone){stone = 'Cap';}
+		else if(piece.isstanding){stone = 'Wall';}
+		this.highlightLastMove_sq(sq, gameData.move_count);
+		this.lastMovedSquareList.push({file: sq.file, rank: sq.rank});
+
+		const sqname = this.squarename(sq.file, sq.rank);
+		let msg = "P " + sqname;
+		if(stone !== 'Piece'){msg += " " + stone.charAt(0);}
+		sendMove(msg);
+		this.notatePmove(sqname, stone === 'Piece' ? '' : stone.charAt(0));
+
+		if(piece.iswhitepiece){
+			this.whitepiecesleft--;
+		}
+		else{
+			this.blackpiecesleft--;
+		}
+		if(gameData.is_scratch){
+			let over = this.checkroadwin();
+			if(!over){
+				over = this.checksquaresover();
+				const pcs = piece.iswhitepiece ? this.whitepiecesleft : this.blackpiecesleft;
+				if(!over && pcs <= 0){
+					this.findwhowon();
+					gameOver();
+				}
+			}
+		}
+		this.incmovecnt();
 	},
 	// Get the swapped first-turn piece (opponent's color positioned on player's side)
 	getSwappedFirstPiece: function(forWhitePlayer){
@@ -3037,7 +3052,6 @@ const board = {
 	},
 	rightup: function(){
 		settingscounter=(settingscounter+1)&15;
-		console.log('right up');
 		this.remove_total_highlight();
 	},
 	//bring pieces to original positions,
@@ -3083,7 +3097,6 @@ const board = {
 		}
 		const prevdontanim = dontanimate;
 		dontanimate = true;
-		console.log('showmove '+no);
 		setShownMove(no);
 		this.unhighlight_sq();
 		this.resetpieces();
@@ -3479,6 +3492,11 @@ const board = {
 		this.unhighlight_sq(this.highlighted);
 		this.highlighted = sq;
 
+		// Temporarily hide last move highlighter if hovering over the same square
+		if(this.lastMoveHighlighted === sq){
+			scene.remove(lastMoveHighlighter);
+		}
+
 		// Set color based on whose turn it is (even move_count = white's turn)
 		const isWhiteTurn = (gameData.move_count % 2 === 0);
 		highlighter.material.color.setHex(isWhiteTurn ? 0xffffff : 0x000000);
@@ -3490,6 +3508,10 @@ const board = {
 	},
 	unhighlight_sq: function(){
 		if(this.highlighted){
+			// Restore last move highlighter if it was hidden
+			if(this.lastMoveHighlighted === this.highlighted && this.lastMoveHighlighterVisible){
+				scene.add(lastMoveHighlighter);
+			}
 			this.highlighted = null;
 			scene.remove(highlighter);
 		}
@@ -3604,6 +3626,7 @@ const board = {
 				}
 				const hlt = this.get_board_obj(file,rank);
 				this.pushPieceOntoSquare(hlt,obj);
+				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 			}
 			else if((match = /^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(move)) !== null){
 				const count = match[1];
@@ -3642,6 +3665,7 @@ const board = {
 
 				for(let i = 0;i < tot;i++){tstk.push(stk.pop());}
 
+				let finalSq;
 				for(let i = 0;i < drops.length;i++){
 					const sq = this.get_board_obj(
 						s1.file + (i + 1) * df,
@@ -3650,7 +3674,9 @@ const board = {
 					for(let j = 0;j < parseInt(drops[i]);j++){
 						this.pushPieceOntoSquare(sq,tstk.pop());
 					}
+					finalSq = sq;
 				}
+				this.lastMovedSquareList.push({file: finalSq.file, rank: finalSq.rank});
 			}
 			else{
 				console.warn("unparseable: " + move);
@@ -3658,6 +3684,11 @@ const board = {
 			}
 			notate(move);
 			this.incmovecnt();
+		}
+		// Highlight the last move after loading
+		if(this.lastMovedSquareList.length > 0){
+			const coords = this.lastMovedSquareList.at(-1);
+			this.highlightLastMove_sq(this.get_board_obj(coords.file, coords.rank), gameData.move_count - 1);
 		}
 		if(parsed.tags.Result !== undefined){
 			gameData.result = parsed.tags.Result;
@@ -3852,7 +3883,6 @@ const board = {
 								this.pushPieceOntoSquare(square,pc);
 							}
 							else{
-								console.log('regular flat', cellValues.pieces[k]);
 								const pc = this.getfromstack(false,cellValues.pieces[k] === 1);
 								if(pc === null || typeof pc === 'undefined'){
 									alert('danger','Invalid TPS - too many pieces for player ' + k + ' at row ' + i + ', "' + j + '"');
@@ -3901,6 +3931,7 @@ const mouseDownPos = { x: 0, y: 0 };
 const mouseDragThreshold = 5;
 let justRotatedPiece = false;
 let justSelectedPiece = false;
+let pendingPlacement = null; // { sq, piece, hideSelectionShadow } - deferred until mouseup confirms click
 
 function onDocumentMouseDown(e){
 	justRotatedPiece = false;
@@ -3928,11 +3959,25 @@ function onDocumentMouseUp(e){
 		board.rightup();
 	}
 	else if(e.button === 0){
-		// Check if this was a click (not a drag) on background
+		// Check if this was a click (not a drag)
 		const dx = e.clientX - mouseDownPos.x;
 		const dy = e.clientY - mouseDownPos.y;
 		const dist = Math.sqrt(dx * dx + dy * dy);
-		if(dist < mouseDragThreshold && !justRotatedPiece && !justSelectedPiece){
+		const wasClick = dist < mouseDragThreshold;
+
+		// Handle pending piece placement (deferred from mousedown)
+		if(pendingPlacement){
+			if(wasClick && checkIfMyMove() && !gameData.is_game_end){
+				board.placePieceOnSquare(pendingPlacement.piece, pendingPlacement.sq, pendingPlacement.hideSelectionShadow);
+			}
+			else if(pendingPlacement.hideSelectionShadow){
+				// Was a drag with a selected piece - restore the selection
+				board.selected = pendingPlacement.piece;
+			}
+			pendingPlacement = null;
+		}
+
+		if(wasClick && !justRotatedPiece && !justSelectedPiece){
 			// This was a click, not a drag - cancel move if on background
 			// Don't cancel if we just rotated or selected a piece (raycaster might miss moved piece)
 			const pick = board.mousepick();
