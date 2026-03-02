@@ -197,6 +197,14 @@ var server = {
 				notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2].toLowerCase()}`);
 				incrementMoveCounter();
 				storeNotation();
+				if(!loadingGameHistory){
+					if(localStorage.getItem('2d-animations') === 'true'){
+						setTimeout(playMoveSound, PTN_NINJA_ANIMATION_DURATION - SOUND_OFFSET_BEFORE_ANIMATION_END);
+					}
+					else{
+						playMoveSound();
+					}
+				}
 				if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
 					setDisable2DBoard(true);
 				}
@@ -216,6 +224,14 @@ var server = {
 				notate(toPTN('M' + psn));
 				incrementMoveCounter();
 				storeNotation();
+				if(!loadingGameHistory){
+					if(localStorage.getItem('2d-animations') === 'true'){
+						setTimeout(playMoveSound, PTN_NINJA_ANIMATION_DURATION - SOUND_OFFSET_BEFORE_ANIMATION_END);
+					}
+					else{
+						playMoveSound();
+					}
+				}
 				if(!checkIfMyMove() || gameData.move_shown !== gameData.move_count){
 					setDisable2DBoard(true);
 				}
