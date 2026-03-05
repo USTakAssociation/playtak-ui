@@ -82,6 +82,18 @@ const gamePresets = {
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ['opname']
+	},
+	"mentee": {
+		size: 6,
+        komi: 4,
+        type: 1,
+        pieces: 30,
+        capstones: 1,
+        time: 600, // seconds
+        increment: 15,
+        trigger_move: "",
+        time_amount: "", // seconds
+        required_fields: ['opname']
 	}
 };
 
