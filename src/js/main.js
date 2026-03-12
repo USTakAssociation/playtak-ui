@@ -1,5 +1,5 @@
 const gamePresets = {
-	"beginner": {
+	beginner: {
 		size: 6,
 		komi: 4,
 		type: 1, // 1 for tournament, 0 for normal, 2 for unrated
@@ -9,9 +9,9 @@ const gamePresets = {
 		increment: 10,
 		trigger_move: "",
 		time_amount: "",
-		required_fields: ['opname']
+		required_fields: ["opname"],
 	},
-	"intermediate": {
+	intermediate: {
 		size: 6,
 		komi: 4,
 		type: 1,
@@ -21,9 +21,9 @@ const gamePresets = {
 		increment: 10,
 		trigger_move: "",
 		time_amount: "",
-		required_fields: ['opname']
+		required_fields: ["opname"],
 	},
-	"league": {
+	league: {
 		size: 6,
 		komi: 4,
 		type: 1,
@@ -33,7 +33,7 @@ const gamePresets = {
 		increment: 10,
 		trigger_move: 35,
 		time_amount: 300, // seconds
-		required_fields: ['opname']
+		required_fields: ["opname"],
 	},
 	"7_open": {
 		size: 7,
@@ -45,7 +45,7 @@ const gamePresets = {
 		increment: 15,
 		trigger_move: 40,
 		time_amount: 600, // seconds
-		required_fields: ['opname']
+		required_fields: ["opname"],
 	},
 	"7_blitz": {
 		size: 7,
@@ -57,7 +57,7 @@ const gamePresets = {
 		increment: 5,
 		trigger_move: "",
 		time_amount: "", // seconds
-		required_fields: ['opname']
+		required_fields: ["opname"],
 	},
 	"trans-atlan": {
 		size: 6,
@@ -69,7 +69,7 @@ const gamePresets = {
 		increment: 15,
 		trigger_move: "35",
 		time_amount: "600", // seconds
-		required_fields: ['opname']
+		required_fields: ["opname"],
 	},
 	"tak-open": {
 		size: 6,
@@ -81,79 +81,100 @@ const gamePresets = {
 		increment: 15,
 		trigger_move: "",
 		time_amount: "", // seconds
-		required_fields: ['opname']
+		required_fields: ["opname"],
 	},
-	"mentee": {
+	mentee: {
 		size: 6,
-        komi: 4,
-        type: 1,
-        pieces: 30,
-        capstones: 1,
-        time: 600, // seconds
-        increment: 15,
-        trigger_move: "",
-        time_amount: "", // seconds
-        required_fields: ['opname']
-	}
+		komi: 4,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 600, // seconds
+		increment: 15,
+		trigger_move: "",
+		time_amount: "", // seconds
+		required_fields: ["opname"],
+	},
+	"tiebreaker-blitz": {
+		size: 6,
+		komi: 4,
+		type: 1,
+		pieces: 30,
+		capstones: 1,
+		time: 180, // seconds
+		increment: 5,
+		trigger_move: "",
+		time_amount: "", // seconds
+		required_fields: ["opname"],
+	},
 };
 
-let ismobile=false;
-let isidevice=false;
-let fixedcamera=false;
-let clickthrough=true;
-let hovertext=true;
-let pixelratio=1;
-let rendererdone=false;
-let clearcolor=parseInt(boardDefaults.backgroundColor.replace('#', '0x'));
+let ismobile = false;
+let isidevice = false;
+let fixedcamera = false;
+let clickthrough = true;
+let hovertext = true;
+let pixelratio = 1;
+let rendererdone = false;
+let clearcolor = parseInt(boardDefaults.backgroundColor.replace("#", "0x"));
 
-let settingscounter=0;
+let settingscounter = 0;
 let is2DBoard = false;
 let fson = false;
 
-function alert(type,msg){
-	$('#alert-text').text(msg);
-	const $alert = $('#alert');
+function alert(type, msg) {
+	$("#alert-text").text(msg);
+	const $alert = $("#alert");
 	$alert.removeClass("alert-success alert-info alert-warning alert-danger");
 
-	$alert.addClass("alert-"+type);
-	$alert.removeAttr('style');
-	$alert.stop(true,true);
-	$alert.fadeTo(7000,500).slideUp(500,function(){
-		$alert.css("display","none");
+	$alert.addClass("alert-" + type);
+	$alert.removeAttr("style");
+	$alert.stop(true, true);
+	$alert.fadeTo(7000, 500).slideUp(500, function () {
+		$alert.css("display", "none");
 	});
 }
 
-function togglefs(){
-	if(fson){
+function togglefs() {
+	if (fson) {
 		document.exitFullscreen();
-	}
-	else{
+	} else {
 		document.documentElement.requestFullscreen();
 	}
 	fson = !fson;
 }
 
-function init(){
+function init() {
 	const ua = navigator.userAgent.toLowerCase();
-	if(ua.indexOf("android") > -1 || ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
+	if (
+		ua.indexOf("android") > -1 ||
+		ua.indexOf("iphone") > -1 ||
+		ua.indexOf("ipod") > -1 ||
+		ua.indexOf("ipad") > -1
+	) {
 		ismobile = true;
 	}
-	if(ua.indexOf("iphone") > -1 || ua.indexOf("ipod") > -1 || ua.indexOf("ipad") > -1){
+	if (
+		ua.indexOf("iphone") > -1 ||
+		ua.indexOf("ipod") > -1 ||
+		ua.indexOf("ipad") > -1
+	) {
 		isidevice = true;
 		document.body.ongesturestart =
 			document.body.ongesturechange =
 			document.body.ongestureend =
-				function(ev){
+				function (ev) {
 					ev.preventDefault();
 				};
 	}
 
-	if(ismobile && !isidevice){
+	if (ismobile && !isidevice) {
 		let fsbutton = document.createElement("button");
 		let li = document.createElement("li");
 		fsbutton.title = "Toggle Fullscreen";
 		fsbutton.className = "navitem";
-		fsbutton.innerHTML = '<svg viewBox="0 0 14 14" class="navicon"><g fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g id="Core" transform="translate(-257.000000, -257.000000)"><g id="fullscreen-exit" transform="translate(257.000000, 257.000000)"><path d="M0,11 L3,11 L3,14 L5,14 L5,9 L0,9 L0,11 L0,11 Z M3,3 L0,3 L0,5 L5,5 L5,0 L3,0 L3,3 L3,3 Z M9,14 L11,14 L11,11 L14,11 L14,9 L9,9 L9,14 L9,14 Z M11,3 L11,0 L9,0 L9,5 L14,5 L14,3 L11,3 L11,3 Z" id="Shape"/></g></g></g></svg>';
+		fsbutton.innerHTML =
+			'<svg viewBox="0 0 14 14" class="navicon"><g fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g id="Core" transform="translate(-257.000000, -257.000000)"><g id="fullscreen-exit" transform="translate(257.000000, 257.000000)"><path d="M0,11 L3,11 L3,14 L5,14 L5,9 L0,9 L0,11 L0,11 Z M3,3 L0,3 L0,5 L5,5 L5,0 L3,0 L3,3 L3,3 Z M9,14 L11,14 L11,11 L14,11 L14,9 L9,9 L9,14 L9,14 Z M11,3 L11,0 L9,0 L9,5 L14,5 L14,3 L11,3 L11,3 Z" id="Shape"/></g></g></g></svg>';
 		fsbutton.onclick = togglefs;
 		li.appendChild(fsbutton);
 		document.getElementById("main-nav").appendChild(li);
@@ -161,26 +182,26 @@ function init(){
 	clearStoredNotation();
 	loadInterfaceSettings();
 	const ninjaElement = document.getElementById("ninja");
-	const ninjaParams = "&moveNumber=false&unplayedPieces=true&disableStoneCycling=true&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=false&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false";
-	if(window.location.host.indexOf("localhost") > -1 ||
+	const ninjaParams =
+		"&moveNumber=false&unplayedPieces=true&disableStoneCycling=true&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=false&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false";
+	if (
+		window.location.host.indexOf("localhost") > -1 ||
 		window.location.host.indexOf("127.0.0.1") > -1 ||
 		window.location.host.indexOf("192.168.") == 0 ||
 		window.location.host.indexOf("beta.playtak.com") > -1
-	){
+	) {
 		ninjaElement.src = "https://next.ptn.ninja/" + ninjaParams;
-	}
-	else{
+	} else {
 		ninjaElement.src = "https://ptn.ninja/" + ninjaParams;
 	}
-	if(localStorage.getItem("2d_board") === "true"){
+	if (localStorage.getItem("2d_board") === "true") {
 		document.getElementById("ninja-wrapper").style.display = "block";
 		document.getElementById("3d-settings").style.display = "none";
 		document.getElementById("2d-settings").style.display = "block";
-		document.getElementById('2d-board-checkbox').checked = true;
+		document.getElementById("2d-board-checkbox").checked = true;
 		is2DBoard = true;
 		init2DBoard();
-	}
-	else{
+	} else {
 		makeStyleSelector();
 		load3DSettings();
 		init3DBoard();
@@ -188,72 +209,65 @@ function init(){
 	storeNotation();
 }
 
-function adjustsidemenu(notation,chat){
-	const vertical = window.screen.width<window.screen.height;
-	const notationstore = "shownotation"+(vertical?"v":"h");
-	const chatstore = "showchat"+(vertical?"v":"h");
+function adjustsidemenu(notation, chat) {
+	const vertical = window.screen.width < window.screen.height;
+	const notationstore = "shownotation" + (vertical ? "v" : "h");
+	const chatstore = "showchat" + (vertical ? "v" : "h");
 
-	let notationstate=localStorage[notationstore];
-	if(notation=="show"){
-		notationstate="show";
-	}
-	else if(notation=="hide"){
-		notationstate="hide";
-	}
-	else if(notation=="toggle"){
-		notationstate=notationstate=="show"?"hide":"show";
-	}
-	else{
-		if(!(notationstate=="show" || notationstate=="hide")){
-			notationstate=(window.innerWidth<600?"hide":"show");
+	let notationstate = localStorage[notationstore];
+	if (notation == "show") {
+		notationstate = "show";
+	} else if (notation == "hide") {
+		notationstate = "hide";
+	} else if (notation == "toggle") {
+		notationstate = notationstate == "show" ? "hide" : "show";
+	} else {
+		if (!(notationstate == "show" || notationstate == "hide")) {
+			notationstate = window.innerWidth < 600 ? "hide" : "show";
 		}
 	}
-	localStorage[notationstore]=notationstate;
+	localStorage[notationstore] = notationstate;
 	const rmenu = document.getElementById("rmenu");
 	// check is the rmenu has the hidden attribute
 	const rmenuHidden = rmenu.hasAttribute("hidden");
-	if(typeof rmenuHidden !== 'undefined' && rmenuHidden !== false){
-		if(notationstate=="show"){
-			document.getElementById('notation-arrow').classList.add('rotate-arrow');
+	if (typeof rmenuHidden !== "undefined" && rmenuHidden !== false) {
+		if (notationstate == "show") {
+			document.getElementById("notation-arrow").classList.add("rotate-arrow");
 			document.getElementById("notation-toggle-text").style.left = "200px";
 			rmenu.removeAttribute("hidden");
 			adjustBoardWidth();
 		}
-	}
-	else if(notationstate=="hide"){
+	} else if (notationstate == "hide") {
 		rmenu.setAttribute("hidden", "true");
 		document.getElementById("notation-arrow").classList.remove("rotate-arrow");
 		document.getElementById("notation-toggle-text").style.left = "0px";
 		adjustBoardWidth();
 	}
 
-	let chatstate=localStorage[chatstore];
-	if(chat=="show"){
-		chatstate="show";
-	}
-	else if(chat=="hide"){
-		chatstate="hide";
-	}
-	else if(chat=="toggle"){
-		chatstate=chatstate=="show"?"hide":"show";
-	}
-	else{
-		if(!(chatstate=="show" || chatstate=="hide")){
-			chatstate=(window.innerWidth<600?"hide":"show");
+	let chatstate = localStorage[chatstore];
+	if (chat == "show") {
+		chatstate = "show";
+	} else if (chat == "hide") {
+		chatstate = "hide";
+	} else if (chat == "toggle") {
+		chatstate = chatstate == "show" ? "hide" : "show";
+	} else {
+		if (!(chatstate == "show" || chatstate == "hide")) {
+			chatstate = window.innerWidth < 600 ? "hide" : "show";
 		}
 	}
-	localStorage[chatstore]=chatstate;
+	localStorage[chatstore] = chatstate;
 	const cmenu = document.getElementById("cmenu");
 	const cmenuHidden = cmenu.hasAttribute("hidden");
-	if(typeof cmenuHidden !== 'undefined' && cmenuHidden !== false){
-		if(chatstate=="show"){
-			document.getElementById('chat-toggle-button').style.right = (chathandler.chat_width + 12) + "px";
+	if (typeof cmenuHidden !== "undefined" && cmenuHidden !== false) {
+		if (chatstate == "show") {
+			document.getElementById("chat-toggle-button").style.right =
+				chathandler.chat_width + 12 + "px";
 			document.getElementById("chat-arrow").classList.remove("rotate-arrow");
 			cmenu.removeAttribute("hidden");
 			adjustBoardWidth();
 		}
-	}
-	else if(chatstate=="hide"){
+	} else if (chatstate == "hide") {
 		document.getElementById("chat-toggle-button").style.right = "0px";
 		document.getElementById("chat-arrow").classList.add("rotate-arrow");
 		cmenu.setAttribute("hidden", "true");
@@ -262,13 +276,12 @@ function adjustsidemenu(notation,chat){
 }
 
 let settingsToggle = false;
-function toggleSettingsDrawer(){
+function toggleSettingsDrawer() {
 	const settings = document.getElementById("settings-drawer");
-	if(!settingsToggle){
+	if (!settingsToggle) {
 		settings.removeAttribute("hidden");
 		settingsToggle = true;
-	}
-	else{
+	} else {
 		settings.setAttribute("hidden", "true");
 		settingsToggle = false;
 	}
@@ -276,25 +289,26 @@ function toggleSettingsDrawer(){
 }
 
 let menuToggle = false;
-function toggleMobileMenu(){
-	const header = document.getElementById('header');
-	if(!menuToggle){
+function toggleMobileMenu() {
+	const header = document.getElementById("header");
+	if (!menuToggle) {
 		header.style.height = "auto";
 		hideElement("mobile-open");
-		showElement("mobile-close", 'block');
+		showElement("mobile-close", "block");
 		menuToggle = true;
-	}
-	else{
+	} else {
 		header.style.height = "36px";
 		hideElement("mobile-close");
-		showElement("mobile-open", 'block');
+		showElement("mobile-open", "block");
 		menuToggle = false;
 	}
 }
 
-function closeMobileMenu(){
-	if(!menuToggle){return;}
-	const header = document.getElementById('header');
+function closeMobileMenu() {
+	if (!menuToggle) {
+		return;
+	}
+	const header = document.getElementById("header");
 	header.style.height = "36px";
 	hideElement("mobile-close");
 	showElement("mobile-open", "block");
@@ -302,133 +316,168 @@ function closeMobileMenu(){
 	generateCamera();
 }
 
-function showPrivacyPolicy(){
-	$('#help-modal').modal('hide');
-	$('#privacy-modal').modal('show');
+function showPrivacyPolicy() {
+	$("#help-modal").modal("hide");
+	$("#privacy-modal").modal("show");
 }
 
-function getHeader(key,val){
-	return '['+key+' "'+val+'"]\r\n';
+function getHeader(key, val) {
+	return "[" + key + ' "' + val + '"]\r\n';
 }
 
-function openGameOverModal(){
-	$('#gameoveralert').modal('show');
+function openGameOverModal() {
+	$("#gameoveralert").modal("show");
 }
 
-function copyGameIdToClipboard(){
+function copyGameIdToClipboard() {
 	const gameId = gameData.id || "";
-	navigator.clipboard.writeText(gameId).then(() => {
-		alert('success','Copied Game ID: ' + gameId);
-	}, () => {
-		alert('danger','Unable to copy Game ID!');
-	});
+	navigator.clipboard.writeText(gameId).then(
+		() => {
+			alert("success", "Copied Game ID: " + gameId);
+		},
+		() => {
+			alert("danger", "Unable to copy Game ID!");
+		},
+	);
 }
 
-function getNotation(id){
-	const p1 = $('.player1-name:first').html();
-	const p2 = $('.player2-name:first').html();
+function getNotation(id) {
+	const p1 = $(".player1-name:first").html();
+	const p2 = $(".player2-name:first").html();
 	const date = new Date();
 
-	if(id){
-		const dt = date.getFullYear()+'.'+(date.getMonth()+1)+'.'+date.getDate()+' '+date.getHours()+'.'+getZero(date.getMinutes());
-		$(`#${id || "download_notation"}`).attr("download", p1 + " vs " + p2 + " " + dt + ".ptn");
+	if (id) {
+		const dt =
+			date.getFullYear() +
+			"." +
+			(date.getMonth() + 1) +
+			"." +
+			date.getDate() +
+			" " +
+			date.getHours() +
+			"." +
+			getZero(date.getMinutes());
+		$(`#${id || "download_notation"}`).attr(
+			"download",
+			p1 + " vs " + p2 + " " + dt + ".ptn",
+		);
 	}
 
-	let res='';
-	res += getHeader('Site','PlayTak.com');
-	res += getHeader('Date',date.getFullYear()+'.'+(date.getMonth()+1)+'.'+date.getDate());
-	res += getHeader('Player1',p1);
-	res += getHeader('Player2',p2);
-	res += getHeader('Size',gameData.size);
-	res += getHeader('Komi',gameData.komi/2);
-	res += getHeader('Flats',gameData.pieces);
-	res += getHeader('Caps',gameData.capstones);
-	res += getHeader('Result',gameData.result);
-	res += '\r\n';
+	let res = "";
+	res += getHeader("Site", "PlayTak.com");
+	res += getHeader(
+		"Date",
+		date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate(),
+	);
+	res += getHeader("Player1", p1);
+	res += getHeader("Player2", p2);
+	res += getHeader("Size", gameData.size);
+	res += getHeader("Komi", gameData.komi / 2);
+	res += getHeader("Flats", gameData.pieces);
+	res += getHeader("Caps", gameData.capstones);
+	res += getHeader("Result", gameData.result);
+	res += "\r\n";
 
-	$('#moveslist tr').each(function(){
-		let line="";
-		$('td',this).each(function(){
+	$("#moveslist tr").each(function () {
+		let line = "";
+		$("td", this).each(function () {
 			const val = $(this).text();
-			if(line && val){
-				line += ' ';
+			if (line && val) {
+				line += " ";
 			}
 			line += val;
 		});
-		res += line+'\r\n';
+		res += line + "\r\n";
 	});
 
 	return res;
 }
 
-function downloadNotation(id){
-	$(`#${id}`).attr('href','data:text/plain;charset=utf-8,'+encodeURIComponent(getNotation(id)));
+function downloadNotation(id) {
+	$(`#${id}`).attr(
+		"href",
+		"data:text/plain;charset=utf-8," + encodeURIComponent(getNotation(id)),
+	);
 }
 
-function copyNotationToClipboard(){
+function copyNotationToClipboard() {
 	const ptn = getNotation();
-	navigator.clipboard.writeText(ptn).then(() => {
-		alert('success','Copied PTN!');
-	}, () => {
-		alert('danger','Unable to copy!');
-	});
+	navigator.clipboard.writeText(ptn).then(
+		() => {
+			alert("success", "Copied PTN!");
+		},
+		() => {
+			alert("danger", "Unable to copy!");
+		},
+	);
 }
 
-function openInPtnNinja(){
-	const link = 'http://ptn.ninja/' + encodeURIComponent(getNotation());
-	window.open(link,'_blank');
+function openInPtnNinja() {
+	const link = "http://ptn.ninja/" + encodeURIComponent(getNotation());
+	window.open(link, "_blank");
 }
 
-function copyNotationLink(){
-	const link = 'http://www.playtak.com/?load=' + encodeURIComponent(getNotation());
+function copyNotationLink() {
+	const link =
+		"http://www.playtak.com/?load=" + encodeURIComponent(getNotation());
 
-	navigator.clipboard.writeText(link).then(() => {
-		alert('success','Copied PTN Link!');
-	}, () => {
-		alert('danger','Unable to copy!');
-	});
+	navigator.clipboard.writeText(link).then(
+		() => {
+			alert("success", "Copied PTN Link!");
+		},
+		() => {
+			alert("danger", "Unable to copy!");
+		},
+	);
 }
 
-function undoButton(){
-	if(gameData.is_scratch){undoMove();}
-	else{server.undo();}
+function undoButton() {
+	if (gameData.is_scratch) {
+		undoMove();
+	} else {
+		server.undo();
+	}
 }
 
-function fastrewind(){
+function fastrewind() {
 	firstMove();
 }
 
-function stepback(){
+function stepback() {
 	previousMove();
 }
 
-function stepforward(){
+function stepforward() {
 	nextMove();
 }
 
-function fastforward(){
+function fastforward() {
 	lastMove();
 }
 
-function resetFormFieldAttributes(){
+function resetFormFieldAttributes() {
 	const form = document.getElementById("create-game-form");
 	// remove the required attribute from all elements
 	const allFields = form.querySelectorAll("input, select");
-	allFields.forEach(field => {
+	allFields.forEach((field) => {
 		field.removeAttribute("required");
 		field.removeAttribute("disabled");
 	});
 }
 
-function changePreset(event){
+function changePreset(event) {
 	resetFormFieldAttributes();
 	const presetValue = event.target.value;
 
 	const preset = gamePresets[presetValue];
 
-	if(presetValue === "none"){
-		const storedValues = JSON.parse(localStorage.getItem("current-game-settings") || '{}');
-		if(!Object.keys(storedValues).length){return;}
+	if (presetValue === "none") {
+		const storedValues = JSON.parse(
+			localStorage.getItem("current-game-settings") || "{}",
+		);
+		if (!Object.keys(storedValues).length) {
+			return;
+		}
 		// get the stored values
 		document.getElementById("boardsize").value = storedValues.size;
 		document.getElementById("piececount").value = storedValues.pieces;
@@ -440,8 +489,7 @@ function changePreset(event){
 		document.getElementById("triggerMove").value = storedValues.trigger_move;
 		document.getElementById("timeAmount").value = storedValues.time_amount;
 		return;
-	}
-	else if(preset){
+	} else if (preset) {
 		// store the current values if user changes back to the noen preset
 		const currentValues = {
 			size: document.getElementById("boardsize").value,
@@ -452,9 +500,12 @@ function changePreset(event){
 			time: document.getElementById("timeselect").value,
 			increment: document.getElementById("incselect").value,
 			trigger_move: document.getElementById("triggerMove").value,
-			time_amount: document.getElementById("timeAmount").value
+			time_amount: document.getElementById("timeAmount").value,
 		};
-		localStorage.setItem("current-game-settings", JSON.stringify(currentValues));
+		localStorage.setItem(
+			"current-game-settings",
+			JSON.stringify(currentValues),
+		);
 		document.getElementById("boardsize").value = preset.size;
 		document.getElementById("boardsize").setAttribute("disabled", "true");
 		document.getElementById("piececount").value = preset.pieces;
@@ -474,29 +525,35 @@ function changePreset(event){
 		document.getElementById("timeAmount").value = preset.time_amount;
 		document.getElementById("timeAmount").setAttribute("disabled", "true");
 		// set the required attributes for the fields that are required in the preset
-		for(let i = 0; i < preset.required_fields.length; i++){
+		for (let i = 0; i < preset.required_fields.length; i++) {
 			const element = document.getElementById(preset.required_fields[i]);
-			if(element){
+			if (element) {
 				element.setAttribute("required", "true");
 			}
 		}
 		return;
-	}
-	else{
-		alert('danger', 'Invalid game preset selected');
-	}
-}
-
-function changeboardsize(){
-	const size=document.getElementById("boardsize").value;
-	const piecescaps = {"3": [10,0], "4": [15,0], "5": [21,1], "6": [30,1], "7": [40,2], "8": [50,2]}[size];
-	if(piecescaps){
-		document.getElementById("piececount").value=piecescaps[0];
-		document.getElementById("capcount").value=piecescaps[1];
+	} else {
+		alert("danger", "Invalid game preset selected");
 	}
 }
 
-function resetGameSettings(){
+function changeboardsize() {
+	const size = document.getElementById("boardsize").value;
+	const piecescaps = {
+		3: [10, 0],
+		4: [15, 0],
+		5: [21, 1],
+		6: [30, 1],
+		7: [40, 2],
+		8: [50, 2],
+	}[size];
+	if (piecescaps) {
+		document.getElementById("piececount").value = piecescaps[0];
+		document.getElementById("capcount").value = piecescaps[1];
+	}
+}
+
+function resetGameSettings() {
 	resetFormFieldAttributes();
 	// remove the stored values from localStorage
 	localStorage.removeItem("current-game-settings");
@@ -515,9 +572,13 @@ function resetGameSettings(){
 	document.getElementById("preset").value = "none";
 }
 
-function loadGameSettings(){
-	const storedValues = JSON.parse(localStorage.getItem("current-game-settings") || '{}');
-	if(!Object.keys(storedValues).length){return;}
+function loadGameSettings() {
+	const storedValues = JSON.parse(
+		localStorage.getItem("current-game-settings") || "{}",
+	);
+	if (!Object.keys(storedValues).length) {
+		return;
+	}
 	document.getElementById("boardsize").value = storedValues.size;
 	document.getElementById("piececount").value = storedValues.pieces;
 	document.getElementById("capcount").value = storedValues.capstones;
@@ -529,10 +590,10 @@ function loadGameSettings(){
 	document.getElementById("colorselect").value = storedValues.color || "A";
 }
 
-function resetToLoginState(){
+function resetToLoginState() {
 	// header reset
 	hideElement("playerinfo");
-	showElement("login-button", 'block');
+	showElement("login-button", "block");
 	hideElement("logout-button");
 	// Landing page reset
 	hideElement("sign-up");
@@ -546,7 +607,7 @@ function resetToLoginState(){
 	showElement("action-links");
 }
 
-function setLoggedInState(){
+function setLoggedInState() {
 	// header
 	hideElement("login-button");
 	showElement("logout-button", "block");
@@ -562,129 +623,138 @@ function setLoggedInState(){
 	showElement("close-events");
 }
 
-function showEvents(){
-	showElement('landing');
+function showEvents() {
+	showElement("landing");
 	const element = document.getElementById("events");
 	element.scrollIntoView();
 }
 
-function hideElement(element){
+function hideElement(element) {
 	document.getElementById(element).style.display = "none";
 }
 
-function showElement(element, type){
+function showElement(element, type) {
 	document.getElementById(element).style.display = type || "flex";
 }
 
 // Landing functions
-async function fetchEvents(){
-	showElement('loading-events');
-	try{
-		let path = '/events';
-		let url = 'https://api.' + window.location.host;
-		if(
+async function fetchEvents() {
+	showElement("loading-events");
+	try {
+		let path = "/events";
+		let url = "https://api." + window.location.host;
+		if (
 			window.location.host.indexOf("localhost") > -1 ||
 			window.location.host.indexOf("127.0.0.1") > -1 ||
 			window.location.host.indexOf("192.168.") == 0
-		){
+		) {
 			url = "http://localhost:3004";
 		}
 		const results = await fetch(url + path, {
-			method: 'GET'
+			method: "GET",
 		});
 		const data = await results.json();
 		createEventTable(data);
-		hideElement('loading-events');
-	}
-	catch(error){
+		hideElement("loading-events");
+	} catch (error) {
 		hideElement("loading-events");
 		console.error(error);
 	}
 }
 
-function createEventTable(data){
+function createEventTable(data) {
 	const filterButtons = document.getElementById("filter-buttons");
 	filterButtons.classList = "flex gap--8 flex-wrap";
 	// create the category buttons
-	for(let i = 0; i < data.categories.length; i++){
+	for (let i = 0; i < data.categories.length; i++) {
 		const categoryClean = data.categories[i].toLowerCase().replace(" ", "-");
 		const filterButton = document.createElement("button");
 		filterButton.innerHTML = data.categories[i];
 		filterButton.id = `filter-${categoryClean}`;
 		filterButton.classList = "btn btn-pill btn--secondary";
-		if(categoryClean === "all"){
+		if (categoryClean === "all") {
 			filterButton.classList = "btn btn-pill btn-primary";
 		}
 		filterButton.onclick = () => filterTable(categoryClean);
 		filterButtons.appendChild(filterButton);
 	}
 
-	const table = document.getElementById('event-data');
-	for(let i = 0; i < data.data.length; i++){
+	const table = document.getElementById("event-data");
+	for (let i = 0; i < data.data.length; i++) {
 		const el = data.data[i];
 		const tr = table.insertRow(-1);
-		tr.id = el.category.toLowerCase().replace(' ', '-');
+		tr.id = el.category.toLowerCase().replace(" ", "-");
 		const name = tr.insertCell(-1);
 		name.innerHTML = `<b>${el.name}</b>`;
 		const dates = tr.insertCell(-1);
 		const range =
 			!el.start_date && !el.end_date
 				? "TBD"
-				: el.start_date && el.end_date ? `${el.start_date} - ${el.end_date}` : `${el.start_date || el.end_date}`;
+				: el.start_date && el.end_date
+					? `${el.start_date} - ${el.end_date}`
+					: `${el.start_date || el.end_date}`;
 		dates.innerHTML = range;
 		const details = tr.insertCell(-1);
-		details.innerHTML = el.details ? `<a href="${el.details}" target="_blank">Details</a>` : "";
-		el.registration ? details.innerHTML += ` | <a href="${el.registration}" target="_blank">Registration</a> `: '';
-		el.standings ? details.innerHTML += ` | <a href="${el.standings}" target="_blank">Standings</a> `: '';
+		details.innerHTML = el.details
+			? `<a href="${el.details}" target="_blank">Details</a>`
+			: "";
+		el.registration
+			? (details.innerHTML += ` | <a href="${el.registration}" target="_blank">Registration</a> `)
+			: "";
+		el.standings
+			? (details.innerHTML += ` | <a href="${el.standings}" target="_blank">Standings</a> `)
+			: "";
 	}
 }
 
-function filterTable(category){
-	const table = document.getElementById('event-data');
+function filterTable(category) {
+	const table = document.getElementById("event-data");
 	const trs = table.childNodes;
-	const filterAll = document.getElementById('filter-all');
+	const filterAll = document.getElementById("filter-all");
 	// loop through button and reset classes
 	const filterButtons = document.getElementById("filter-buttons");
-	filterButtons.childNodes.forEach(el => {
-		el.classList = 'btn btn-pill btn-secondary';
+	filterButtons.childNodes.forEach((el) => {
+		el.classList = "btn btn-pill btn-secondary";
 	});
 	// reset styles for all filter
-	if(category === 'all'){
-		filterAll.classList = 'btn btn-pill btn-primary';
-		trs.forEach(el => {
-			el.style.display = '';
+	if (category === "all") {
+		filterAll.classList = "btn btn-pill btn-primary";
+		trs.forEach((el) => {
+			el.style.display = "";
 		});
 		return;
 	}
 	// set active button style
 	const button = document.getElementById(`filter-${category}`);
-	button.classList = 'btn btn-pill btn-primary';
-	filterAll.classList = 'btn btn-pill btn-secondary';
+	button.classList = "btn btn-pill btn-primary";
+	filterAll.classList = "btn btn-pill btn-secondary";
 
 	// loop through rows and set display style
-	trs.forEach(element => {
+	trs.forEach((element) => {
 		element.style.display = element.id === category ? "" : "none";
 	});
 }
 
-$(document).ready(function(){
-	if(localStorage.getItem("2d_board") === "true"){
+$(document).ready(function () {
+	if (localStorage.getItem("2d_board") === "true") {
 		is2DBoard = true;
 	}
-	if(localStorage.getItem('sound')==='false'){
+	if (localStorage.getItem("sound") === "false") {
 		turnsoundoff();
 	}
 	chathandler.init();
-	if(localStorage.getItem('keeploggedin') === 'true' && !is2DBoard){
+	if (localStorage.getItem("keeploggedin") === "true" && !is2DBoard) {
+		server.connect();
+	} else if (!is2DBoard) {
 		server.connect();
 	}
-	else if(!is2DBoard){
-		server.connect();
+	if (
+		localStorage.getItem("usr") &&
+		localStorage.getItem("disable-landing") === "true"
+	) {
+		hideElement("landing");
 	}
-	if(localStorage.getItem("usr") && localStorage.getItem('disable-landing') === 'true'){
-		hideElement('landing');
-	}
-	if(localStorage.getItem("isLoggedIn")){
+	if (localStorage.getItem("isLoggedIn")) {
 		hideElement("signup-button");
 		hideElement("landing-login-button");
 		hideElement("action-links");
