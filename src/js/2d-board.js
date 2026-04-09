@@ -96,6 +96,9 @@ async function messageHandler(event){
 				setDisable2DBoard(false);
 			}
 			break;
+		case "UNHANDLED_KEY":
+			onKeyUp(value);
+			break;
 		default:
 			break;
 	}
