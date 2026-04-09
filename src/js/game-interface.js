@@ -29,7 +29,8 @@ let gameData = {
 	move_start: 0,
 	move_shown: 0, // which move are we showing (we can show previous moves
 	result: '',
-	is_game_end: false // the game has ended and play cannot continue,
+	is_game_end: false, // the game has ended and play cannot continue
+	chatRoom: null // chat room ID associated with this game
 };
 
 const defaultPiecesAndCaps = {
@@ -69,7 +70,8 @@ function resetGameDataToDefault(){
 		move_start: 0,
 		move_shown: 0,
 		result: '',
-		is_game_end: false
+		is_game_end: false,
+		chatRoom: null
 	};
 }
 function changeScratchBoardSize(){
@@ -492,6 +494,14 @@ function notate(txt){
 		cell1.innerHTML = '<a href="#" onclick="showMove('+(gameData.move_count+1)+');"><span class=moveno'+gameData.move_count+'>'+txt+'</span></a>';
 	}
 	$('#notationbar').scrollTop(10000);
+
+	// Insert move marker in game chat
+	if(!gameData.is_scratch && gameData.chatRoom && typeof loadingGameHistory !== 'undefined' && !loadingGameHistory){
+		const moveNum = Math.floor(gameData.move_count / 2) + 1;
+		const isWhite = gameData.move_count % 2 === 0;
+		const label = moveNum + (isWhite ? '. ' : '... ') + txt;
+		chathandler.insertMoveMarker(gameData.chatRoom, label);
+	}
 }
 
 function updateLastMove(move){
@@ -602,6 +612,16 @@ function setShownMove(moveId){
 function undoMove(){
 	// we can't undo before the place we started from
 	if(gameData.move_count <= gameData.move_start){return;}
+
+	// Insert undo marker in game chat
+	if(!gameData.is_scratch && gameData.chatRoom){
+		const undoneIdx = gameData.move_count - 1;
+		const moveNum = Math.floor(undoneIdx / 2) + 1;
+		const wasWhite = undoneIdx % 2 === 0;
+		const label = 'Undo ' + moveNum + (wasWhite ? '.' : '...');
+		chathandler.insertMoveMarker(gameData.chatRoom, label);
+	}
+
 	// Save current view position
 	const wasViewingHistory = gameData.move_shown !== gameData.move_count;
 	const oldViewPos = gameData.move_shown;

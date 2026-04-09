@@ -490,6 +490,25 @@ a.navitem, div.navitem{
 	cursor: pointer;
 }
 
+.chat-move-marker {
+	text-align: center;
+	font-size: 0.75em;
+	opacity: 0.6;
+	margin: 2px 0;
+	border-top: 1px solid var(--primar-border-color);
+	padding-top: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.roombody code {
+	background: rgba(128,128,128,0.2);
+	padding: 1px 3px;
+	border-radius: 3px;
+	font-size: 0.9em;
+}
+
 /* || Settings */
 #settings-drawer {
 	position: absolute;
