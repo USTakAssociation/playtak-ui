@@ -94,10 +94,8 @@ var chathandler={
 				this.rooms[id][2] = timenow;
 			}
 			$cs.append('<span class="chatname context-player">' + name + ':</span>');
-			const options = {};
-
 			const occ = (txt.match(new RegExp(server.myname,"g")) || []).length;
-			txt = txt.linkify(options);
+			txt = inlineMarkdown(txt);
 			const occ2 = (txt.match(new RegExp(server.myname,"g")) || []).length;
 
 			//someone said our name and link in string doesn't contain name
@@ -137,6 +135,12 @@ var chathandler={
 				$(this).removeAttr('hidden');
 			});
 		}
+	},
+	insertMoveMarker: function(roomId,label){
+		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
+		const $cs = this.rooms[roomId][1];
+		$cs.append('<div class="chat-move-marker">' + escapeHtml(label) + '</div>');
+		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
 	},
 	send: function(){
 		const msg = $('#chat-me').val();
