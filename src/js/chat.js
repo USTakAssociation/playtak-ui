@@ -142,6 +142,13 @@ var chathandler={
 		$cs.append('<div class="chat-move-marker">' + escapeHtml(label) + '</div>');
 		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
 	},
+	insertGameSeparator: function(roomId){
+		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
+		const $cs = this.rooms[roomId][1];
+		if($cs.children().length === 0){return;}
+		$cs.append('<hr class="chat-game-separator">');
+		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
+	},
 	send: function(){
 		const msg = $('#chat-me').val();
 		if(this.cur_room=="global-"){

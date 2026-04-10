@@ -495,11 +495,17 @@ a.navitem, div.navitem{
 	font-size: 0.75em;
 	opacity: 0.6;
 	margin: 2px 0;
-	border-top: 1px solid var(--primar-border-color);
 	padding-top: 2px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.chat-game-separator {
+	border: none;
+	border-top: 1px solid currentColor;
+	margin: 6px 0;
+	opacity: 0.4;
 }
 
 .roombody code {
@@ -514,7 +520,7 @@ a.navitem, div.navitem{
 	position: absolute;
 	z-index: 30;
 	background-color: var(--primary-bg-color);
-	border-right: 1px solid var(--primar-border-color);
+	border-right: 1px solid var(--primary-border-color);
 	width: 225px;
 	height: inherit;
 	overflow-y: scroll;
