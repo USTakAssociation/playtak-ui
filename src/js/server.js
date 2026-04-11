@@ -621,7 +621,8 @@ var server = {
 			gameData.bot = 1;
 			gameData.observing = true;
 			gameData.is_scratch = false;
-			gameData.chatRoom = "room-" + p1 + "-" + p2;
+			gameData.chatRoom = "room-" + [p1, p2].sort().join("-");
+			chathandler.insertGameSeparator(gameData.chatRoom);
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
 			loadingGameHistory = true;
@@ -692,6 +693,7 @@ var server = {
 				//Game#1 Time 170 200
 				else if(spl[1] === "Time"){
 					loadingGameHistory = false;
+					flushPendingMoveMarkers();
 					const wt = Math.max(+spl[2] || 0, 0) * 1000;
 					const bt = Math.max(+spl[3] || 0, 0) * 1000;
 					lastWt = wt;
@@ -703,6 +705,7 @@ var server = {
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
 					loadingGameHistory = false;
+					flushPendingMoveMarkers();
 					const wt = Math.max(+spl[2] || 0, 0);
 					const bt = Math.max(+spl[3] || 0, 0);
 					lastWt = wt;
@@ -740,6 +743,10 @@ var server = {
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
 					gameData.result = spl[2];
+					if(!gameData.is_scratch && gameData.chatRoom){
+						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
+						chathandler.insertGameSeparator(gameData.chatRoom);
+					}
 					stopTime();
 					document.title = "Play Tak";
 					if(!is2DBoard || !gameData.is_game_end){
@@ -768,6 +775,10 @@ var server = {
 
 					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
+					if(!gameData.is_scratch && gameData.chatRoom){
+						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
+						chathandler.insertGameSeparator(gameData.chatRoom);
+					}
 					stopTime();
 
 					// Wait for animation to complete before showing game-over dialog
