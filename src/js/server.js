@@ -589,6 +589,7 @@ var server = {
 			chathandler.createRoom("priv-" + opponentname, "<b>" + opponentname + "</b>");
 			chathandler.selectRoom("priv-" + opponentname);
 			gameData.chatRoom = "priv-" + opponentname;
+			chathandler.insertGameSeparator(gameData.chatRoom);
 
 			document.getElementById("chime-sound").currentTime = 0;
 			document.getElementById("chime-sound").play();
@@ -693,7 +694,6 @@ var server = {
 				//Game#1 Time 170 200
 				else if(spl[1] === "Time"){
 					loadingGameHistory = false;
-					flushPendingMoveMarkers();
 					const wt = Math.max(+spl[2] || 0, 0) * 1000;
 					const bt = Math.max(+spl[3] || 0, 0) * 1000;
 					lastWt = wt;
@@ -705,7 +705,6 @@ var server = {
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
 					loadingGameHistory = false;
-					flushPendingMoveMarkers();
 					const wt = Math.max(+spl[2] || 0, 0);
 					const bt = Math.max(+spl[3] || 0, 0);
 					lastWt = wt;
