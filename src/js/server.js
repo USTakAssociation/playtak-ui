@@ -743,6 +743,11 @@ var server = {
 				else if(spl[1] === "Over"){
 					gameData.result = spl[2];
 					if(!gameData.is_scratch && gameData.chatRoom){
+						chathandler.insertTimeMarker(gameData.chatRoom);
+						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
+							chathandler.insertMoveMarker(gameData.chatRoom, gameData.lastMoveLabel);
+							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
+						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
 						chathandler.insertGameSeparator(gameData.chatRoom);
 					}
@@ -775,6 +780,11 @@ var server = {
 					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
 					if(!gameData.is_scratch && gameData.chatRoom){
+						chathandler.insertTimeMarker(gameData.chatRoom);
+						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
+							chathandler.insertMoveMarker(gameData.chatRoom, gameData.lastMoveLabel);
+							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
+						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
 						chathandler.insertGameSeparator(gameData.chatRoom);
 					}

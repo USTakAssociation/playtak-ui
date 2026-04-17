@@ -144,6 +144,17 @@ var chathandler={
 			});
 		}
 	},
+	insertTimeMarker: function(roomId){
+		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
+		const now = new Date();
+		const timenow = getZero(now.getHours()) + ':' + getZero(now.getMinutes());
+		if(timenow === this.rooms[roomId][2]){return;}
+		this.rooms[roomId][2] = timenow;
+		const $cs = this.rooms[roomId][1];
+		let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
+		$cs.append('<div class="chattime"' + hiddenAttr + '>' + timenow + '</div>');
+		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
+	},
 	insertMoveMarker: function(roomId,label){
 		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
 		const $cs = this.rooms[roomId][1];
