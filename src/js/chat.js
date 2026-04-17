@@ -90,34 +90,15 @@ var chathandler={
 			const isGameRoom = gameData.chatRoom && id === gameData.chatRoom;
 			const moveChanged = isGameRoom && gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel;
 
-			let timeHtml = '';
-			let moveHtml = '';
-
 			if(timeChanged){
 				let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
-				timeHtml = '<span class="chattime-text"' + hiddenAttr + '>' + timenow + '</span>';
+				$cs.append('<div class="chattime"' + hiddenAttr + '>' + timenow + '</div>');
 				this.rooms[id][2] = timenow;
 			}
 
 			if(moveChanged){
 				gameData.lastShownMoveLabel = gameData.lastMoveLabel;
-				moveHtml = '<span class="chat-move-text">' + escapeHtml(gameData.lastMoveLabel) + '</span>';
-			}
-
-			if(timeChanged || moveChanged){
-				let combinedHtml = '';
-				if(timeChanged && moveChanged){
-					let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
-					// Time is hidden via CSS class, so we use a wrapper span to conditionally show the separator bullet too
-					combinedHtml = '<span class="chattime-container"' + hiddenAttr + '>' + timeHtml + '&nbsp;&bull;&nbsp;</span>' + moveHtml;
-				}
-				else if(timeChanged){
-					combinedHtml = timeHtml;
-				}
-				else{
-					combinedHtml = moveHtml;
-				}
-				$cs.append('<div class="chat-move-marker">' + combinedHtml + '</div>');
+				$cs.append('<div class="chat-move-marker">' + escapeHtml(gameData.lastMoveLabel) + '</div>');
 			}
 
 			$cs.append('<span class="chatname context-player">' + name + ':</span>');
@@ -152,13 +133,13 @@ var chathandler={
 	hideChatTime: function(){
 		if(document.getElementById('hide-chat-time').checked){
 			localStorage.setItem('hide-chat-time','true');
-			$('.chattime-text, .chattime-container').each(function(index){
+			$('.chattime').each(function(index){
 				$(this).attr('hidden', "true");
 			});
 		}
 		else{
 			localStorage.setItem('hide-chat-time','false');
-			$('.chattime-text, .chattime-container').each(function(index){
+			$('.chattime').each(function(index){
 				$(this).removeAttr('hidden');
 			});
 		}
