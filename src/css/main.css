@@ -490,7 +490,22 @@ a.navitem, div.navitem{
 	cursor: pointer;
 }
 
+.chattime {
+	text-align: center;
+	font-size: 0.75em;
+	opacity: 0.6;
+	margin: 2px 0;
+	padding-top: 2px;
+}
+
+.chattime[hidden] {
+	display: none !important;
+}
+
 .chat-move-marker {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	text-align: center;
 	font-size: 0.75em;
 	opacity: 0.6;
@@ -498,7 +513,22 @@ a.navitem, div.navitem{
 	padding-top: 2px;
 	white-space: nowrap;
 	overflow: hidden;
-	text-overflow: ellipsis;
+}
+
+.chat-move-marker::before,
+.chat-move-marker::after {
+	content: '';
+	flex: 1;
+	border-bottom: 1px solid currentColor;
+	opacity: 0.4;
+}
+
+.chat-move-marker::before {
+	margin-right: 0.5em;
+}
+
+.chat-move-marker::after {
+	margin-left: 0.5em;
 }
 
 .chat-game-separator {

@@ -31,7 +31,8 @@ let gameData = {
 	result: '',
 	is_game_end: false, // the game has ended and play cannot continue
 	chatRoom: null, // chat room ID associated with this game
-	pendingMoveMarkers: [] // markers queued during history loading
+	lastMoveLabel: null, // current move label for chat
+	lastShownMoveLabel: null // last move label displayed in chat
 };
 
 const defaultPiecesAndCaps = {
@@ -73,7 +74,8 @@ function resetGameDataToDefault(){
 		result: '',
 		is_game_end: false,
 		chatRoom: null,
-		pendingMoveMarkers: []
+		lastMoveLabel: null,
+		lastShownMoveLabel: null
 	};
 }
 function changeScratchBoardSize(){
@@ -152,15 +154,6 @@ function playMoveSound(){
 	document.getElementById("move-sound").play();
 }
 
-function flushPendingMoveMarkers(){
-	if(gameData.pendingMoveMarkers.length > 0){
-		chathandler.insertGameSeparator(gameData.chatRoom);
-		for(const label of gameData.pendingMoveMarkers){
-			chathandler.insertMoveMarker(gameData.chatRoom, label);
-		}
-		gameData.pendingMoveMarkers = [];
-	}
-}
 
 function incrementMoveCounter(){
 	if(gameData.move_shown === gameData.move_count){
@@ -507,20 +500,11 @@ function notate(txt){
 	}
 	$('#notationbar').scrollTop(10000);
 
-	// Insert move marker in game chat
+	// Track current move label for chat
 	if(!gameData.is_scratch && gameData.chatRoom){
 		const moveNum = Math.floor(gameData.move_count / 2) + 1;
 		const isWhite = gameData.move_count % 2 === 0;
-		const label = moveNum + (isWhite ? '. ' : '... ') + txt;
-		if(!loadingGameHistory){
-			if(gameData.move_count === gameData.move_start){
-				chathandler.insertGameSeparator(gameData.chatRoom);
-			}
-			chathandler.insertMoveMarker(gameData.chatRoom, label);
-		}
-		else if(!gameData.observing){
-			gameData.pendingMoveMarkers.push(label);
-		}
+		gameData.lastMoveLabel = moveNum + (isWhite ? '. ' : '... ') + txt;
 	}
 }
 

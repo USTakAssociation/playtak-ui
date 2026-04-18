@@ -84,15 +84,23 @@ var chathandler={
 			const now = new Date();
 			const hours = now.getHours();
 			const mins = now.getMinutes();
-			const cls = 'chattime';
 			const timenow = getZero(hours) + ':' + getZero(mins);
 
-			// add check to include chat time
-			if(timenow !== this.rooms[id][2]){
+			const timeChanged = timenow !== this.rooms[id][2];
+			const isGameRoom = gameData.chatRoom && id === gameData.chatRoom;
+			const moveChanged = isGameRoom && gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel;
+
+			if(timeChanged){
 				let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
-				$cs.append('<div class="' + cls + '"' + hiddenAttr + '>' + timenow + '</div>');
+				$cs.append('<div class="chattime"' + hiddenAttr + '>' + timenow + '</div>');
 				this.rooms[id][2] = timenow;
 			}
+
+			if(moveChanged){
+				gameData.lastShownMoveLabel = gameData.lastMoveLabel;
+				$cs.append('<div class="chat-move-marker">' + escapeHtml(gameData.lastMoveLabel) + '</div>');
+			}
+
 			$cs.append('<span class="chatname context-player">' + name + ':</span>');
 			const occ = (txt.match(new RegExp(server.myname,"g")) || []).length;
 			txt = inlineMarkdown(txt);
@@ -135,6 +143,17 @@ var chathandler={
 				$(this).removeAttr('hidden');
 			});
 		}
+	},
+	insertTimeMarker: function(roomId){
+		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
+		const now = new Date();
+		const timenow = getZero(now.getHours()) + ':' + getZero(now.getMinutes());
+		if(timenow === this.rooms[roomId][2]){return;}
+		this.rooms[roomId][2] = timenow;
+		const $cs = this.rooms[roomId][1];
+		let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
+		$cs.append('<div class="chattime"' + hiddenAttr + '>' + timenow + '</div>');
+		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
 	},
 	insertMoveMarker: function(roomId,label){
 		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
