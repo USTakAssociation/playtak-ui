@@ -161,12 +161,21 @@ var chathandler={
 		$cs.append('<div class="chat-move-marker">' + escapeHtml(label) + '</div>');
 		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
 	},
-	insertGameSeparator: function(roomId){
+	lastSeparatorGameId: {},
+	insertGameSeparator: function(roomId, gameId){
 		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
+		// Only insert a separator once per distinct game for a given room.
+		// Re-observing the same game (e.g. switching away and back) reuses the
+		// existing chat room and should not introduce another separator.
+		if(gameId && this.lastSeparatorGameId[roomId] === gameId){return;}
 		const $cs = this.rooms[roomId][1];
-		if($cs.children().length === 0){return;}
+		if($cs.children().length === 0){
+			if(gameId){this.lastSeparatorGameId[roomId] = gameId;}
+			return;
+		}
 		$cs.append('<hr class="chat-game-separator">');
 		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
+		if(gameId){this.lastSeparatorGameId[roomId] = gameId;}
 	},
 	send: function(){
 		const msg = $('#chat-me').val();

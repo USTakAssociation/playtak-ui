@@ -604,7 +604,7 @@ var server = {
 			chathandler.createRoom("priv-" + opponentname, "<b>" + opponentname + "</b>");
 			chathandler.selectRoom("priv-" + opponentname);
 			gameData.chatRoom = "priv-" + opponentname;
-			chathandler.insertGameSeparator(gameData.chatRoom);
+			chathandler.insertGameSeparator(gameData.chatRoom, gameData.id);
 
 			document.getElementById("chime-sound").currentTime = 0;
 			document.getElementById("chime-sound").play();
@@ -638,7 +638,7 @@ var server = {
 			gameData.observing = true;
 			gameData.is_scratch = false;
 			gameData.chatRoom = "room-" + [p1, p2].sort().join("-");
-			chathandler.insertGameSeparator(gameData.chatRoom);
+			chathandler.insertGameSeparator(gameData.chatRoom, gameData.id);
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
 			loadingGameHistory = true;
