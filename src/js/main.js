@@ -413,13 +413,13 @@ function copyNotationToClipboard() {
 }
 
 function openInPtnNinja() {
-	const link = "http://ptn.ninja/" + encodeURIComponent(getNotation());
+	const link = "https://ptn.ninja/" + encodeURIComponent(getNotation());
 	window.open(link, "_blank");
 }
 
 function copyNotationLink() {
 	const link =
-		"http://www.playtak.com/?load=" + encodeURIComponent(getNotation());
+		"https://www.playtak.com/?load=" + encodeURIComponent(getNotation());
 
 	navigator.clipboard.writeText(link).then(
 		() => {
