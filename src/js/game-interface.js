@@ -176,6 +176,13 @@ function incrementMoveCounter(){
 	}
 
 	$('#undo').removeClass('i-requested-undo').removeClass('opp-requested-undo').addClass('request-undo');
+
+	// Flip the active clock in the PTN Ninja iframe so its countdown follows the
+	// new turn between server Time updates. Skip during history replay.
+	if(is2DBoard && !loadingGameHistory){
+		const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
+		set2DGameTimerTurn(timerTurn);
+	}
 }
 
 function load(){
@@ -289,6 +296,26 @@ function loadCurrentGameState(){
 		$(".player1-name:first").html(parsed.tags.Player1 || 'You');
 		$(".player2-name:first").html(parsed.tags.Player2 || 'You');
 	}
+
+	// clearNotationMenu() zeroed the clocks; restore them from the latest
+	// server-authoritative values so the built-in clocks don't display 00:00
+	// until the next Time message arrives.
+	if(lastTimeUpdate){
+		if(gameData.is_game_end){
+			settimers(lastWt, lastBt);
+		}
+		else{
+			startTime(true);
+		}
+		// Also forward the current clock state to the PTN Ninja iframe. This
+		// covers toggling the 2D board on mid-game (e.g. after refreshing the
+		// page with the 2D board disabled): the iframe was not receiving Time
+		// updates while hidden, so its clocks would otherwise stay unset until
+		// the next move.
+		if(is2DBoard){
+			forward2DGameTime(lastWt, lastBt);
+		}
+	}
 }
 
 function processPendingServerMoves(){
@@ -345,6 +372,38 @@ function stopTime(){
 	server.timervar = null;
 }
 
+// Forward authoritative clock values from the PlayTak server to the PTN Ninja
+// iframe (when the 2D board is active). Enables live countdown on first call.
+// The caller passes the raw remaining-time values from the last authoritative
+// server Time update (lastWt/lastBt). Since the iframe stamps its reference
+// point to "now" (Date.now()) when the message arrives, we subtract the time
+// elapsed since lastTimeUpdate from the active side so the forwarded values
+// correspond to the current moment. Without this, toggling the board on
+// after a delay would freeze the iframe clock at the stale snapshot value.
+function forward2DGameTime(p1t, p2t){
+	if(!is2DBoard){return;}
+	const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
+	let time1 = p1t;
+	let time2 = p2t;
+	if(lastTimeUpdate && !gameData.is_game_end){
+		const elapsed = Math.max(invarianttime() - lastTimeUpdate, 0);
+		if(timerTurn === 1){
+			time1 = Math.max(p1t - elapsed, 0);
+		}
+		else{
+			time2 = Math.max(p2t - elapsed, 0);
+		}
+	}
+	set2DGameTime({
+		time1: time1,
+		time2: time2,
+		timerTurn: timerTurn
+	});
+	if(!gameData.is_game_end){
+		set2DTimerLive(true);
+	}
+}
+
 function settimers(p1t,p2t,noHurry){
 	$('.player1-time:first').html(formatTime(p1t));
 	$('.player2-time:first').html(formatTime(p2t));
@@ -387,6 +446,9 @@ function clearNotationMenu(){
 	document.getElementById("extra-time").style.display = "none";
 	$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw');
 	stopTime();
+	if(is2DBoard){
+		set2DTimerLive(false);
+	}
 
 	$('#player-me-name').removeClass('player1-name');
 	$('#player-me-name').removeClass('player2-name');
@@ -683,6 +745,13 @@ function undoMove(){
 	$('.curmove:first').removeClass('curmove');
 	$('.moveno'+(gameData.move_shown-1)+':first').addClass('curmove');
 	storeNotation();
+
+	// Flip the active clock in the PTN Ninja iframe back to the undone player's
+	// side. The subsequent server Time message will correct clock values.
+	if(is2DBoard){
+		const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
+		set2DGameTimerTurn(timerTurn);
+	}
 }
 
 function checkIfMyMove(){

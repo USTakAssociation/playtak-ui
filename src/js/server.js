@@ -306,6 +306,9 @@ var server = {
 				server.rendeerseekslist();
 				server.updateplayerinfo();
 				stopTime();
+				if(is2DBoard){
+					set2DTimerLive(false);
+				}
 				document.getElementById("removeSeek").removeAttribute("disabled");
 				document.getElementById("createSeek").removeAttribute("disabled");
 
@@ -577,6 +580,18 @@ var server = {
 			const time = gameData.time;
 			settimers(time * 1000, time * 1000);
 
+			// Forward player names + initial clock values to the PTN Ninja iframe.
+			// Live ticking is enabled once the first Time message arrives.
+			if(is2DBoard){
+				set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"][Player1 "${p1}"][Player2 "${p2}"]`);
+				set2DTimerLive(false);
+				set2DGameTime({
+					time1: time * 1000,
+					time2: time * 1000,
+					timerTurn: 1
+				});
+			}
+
 			let opponentname;
 			if(spl[6] === "white"){
 				//I am white
@@ -636,6 +651,17 @@ var server = {
 			document.getElementById('rematch').style.display = "none";
 			const time = +spl[5];
 			settimers(time * 1000, time * 1000);
+
+			// Forward player names + initial clock values to the PTN Ninja iframe.
+			if(is2DBoard){
+				set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"][Player1 "${p1}"][Player2 "${p2}"]`);
+				set2DTimerLive(false);
+				set2DGameTime({
+					time1: time * 1000,
+					time2: time * 1000,
+					timerTurn: 1
+				});
+			}
 		}
 		else if(e.startsWith("GameList Add ")){
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
@@ -701,6 +727,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
@@ -712,6 +739,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 RequestUndo
 				else if(spl[1] === "RequestUndo"){
@@ -751,6 +779,9 @@ var server = {
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 					document.title = "Play Tak";
 					if(!is2DBoard || !gameData.is_game_end){
 						// Wait for animation to complete before showing game-over dialog
@@ -779,15 +810,17 @@ var server = {
 					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
 					if(!gameData.is_scratch && gameData.chatRoom){
-						chathandler.insertTimeMarker(gameData.chatRoom);
 						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
 							chathandler.insertMoveMarker(gameData.chatRoom, gameData.lastMoveLabel);
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
+						chathandler.insertTimeMarker(gameData.chatRoom);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 
 					// Wait for animation to complete before showing game-over dialog
 					animation.whenComplete(function(){

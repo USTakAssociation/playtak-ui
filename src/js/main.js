@@ -182,8 +182,15 @@ function init() {
 	clearStoredNotation();
 	loadInterfaceSettings();
 	const ninjaElement = document.getElementById("ninja");
+	// Show game header (turn indicator, player names, clocks) defaults to true,
+	// but honor the user's saved preference when loading the iframe.
+	const showHeader = localStorage.getItem("2d-header") !== "false";
 	const ninjaParams =
-		"&moveNumber=false&unplayedPieces=true&disableStoneCycling=true&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=false&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false";
+		"&moveNumber=false&unplayedPieces=true&disableStoneCycling=true&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=" +
+		showHeader +
+		"&gameTimer=" +
+		showHeader +
+		"&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false";
 	if (
 		window.location.host.indexOf("localhost") > -1 ||
 		window.location.host.indexOf("127.0.0.1") > -1 ||
