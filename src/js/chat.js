@@ -90,15 +90,15 @@ var chathandler={
 			const isGameRoom = gameData.chatRoom && id === gameData.chatRoom;
 			const moveChanged = isGameRoom && gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel;
 
+			if(moveChanged){
+				gameData.lastShownMoveLabel = gameData.lastMoveLabel;
+				$cs.append('<div class="chat-move-marker">' + escapeHtml(gameData.lastMoveLabel) + '</div>');
+			}
+
 			if(timeChanged){
 				let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
 				$cs.append('<div class="chattime"' + hiddenAttr + '>' + timenow + '</div>');
 				this.rooms[id][2] = timenow;
-			}
-
-			if(moveChanged){
-				gameData.lastShownMoveLabel = gameData.lastMoveLabel;
-				$cs.append('<div class="chat-move-marker">' + escapeHtml(gameData.lastMoveLabel) + '</div>');
 			}
 
 			$cs.append('<span class="chatname context-player">' + name + ':</span>');

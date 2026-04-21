@@ -749,7 +749,6 @@ var server = {
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
 					}
 					stopTime();
 					document.title = "Play Tak";
