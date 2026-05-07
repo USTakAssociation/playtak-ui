@@ -124,12 +124,22 @@ function initBoard(){
 
 	if(gameData.increment > 0){
 		document.getElementById("time-increment").style.display = 'block';
-		const incrementRule = document.getElementById("time-increment-rule");
-		incrementRule.style.display = 'block';
-		incrementRule.innerHTML = `+${minuteseconds(gameData.increment)}${gameData.incrementScales ? '&times;n' : ''}`;
-		incrementRule.setAttribute('title', gameData.incrementScales
+		const $incrementRule = $("#time-increment-rule");
+		$incrementRule.css('display', 'block');
+		$incrementRule.html(`+${minuteseconds(gameData.increment)}${gameData.incrementScales ? '&times;n' : ''}`);
+		const tooltipText = gameData.incrementScales
 			? `Time increment - +${gameData.increment} seconds added each move, scaled by move number`
-			: 'Time increment - Extra time added each move');
+			: 'Time increment - Extra time added each move';
+		// If Bootstrap has already initialized a tooltip on this node, it has
+		// moved the original title to `data-original-title` and stripped the
+		// native `title` — so set both attrs to keep things in sync and avoid
+		// a duplicate native browser tooltip showing alongside Bootstrap's.
+		if($incrementRule.data('bs.tooltip')){
+			$incrementRule.attr('data-original-title', tooltipText).removeAttr('title');
+		}
+		else{
+			$incrementRule.attr('title', tooltipText);
+		}
 	}
 
 	if(gameData.triggerMove > 0 && gameData.timeAmount > 0){
