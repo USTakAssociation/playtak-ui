@@ -119,11 +119,19 @@ function initBoard(){
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
 	document.getElementById("player-opp").className = "selectplayer";
 	document.getElementById("player-me").className = "";
-	if(gameData.triggerMove > 0){
+
+	if(gameData.increment > 0){
+		document.getElementById("time-increment").style.display = 'block';
+		document.getElementById("time-increment-rule").style.display = 'block';
+		document.getElementById("time-increment-rule").innerHTML = `+${gameData.increment}`;
+	}
+
+	if(gameData.triggerMove > 0 && gameData.timeAmount > 0){
 		document.getElementById("extra-time").style.display = 'block';
+		document.getElementById("extra-time-rule").style.display = 'block';
 		document.getElementById("extra-time-rule").innerHTML = `${gameData.triggerMove}/+${gameData.timeAmount/60}`;
 	}
-	// reset the game data and new new values
+	// reset the game data and set new values
 	if(!is2DBoard){
 		board.clear();
 		board.create(gameData.size, gameData.pieces, gameData.capstones);
@@ -383,7 +391,12 @@ function formatTime(time){
 function clearNotationMenu(){
 	const tbl = document.getElementById("moveslist");
 	while(tbl.rows.length > 0){tbl.deleteRow(0);}
+	document.getElementById("time-increment-rule").innerHTML = '';
+	document.getElementById("time-increment-rule").style.display = "none";
+	document.getElementById("time-increment").style.display = "none";
+
 	document.getElementById("extra-time-rule").innerHTML = '';
+	document.getElementById("extra-time-rule").style.display = "none";
 	document.getElementById("extra-time").style.display = "none";
 	$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw');
 	stopTime();
