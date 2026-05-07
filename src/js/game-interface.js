@@ -10,6 +10,7 @@ let gameData = {
 	size: 5,
 	time: null,
 	increment: null,
+	incrementScales: false,
 	komi: 0,
 	pieces: 21,
 	capstones: 1,
@@ -58,6 +59,7 @@ function resetGameDataToDefault(){
 		size: 5,
 		time: null,
 		increment: null,
+		incrementScales: false,
 		komi: 0,
 		pieces: 21,
 		capstones: 1,
@@ -122,8 +124,12 @@ function initBoard(){
 
 	if(gameData.increment > 0){
 		document.getElementById("time-increment").style.display = 'block';
-		document.getElementById("time-increment-rule").style.display = 'block';
-		document.getElementById("time-increment-rule").innerHTML = `+${gameData.increment}`;
+		const incrementRule = document.getElementById("time-increment-rule");
+		incrementRule.style.display = 'block';
+		incrementRule.innerHTML = `+${minuteseconds(gameData.increment)}${gameData.incrementScales ? '&times;n' : ''}`;
+		incrementRule.setAttribute('title', gameData.incrementScales
+			? `Time increment - +${gameData.increment} seconds added each move, scaled by move number`
+			: 'Time increment - Extra time added each move');
 	}
 
 	if(gameData.triggerMove > 0 && gameData.timeAmount > 0){
