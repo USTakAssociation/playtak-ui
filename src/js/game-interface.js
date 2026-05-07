@@ -10,6 +10,7 @@ let gameData = {
 	size: 5,
 	time: null,
 	increment: null,
+	incrementScales: false,
 	komi: 0,
 	pieces: 21,
 	capstones: 1,
@@ -58,6 +59,7 @@ function resetGameDataToDefault(){
 		size: 5,
 		time: null,
 		increment: null,
+		incrementScales: false,
 		komi: 0,
 		pieces: 21,
 		capstones: 1,
@@ -119,11 +121,33 @@ function initBoard(){
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
 	document.getElementById("player-opp").className = "selectplayer";
 	document.getElementById("player-me").className = "";
-	if(gameData.triggerMove > 0){
+
+	if(gameData.increment > 0){
+		document.getElementById("time-increment").style.display = 'block';
+		const $incrementRule = $("#time-increment-rule");
+		$incrementRule.css('display', 'block');
+		$incrementRule.html(`+${minuteseconds(gameData.increment)}${gameData.incrementScales ? '&times;n' : ''}`);
+		const tooltipText = gameData.incrementScales
+			? `Time increment - +${gameData.increment} seconds added each move, scaled by move number`
+			: 'Time increment - Extra time added each move';
+		// If Bootstrap has already initialized a tooltip on this node, it has
+		// moved the original title to `data-original-title` and stripped the
+		// native `title` — so set both attrs to keep things in sync and avoid
+		// a duplicate native browser tooltip showing alongside Bootstrap's.
+		if($incrementRule.data('bs.tooltip')){
+			$incrementRule.attr('data-original-title', tooltipText).removeAttr('title');
+		}
+		else{
+			$incrementRule.attr('title', tooltipText);
+		}
+	}
+
+	if(gameData.triggerMove > 0 && gameData.timeAmount > 0){
 		document.getElementById("extra-time").style.display = 'block';
+		document.getElementById("extra-time-rule").style.display = 'block';
 		document.getElementById("extra-time-rule").innerHTML = `${gameData.triggerMove}/+${gameData.timeAmount/60}`;
 	}
-	// reset the game data and new new values
+	// reset the game data and set new values
 	if(!is2DBoard){
 		board.clear();
 		board.create(gameData.size, gameData.pieces, gameData.capstones);
@@ -442,7 +466,12 @@ function formatTime(time){
 function clearNotationMenu(){
 	const tbl = document.getElementById("moveslist");
 	while(tbl.rows.length > 0){tbl.deleteRow(0);}
+	document.getElementById("time-increment-rule").innerHTML = '';
+	document.getElementById("time-increment-rule").style.display = "none";
+	document.getElementById("time-increment").style.display = "none";
+
 	document.getElementById("extra-time-rule").innerHTML = '';
+	document.getElementById("extra-time-rule").style.display = "none";
 	document.getElementById("extra-time").style.display = "none";
 	$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw');
 	stopTime();
