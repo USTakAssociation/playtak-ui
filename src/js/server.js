@@ -1564,7 +1564,6 @@ var server = {
 			size: document.getElementById("boardsize").value,
 			time: document.getElementById("timeselect").value,
 			increment: document.getElementById("incselect").value,
-			increment_scales: document.getElementById("incrementScales").checked,
 			color: document.getElementById("colorselect").value,
 			komi: document.getElementById("komiselect").value,
 			pieces: document.getElementById("piececount").value,
@@ -1578,7 +1577,8 @@ var server = {
 		const opponent = document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"");
 		const unrated = (game.type==2?1:0);
 		const tournament = (game.type==1?1:0);
-		const seekCMD =`Seek ${game.size} ${game.time} ${game.increment} ${game.increment_scales ? 1 : 0} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opponent}`;
+		const incParsed = parseIncrementValue(game.increment);
+		const seekCMD =`Seek ${game.size} ${game.time} ${incParsed.increment} ${incParsed.increment_scales ? 1 : 0} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opponent}`;
 		this.send(seekCMD);
 		$('#creategamemodal').modal('hide');
 		server.newSeek = true;

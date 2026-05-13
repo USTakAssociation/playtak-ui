@@ -1,3 +1,11 @@
+// Parses an #incselect value like "20" or "1*n" into { increment, increment_scales }.
+function parseIncrementValue(value) {
+	const str = String(value ?? "0");
+	const scales = str.endsWith("*n");
+	const increment = parseInt(scales ? str.slice(0, -2) : str, 10) || 0;
+	return { increment, increment_scales: scales };
+}
+
 const gamePresets = {
 	beginner: {
 		size: 6,
@@ -6,8 +14,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900,
-		increment: 10,
-		increment_scales: false,
+		increment: "10",
 		trigger_move: "",
 		time_amount: "",
 		required_fields: ["opname"],
@@ -19,8 +26,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900,
-		increment: 10,
-		increment_scales: false,
+		increment: "10",
 		trigger_move: "",
 		time_amount: "",
 		required_fields: ["opname"],
@@ -32,8 +38,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900, // seconds
-		increment: 10,
-		increment_scales: false,
+		increment: "10",
 		trigger_move: 35,
 		time_amount: 300, // seconds
 		required_fields: ["opname"],
@@ -45,8 +50,7 @@ const gamePresets = {
 		pieces: 40,
 		capstones: 2,
 		time: 1200, // seconds
-		increment: 15,
-		increment_scales: false,
+		increment: "15",
 		trigger_move: 40,
 		time_amount: 600, // seconds
 		required_fields: ["opname"],
@@ -58,8 +62,7 @@ const gamePresets = {
 		pieces: 40,
 		capstones: 2,
 		time: 300, // seconds
-		increment: 5,
-		increment_scales: false,
+		increment: "5",
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -71,8 +74,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 1200, // seconds
-		increment: 15,
-		increment_scales: false,
+		increment: "15",
 		trigger_move: "35",
 		time_amount: "600", // seconds
 		required_fields: ["opname"],
@@ -84,8 +86,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900, // seconds
-		increment: 15,
-		increment_scales: false,
+		increment: "15",
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -97,8 +98,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 600, // seconds
-		increment: 15,
-		increment_scales: false,
+		increment: "15",
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -110,8 +110,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 180, // seconds
-		increment: 5,
-		increment_scales: false,
+		increment: "5",
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -502,7 +501,6 @@ function changePreset(event) {
 		document.getElementById("gametype").value = storedValues.type;
 		document.getElementById("timeselect").value = storedValues.time;
 		document.getElementById("incselect").value = storedValues.increment;
-		document.getElementById("incrementScales").checked = !!storedValues.increment_scales;
 		document.getElementById("triggerMove").value = storedValues.trigger_move;
 		document.getElementById("timeAmount").value = storedValues.time_amount;
 		return;
@@ -516,7 +514,6 @@ function changePreset(event) {
 			type: document.getElementById("gametype").value,
 			time: document.getElementById("timeselect").value,
 			increment: document.getElementById("incselect").value,
-			increment_scales: document.getElementById("incrementScales").checked,
 			trigger_move: document.getElementById("triggerMove").value,
 			time_amount: document.getElementById("timeAmount").value,
 		};
@@ -538,8 +535,6 @@ function changePreset(event) {
 		document.getElementById("timeselect").setAttribute("disabled", "true");
 		document.getElementById("incselect").value = preset.increment;
 		document.getElementById("incselect").setAttribute("disabled", "true");
-		document.getElementById("incrementScales").checked = !!preset.increment_scales;
-		document.getElementById("incrementScales").setAttribute("disabled", "true");
 		document.getElementById("triggerMove").value = preset.trigger_move;
 		document.getElementById("triggerMove").setAttribute("disabled", "true");
 		document.getElementById("timeAmount").value = preset.time_amount;
@@ -585,7 +580,6 @@ function resetGameSettings() {
 	document.getElementById("gametype").value = "0";
 	document.getElementById("timeselect").value = "600";
 	document.getElementById("incselect").value = "20";
-	document.getElementById("incrementScales").checked = false;
 	document.getElementById("triggerMove").value = "";
 	document.getElementById("timeAmount").value = "";
 	document.getElementById("colorselect").value = "A";
@@ -607,7 +601,6 @@ function loadGameSettings() {
 	document.getElementById("gametype").value = storedValues.type;
 	document.getElementById("timeselect").value = storedValues.time;
 	document.getElementById("incselect").value = storedValues.increment;
-	document.getElementById("incrementScales").checked = !!storedValues.increment_scales;
 	document.getElementById("triggerMove").value = storedValues.trigger_move;
 	document.getElementById("colorselect").value = storedValues.color || "A";
 }
