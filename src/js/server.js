@@ -367,7 +367,7 @@ var server = {
 	},
 	sendClient: function(){
 		server.send("Client TakWeb-22.04.12");
-		server.send("Protocol 3");
+		server.send("Protocol 4");
 	},
 	login: function(){
 		this.anotherlogin=false;
