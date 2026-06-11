@@ -254,6 +254,17 @@ var server = {
 				);
 			}
 		}
+		// The server sends the Time update immediately BEFORE the move message,
+		// so when that Time arrived move_count was still the pre-move value: the
+		// clock was frozen (pre-game) or stopped, and only the next move's Time
+		// would restart it. Now that the move is applied and move_count is
+		// current, (re)start the clocks so they begin counting the new side's
+		// time right away. Skipped during the initial history burst, which ends
+		// when the first Time message clears loadingGameHistory.
+		if(!loadingGameHistory && lastTimeUpdate && !gameData.is_game_end){
+			startTime(true);
+			forward2DGameTime(lastWt, lastBt);
+		}
 	},
 
 	connect: function(){
