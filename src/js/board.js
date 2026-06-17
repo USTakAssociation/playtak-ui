@@ -2423,7 +2423,7 @@ const board = {
 	},
 	placePieceOnSquare: function(piece, sq, hideSelectionShadowAfter){
 		const self = this;
-		// Double Black Stack: white's first move places a second black flat on top,
+		// Double Black Stack (DBS): white's first move places a second black flat on top,
 		// animated together with the first flat so the pair moves down as a unit.
 		// select() sets selectedCompanion for the lift-then-place flow; the direct
 		// click-to-place flow skips select(), so resolve the companion here too
@@ -2486,7 +2486,7 @@ const board = {
 		// If no lifted companion was animated above (e.g. a fallback path), add the
 		// extra black flat now. The own-move flow normally handles it inline above.
 		if(!companion){
-			this.maybeAddDoubleBlackStackFlat(sq);
+			this.addDoubleBlackStackFlatIfApplicable(sq);
 		}
 		this.incmovecnt();
 	},
@@ -2511,7 +2511,7 @@ const board = {
 	// on top of the swapped black flat, drawn from black's reserves (rendered "2a1").
 	// Must run after the first flat is on the square and before the position snapshot
 	// (incmovecnt) so board_history captures both flats.
-	maybeAddDoubleBlackStackFlat: function(sq){
+	addDoubleBlackStackFlatIfApplicable: function(sq){
 		if(gameData.opening !== 'double black stack' || gameData.move_count !== 0){
 			return;
 		}
@@ -2607,7 +2607,7 @@ const board = {
 
 		// Only fall back to the teleport helper when no companion was animated above.
 		if(!companion){
-			this.maybeAddDoubleBlackStackFlat(hlt);
+			this.addDoubleBlackStackFlatIfApplicable(hlt);
 		}
 		this.notatePmove(file + rank,caporwall);
 		this.incmovecnt();
