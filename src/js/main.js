@@ -390,6 +390,10 @@ function getNotation(id) {
 	res += getHeader("Komi", gameData.komi / 2);
 	res += getHeader("Flats", gameData.pieces);
 	res += getHeader("Caps", gameData.capstones);
+	// Opening variant (PTN Ninja tag). Omitted for the default "swap".
+	if (gameData.opening && gameData.opening !== "swap") {
+		res += getHeader("Opening", gameData.opening);
+	}
 	res += getHeader("Result", gameData.result);
 	res += "\r\n";
 
@@ -503,6 +507,7 @@ function changePreset(event) {
 		document.getElementById("incselect").value = storedValues.increment;
 		document.getElementById("triggerMove").value = storedValues.trigger_move;
 		document.getElementById("timeAmount").value = storedValues.time_amount;
+		document.getElementById("openingselect").value = storedValues.opening || "swap";
 		return;
 	} else if (preset) {
 		// store the current values if user changes back to the noen preset
@@ -516,6 +521,7 @@ function changePreset(event) {
 			increment: document.getElementById("incselect").value,
 			trigger_move: document.getElementById("triggerMove").value,
 			time_amount: document.getElementById("timeAmount").value,
+			opening: document.getElementById("openingselect").value,
 		};
 		localStorage.setItem(
 			"current-game-settings",
@@ -583,6 +589,7 @@ function resetGameSettings() {
 	document.getElementById("triggerMove").value = "";
 	document.getElementById("timeAmount").value = "";
 	document.getElementById("colorselect").value = "A";
+	document.getElementById("openingselect").value = "swap";
 	document.getElementById("opname").value = "";
 	document.getElementById("preset").value = "none";
 }
@@ -603,6 +610,7 @@ function loadGameSettings() {
 	document.getElementById("incselect").value = storedValues.increment;
 	document.getElementById("triggerMove").value = storedValues.trigger_move;
 	document.getElementById("colorselect").value = storedValues.color || "A";
+	document.getElementById("openingselect").value = storedValues.opening || "swap";
 }
 
 function resetToLoginState() {

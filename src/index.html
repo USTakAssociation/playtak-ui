@@ -1099,6 +1099,21 @@
 												</div>
 											</div>
 										</div>
+										<div class="row">
+											<div class="col-sm-6">
+												<!-- opening -->
+												<div
+													class="form-group"
+													data-toggle="tooltip" data-placement="auto" title="Opening - Single Swap: each player's first move places one of the opponent's flats. Double Black Stack: White's first move instead places a stack of two black flats."
+												>
+													<label for="openingselect">Opening</label>
+													<select class="form-control" id="openingselect">
+														<option value="swap" selected="selected">Single Swap</option>
+														<option value="double black stack">Double Black Stack</option>
+													</select>
+												</div>
+											</div>
+										</div>
 										<div class="accordion" id="accordionExample">
 											<div class="card">
 												<div class="card-header" id="headingOne">
@@ -1221,6 +1236,15 @@
 											</select>
 										</div>
 
+									</div>
+									<div class="col-sm-6">
+										<div class="form-group" data-toggle="tooltip" data-placement="auto" title="Opening - Single Swap: each player's first move places one of the opponent's flats. Double Black Stack: white's first move instead places a stack of two black flats.">
+											<label for="scratchOpeningSelect">Opening</label>
+											<select class="form-control" id="scratchOpeningSelect">
+												<option value="swap" selected="selected">Single Swap</option>
+												<option value="double black stack">Double Black Stack</option>
+											</select>
+										</div>
 									</div>
 								</div>
 								<div class="row">
@@ -2189,6 +2213,7 @@
 									<td class="right hide-sm">Stones</td>
 									<td class="right hide-sm">Type</td>
 									<td class="right hide-sm">Extra</td>
+									<td class="right hide-sm">Opening</td>
 									<td class="right hide-md" style="width: 40px"></td>
 								</tr>
 							</thead>
@@ -2208,6 +2233,7 @@
 									<td class="right hide-sm">Stones</td>
 									<td class="right hide-sm">Type</td>
 									<td class="right hide-sm">Extra</td>
+									<td class="right hide-sm">Opening</td>
 									<td class="right hide-md" style="width: 40px"></td>
 								</tr>
 							</thead>

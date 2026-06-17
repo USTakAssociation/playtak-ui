@@ -80,7 +80,16 @@ async function messageHandler(event){
 				server.send("Game#" + gameData.id + " " + fromPTN(value));
 				setDisable2DBoard(true);
 			}
-			notate(value);
+			// Double Black Stack: white's first ply is written "2a1". PTN Ninja
+			// emits a plain "a1" for the placement, so add the leading "2"
+			// ourselves (idempotent — mirrors board.js notatePmove and
+			// server.js processGameMove). The server send above is unaffected:
+			// fromPTN ignores a placement's leading count.
+			let plyNotation = value;
+			if(gameData.opening === 'double black stack' && gameData.move_count === 0 && !/^2/.test(plyNotation)){
+				plyNotation = '2' + plyNotation;
+			}
+			notate(plyNotation);
 			incrementMoveCounter();
 			storeNotation();
 			// Play sound: if animations enabled, delay to sync with PTN Ninja animation
