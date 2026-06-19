@@ -780,12 +780,21 @@ select, .select.dropdown-toggle {
 	border-bottom: 1px solid var(--primary-border-color);
 }
 
+/* Left-align all columns to match the playtak-games table. This overrides the
+   generic .right utility (lower specificity than .linestable td/th). */
 .linestable td{
 	padding: 8px 4px;
+	text-align: left;
 }
 
 .linestable th{
 	padding: 8px 4px;
+	text-align: left;
+}
+
+/* Rules column: allow "Double Black Stack" to wrap rather than forcing a wide column. */
+.rules-col{
+	white-space: normal;
 }
 
 .colourcircle circle{
@@ -1131,12 +1140,12 @@ a.btn.btn-primary {
 	}
 }
 
-/* max width 500 hide komi */
+/* max width 500: collapse the Rules column into the detail menu (like the old Komi column did) */
 @media (max-width: 500px) {
-	.komi-rule {
+	.rules-rule {
 		display: none;
 	}
-	.komi-rule-menu {
+	.rules-rule-menu {
 		display: block !important;
 	}
 }

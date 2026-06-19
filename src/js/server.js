@@ -688,7 +688,9 @@ var server = {
 				unrated: spl[12] == 1,
 				tournament: spl[13] == 1,
 				triggerMove: spl[14],
-				timeAmount: parseInt(spl[15]) / 60
+				timeAmount: parseInt(spl[15]) / 60,
+				// protocol 4 appends the opening code after timeAmount
+				opening: openingNameFromCode(+(spl[16] || 0))
 			};
 			this.gameslist.push(game);
 			this.addGameToWatchList(game);
@@ -1134,15 +1136,15 @@ var server = {
 		let gameType = "";
 		let gameTypeText = "";
 		if(!game.unrated && !game.tournament){
-			gameType = "N";
+			gameType = "Normal";
 			gameTypeText = "Normal game";
 		}
 		else if(game.unrated && !game.tournament){
-			gameType = "U";
+			gameType = "Unrated";
 			gameTypeText = "Unrated game";
 		}
 		else if(!game.unrated && game.tournament){
-			gameType = "T";
+			gameType = "Tournament";
 			gameTypeText = "Tournament game";
 		}
 		const players = document.createElement("button");
@@ -1159,12 +1161,39 @@ var server = {
 		$('<td/>').append(actionButton).attr("data-toggle", "tooltip").attr("title", "Watch game").click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		// game details
-		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row);
-		$('<td/>').append(minuteseconds(game.time) + ' +'+minuteseconds(game.increment) + (game.incrementScales ? '&times;n' : '')).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
-		$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
-		$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
-		$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", gameTypeText).appendTo(row);
-		$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", "Trigger move and extra time to add in minutes").appendTo(row);
+		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").appendTo(row);
+		// shared rule values, reused by the Rules cell and the mobile detail menu
+		const stdPieces = [0,0,0,10,15,21,30,40,50][game.size];
+		const stdCaps = [0,0,0,0,0,1,1,2,2][game.size];
+		const piecesVary = (game.pieces !== stdPieces || game.capstones !== stdCaps);
+		const komiText = Math.floor(game.komi/2) + (game.komi&1 ? ".5" : "");
+		const gameOpeningFull = game.opening === "double black stack" ? "Double Black Stack" : "Single Swap";
+		const timeText = (game.time/60) + "m +" + game.increment + "s" + (game.incrementScales ? "&times;n" : "") + " inc";
+		const hasExtra = (Number(game.triggerMove) > 0 && Number(game.timeAmount) > 0);
+		const extraText = "+" + game.timeAmount + "m @" + game.triggerMove;
+		// Time: base time + increment (playtak-games style); extra time on a 2nd line
+		$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
+		// Rules: consolidated komi / pieces / opening (see the seek list for details).
+		const rulesLines = [];
+		const rulesTips = [];
+		if(game.komi > 0){
+			rulesLines.push("Komi: " + komiText);
+			rulesTips.push("Komi: if the game ends without a road, Black adds this to their flat count.");
+		}
+		if(piecesVary){
+			rulesLines.push("Pieces: " + game.pieces + "/" + game.capstones);
+			rulesTips.push("Pieces: the number of stones/capstones each player has.");
+		}
+		if(game.opening && game.opening !== "swap"){
+			rulesLines.push(gameOpeningFull);
+			rulesTips.push("Double Black Stack: White opens by placing a stack of two black flats.");
+		}
+		const rulesCell = $('<td/>').append(rulesLines.join("<br>")).addClass("rules-col rules-rule");
+		if(rulesTips.length){
+			rulesCell.attr("data-toggle", "tooltip").attr("data-html", "true").attr("title", rulesTips.join("<br>"));
+		}
+		rulesCell.appendTo(row);
+		$('<td/>').append(gameType).addClass("hide-sm").attr("data-toggle", "tooltip").attr("title", gameTypeText).appendTo(row);
 
 		const dropdownButton = document.createElement("button");
 		dropdownButton.className = "btn btn-transparent dropdown-toggle";
@@ -1180,50 +1209,26 @@ var server = {
 		dropdownMenu.id = "game-" + game.id + "-menu";
 		// aria-label by
 		dropdownMenu.setAttribute("aria-labelledby", "game-" + game.id);
-		// add the drop down items
-		// time
-		const timeItem = document.createElement("span");
-		timeItem.className = "dropdown-item time-rule-menu";
-		timeItem.style.display = "none";
-		timeItem.innerHTML = `<strong>Time Control:</strong> ${minuteseconds(game.time)}`;
-		dropdownMenu.appendChild(timeItem);
-		// increment
-		const incrementItem = document.createElement("span");
-		incrementItem.className = "dropdown-item time-rule-menu";
-		incrementItem.style.display = "none";
-		incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(game.increment)}${game.incrementScales ? ' &times; move number' : ''}`;
-		dropdownMenu.appendChild(incrementItem);
-		// komi
-		const komiItem = document.createElement("span");
-		komiItem.className = "dropdown-item komi-rule-menu";
-		komiItem.style.display = "none";
-		komiItem.innerHTML = `<strong>Komi:</strong> +${Math.floor(game.komi/2)}.${(game.komi&1)?"5":"0"}`;
-		dropdownMenu.appendChild(komiItem);
-		// pieces
-		const piecesItem = document.createElement("span");
-		piecesItem.className = "dropdown-item";
-		piecesItem.innerHTML = `<strong>Pieces:</strong> ${game.pieces}/${game.capstones}`;
-		dropdownMenu.appendChild(piecesItem);
-		// capstones
-		const capstonesItem = document.createElement("span");
-		capstonesItem.className = "dropdown-item";
-		capstonesItem.innerHTML = `<strong>Capstones:</strong> ${game.capstones}`;
-		dropdownMenu.appendChild(capstonesItem);
-		// game type
-		const gameTypeItem = document.createElement("span");
-		gameTypeItem.className = "dropdown-item";
-		gameTypeItem.innerHTML = `<strong>Game Type:</strong> ${gameTypeText}`;
-		dropdownMenu.appendChild(gameTypeItem);
-		// trigger move
-		const triggerMoveItem = document.createElement("span");
-		triggerMoveItem.className = "dropdown-item";
-		triggerMoveItem.innerHTML = `<strong>Trigger Move:</strong> ${game.triggerMove}`;
-		dropdownMenu.appendChild(triggerMoveItem);
-		// extra time
-		const extraTimeItem = document.createElement("span");
-		extraTimeItem.className = "dropdown-item";
-		extraTimeItem.innerHTML = `<strong>Extra Time:</strong> +${game.timeAmount} minutes`;
-		dropdownMenu.appendChild(extraTimeItem);
+		// Detail menu items, revealed as their column drops out at narrower widths.
+		const addMenuItem = function(html, cls){
+			const item = document.createElement("span");
+			item.className = "dropdown-item" + (cls ? " " + cls : "");
+			if(cls){ item.style.display = "none"; }
+			item.innerHTML = html;
+			dropdownMenu.appendChild(item);
+		};
+		// Time control mirrors the Time column; extra time follows it when set.
+		addMenuItem(`<strong>Time Control:</strong> ${timeText}`, "time-rule-menu");
+		if(hasExtra){ addMenuItem(`<strong>Extra Time:</strong> ${extraText}`, "time-rule-menu"); }
+		// Rules detail, shown only when the Rules column is hidden.
+		if(game.komi > 0){ addMenuItem(`<strong>Komi:</strong> ${komiText}`, "rules-rule-menu"); }
+		if(piecesVary){
+			addMenuItem(`<strong>Pieces:</strong> ${game.pieces}/${game.capstones}`, "rules-rule-menu");
+			addMenuItem(`<strong>Capstones:</strong> ${game.capstones}`, "rules-rule-menu");
+		}
+		if(game.opening && game.opening !== "swap"){ addMenuItem(`<strong>Opening:</strong> ${gameOpeningFull}`, "rules-rule-menu"); }
+		// Game type, shown when the Type column is hidden.
+		addMenuItem(`<strong>Game Type:</strong> ${gameTypeText}`);
 		// create  dropdown div with dropdown class
 		const dropdownDiv = document.createElement("div");
 		dropdownDiv.className = "dropdown";
@@ -1344,21 +1349,20 @@ var server = {
 			let gameType = "";
 			let gameTypeText = "";
 			if(!seek.unrated && !seek.tournament){
-				gameType = "N";
+				gameType = "Normal";
 				gameTypeText = "Normal game";
 			}
 			else if(seek.unrated && !seek.tournament){
-				gameType = "U";
+				gameType = "Unrated";
 				gameTypeText = "Unrated game";
 			}
 			else if(!seek.unrated && seek.tournament){
-				gameType = "T";
+				gameType = "Tournament";
 				gameTypeText = "Tournament game";
 			}
 
-			// Opening: abbreviation (SS/DBS) for the desktop column, full text for the mobile menu.
+			// Opening: full label used in the Rules column and the mobile detail menu.
 			const openingFull = seek.opening === "double black stack" ? "Double Black Stack" : "Single Swap";
-			const openingAbbr = seek.opening === "double black stack" ? "DBS" : "SS";
 
 			const challengePlayerButton = document.createElement("button");
 			challengePlayerButton.className = "btn btn-transparent seek-button";
@@ -1383,13 +1387,42 @@ var server = {
 			}).attr("data-toggle", "tooltip").attr("title", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row);
 			$('<td/>').append(ratingdecoration + " " + (seek.player_rating || "")).addClass("right").attr("data-toggle", "tooltip").attr("title",ratingtext).appendTo(row);
 			// game details
-			$('<td/>').append(sizespan).addClass("right").appendTo(row);
-			$('<td/>').append(minuteseconds(seek.time) + ' +'+minuteseconds(seek.increment) + (seek.increment_scales ? '&times;n' : '')).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
-			$('<td/>').append((Math.floor(seek.komi/2)||(seek.komi&1?"":"0"))+(seek.komi&1?"&frac12;":"")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
-			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
-			$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title",gameTypeText).appendTo(row);
-			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row);
-			$('<td/>').append(openingAbbr).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Opening - " + openingFull).appendTo(row);
+			$('<td/>').append(sizespan).appendTo(row);
+			// shared rule values, reused by the Rules cell and the mobile detail menu
+			const seekSize = parseInt(seek.size);
+			const stdPieces = [0,0,0,10,15,21,30,40,50][seekSize];
+			const stdCaps = [0,0,0,0,0,1,1,2,2][seekSize];
+			const piecesVary = (seek.pieces !== stdPieces || seek.capstones !== stdCaps);
+			const komiText = Math.floor(seek.komi/2) + (seek.komi&1 ? ".5" : "");
+			const timeText = (seek.time/60) + "m +" + seek.increment + "s" + (seek.increment_scales ? "&times;n" : "") + " inc";
+			const hasExtra = (Number(seek.trigger_move) > 0 && Number(seek.time_amount) > 0);
+			const extraText = "+" + seek.time_amount + "m @" + seek.trigger_move;
+			// Time: base time + increment (playtak-games style); extra time on a 2nd line
+			$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
+			// Rules: consolidated komi / pieces / opening. Only non-default values are
+			// shown, each on its own line. The opening name appears without an "Opening:"
+			// label (kept compact via a smaller, wrappable font); the per-row tooltip
+			// explains only the rules that actually apply to this seek.
+			const rulesLines = [];
+			const rulesTips = [];
+			if(seek.komi > 0){
+				rulesLines.push("Komi: " + komiText);
+				rulesTips.push("Komi: if the game ends without a road, Black adds this to their flat count.");
+			}
+			if(piecesVary){
+				rulesLines.push("Pieces: " + seek.pieces + "/" + seek.capstones);
+				rulesTips.push("Pieces: the number of stones/capstones each player has.");
+			}
+			if(seek.opening !== "swap"){
+				rulesLines.push(openingFull);
+				rulesTips.push("Double Black Stack: White opens by placing a stack of two black flats.");
+			}
+			const rulesCell = $('<td/>').append(rulesLines.join("<br>")).addClass("rules-col rules-rule");
+			if(rulesTips.length){
+				rulesCell.attr("data-toggle", "tooltip").attr("data-html", "true").attr("title", rulesTips.join("<br>"));
+			}
+			rulesCell.appendTo(row);
+			$('<td/>').append(gameType).addClass("hide-sm").attr("data-toggle", "tooltip").attr("title",gameTypeText).appendTo(row);
 			// add the same deetails to a dropdown on mobile
 			const dropdownButton = document.createElement("button");
 			dropdownButton.className = "btn btn-transparent dropdown-toggle";
@@ -1405,58 +1438,26 @@ var server = {
 			dropdownMenu.id = "seek-" + seek.id + "-menu";
 			// aria-label by
 			dropdownMenu.setAttribute("aria-labelledby", "seek-" + seek.id);
-			// add the drop down items
-			// time
-			const timeItem = document.createElement("span");
-			timeItem.className = "dropdown-item time-rule-menu";
-			// set default display none
-			timeItem.style.display = "none";
-			timeItem.innerHTML = `<strong>Time Control:</strong> ${minuteseconds(seek.time)}`;
-			dropdownMenu.appendChild(timeItem);
-			// increment
-			const incrementItem = document.createElement("span");
-			incrementItem.className = "dropdown-item time-rule-menu";
-			// set default display none
-			incrementItem.style.display = "none";
-			incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(seek.increment)}${seek.increment_scales ? ' &times; move number' : ''}`;
-			dropdownMenu.appendChild(incrementItem);
-			// komi
-			const komiItem = document.createElement("span");
-			komiItem.className = "dropdown-item komi-rule-menu";
-			// set default display none
-			komiItem.style.display = "none";
-			komiItem.innerHTML = `<strong>Komi:</strong> +${Math.floor(seek.komi/2)}.${(seek.komi&1)?"5":"0"}`;
-			dropdownMenu.appendChild(komiItem);
-			// pieces
-			const piecesItem = document.createElement("span");
-			piecesItem.className = "dropdown-item";
-			piecesItem.innerHTML = `<strong>Pieces:</strong> ${seek.pieces}/${seek.capstones}`;
-			dropdownMenu.appendChild(piecesItem);
-			// capstones
-			const capstonesItem = document.createElement("span");
-			capstonesItem.className = "dropdown-item";
-			capstonesItem.innerHTML = `<strong>Capstones:</strong> ${seek.capstones}`;
-			dropdownMenu.appendChild(capstonesItem);
-			// game type
-			const gameTypeItem = document.createElement("span");
-			gameTypeItem.className = "dropdown-item";
-			gameTypeItem.innerHTML = `<strong>Game Type:</strong> ${gameTypeText}`;
-			dropdownMenu.appendChild(gameTypeItem);
-			// opening
-			const openingItem = document.createElement("span");
-			openingItem.className = "dropdown-item";
-			openingItem.innerHTML = `<strong>Opening:</strong> ${openingFull}`;
-			dropdownMenu.appendChild(openingItem);
-			// trigger move
-			const triggerMoveItem = document.createElement("span");
-			triggerMoveItem.className = "dropdown-item";
-			triggerMoveItem.innerHTML = `<strong>Trigger Move:</strong> ${seek.trigger_move}`;
-			dropdownMenu.appendChild(triggerMoveItem);
-			// extra time
-			const extraTimeItem = document.createElement("span");
-			extraTimeItem.className = "dropdown-item";
-			extraTimeItem.innerHTML = `<strong>Extra Time:</strong> +${seek.time_amount} minutes`;
-			dropdownMenu.appendChild(extraTimeItem);
+			// Detail menu items, revealed as their column drops out at narrower widths.
+			const addMenuItem = function(html, cls){
+				const item = document.createElement("span");
+				item.className = "dropdown-item" + (cls ? " " + cls : "");
+				if(cls){ item.style.display = "none"; }
+				item.innerHTML = html;
+				dropdownMenu.appendChild(item);
+			};
+			// Time control mirrors the Time column; extra time follows it when set.
+			addMenuItem(`<strong>Time Control:</strong> ${timeText}`, "time-rule-menu");
+			if(hasExtra){ addMenuItem(`<strong>Extra Time:</strong> ${extraText}`, "time-rule-menu"); }
+			// Rules detail, shown only when the Rules column is hidden.
+			if(seek.komi > 0){ addMenuItem(`<strong>Komi:</strong> ${komiText}`, "rules-rule-menu"); }
+			if(piecesVary){
+				addMenuItem(`<strong>Pieces:</strong> ${seek.pieces}/${seek.capstones}`, "rules-rule-menu");
+				addMenuItem(`<strong>Capstones:</strong> ${seek.capstones}`, "rules-rule-menu");
+			}
+			if(seek.opening !== "swap"){ addMenuItem(`<strong>Opening:</strong> ${openingFull}`, "rules-rule-menu"); }
+			// Game type, shown when the Type column is hidden.
+			addMenuItem(`<strong>Game Type:</strong> ${gameTypeText}`);
 			// create  dropdown div with dropdown class
 			const dropdownDiv = document.createElement("div");
 			dropdownDiv.className = "dropdown";
