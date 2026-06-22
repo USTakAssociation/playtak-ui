@@ -863,9 +863,9 @@ function handleGameOverState(){
 		if(!is2DBoard){
 			gameData.flatCount = board.flatscore();
 		}
-		let komi = (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "");
-		if(komi){
-			komi = "+" + komi;
+		let komi = "";
+		if(gameData.komi > 0){
+			komi = "+" + ((Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
 		}
 		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + komi + ")";
 	}
