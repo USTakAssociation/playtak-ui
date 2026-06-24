@@ -49,11 +49,10 @@ const gamePresets = {
 		type: 1,
 		pieces: 30,
 		capstones: 1,
-		time: 900, // seconds
-		increment: 10,
-		increment_scales: false,
-		trigger_move: 35,
-		time_amount: 300, // seconds
+		time: 600, // seconds
+		increment: 20,
+		trigger_move: "",
+		time_amount: "", // seconds
 		required_fields: ["opname"],
 	},
 	"7_open": {

@@ -363,6 +363,16 @@ function adjustBoardWidth(){
 // time controls
 function startTime(fromFn){
 	if(typeof fromFn === 'undefined' && !server.timervar){return;}
+	// The clock only runs once the first move has been played. The server keeps
+	// both clocks fixed at the starting time and never ticks pre-game. Players
+	// don't receive a Time update before the game starts, but spectators get one
+	// on Observe, so without this guard their active clock would count down
+	// locally even though the game hasn't started.
+	if(gameData.move_count === 0){
+		settimers(lastWt, lastBt);
+		stopTime();
+		return;
+	}
 	const t = invarianttime();
 	const elapsed = t - lastTimeUpdate;
 	let t1;
@@ -408,10 +418,12 @@ function stopTime(){
 // after a delay would freeze the iframe clock at the stale snapshot value.
 function forward2DGameTime(p1t, p2t){
 	if(!is2DBoard){return;}
+	// Mirror startTime(): the clock is not live until the first move is played.
+	const gameStarted = gameData.move_count > 0;
 	const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
 	let time1 = p1t;
 	let time2 = p2t;
-	if(lastTimeUpdate && !gameData.is_game_end){
+	if(gameStarted && lastTimeUpdate && !gameData.is_game_end){
 		const elapsed = Math.max(invarianttime() - lastTimeUpdate, 0);
 		if(timerTurn === 1){
 			time1 = Math.max(p1t - elapsed, 0);
@@ -425,9 +437,7 @@ function forward2DGameTime(p1t, p2t){
 		time2: time2,
 		timerTurn: timerTurn
 	});
-	if(!gameData.is_game_end){
-		set2DTimerLive(true);
-	}
+	set2DTimerLive(gameStarted && !gameData.is_game_end);
 }
 
 function settimers(p1t,p2t,noHurry){
