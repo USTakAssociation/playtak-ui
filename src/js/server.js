@@ -1172,7 +1172,7 @@ var server = {
 		const hasExtra = (Number(game.triggerMove) > 0 && Number(game.timeAmount) > 0);
 		const extraText = "+" + game.timeAmount + "m @" + game.triggerMove;
 		// Time: base time + increment (playtak-games style); extra time on a 2nd line
-		$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
+		$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time control and increment (n = the current move number)" : "Time control and increment").appendTo(row);
 		// Rules: consolidated komi / pieces / opening (see the seek list for details).
 		const rulesLines = [];
 		const rulesTips = [];
@@ -1398,7 +1398,7 @@ var server = {
 			const hasExtra = (Number(seek.trigger_move) > 0 && Number(seek.time_amount) > 0);
 			const extraText = "+" + seek.time_amount + "m @" + seek.trigger_move;
 			// Time: base time + increment (playtak-games style); extra time on a 2nd line
-			$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
+			$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time control and increment (n = the current move number)" : "Time control and increment").appendTo(row);
 			// Rules: consolidated komi / pieces / opening. Only non-default values are
 			// shown, each on its own line. The opening name appears without an "Opening:"
 			// label (kept compact via a smaller, wrappable font); the per-row tooltip
