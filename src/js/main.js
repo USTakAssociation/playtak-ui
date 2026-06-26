@@ -51,6 +51,7 @@ const gamePresets = {
 		capstones: 1,
 		time: 600, // seconds
 		increment: 20,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
