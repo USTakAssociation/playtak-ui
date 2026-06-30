@@ -1594,13 +1594,13 @@ var server = {
 			time: document.getElementById("timeselect").value,
 			increment: document.getElementById("incselect").value,
 			color: document.getElementById("colorselect").value,
-			komi: document.getElementById("komiselect").value,
+			komi: getBalancingValues(false).komi,
 			pieces: document.getElementById("piececount").value,
 			capstones: document.getElementById("capcount").value,
 			type: document.getElementById("gametype").value,
 			trigger_move: document.getElementById("triggerMove").value,
 			time_amount: document.getElementById("timeAmount").value,
-			opening: document.getElementById("openingselect").value
+			opening: getBalancingValues(false).opening
 		};
 		// save the current game seetings to local storage
 		localStorage.setItem("current-game-settings", JSON.stringify(game));

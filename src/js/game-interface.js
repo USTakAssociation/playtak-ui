@@ -103,8 +103,9 @@ function playScratch(){
 		gameData.size = parseInt(document.getElementById("scratchBoardSize").value);
 		gameData.pieces = parseInt(document.getElementById("scratchPieceCount").value);
 		gameData.capstones = parseInt(document.getElementById("scratchCapCount").value);
-		gameData.opening = document.getElementById("scratchOpeningSelect").value;
-		gameData.komi = 0;
+		const balancing = getBalancingValues(true);
+		gameData.opening = balancing.opening;
+		gameData.komi = balancing.komi;
 		gameData.id = 0;
 		initBoard();
 		if(is2DBoard){
@@ -119,7 +120,14 @@ function playScratch(){
 }
 
 function initBoard(){
-	$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
+	if(gameData.komi > 0){
+		$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "")).css("display", "");
+		$("#komi-separator").css("display", "");
+	}
+	else{
+		$("#komirule").html("").css("display", "none");
+		$("#komi-separator").css("display", "none");
+	}
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
 	document.getElementById("player-opp").className = "selectplayer";
 	document.getElementById("player-me").className = "";

@@ -285,7 +285,7 @@
 						class="rulebox"
 						data-toggle="tooltip" data-placement="auto" title="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined"
 					></span>
-					|
+					<span id="komi-separator">|</span>
 					<span
 						id="piecerule"
 						class="rulebox"
@@ -1030,23 +1030,24 @@
 												</div>
 											</div>
 											<div class="col-sm-6">
-												<!-- komi -->
+												<!-- balancing mechanism -->
 												<div
 													class="form-group"
-													data-toggle="tooltip" data-placement="auto" title="Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined. 2 is the generally agreed-upon value"
+													data-toggle="tooltip" data-placement="auto" title="The mechanism for balancing first-player advantage. Komi: If the game ends without a road, Black gets this amount added to their final flat count. Double Black Stack: White's initial placement is a stack of two black flats."
 												>
-													<label for="komiselect">Komi</label>
-													<select class="form-control" id="komiselect">
-														<option value="0" selected="selected">0</option>
-														<option value="1">&frac12;</option>
-														<option value="2">1</option>
-														<option value="3">1&frac12;</option>
-														<option value="4">2</option>
-														<option value="5">2&frac12;</option>
-														<option value="6">3</option>
-														<option value="7">3&frac12;</option>
-														<option value="8">4</option>
-													</select>
+													<label for="balancingselect">Balancing Mechanism</label>
+													<div class="balancing-row">
+														<select class="form-control" id="balancingselect" onchange="updateBalancingMechanism(false)">
+															<option value="none" selected="selected">None</option>
+															<option value="komi">Komi</option>
+															<option value="double black stack">Double Black Stack</option>
+														</select>
+														<div class="komi-stepper" id="komiStepper" style="display: none;">
+															<button type="button" class="komi-step-btn" onclick="stepKomi(false, -0.5)" aria-label="Decrease komi value">&minus;</button>
+															<span class="komi-step-value" id="komiValue">2</span>
+															<button type="button" class="komi-step-btn" onclick="stepKomi(false, 0.5)" aria-label="Increase komi value">+</button>
+														</div>
+													</div>
 												</div>
 											</div>
 										</div>
@@ -1100,23 +1101,7 @@
 													</select>
 												</div>
 											</div>
-										</div>
-										<div class="row">
-											<div class="col-sm-6">
-												<!-- opening -->
-												<div
-													class="form-group"
-													data-toggle="tooltip" data-placement="auto" title="Opening - Single Swap: each player's first move places one of the opponent's flats. Double Black Stack: White's first move instead places a stack of two black flats."
-												>
-													<label for="openingselect">Opening</label>
-													<select class="form-control" id="openingselect">
-														<option value="swap" selected="selected">Single Swap</option>
-														<option value="double black stack">Double Black Stack</option>
-													</select>
-												</div>
-											</div>
-										</div>
-										<div class="accordion" id="accordionExample">
+										</div>										<div class="accordion" id="accordionExample">
 											<div class="card">
 												<div class="card-header" id="headingOne">
 													<h2 class="margin--0">
@@ -1240,12 +1225,20 @@
 
 									</div>
 									<div class="col-sm-6">
-										<div class="form-group" data-toggle="tooltip" data-placement="auto" title="Opening - Single Swap: each player's first move places one of the opponent's flats. Double Black Stack: white's first move instead places a stack of two black flats.">
-											<label for="scratchOpeningSelect">Opening</label>
-											<select class="form-control" id="scratchOpeningSelect">
-												<option value="swap" selected="selected">Single Swap</option>
-												<option value="double black stack">Double Black Stack</option>
-											</select>
+										<div class="form-group" data-toggle="tooltip" data-placement="auto" title="The mechanism for balancing first-player advantage. Komi: If the game ends without a road, Black gets this amount added to their final flat count. Double Black Stack: White's initial placement is a stack of two black flats.">
+											<label for="scratchBalancingSelect">Balancing Mechanism</label>
+											<div class="balancing-row">
+												<select class="form-control" id="scratchBalancingSelect" onchange="updateBalancingMechanism(true)">
+													<option value="none" selected="selected">None</option>
+													<option value="komi">Komi</option>
+													<option value="double black stack">Double Black Stack</option>
+												</select>
+												<div class="komi-stepper" id="scratchKomiStepper" style="display: none;">
+													<button type="button" class="komi-step-btn" onclick="stepKomi(true, -0.5)" aria-label="Decrease komi value">&minus;</button>
+													<span class="komi-step-value" id="scratchKomiValue">2</span>
+													<button type="button" class="komi-step-btn" onclick="stepKomi(true, 0.5)" aria-label="Increase komi value">+</button>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
