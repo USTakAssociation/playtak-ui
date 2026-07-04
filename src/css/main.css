@@ -698,17 +698,8 @@ a.navitem, div.navitem{
 	font-size: 18px;
 	line-height: 1;
 }
-.komi-step-btn:not(:disabled):hover{
+.komi-step-btn:hover{
 	background-color: var(--secondary-bg-color);
-}
-.komi-step-btn:disabled{
-	cursor: not-allowed;
-}
-/* When the stepper is disabled (e.g. a preset fixes the komi value),
-   fade the whole control to match a disabled .form-control. */
-.komi-stepper:has(.komi-step-btn:disabled){
-	opacity: .4;
-	cursor: not-allowed;
 }
 .komi-step-value{
 	display: flex;
