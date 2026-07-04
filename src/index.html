@@ -1031,10 +1031,11 @@
 											</div>
 											<div class="col-sm-6">
 												<!-- balancing mechanism -->
-												<div class="form-group">
-													<label for="balancingselect">Balancing Mechanism
-														<button type="button" class="btn btn-link p-0 align-baseline" style="line-height:1;vertical-align:middle;" data-toggle="popover" data-trigger="focus" data-placement="top" data-html="true" data-content="The mechanism for balancing first-player advantage.<br><br><b>Komi:</b> If the game ends without a road, Black gets this amount added to their final flat count.<br><br><b>Double Black Stack:</b> White's initial placement is a stack of two black flats." aria-label="Balancing mechanism help">&#9432;</button>
-													</label>
+												<div
+													class="form-group"
+													data-toggle="tooltip" data-placement="auto" title="The mechanism for balancing first-player advantage. Komi: If the game ends without a road, Black gets this amount added to their final flat count. Double Black Stack: White's initial placement is a stack of two black flats."
+												>
+													<label for="balancingselect">Balancing Mechanism</label>
 													<div class="balancing-row">
 														<select class="form-control" id="balancingselect" onchange="updateBalancingMechanism(false)">
 															<option value="none" selected="selected">None</option>
@@ -1224,10 +1225,8 @@
 
 									</div>
 									<div class="col-sm-6">
-										<div class="form-group">
-											<label for="scratchBalancingSelect">Balancing Mechanism
-												<button type="button" class="btn btn-link p-0 align-baseline" style="line-height:1;vertical-align:middle;" data-toggle="popover" data-trigger="focus" data-placement="top" data-html="true" data-content="The mechanism for balancing first-player advantage.<br><br><b>Komi:</b> If the game ends without a road, Black gets this amount added to their final flat count.<br><br><b>Double Black Stack:</b> White's initial placement is a stack of two black flats." aria-label="Balancing mechanism help">&#9432;</button>
-											</label>
+										<div class="form-group" data-toggle="tooltip" data-placement="auto" title="The mechanism for balancing first-player advantage. Komi: If the game ends without a road, Black gets this amount added to their final flat count. Double Black Stack: White's initial placement is a stack of two black flats.">
+											<label for="scratchBalancingSelect">Balancing Mechanism</label>
 											<div class="balancing-row">
 												<select class="form-control" id="scratchBalancingSelect" onchange="updateBalancingMechanism(true)">
 													<option value="none" selected="selected">None</option>
