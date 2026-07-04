@@ -496,70 +496,11 @@ function fastforward() {
 function resetFormFieldAttributes() {
 	const form = document.getElementById("create-game-form");
 	// remove the required attribute from all elements
-	const allFields = form.querySelectorAll("input, select, .komi-step-btn");
+	const allFields = form.querySelectorAll("input, select");
 	allFields.forEach((field) => {
 		field.removeAttribute("required");
 		field.removeAttribute("disabled");
 	});
-}
-
-// --- Balancing Mechanism control (None / Komi / Double Black Stack) ---
-// A single selector that maps onto the underlying komi + opening values.
-// komi is stored in half-points (komi / 2 = the points shown to the user).
-function balancingIds(isScratch) {
-	return isScratch
-		? { select: "scratchBalancingSelect", stepper: "scratchKomiStepper", value: "scratchKomiValue" }
-		: { select: "balancingselect", stepper: "komiStepper", value: "komiValue" };
-}
-
-function formatKomiPoints(points) {
-	return Number.isInteger(points) ? String(points) : points.toFixed(1);
-}
-
-// Show the komi stepper only when "Komi" is the selected mechanism.
-function updateBalancingMechanism(isScratch) {
-	const ids = balancingIds(isScratch);
-	const mech = document.getElementById(ids.select).value;
-	document.getElementById(ids.stepper).style.display = mech === "komi" ? "flex" : "none";
-}
-
-// Adjust the komi value by +/- 0.5, clamped to a 0.5 minimum.
-function stepKomi(isScratch, delta) {
-	const ids = balancingIds(isScratch);
-	const el = document.getElementById(ids.value);
-	let points = parseFloat(el.textContent) || 2;
-	points = Math.max(0.5, Math.round((points + delta) * 2) / 2);
-	el.textContent = formatKomiPoints(points);
-}
-
-// Read the control as { komi, opening } in the underlying wire representation.
-function getBalancingValues(isScratch) {
-	const ids = balancingIds(isScratch);
-	const mech = document.getElementById(ids.select).value;
-	if (mech === "komi") {
-		const points = parseFloat(document.getElementById(ids.value).textContent) || 2;
-		return { komi: Math.round(points * 2), opening: "swap" };
-	}
-	if (mech === "double black stack") {
-		return { komi: 0, opening: "double black stack" };
-	}
-	return { komi: 0, opening: "swap" };
-}
-
-// Set the control from underlying komi + opening values (reverse of getBalancingValues).
-function setBalancingValues(isScratch, komi, opening) {
-	const ids = balancingIds(isScratch);
-	const sel = document.getElementById(ids.select);
-	komi = Number(komi) || 0;
-	if (opening === "double black stack") {
-		sel.value = "double black stack";
-	} else if (komi > 0) {
-		sel.value = "komi";
-		document.getElementById(ids.value).textContent = formatKomiPoints(komi / 2);
-	} else {
-		sel.value = "none";
-	}
-	updateBalancingMechanism(isScratch);
 }
 
 function changePreset(event) {
@@ -579,12 +520,13 @@ function changePreset(event) {
 		document.getElementById("boardsize").value = storedValues.size;
 		document.getElementById("piececount").value = storedValues.pieces;
 		document.getElementById("capcount").value = storedValues.capstones;
-		setBalancingValues(false, storedValues.komi, storedValues.opening || "swap");
+		document.getElementById("komiselect").value = storedValues.komi;
 		document.getElementById("gametype").value = storedValues.type;
 		document.getElementById("timeselect").value = storedValues.time;
 		document.getElementById("incselect").value = storedValues.increment;
 		document.getElementById("triggerMove").value = storedValues.trigger_move;
 		document.getElementById("timeAmount").value = storedValues.time_amount;
+		document.getElementById("openingselect").value = storedValues.opening || "swap";
 		return;
 	} else if (preset) {
 		// store the current values if user changes back to the noen preset
@@ -592,13 +534,13 @@ function changePreset(event) {
 			size: document.getElementById("boardsize").value,
 			pieces: document.getElementById("piececount").value,
 			capstones: document.getElementById("capcount").value,
-			komi: getBalancingValues(false).komi,
+			komi: document.getElementById("komiselect").value,
 			type: document.getElementById("gametype").value,
 			time: document.getElementById("timeselect").value,
 			increment: document.getElementById("incselect").value,
 			trigger_move: document.getElementById("triggerMove").value,
 			time_amount: document.getElementById("timeAmount").value,
-			opening: getBalancingValues(false).opening,
+			opening: document.getElementById("openingselect").value,
 		};
 		localStorage.setItem(
 			"current-game-settings",
@@ -610,9 +552,8 @@ function changePreset(event) {
 		document.getElementById("piececount").setAttribute("disabled", "true");
 		document.getElementById("capcount").value = preset.capstones;
 		document.getElementById("capcount").setAttribute("disabled", "true");
-		setBalancingValues(false, preset.komi, "swap");
-		document.getElementById("balancingselect").setAttribute("disabled", "true");
-		document.querySelectorAll("#komiStepper .komi-step-btn").forEach((b) => b.setAttribute("disabled", "true"));
+		document.getElementById("komiselect").value = preset.komi;
+		document.getElementById("komiselect").setAttribute("disabled", "true");
 		document.getElementById("gametype").value = preset.type;
 		document.getElementById("gametype").setAttribute("disabled", "true");
 		document.getElementById("timeselect").value = preset.time;
@@ -660,14 +601,14 @@ function resetGameSettings() {
 	document.getElementById("boardsize").value = "5";
 	document.getElementById("piececount").value = "21";
 	document.getElementById("capcount").value = "1";
-	setBalancingValues(false, 0, "swap");
-	document.getElementById("komiValue").textContent = "2";
+	document.getElementById("komiselect").value = "0";
 	document.getElementById("gametype").value = "0";
 	document.getElementById("timeselect").value = "600";
 	document.getElementById("incselect").value = "20";
 	document.getElementById("triggerMove").value = "";
 	document.getElementById("timeAmount").value = "";
 	document.getElementById("colorselect").value = "A";
+	document.getElementById("openingselect").value = "swap";
 	document.getElementById("opname").value = "";
 	document.getElementById("preset").value = "none";
 }
@@ -682,12 +623,13 @@ function loadGameSettings() {
 	document.getElementById("boardsize").value = storedValues.size;
 	document.getElementById("piececount").value = storedValues.pieces;
 	document.getElementById("capcount").value = storedValues.capstones;
-	setBalancingValues(false, storedValues.komi, storedValues.opening || "swap");
+	document.getElementById("komiselect").value = storedValues.komi;
 	document.getElementById("gametype").value = storedValues.type;
 	document.getElementById("timeselect").value = storedValues.time;
 	document.getElementById("incselect").value = storedValues.increment;
 	document.getElementById("triggerMove").value = storedValues.trigger_move;
 	document.getElementById("colorselect").value = storedValues.color || "A";
+	document.getElementById("openingselect").value = storedValues.opening || "swap";
 }
 
 function resetToLoginState() {

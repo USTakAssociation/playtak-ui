@@ -668,49 +668,6 @@ a.navitem, div.navitem{
 	border: 1px solid var(--secondary-border-color);
 }
 
-/* Balancing Mechanism: select with an inline komi stepper that matches its height */
-.balancing-row{
-	display: flex;
-	align-items: stretch;
-	gap: 8px;
-}
-.balancing-row .form-control{
-	flex: 1;
-	min-width: 0;
-}
-.komi-stepper{
-	display: flex;
-	align-items: stretch;
-	border: 1px solid var(--secondary-border-color);
-	border-radius: 0.25rem;
-	background-color: var(--primary-bg-color);
-	overflow: hidden;
-}
-.komi-step-btn{
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border: none;
-	background: transparent;
-	color: var(--primary-font-color);
-	cursor: pointer;
-	padding: 0 12px;
-	font-size: 18px;
-	line-height: 1;
-}
-.komi-step-btn:hover{
-	background-color: var(--secondary-bg-color);
-}
-.komi-step-value{
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 32px;
-	color: var(--primary-font-color);
-	font-size: 14px;
-	user-select: none;
-}
-
 input[type=range] {
 	vertical-align: middle;
 	margin: 0px;
