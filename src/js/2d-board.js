@@ -150,25 +150,6 @@ function setDisable2DBoard(value){
 	});
 }
 
-function set2DGameTime(payload){
-	// payload: { time1, time2, timerTurn, lastTimeUpdateWall? }
-	// `lastTimeUpdateWall` (Date.now()) lets PTN Ninja compensate for
-	// postMessage transit delay and stay in sync with this frame's clock.
-	const augmented = {
-		lastTimeUpdateWall: Date.now(),
-		...payload
-	};
-	send2DAction('SET_GAME_TIME', augmented);
-}
-
-function set2DGameTimerTurn(turn){
-	send2DAction('SET_GAME_TIMER_TURN', turn);
-}
-
-function set2DTimerLive(value){
-	send2DAction('SET_TIMER_LIVE', Boolean(value));
-}
-
 function set2DBoardPadding(){
 	const notationWidth = document.getElementById("rmenu").clientWidth;
 	const settingsWidth = document.getElementById("settings-drawer").clientWidth;
