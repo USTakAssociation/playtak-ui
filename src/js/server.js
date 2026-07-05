@@ -254,6 +254,17 @@ var server = {
 				);
 			}
 		}
+		// The server sends the Time update immediately BEFORE the move message,
+		// so when that Time arrived move_count was still the pre-move value: the
+		// clock was frozen (pre-game) or stopped, and only the next move's Time
+		// would restart it. Now that the move is applied and move_count is
+		// current, (re)start the clocks so they begin counting the new side's
+		// time right away. Skipped during the initial history burst, which ends
+		// when the first Time message clears loadingGameHistory.
+		if(!loadingGameHistory && lastTimeUpdate && !gameData.is_game_end){
+			startTime(true);
+			forward2DGameTime(lastWt, lastBt);
+		}
 	},
 
 	connect: function(){
@@ -306,6 +317,9 @@ var server = {
 				server.rendeerseekslist();
 				server.updateplayerinfo();
 				stopTime();
+				if(is2DBoard){
+					set2DTimerLive(false);
+				}
 				document.getElementById("removeSeek").removeAttribute("disabled");
 				document.getElementById("createSeek").removeAttribute("disabled");
 
@@ -364,7 +378,7 @@ var server = {
 	},
 	sendClient: function(){
 		server.send("Client TakWeb-22.04.12");
-		server.send("Protocol 2");
+		server.send("Protocol 4");
 	},
 	login: function(){
 		this.anotherlogin=false;
@@ -509,14 +523,15 @@ var server = {
 			gameData.size = +spl[7];
 			gameData.time = +spl[8];
 			gameData.increment = +spl[9];
-			gameData.komi = +spl[10];
-			gameData.pieces = +spl[11];
-			gameData.capstones = +spl[12];
-			gameData.unrated = +spl[13];
-			gameData.tournament = +spl[14];
-			gameData.triggerMove = +spl[15];
-			gameData.timeAmount = +spl[16];
-			gameData.bot = +spl[17];
+			gameData.incrementScales = +(spl[10] || 0) === 1;
+			gameData.komi = +spl[11];
+			gameData.pieces = +spl[12];
+			gameData.capstones = +spl[13];
+			gameData.unrated = +spl[14];
+			gameData.tournament = +spl[15];
+			gameData.triggerMove = +spl[16];
+			gameData.timeAmount = +spl[17];
+			gameData.bot = +spl[18];
 			gameData.is_scratch = false;
 			gameData.observing = false;
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
@@ -577,6 +592,18 @@ var server = {
 			const time = gameData.time;
 			settimers(time * 1000, time * 1000);
 
+			// Forward player names + initial clock values to the PTN Ninja iframe.
+			// Live ticking is enabled once the first Time message arrives.
+			if(is2DBoard){
+				set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"][Player1 "${p1}"][Player2 "${p2}"]`);
+				set2DTimerLive(false);
+				set2DGameTime({
+					time1: time * 1000,
+					time2: time * 1000,
+					timerTurn: 1
+				});
+			}
+
 			let opponentname;
 			if(spl[6] === "white"){
 				//I am white
@@ -589,7 +616,7 @@ var server = {
 			chathandler.createRoom("priv-" + opponentname, "<b>" + opponentname + "</b>");
 			chathandler.selectRoom("priv-" + opponentname);
 			gameData.chatRoom = "priv-" + opponentname;
-			chathandler.insertGameSeparator(gameData.chatRoom);
+			chathandler.insertGameSeparator(gameData.chatRoom, gameData.id);
 
 			document.getElementById("chime-sound").currentTime = 0;
 			document.getElementById("chime-sound").play();
@@ -612,18 +639,19 @@ var server = {
 			gameData.size = +spl[4];
 			gameData.time = +spl[5];
 			gameData.increment = +spl[6];
-			gameData.komi = +spl[7];
-			gameData.pieces = +spl[8];
-			gameData.capstones = +spl[9];
-			gameData.unrated = +spl[10];
-			gameData.tournament = +spl[11];
-			gameData.triggerMove = +spl[12];
-			gameData.timeAmount = +spl[13];
+			gameData.incrementScales = +(spl[7] || 0) === 1;
+			gameData.komi = +spl[8];
+			gameData.pieces = +spl[9];
+			gameData.capstones = +spl[10];
+			gameData.unrated = +spl[11];
+			gameData.tournament = +spl[12];
+			gameData.triggerMove = +spl[13];
+			gameData.timeAmount = +spl[14];
 			gameData.bot = 1;
 			gameData.observing = true;
 			gameData.is_scratch = false;
 			gameData.chatRoom = "room-" + [p1, p2].sort().join("-");
-			chathandler.insertGameSeparator(gameData.chatRoom);
+			chathandler.insertGameSeparator(gameData.chatRoom, gameData.id);
 			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
 			initBoard();
 			loadingGameHistory = true;
@@ -636,6 +664,17 @@ var server = {
 			document.getElementById('rematch').style.display = "none";
 			const time = +spl[5];
 			settimers(time * 1000, time * 1000);
+
+			// Forward player names + initial clock values to the PTN Ninja iframe.
+			if(is2DBoard){
+				set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"][Player1 "${p1}"][Player2 "${p2}"]`);
+				set2DTimerLive(false);
+				set2DGameTime({
+					time1: time * 1000,
+					time2: time * 1000,
+					timerTurn: 1
+				});
+			}
 		}
 		else if(e.startsWith("GameList Add ")){
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
@@ -644,16 +683,17 @@ var server = {
 				id: +spl[2],
 				time: +spl[6],
 				increment: +spl[7],
+				incrementScales: +(spl[8] || 0) === 1,
 				player1: spl[3],
 				player2: spl[4],
 				size: +spl[5],
-				komi: +spl[8],
-				pieces: +spl[9],
-				capstones: +spl[10],
-				unrated: spl[11] == 1,
-				tournament: spl[12] == 1,
-				triggerMove: spl[13],
-				timeAmount: parseInt(spl[14]) / 60
+				komi: +spl[9],
+				pieces: +spl[10],
+				capstones: +spl[11],
+				unrated: spl[12] == 1,
+				tournament: spl[13] == 1,
+				triggerMove: spl[14],
+				timeAmount: parseInt(spl[15]) / 60
 			};
 			this.gameslist.push(game);
 			this.addGameToWatchList(game);
@@ -701,6 +741,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
@@ -712,6 +753,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 RequestUndo
 				else if(spl[1] === "RequestUndo"){
@@ -739,6 +781,18 @@ var server = {
 					$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw").addClass("offer-draw");
 					alert("info", "Draw offer is taken back by your opponent");
 				}
+				//Game#1 GivenTime <toColor> <ms>
+				else if(spl[1] === "GivenTime"){
+					const toColor = spl[2];
+					const seconds = Math.round((+spl[3] || 0) / 1000);
+					const youReceived = toColor === gameData.my_color;
+					if(youReceived){
+						alert("info", "Your opponent gave you " + seconds + " seconds");
+					}
+					else{
+						alert("info", "You gave your opponent " + seconds + " seconds");
+					}
+				}
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
 					gameData.result = spl[2];
@@ -749,9 +803,11 @@ var server = {
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 					document.title = "Play Tak";
 					if(!is2DBoard || !gameData.is_game_end){
 						// Wait for animation to complete before showing game-over dialog
@@ -780,15 +836,17 @@ var server = {
 					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
 					if(!gameData.is_scratch && gameData.chatRoom){
-						chathandler.insertTimeMarker(gameData.chatRoom);
 						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
 							chathandler.insertMoveMarker(gameData.chatRoom, gameData.lastMoveLabel);
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
+						chathandler.insertTimeMarker(gameData.chatRoom);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 
 					// Wait for animation to complete before showing game-over dialog
 					animation.whenComplete(function(){
@@ -961,16 +1019,17 @@ var server = {
 				size: spl[4] + "x" + spl[4],
 				time: Number(spl[5]),
 				increment: Number(spl[6]),
-				color: spl[7],
-				komi: +spl[8],
-				pieces: +spl[9],
-				capstones: +spl[10],
-				unrated: spl[11] == 1,
-				tournament: spl[12] == 1,
-				trigger_move: spl[13],
-				time_amount: (parseInt(spl[14]) / 60).toString(),
-				opponent: spl[15],
-				bot: spl[16],
+				increment_scales: +(spl[7] || 0) === 1,
+				color: spl[8],
+				komi: +spl[9],
+				pieces: +spl[10],
+				capstones: +spl[11],
+				unrated: spl[12] == 1,
+				tournament: spl[13] == 1,
+				trigger_move: spl[14],
+				time_amount: (parseInt(spl[15]) / 60).toString(),
+				opponent: spl[16],
+				bot: spl[17],
 				player_rating: playerRating
 			});
 			this.rendeerseekslist();
@@ -1105,7 +1164,7 @@ var server = {
 		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		// game details
 		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row);
-		$('<td/>').append(minuteseconds(game.time) + ' +'+minuteseconds(game.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control and increment").appendTo(row);
+		$('<td/>').append(minuteseconds(game.time) + ' +'+minuteseconds(game.increment) + (game.incrementScales ? '&times;n' : '')).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
 		$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
 		$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
 		$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", gameTypeText).appendTo(row);
@@ -1136,7 +1195,7 @@ var server = {
 		const incrementItem = document.createElement("span");
 		incrementItem.className = "dropdown-item time-rule-menu";
 		incrementItem.style.display = "none";
-		incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(game.increment)}`;
+		incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(game.increment)}${game.incrementScales ? ' &times; move number' : ''}`;
 		dropdownMenu.appendChild(incrementItem);
 		// komi
 		const komiItem = document.createElement("span");
@@ -1325,7 +1384,7 @@ var server = {
 			$('<td/>').append(ratingdecoration + " " + (seek.player_rating || "")).addClass("right").attr("data-toggle", "tooltip").attr("title",ratingtext).appendTo(row);
 			// game details
 			$('<td/>').append(sizespan).addClass("right").appendTo(row);
-			$('<td/>').append(minuteseconds(seek.time) + ' +'+minuteseconds(seek.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control and increment").appendTo(row);
+			$('<td/>').append(minuteseconds(seek.time) + ' +'+minuteseconds(seek.increment) + (seek.increment_scales ? '&times;n' : '')).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time control and increment (increment scales with move number)" : "Time control and increment").appendTo(row);
 			$('<td/>').append((Math.floor(seek.komi/2)||(seek.komi&1?"":"0"))+(seek.komi&1?"&frac12;":"")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
 			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
 			$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title",gameTypeText).appendTo(row);
@@ -1358,7 +1417,7 @@ var server = {
 			incrementItem.className = "dropdown-item time-rule-menu";
 			// set default display none
 			incrementItem.style.display = "none";
-			incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(seek.increment)}`;
+			incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(seek.increment)}${seek.increment_scales ? ' &times; move number' : ''}`;
 			dropdownMenu.appendChild(incrementItem);
 			// komi
 			const komiItem = document.createElement("span");
@@ -1529,7 +1588,8 @@ var server = {
 		const opponent = document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"");
 		const unrated = (game.type==2?1:0);
 		const tournament = (game.type==1?1:0);
-		const seekCMD =`Seek ${game.size} ${game.time} ${game.increment} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opponent}`;
+		const incParsed = parseIncrementValue(game.increment);
+		const seekCMD =`Seek ${game.size} ${game.time} ${incParsed.increment} ${incParsed.increment_scales ? 1 : 0} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opponent}`;
 		this.send(seekCMD);
 		$('#creategamemodal').modal('hide');
 		server.newSeek = true;
@@ -1586,6 +1646,12 @@ var server = {
 
 		this.send("Game#" + gameData.id + " Resign");
 	},
+	giveTime: function(){
+		if(gameData.is_scratch){return;}
+		else if(gameData.observing){return;}
+
+		this.send("Game#" + gameData.id + " GiveTime");
+	},
 	acceptseek: function(e, skipDebounce){
 		if(!skipDebounce && this.changeseektime+800>Date.now()){
 			return;
@@ -1635,7 +1701,7 @@ var server = {
 			}
 			// swap the player color for the new seek
 			const newColor = game.my_color === "black" ? "W" : "B";
-			this.send(`Rematch ${game.id} ${game.size} ${game.time} ${game.increment} ${newColor} ${game.komi} ${game.pieces} ${game.capstones} ${game.unrated} ${game.tournament} ${game.triggerMove} ${game.timeAmount} ${game.opponent}`);
+			this.send(`Rematch ${game.id} ${game.size} ${game.time} ${game.increment} ${game.incrementScales ? 1 : 0} ${newColor} ${game.komi} ${game.pieces} ${game.capstones} ${game.unrated} ${game.tournament} ${game.triggerMove} ${game.timeAmount} ${game.opponent}`);
 			document.getElementById("rematch").setAttribute("disabled", "disabled");
 			document.getElementById('createSeek').setAttribute("disabled", "disabled");
 			document.getElementById("removeSeek").setAttribute("hidden", "true");
