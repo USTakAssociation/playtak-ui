@@ -10,7 +10,6 @@ let gameData = {
 	size: 5,
 	time: null,
 	increment: null,
-	incrementScales: false,
 	komi: 0,
 	pieces: 21,
 	capstones: 1,
@@ -59,7 +58,6 @@ function resetGameDataToDefault(){
 		size: 5,
 		time: null,
 		increment: null,
-		incrementScales: false,
 		komi: 0,
 		pieces: 21,
 		capstones: 1,
@@ -121,33 +119,11 @@ function initBoard(){
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
 	document.getElementById("player-opp").className = "selectplayer";
 	document.getElementById("player-me").className = "";
-
-	if(gameData.increment > 0){
-		document.getElementById("time-increment").style.display = 'block';
-		const $incrementRule = $("#time-increment-rule");
-		$incrementRule.css('display', 'block');
-		$incrementRule.html(`+${minuteseconds(gameData.increment)}${gameData.incrementScales ? '&times;n' : ''}`);
-		const tooltipText = gameData.incrementScales
-			? `Time increment - +${gameData.increment} seconds added each move, scaled by move number`
-			: 'Time increment - Extra time added each move';
-		// If Bootstrap has already initialized a tooltip on this node, it has
-		// moved the original title to `data-original-title` and stripped the
-		// native `title` — so set both attrs to keep things in sync and avoid
-		// a duplicate native browser tooltip showing alongside Bootstrap's.
-		if($incrementRule.data('bs.tooltip')){
-			$incrementRule.attr('data-original-title', tooltipText).removeAttr('title');
-		}
-		else{
-			$incrementRule.attr('title', tooltipText);
-		}
-	}
-
-	if(gameData.triggerMove > 0 && gameData.timeAmount > 0){
+	if(gameData.triggerMove > 0){
 		document.getElementById("extra-time").style.display = 'block';
-		document.getElementById("extra-time-rule").style.display = 'block';
 		document.getElementById("extra-time-rule").innerHTML = `${gameData.triggerMove}/+${gameData.timeAmount/60}`;
 	}
-	// reset the game data and set new values
+	// reset the game data and new new values
 	if(!is2DBoard){
 		board.clear();
 		board.create(gameData.size, gameData.pieces, gameData.capstones);
@@ -200,13 +176,6 @@ function incrementMoveCounter(){
 	}
 
 	$('#undo').removeClass('i-requested-undo').removeClass('opp-requested-undo').addClass('request-undo');
-
-	// Flip the active clock in the PTN Ninja iframe so its countdown follows the
-	// new turn between server Time updates. Skip during history replay.
-	if(is2DBoard && !loadingGameHistory){
-		const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
-		set2DGameTimerTurn(timerTurn);
-	}
 }
 
 function load(){
@@ -320,26 +289,6 @@ function loadCurrentGameState(){
 		$(".player1-name:first").html(parsed.tags.Player1 || 'You');
 		$(".player2-name:first").html(parsed.tags.Player2 || 'You');
 	}
-
-	// clearNotationMenu() zeroed the clocks; restore them from the latest
-	// server-authoritative values so the built-in clocks don't display 00:00
-	// until the next Time message arrives.
-	if(lastTimeUpdate){
-		if(gameData.is_game_end){
-			settimers(lastWt, lastBt);
-		}
-		else{
-			startTime(true);
-		}
-		// Also forward the current clock state to the PTN Ninja iframe. This
-		// covers toggling the 2D board on mid-game (e.g. after refreshing the
-		// page with the 2D board disabled): the iframe was not receiving Time
-		// updates while hidden, so its clocks would otherwise stay unset until
-		// the next move.
-		if(is2DBoard){
-			forward2DGameTime(lastWt, lastBt);
-		}
-	}
 }
 
 function processPendingServerMoves(){
@@ -361,16 +310,6 @@ function adjustBoardWidth(){
 // time controls
 function startTime(fromFn){
 	if(typeof fromFn === 'undefined' && !server.timervar){return;}
-	// The clock only runs once the first move has been played. The server keeps
-	// both clocks fixed at the starting time and never ticks pre-game. Players
-	// don't receive a Time update before the game starts, but spectators get one
-	// on Observe, so without this guard their active clock would count down
-	// locally even though the game hasn't started.
-	if(gameData.move_count === 0){
-		settimers(lastWt, lastBt);
-		stopTime();
-		return;
-	}
 	const t = invarianttime();
 	const elapsed = t - lastTimeUpdate;
 	let t1;
@@ -404,38 +343,6 @@ function startTime(fromFn){
 function stopTime(){
 	clearTimeout(server.timervar);
 	server.timervar = null;
-}
-
-// Forward authoritative clock values from the PlayTak server to the PTN Ninja
-// iframe (when the 2D board is active). Enables live countdown on first call.
-// The caller passes the raw remaining-time values from the last authoritative
-// server Time update (lastWt/lastBt). Since the iframe stamps its reference
-// point to "now" (Date.now()) when the message arrives, we subtract the time
-// elapsed since lastTimeUpdate from the active side so the forwarded values
-// correspond to the current moment. Without this, toggling the board on
-// after a delay would freeze the iframe clock at the stale snapshot value.
-function forward2DGameTime(p1t, p2t){
-	if(!is2DBoard){return;}
-	// Mirror startTime(): the clock is not live until the first move is played.
-	const gameStarted = gameData.move_count > 0;
-	const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
-	let time1 = p1t;
-	let time2 = p2t;
-	if(gameStarted && lastTimeUpdate && !gameData.is_game_end){
-		const elapsed = Math.max(invarianttime() - lastTimeUpdate, 0);
-		if(timerTurn === 1){
-			time1 = Math.max(p1t - elapsed, 0);
-		}
-		else{
-			time2 = Math.max(p2t - elapsed, 0);
-		}
-	}
-	set2DGameTime({
-		time1: time1,
-		time2: time2,
-		timerTurn: timerTurn
-	});
-	set2DTimerLive(gameStarted && !gameData.is_game_end);
 }
 
 function settimers(p1t,p2t,noHurry){
@@ -476,18 +383,10 @@ function formatTime(time){
 function clearNotationMenu(){
 	const tbl = document.getElementById("moveslist");
 	while(tbl.rows.length > 0){tbl.deleteRow(0);}
-	document.getElementById("time-increment-rule").innerHTML = '';
-	document.getElementById("time-increment-rule").style.display = "none";
-	document.getElementById("time-increment").style.display = "none";
-
 	document.getElementById("extra-time-rule").innerHTML = '';
-	document.getElementById("extra-time-rule").style.display = "none";
 	document.getElementById("extra-time").style.display = "none";
 	$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw');
 	stopTime();
-	if(is2DBoard){
-		set2DTimerLive(false);
-	}
 
 	$('#player-me-name').removeClass('player1-name');
 	$('#player-me-name').removeClass('player2-name');
@@ -784,13 +683,6 @@ function undoMove(){
 	$('.curmove:first').removeClass('curmove');
 	$('.moveno'+(gameData.move_shown-1)+':first').addClass('curmove');
 	storeNotation();
-
-	// Flip the active clock in the PTN Ninja iframe back to the undone player's
-	// side. The subsequent server Time message will correct clock values.
-	if(is2DBoard){
-		const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
-		set2DGameTimerTurn(timerTurn);
-	}
 }
 
 function checkIfMyMove(){

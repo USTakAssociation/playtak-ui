@@ -1,11 +1,3 @@
-// Parses an #incselect value like "20" or "1*n" into { increment, increment_scales }.
-function parseIncrementValue(value) {
-	const str = String(value ?? "0");
-	const scales = str.endsWith("*n");
-	const increment = parseInt(scales ? str.slice(0, -2) : str, 10) || 0;
-	return { increment, increment_scales: scales };
-}
-
 const gamePresets = {
 	beginner: {
 		size: 6,
@@ -14,7 +6,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900,
-		increment: "10",
+		increment: 10,
 		trigger_move: "",
 		time_amount: "",
 		required_fields: ["opname"],
@@ -26,7 +18,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900,
-		increment: "10",
+		increment: 10,
 		trigger_move: "",
 		time_amount: "",
 		required_fields: ["opname"],
@@ -38,7 +30,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 600, // seconds
-		increment: "20",
+		increment: 20,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -50,7 +42,7 @@ const gamePresets = {
 		pieces: 40,
 		capstones: 2,
 		time: 1200, // seconds
-		increment: "15",
+		increment: 15,
 		trigger_move: 40,
 		time_amount: 600, // seconds
 		required_fields: ["opname"],
@@ -62,7 +54,7 @@ const gamePresets = {
 		pieces: 40,
 		capstones: 2,
 		time: 300, // seconds
-		increment: "5",
+		increment: 5,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -74,7 +66,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 1200, // seconds
-		increment: "15",
+		increment: 15,
 		trigger_move: "35",
 		time_amount: "600", // seconds
 		required_fields: ["opname"],
@@ -86,7 +78,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900, // seconds
-		increment: "15",
+		increment: 15,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -98,7 +90,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 600, // seconds
-		increment: "15",
+		increment: 15,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -110,7 +102,7 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 180, // seconds
-		increment: "5",
+		increment: 5,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -190,15 +182,8 @@ function init() {
 	clearStoredNotation();
 	loadInterfaceSettings();
 	const ninjaElement = document.getElementById("ninja");
-	// Show game header (turn indicator, player names, clocks) defaults to true,
-	// but honor the user's saved preference when loading the iframe.
-	const showHeader = localStorage.getItem("2d-header") !== "false";
 	const ninjaParams =
-		"&moveNumber=false&unplayedPieces=true&disableStoneCycling=true&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=" +
-		showHeader +
-		"&gameTimer=" +
-		showHeader +
-		"&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false";
+		"&moveNumber=false&unplayedPieces=true&disableStoneCycling=true&showBoardPrefsBtn=false&disableNavigation=true&disablePTN=true&disableText=true&flatCounts=false&turnIndicator=false&showHeader=false&showEval=false&showRoads=false&stackCounts=false&notifyGame=false";
 	if (
 		window.location.host.indexOf("localhost") > -1 ||
 		window.location.host.indexOf("127.0.0.1") > -1 ||
@@ -428,13 +413,13 @@ function copyNotationToClipboard() {
 }
 
 function openInPtnNinja() {
-	const link = "https://ptn.ninja/" + encodeURIComponent(getNotation());
+	const link = "http://ptn.ninja/" + encodeURIComponent(getNotation());
 	window.open(link, "_blank");
 }
 
 function copyNotationLink() {
 	const link =
-		"https://www.playtak.com/?load=" + encodeURIComponent(getNotation());
+		"http://www.playtak.com/?load=" + encodeURIComponent(getNotation());
 
 	navigator.clipboard.writeText(link).then(
 		() => {
