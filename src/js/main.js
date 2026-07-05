@@ -1,9 +1,19 @@
-// Parses an #incselect value like "20" or "1*n" into { increment, increment_scales }.
+// View<->model bridge for the #incselect dropdown. The dropdown packs two server
+// fields (a numeric increment + a boolean increment_scales) into one option token
+// like "20" (fixed) or "1*n" (scales with move number). Increment is treated as
+// numeric DATA everywhere; the string token only exists as the <select>.value.
+
+// Decode an #incselect token into { increment: Number, increment_scales: Boolean }.
 function parseIncrementValue(value) {
 	const str = String(value ?? "0");
 	const scales = str.endsWith("*n");
 	const increment = parseInt(scales ? str.slice(0, -2) : str, 10) || 0;
 	return { increment, increment_scales: scales };
+}
+
+// Encode { increment, increment_scales } back into an #incselect token ("20" / "1*n").
+function incrementTokenForSelect(increment, increment_scales) {
+	return increment_scales ? `${increment}*n` : String(increment);
 }
 
 const gamePresets = {
@@ -14,7 +24,8 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900,
-		increment: "10",
+		increment: 10,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "",
 		required_fields: ["opname"],
@@ -26,7 +37,8 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900,
-		increment: "10",
+		increment: 10,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "",
 		required_fields: ["opname"],
@@ -38,7 +50,8 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 600, // seconds
-		increment: "20",
+		increment: 20,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -50,7 +63,8 @@ const gamePresets = {
 		pieces: 40,
 		capstones: 2,
 		time: 1200, // seconds
-		increment: "15",
+		increment: 15,
+		increment_scales: false,
 		trigger_move: 40,
 		time_amount: 600, // seconds
 		required_fields: ["opname"],
@@ -62,7 +76,8 @@ const gamePresets = {
 		pieces: 40,
 		capstones: 2,
 		time: 300, // seconds
-		increment: "5",
+		increment: 5,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -74,7 +89,8 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 1200, // seconds
-		increment: "15",
+		increment: 15,
+		increment_scales: false,
 		trigger_move: "35",
 		time_amount: "600", // seconds
 		required_fields: ["opname"],
@@ -86,7 +102,8 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 900, // seconds
-		increment: "15",
+		increment: 15,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -98,7 +115,8 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 600, // seconds
-		increment: "15",
+		increment: 15,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -110,7 +128,8 @@ const gamePresets = {
 		pieces: 30,
 		capstones: 1,
 		time: 180, // seconds
-		increment: "5",
+		increment: 5,
+		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
 		required_fields: ["opname"],
@@ -390,6 +409,10 @@ function getNotation(id) {
 	res += getHeader("Komi", gameData.komi / 2);
 	res += getHeader("Flats", gameData.pieces);
 	res += getHeader("Caps", gameData.capstones);
+	// Opening variant (PTN Ninja tag). Omitted for the default "swap".
+	if (gameData.opening && gameData.opening !== "swap") {
+		res += getHeader("Opening", gameData.opening);
+	}
 	res += getHeader("Result", gameData.result);
 	res += "\r\n";
 
@@ -503,6 +526,7 @@ function changePreset(event) {
 		document.getElementById("incselect").value = storedValues.increment;
 		document.getElementById("triggerMove").value = storedValues.trigger_move;
 		document.getElementById("timeAmount").value = storedValues.time_amount;
+		document.getElementById("openingselect").value = storedValues.opening || "swap";
 		return;
 	} else if (preset) {
 		// store the current values if user changes back to the noen preset
@@ -516,6 +540,7 @@ function changePreset(event) {
 			increment: document.getElementById("incselect").value,
 			trigger_move: document.getElementById("triggerMove").value,
 			time_amount: document.getElementById("timeAmount").value,
+			opening: document.getElementById("openingselect").value,
 		};
 		localStorage.setItem(
 			"current-game-settings",
@@ -533,7 +558,7 @@ function changePreset(event) {
 		document.getElementById("gametype").setAttribute("disabled", "true");
 		document.getElementById("timeselect").value = preset.time;
 		document.getElementById("timeselect").setAttribute("disabled", "true");
-		document.getElementById("incselect").value = preset.increment;
+		document.getElementById("incselect").value = incrementTokenForSelect(preset.increment, preset.increment_scales);
 		document.getElementById("incselect").setAttribute("disabled", "true");
 		document.getElementById("triggerMove").value = preset.trigger_move;
 		document.getElementById("triggerMove").setAttribute("disabled", "true");
@@ -583,6 +608,7 @@ function resetGameSettings() {
 	document.getElementById("triggerMove").value = "";
 	document.getElementById("timeAmount").value = "";
 	document.getElementById("colorselect").value = "A";
+	document.getElementById("openingselect").value = "swap";
 	document.getElementById("opname").value = "";
 	document.getElementById("preset").value = "none";
 }
@@ -603,6 +629,7 @@ function loadGameSettings() {
 	document.getElementById("incselect").value = storedValues.increment;
 	document.getElementById("triggerMove").value = storedValues.trigger_move;
 	document.getElementById("colorselect").value = storedValues.color || "A";
+	document.getElementById("openingselect").value = storedValues.opening || "swap";
 }
 
 function resetToLoginState() {
@@ -776,6 +803,8 @@ $(document).ready(function () {
 		showElement("play-button");
 	}
 	loadGameSettings();
+	// opt-in Bootstrap popovers (e.g. the increment-scaling help in the create-game form)
+	$('[data-toggle="popover"]').popover();
 	// get current game settings
 	fetchEvents();
 	init();

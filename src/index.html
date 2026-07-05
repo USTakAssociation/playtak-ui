@@ -1076,7 +1076,9 @@
 											<div class="col-sm-6">
 												<!-- time inc -->
 												<div class="form-group">
-													<label for="incselect">Increment (seconds)</label>
+													<label for="incselect">Increment (seconds)
+														<button type="button" class="btn btn-link p-0 align-baseline" style="line-height:1;vertical-align:middle;" data-toggle="popover" data-trigger="focus" data-placement="top" data-html="true" data-content="The increment is the time added to your clock after each move.<br><br><b>n</b> = the current move number. Pick <b>n</b> to make the increment grow each move: move&nbsp;1 = +1s, move&nbsp;2 = +2s, move&nbsp;3 = +3s&hellip; <b>2n</b> doubles it (+2s, +4s, +6s&hellip;).<br><br>A fixed number like <b>20</b> adds the same amount every move." aria-label="Increment scaling help">&#9432;</button>
+													</label>
 													<select class="form-control" id="incselect">
 														<option value="0">0</option>
 														<option value="1">1</option>
@@ -1095,6 +1097,21 @@
 														<option value="180">180</option>
 														<option value="1*n">n</option>
 														<option value="2*n">2n</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-sm-6">
+												<!-- opening -->
+												<div
+													class="form-group"
+													data-toggle="tooltip" data-placement="auto" title="Opening - Single Swap: each player's first move places one of the opponent's flats. Double Black Stack: White's first move instead places a stack of two black flats."
+												>
+													<label for="openingselect">Opening</label>
+													<select class="form-control" id="openingselect">
+														<option value="swap" selected="selected">Single Swap</option>
+														<option value="double black stack">Double Black Stack</option>
 													</select>
 												</div>
 											</div>
@@ -1221,6 +1238,15 @@
 											</select>
 										</div>
 
+									</div>
+									<div class="col-sm-6">
+										<div class="form-group" data-toggle="tooltip" data-placement="auto" title="Opening - Single Swap: each player's first move places one of the opponent's flats. Double Black Stack: white's first move instead places a stack of two black flats.">
+											<label for="scratchOpeningSelect">Opening</label>
+											<select class="form-control" id="scratchOpeningSelect">
+												<option value="swap" selected="selected">Single Swap</option>
+												<option value="double black stack">Double Black Stack</option>
+											</select>
+										</div>
 									</div>
 								</div>
 								<div class="row">
@@ -2184,11 +2210,9 @@
 									<th>Player</th>
 									<td class="right">Rating</td>
 									<td class="right ">Board</td>
-									<td class="right">Time</td>
-									<td class="right">Komi</td>
-									<td class="right hide-sm">Stones</td>
-									<td class="right hide-sm">Type</td>
-									<td class="right hide-sm">Extra</td>
+									<td class="time-rule">Time</td>
+									<td class="rules-rule">Rules</td>
+									<td class="hide-sm">Type</td>
 									<td class="right hide-md" style="width: 40px"></td>
 								</tr>
 							</thead>
@@ -2203,11 +2227,9 @@
 									<th>AI</th>
 									<td class="right">Rating</td>
 									<td class="right">Board</td>
-									<td class="right time-rule">Time</td>
-									<td class="right komi-rule">Komi</td>
-									<td class="right hide-sm">Stones</td>
-									<td class="right hide-sm">Type</td>
-									<td class="right hide-sm">Extra</td>
+									<td class="time-rule">Time</td>
+									<td class="rules-rule">Rules</td>
+									<td class="hide-sm">Type</td>
 									<td class="right hide-md" style="width: 40px"></td>
 								</tr>
 							</thead>
@@ -2234,11 +2256,9 @@
 									<td></td>
 									<td class="text-center">Players</td>
 									<td class="right">Board</td>
-									<td class="right time-rule">Time</td>
-									<td class="right komi-rule">Komi</td>
-									<td class="right hide-sm">Stones</td>
-									<td class="right hide-sm">Type</td>
-									<td class="right hide-sm">Extra</td>
+									<td class="time-rule">Time</td>
+									<td class="rules-rule">Rules</td>
+									<td class="hide-sm">Type</td>
 									<td class="right hide-md" style="width: 40px"></td>
 								</tr>
 							</thead>

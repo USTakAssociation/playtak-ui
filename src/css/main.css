@@ -780,12 +780,21 @@ select, .select.dropdown-toggle {
 	border-bottom: 1px solid var(--primary-border-color);
 }
 
+/* Left-align all columns to match the playtak-games table. This overrides the
+   generic .right utility (lower specificity than .linestable td/th). */
 .linestable td{
 	padding: 8px 4px;
+	text-align: left;
 }
 
 .linestable th{
 	padding: 8px 4px;
+	text-align: left;
+}
+
+/* Rules column: allow "Double Black Stack" to wrap rather than forcing a wide column. */
+.rules-col{
+	white-space: normal;
 }
 
 .colourcircle circle{
@@ -1131,12 +1140,12 @@ a.btn.btn-primary {
 	}
 }
 
-/* max width 500 hide komi */
+/* max width 500: collapse the Rules column into the detail menu (like the old Komi column did) */
 @media (max-width: 500px) {
-	.komi-rule {
+	.rules-rule {
 		display: none;
 	}
-	.komi-rule-menu {
+	.rules-rule-menu {
 		display: block !important;
 	}
 }
@@ -1222,3 +1231,37 @@ a.btn.btn-primary {
 .active .stroke-primary {
 	stroke: var(--dark);
 }
+
+/* || Dark popover — match the dark Bootstrap tooltips (e.g. the increment-scaling help) */
+.popover {
+	background-color: #000;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.popover .popover-header {
+	background-color: #000;
+	color: #fff;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.popover .popover-body {
+	color: #fff;
+}
+/* arrow: ::after is the fill (match the black body), ::before is the border */
+.bs-popover-auto[x-placement^=top] > .arrow::after,
+.bs-popover-top > .arrow::after { border-top-color: #000; }
+.bs-popover-auto[x-placement^=top] > .arrow::before,
+.bs-popover-top > .arrow::before { border-top-color: rgba(255, 255, 255, 0.15); }
+.bs-popover-auto[x-placement^=bottom] > .arrow::after,
+.bs-popover-bottom > .arrow::after { border-bottom-color: #000; }
+.bs-popover-auto[x-placement^=bottom] > .arrow::before,
+.bs-popover-bottom > .arrow::before { border-bottom-color: rgba(255, 255, 255, 0.15); }
+.bs-popover-auto[x-placement^=left] > .arrow::after,
+.bs-popover-left > .arrow::after { border-left-color: #000; }
+.bs-popover-auto[x-placement^=left] > .arrow::before,
+.bs-popover-left > .arrow::before { border-left-color: rgba(255, 255, 255, 0.15); }
+.bs-popover-auto[x-placement^=right] > .arrow::after,
+.bs-popover-right > .arrow::after { border-right-color: #000; }
+.bs-popover-auto[x-placement^=right] > .arrow::before,
+.bs-popover-right > .arrow::before { border-right-color: rgba(255, 255, 255, 0.15); }
+/* the bottom-placement notch that sits over the header */
+.popover-header::before,
+.bs-popover-bottom .popover-header::before { border-bottom-color: #000; }

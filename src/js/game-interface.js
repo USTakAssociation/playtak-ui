@@ -65,6 +65,7 @@ function resetGameDataToDefault(){
 		capstones: 1,
 		unrated: false,
 		tournament: false,
+		opening: 'swap',
 		triggerMove: 0,
 		timeAmount: 0,
 		bot: 0,
@@ -102,6 +103,7 @@ function playScratch(){
 		gameData.size = parseInt(document.getElementById("scratchBoardSize").value);
 		gameData.pieces = parseInt(document.getElementById("scratchPieceCount").value);
 		gameData.capstones = parseInt(document.getElementById("scratchCapCount").value);
+		gameData.opening = document.getElementById("scratchOpeningSelect").value;
 		gameData.komi = 0;
 		gameData.id = 0;
 		initBoard();
@@ -154,7 +156,7 @@ function initBoard(){
 		board.initEmpty();
 		return;
 	}
-	set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+	set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]${gameData.opening !== 'swap' ? `[Opening "${gameData.opening}"]` : ''}`);
 	if(gameData.my_color === 'black'){
 		setDisable2DBoard(true);
 	}
@@ -800,6 +802,17 @@ function checkIfMyMove(){
 	return toMove === gameData.my_color;
 }
 
+// Opening variants. The array index is the compact code used on the space-delimited
+// Seek wire protocol; the string is the canonical PTN Ninja "Opening" tag value.
+const OPENING_NAMES = ['swap', 'double black stack'];
+function openingNameFromCode(code){
+	return OPENING_NAMES[code] || 'swap';
+}
+function openingCodeFromName(name){
+	const i = OPENING_NAMES.indexOf(name);
+	return i < 0 ? 0 : i;
+}
+
 function isWhitePieceToMove(){
 	// white always goes first, so must pick up a black piece
 	if(gameData.move_count === 0){return false;}
@@ -860,9 +873,9 @@ function handleGameOverState(){
 		if(!is2DBoard){
 			gameData.flatCount = board.flatscore();
 		}
-		let komi = (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "");
-		if(komi){
-			komi = "+" + komi;
+		let komi = "";
+		if(gameData.komi > 0){
+			komi = "+" + ((Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
 		}
 		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + komi + ")";
 	}
