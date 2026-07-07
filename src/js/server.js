@@ -1179,11 +1179,11 @@ var server = {
 		const piecesVary = (game.pieces !== stdPieces || game.capstones !== stdCaps);
 		const komiText = Math.floor(game.komi/2) + (game.komi&1 ? ".5" : "");
 		const gameOpeningFull = game.opening === "double black stack" ? "Double Black Stack" : "Single Swap";
-		const timeText = (game.time/60) + "m +" + game.increment + "s" + (game.incrementScales ? "&times;n" : "") + " inc";
+		const timeText = formatTimeControl(game.time, game.increment, game.incrementScales);
 		const hasExtra = (Number(game.triggerMove) > 0 && Number(game.timeAmount) > 0);
-		const extraText = "+" + game.timeAmount + "m @" + game.triggerMove;
+		const extraText = formatExtraTime(game.timeAmount, game.triggerMove);
 		// Time: base time + increment (playtak-games style); extra time on a 2nd line
-		$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time control and increment (n = the current move number)" : "Time control and increment").appendTo(row);
+		$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time (minutes) and increment (seconds). n is the current move number" : "Time (minutes) and increment (seconds)").appendTo(row);
 		// Rules: consolidated komi / pieces / opening (see the seek list for details).
 		const rulesLines = [];
 		const rulesTips = [];
@@ -1405,11 +1405,11 @@ var server = {
 			const stdCaps = [0,0,0,0,0,1,1,2,2][seekSize];
 			const piecesVary = (seek.pieces !== stdPieces || seek.capstones !== stdCaps);
 			const komiText = Math.floor(seek.komi/2) + (seek.komi&1 ? ".5" : "");
-			const timeText = (seek.time/60) + "m +" + seek.increment + "s" + (seek.increment_scales ? "&times;n" : "") + " inc";
+			const timeText = formatTimeControl(seek.time, seek.increment, seek.increment_scales);
 			const hasExtra = (Number(seek.trigger_move) > 0 && Number(seek.time_amount) > 0);
-			const extraText = "+" + seek.time_amount + "m @" + seek.trigger_move;
+			const extraText = formatExtraTime(seek.time_amount, seek.trigger_move);
 			// Time: base time + increment (playtak-games style); extra time on a 2nd line
-			$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time control and increment (n = the current move number)" : "Time control and increment").appendTo(row);
+			$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time (minutes) and increment (seconds). n is the current move number" : "Time (minutes) and increment (seconds)").appendTo(row);
 			// Rules: consolidated komi / pieces / opening. Only non-default values are
 			// shown, each on its own line. The opening name appears without an "Opening:"
 			// label (kept compact via a smaller, wrappable font); the per-row tooltip

@@ -119,7 +119,14 @@ function playScratch(){
 }
 
 function initBoard(){
-	$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
+	if(gameData.komi > 0){
+		$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "")).css("display", "");
+		$("#komirule-separator").css("display", "");
+	}
+	else{
+		$("#komirule").css("display", "none");
+		$("#komirule-separator").css("display", "none");
+	}
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
 	document.getElementById("player-opp").className = "selectplayer";
 	document.getElementById("player-me").className = "";
@@ -811,6 +818,25 @@ function openingNameFromCode(code){
 function openingCodeFromName(name){
 	const i = OPENING_NAMES.indexOf(name);
 	return i < 0 ? 0 : i;
+}
+
+// Time-control display for the seek/watch tables and the playtak-games table.
+// "10 + 20" = 10 min base with a 20 s increment; "10 min" when there's no
+// increment. With increment scaling the increment is shown as n (the move
+// number it scales by): "10 + n", "5 + 2n".
+function formatTimeControl(timeSeconds, increment, incrementScales){
+	const mins = timeSeconds / 60;
+	const inc = Number(increment);
+	if(inc > 0){
+		const incText = incrementScales ? (inc === 1 ? "n" : inc + "n") : inc;
+		return mins + " + " + incText;
+	}
+	return mins + " min";
+}
+// Extra ("byoyomi-style") time display, e.g. "+5 min @35" — 5 minutes added
+// once the game reaches move 35.
+function formatExtraTime(timeAmountMinutes, triggerMove){
+	return "+" + timeAmountMinutes + " min @" + triggerMove;
 }
 
 function isWhitePieceToMove(){
