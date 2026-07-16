@@ -301,7 +301,11 @@ function loadCurrentGameState(){
 		set2DBoard(currentGame);
 		send2DAction('LAST');
 		for(let i = 0; i < parsed.moves.length; i++){
-			if((/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
+			// Double Black Stack: White's opening ply "2a1" is a valid 2-flat black
+			// stack placement, but it matches neither pattern below, so accept it
+			// explicitly — otherwise the move list rebuilds a move short and misaligned.
+			const isDbsOpen = (i === 0 && gameData.opening === 'double black stack' && /^2[a-h][0-8]$/.test(parsed.moves[i]));
+			if(!isDbsOpen && (/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
 				console.warn("unparseable: " + parsed.moves[i]);
 				continue;
 			}

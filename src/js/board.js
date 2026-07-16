@@ -3751,8 +3751,28 @@ const board = {
 
 		for(let ply = 0;ply < parsed.moves.length;ply++){
 			const move = parsed.moves[ply];
-			let match;
-			if((match = /^([SFC]?)([a-h])([0-8])$/.exec(move)) !== null){
+			let match, dbsMatch;
+			// Double Black Stack: White's opening ply is stored as "2a1" (a 2-flat
+			// black stack). That token matches neither notation pattern below, so
+			// without this branch the ply is dropped and every later move loads with
+			// the wrong colour/position (move_count never advances). Mirror live play
+			// (addDoubleBlackStackFlatIfApplicable): place the swapped black flat,
+			// then a second black flat on top.
+			if(gameData.opening === 'double black stack' && gameData.move_count === 0 &&
+				(dbsMatch = /^2([a-h])([0-8])$/.exec(move)) !== null){
+				const file = dbsMatch[1].charCodeAt(0) - 'a'.charCodeAt(0);
+				const rank = parseInt(dbsMatch[2]) - 1;
+				const obj = this.getfromstack(false, false); // a black flat
+				if(!obj){
+					console.warn("bad PTN: too many pieces");
+					return;
+				}
+				const hlt = this.get_board_obj(file,rank);
+				this.pushPieceOntoSquare(hlt,obj);
+				this.addDoubleBlackStackFlatIfApplicable(hlt);
+				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
+			}
+			else if((match = /^([SFC]?)([a-h])([0-8])$/.exec(move)) !== null){
 				const piece = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
