@@ -256,6 +256,17 @@ var server = {
 				);
 			}
 		}
+		// The server sends the Time update immediately BEFORE the move message,
+		// so when that Time arrived move_count was still the pre-move value: the
+		// clock was frozen (pre-game) or stopped, and only the next move's Time
+		// would restart it. Now that the move is applied and move_count is
+		// current, (re)start the clocks so they begin counting the new side's
+		// time right away. Skipped during the initial history burst, which ends
+		// when the first Time message clears loadingGameHistory.
+		if(!loadingGameHistory && lastTimeUpdate && !gameData.is_game_end){
+			startTime(true);
+			forward2DGameTime(lastWt, lastBt);
+		}
 	},
 
 	connect: function(){
@@ -308,6 +319,9 @@ var server = {
 				server.rendeerseekslist();
 				server.updateplayerinfo();
 				stopTime();
+				if(is2DBoard){
+					set2DTimerLive(false);
+				}
 				document.getElementById("removeSeek").removeAttribute("disabled");
 				document.getElementById("createSeek").removeAttribute("disabled");
 
@@ -366,7 +380,7 @@ var server = {
 	},
 	sendClient: function(){
 		server.send("Client TakWeb-22.04.12");
-		server.send("Protocol 2");
+		server.send("Protocol 4");
 	},
 	login: function(){
 		this.anotherlogin=false;
@@ -606,7 +620,7 @@ var server = {
 			chathandler.createRoom("priv-" + opponentname, "<b>" + opponentname + "</b>");
 			chathandler.selectRoom("priv-" + opponentname);
 			gameData.chatRoom = "priv-" + opponentname;
-			chathandler.insertGameSeparator(gameData.chatRoom);
+			chathandler.insertGameSeparator(gameData.chatRoom, gameData.id);
 
 			document.getElementById("chime-sound").currentTime = 0;
 			document.getElementById("chime-sound").play();
@@ -675,6 +689,7 @@ var server = {
 				id: +spl[2],
 				time: +spl[6],
 				increment: +spl[7],
+				incrementScales: +(spl[8] || 0) === 1,
 				player1: spl[3],
 				player2: spl[4],
 				size: +spl[5],
@@ -734,6 +749,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
@@ -745,6 +761,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 RequestUndo
 				else if(spl[1] === "RequestUndo"){
@@ -772,6 +789,18 @@ var server = {
 					$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw").addClass("offer-draw");
 					alert("info", "Draw offer is taken back by your opponent");
 				}
+				//Game#1 GivenTime <toColor> <ms>
+				else if(spl[1] === "GivenTime"){
+					const toColor = spl[2];
+					const seconds = Math.round((+spl[3] || 0) / 1000);
+					const youReceived = toColor === gameData.my_color;
+					if(youReceived){
+						alert("info", "Your opponent gave you " + seconds + " seconds");
+					}
+					else{
+						alert("info", "You gave your opponent " + seconds + " seconds");
+					}
+				}
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
 					gameData.result = spl[2];
@@ -782,9 +811,11 @@ var server = {
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 					document.title = "Play Tak";
 					if(!is2DBoard || !gameData.is_game_end){
 						// Wait for animation to complete before showing game-over dialog
@@ -813,15 +844,17 @@ var server = {
 					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
 					if(!gameData.is_scratch && gameData.chatRoom){
-						chathandler.insertTimeMarker(gameData.chatRoom);
 						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
 							chathandler.insertMoveMarker(gameData.chatRoom, gameData.lastMoveLabel);
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
+						chathandler.insertTimeMarker(gameData.chatRoom);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 
 					// Wait for animation to complete before showing game-over dialog
 					animation.whenComplete(function(){
@@ -1633,6 +1666,12 @@ var server = {
 		else if(gameData.observing){return;}
 
 		this.send("Game#" + gameData.id + " Resign");
+	},
+	giveTime: function(){
+		if(gameData.is_scratch){return;}
+		else if(gameData.observing){return;}
+
+		this.send("Game#" + gameData.id + " GiveTime");
 	},
 	acceptseek: function(e, skipDebounce){
 		if(!skipDebounce && this.changeseektime+800>Date.now()){

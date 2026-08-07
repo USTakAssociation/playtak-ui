@@ -30,7 +30,7 @@ This will start a local dev server for you
 
 If you make any changes just reload the page as caching is turned off
 
-To play locally against the live PlayTak server in the /src/js/server.js on line 208 uncomment that line and reload
+To play locally against the live PlayTak server uncomment line 273 in /src/js/server.js and reload
 
 
 ## TODO
