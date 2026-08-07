@@ -416,12 +416,19 @@ function generateCamera(){
 		const scale=Math.max(scalex,scaley);
 		const xpadding=(window.innerWidth-cutleft-cutright)*(1-scalex/scale);
 		const ypadding=(window.innerHeight-cuttop-cutbottom)*(1-scaley/scale);
-		cutleft+=xpadding/2;
-		cutright+=xpadding/2;
-		cuttop+=ypadding/2;
-		cutbottom+=ypadding/2;
+		const paddedCutLeft = cutleft + xpadding / 2;
+		const paddedCutRight = cutright + xpadding / 2;
+		const paddedCutTop = cuttop + ypadding / 2;
+		const paddedCutBottom = cutbottom + ypadding / 2;
 
-		camera = new THREE.OrthographicCamera(-maxleft-cutleft*scale,-maxright+cutright*scale,maxtop+cuttop*scale,maxbottom-cutbottom*scale,2000,5000);
+		camera = new THREE.OrthographicCamera(
+			-maxleft - paddedCutLeft * scale,
+			-maxright + paddedCutRight * scale,
+			maxtop + paddedCutTop * scale,
+			maxbottom - paddedCutBottom * scale,
+			2000,
+			5000
+		);
 		const campos=invcamdir.multiplyScalar(3500);
 		camera.position.set(campos.x,campos.y,campos.z);
 

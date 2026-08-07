@@ -12,18 +12,18 @@ cd playtak-ui
 
 Install the dev dependencies to run locally or run it using some web server like apache or nginx.
 
-Running locally with NodeJs requires (version 14 or later) and NPM. [Node](http://nodejs.org/) and [NPM](https://npmjs.org/) which are really easy to install.
+Running locally with NodeJs requires (version 14 or later) and NPM. [Node](http://nodejs.org/) and [pnpm](https://pnpm.io/) which are really easy to install.
 
 To make sure you have them available on your machine, try running the following command.
 
 ```sh
-node -v && npm -v
+node -v && pnpm -v
 ```
 
 To get started run the following:
 ```
-npm i
-npm run dev
+pnpm i
+pnpm run dev
 ```
 
 This will start a local dev server for you 
