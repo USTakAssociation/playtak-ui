@@ -23,8 +23,11 @@
 	},
 	"homepage": "https://github.com/USTakAssociation/playtak-ui#readme",
 	"devDependencies": {
-		"eslint": "^9.31.0",
-		"http-server": "^14.1.1",
-		"vitest": "^4.0.18"
+		"eslint": "10.8.0",
+		"http-server": "14.1.1",
+		"vitest": "4.1.10"
+	},
+	"engines": {
+		"pnpm": ">=11.0.0"
 	}
 }
