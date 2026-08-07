@@ -90,15 +90,15 @@ var chathandler={
 			const isGameRoom = gameData.chatRoom && id === gameData.chatRoom;
 			const moveChanged = isGameRoom && gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel;
 
-			if(moveChanged){
-				gameData.lastShownMoveLabel = gameData.lastMoveLabel;
-				$cs.append('<div class="chat-move-marker">' + escapeHtml(gameData.lastMoveLabel) + '</div>');
-			}
-
 			if(timeChanged){
 				let hiddenAttr = localStorage.getItem('hide-chat-time') === 'true' ? ' hidden' : '';
 				$cs.append('<div class="chattime"' + hiddenAttr + '>' + timenow + '</div>');
 				this.rooms[id][2] = timenow;
+			}
+
+			if(moveChanged){
+				gameData.lastShownMoveLabel = gameData.lastMoveLabel;
+				$cs.append('<div class="chat-move-marker">' + escapeHtml(gameData.lastMoveLabel) + '</div>');
 			}
 
 			$cs.append('<span class="chatname context-player">' + name + ':</span>');
@@ -161,21 +161,12 @@ var chathandler={
 		$cs.append('<div class="chat-move-marker">' + escapeHtml(label) + '</div>');
 		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
 	},
-	lastSeparatorGameId: {},
-	insertGameSeparator: function(roomId, gameId){
+	insertGameSeparator: function(roomId){
 		if(!roomId || !this.rooms.hasOwnProperty(roomId)){return;}
-		// Only insert a separator once per distinct game for a given room.
-		// Re-observing the same game (e.g. switching away and back) reuses the
-		// existing chat room and should not introduce another separator.
-		if(gameId && this.lastSeparatorGameId[roomId] === gameId){return;}
 		const $cs = this.rooms[roomId][1];
-		if($cs.children().length === 0){
-			if(gameId){this.lastSeparatorGameId[roomId] = gameId;}
-			return;
-		}
+		if($cs.children().length === 0){return;}
 		$cs.append('<hr class="chat-game-separator">');
 		$("#room_divs").scrollTop($("#room_divs")[0].scrollHeight);
-		if(gameId){this.lastSeparatorGameId[roomId] = gameId;}
 	},
 	send: function(){
 		const msg = $('#chat-me').val();
