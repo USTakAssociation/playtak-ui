@@ -3783,6 +3783,22 @@ const board = {
 				const piece = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
+				const obj = this.getfromstack((piece === 'C'),isWhitePieceToMove());
+				if(!obj){
+					console.warn("bad PTN: too many pieces");
+					return;
+				}
+				if(piece === 'S'){
+					this.standup(obj);
+				}
+				const hlt = this.get_board_obj(file,rank);
+				this.pushPieceOntoSquare(hlt,obj);
+				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
+			}
+			else if((match = /^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(move)) !== null){
+				const count = match[1];
+				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
+				const rank = parseInt(match[3]) - 1;
 				const dir = match[4];
 				let drops = match[5];
 
