@@ -278,7 +278,7 @@ function load(){
 				// parsePTN leaves empty-valued tags such as [Result ""] in the move array,
 				// so the opening ply is not reliably at index 0.
 				const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][1-8]$/.test(parsed.moves[i]));
-				if(!isDbsOpen && (/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
+				if(!isDbsOpen && (/^([SFC]?)([a-h])([1-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([1-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
 					console.warn("unparseable: " + parsed.moves[i]);
 					continue;
 				}
@@ -334,7 +334,7 @@ function loadCurrentGameState(){
 			// parsePTN leaves empty-valued tags such as [Result ""] in the move array,
 			// so the opening ply is not reliably at index 0.
 			const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][1-8]$/.test(parsed.moves[i]));
-			if(!isDbsOpen && (/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
+			if(!isDbsOpen && (/^([SFC]?)([a-h])([1-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([1-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
 				console.warn("unparseable: " + parsed.moves[i]);
 				continue;
 			}

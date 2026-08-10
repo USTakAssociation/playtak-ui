@@ -2104,6 +2104,15 @@ const board = {
 	get_board_obj: function(file,rank){
 		return this.sq[file][gameData.size - 1 - rank].board_object;
 	},
+	// Square notation spans the largest board (a-h, 1-8), so a coordinate parsed
+	// from a PTN can name a square this board does not have. get_board_obj would
+	// index outside this.sq and throw, so callers handling untrusted notation
+	// must check first. Uses the allocated dimension rather than gameData.size,
+	// which load() leaves as a string from the PTN tag.
+	isOnBoard: function(file,rank){
+		const n = this.sq.length;
+		return file >= 0 && file < n && rank >= 0 && rank < n;
+	},
 	incmovecnt: function(){
 		this.save_board_pos();
 		incrementMoveCounter();
@@ -3769,11 +3778,7 @@ const board = {
 				(dbsMatch = /^2([a-h])([1-8])$/.exec(move)) !== null){
 				const file = dbsMatch[1].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(dbsMatch[2]) - 1;
-				// The pattern spans the largest board, so it also matches squares past
-				// the edge of this one. get_board_obj would index outside this.sq and
-				// throw, aborting the load half-finished, so treat an off-board square
-				// the same as any other unparseable ply.
-				if(file >= size || rank >= size){
+				if(!this.isOnBoard(file,rank)){
 					console.warn("unparseable: " + move);
 					continue;
 				}
@@ -3787,10 +3792,14 @@ const board = {
 				this.addDoubleBlackStackFlatIfApplicable(hlt);
 				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 			}
-			else if((match = /^([SFC]?)([a-h])([0-8])$/.exec(move)) !== null){
+			else if((match = /^([SFC]?)([a-h])([1-8])$/.exec(move)) !== null){
 				const piece = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
+				if(!this.isOnBoard(file,rank)){
+					console.warn("unparseable: " + move);
+					continue;
+				}
 				const obj = this.getfromstack((piece === 'C'),isWhitePieceToMove());
 				if(!obj){
 					console.warn("bad PTN: too many pieces");
@@ -3803,7 +3812,7 @@ const board = {
 				this.pushPieceOntoSquare(hlt,obj);
 				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 			}
-			else if((match = /^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(move)) !== null){
+			else if((match = /^([1-9]?)([a-h])([1-8])([><+-])(\d*)$/.exec(move)) !== null){
 				const count = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
@@ -3832,6 +3841,16 @@ const board = {
 				}
 				else if(dir == '+'){
 					dr = 1;
+				}
+
+				// Validate the whole path up front. get_stack returns the live stack and
+				// the drop loop mutates squares as it goes, so discovering an off-board
+				// square partway through would leave a half-applied move on the board.
+				// The drops run in a straight line, so the endpoints bound the rest.
+				if(!this.isOnBoard(file,rank)
+					|| !this.isOnBoard(file + drops.length * df, rank + drops.length * dr)){
+					console.warn("unparseable: " + move);
+					continue;
 				}
 
 				const s1 = this.get_board_obj(file,rank);
