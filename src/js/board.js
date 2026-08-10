@@ -3769,6 +3769,14 @@ const board = {
 				(dbsMatch = /^2([a-h])([0-8])$/.exec(move)) !== null){
 				const file = dbsMatch[1].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(dbsMatch[2]) - 1;
+				// The pattern spans the whole a-h/0-8 notation space, so it also matches
+				// rank 0 and squares past the edge of this board. get_board_obj would
+				// index outside this.sq and throw, aborting the load half-finished, so
+				// treat an off-board square the same as any other unparseable ply.
+				if(file >= size || rank < 0 || rank >= size){
+					console.warn("unparseable: " + move);
+					continue;
+				}
 				const obj = this.getfromstack(false, false); // a black flat
 				if(!obj){
 					console.warn("bad PTN: too many pieces");

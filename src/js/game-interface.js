@@ -16,6 +16,7 @@ let gameData = {
 	capstones: 1,
 	unrated: false,
 	tournament: false,
+	opening: 'swap',
 	triggerMove: 0,
 	timeAmount: 0,
 	bot: 0,
@@ -252,6 +253,10 @@ function load(){
 		gameData.komi = parsed.tags.Komi || 0;
 		gameData.pieces = parsed.tags.Flats || defaultPiecesAndCaps[gameData.size][0];
 		gameData.capstones = parsed.tags.Caps || defaultPiecesAndCaps[gameData.size][1];
+		// The opening variant drives how White's first ply is notated and rendered
+		// (Double Black Stack writes it as "2a1"), so it has to be restored from the
+		// tag before any move is validated or replayed below.
+		gameData.opening = (parsed.tags.Opening || 'swap').trim().toLowerCase();
 	}
 	else if(!parsed && !isTPS){
 		alert('warning','Invalid PTN/TPS');
@@ -266,7 +271,14 @@ function load(){
 				parsed.moves.pop();
 			}
 			for(let i = 0; i < parsed.moves.length; i++){
-				if((/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
+				// Double Black Stack: White's opening ply "2a1" is a valid 2-flat black
+				// stack placement, but it matches neither pattern below, so accept it
+				// explicitly — otherwise the move list rebuilds a move short and misaligned.
+				// Keyed off move_count (as board.loadptn is) rather than the loop index:
+				// parsePTN leaves empty-valued tags such as [Result ""] in the move array,
+				// so the opening ply is not reliably at index 0.
+				const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][0-8]$/.test(parsed.moves[i]));
+				if(!isDbsOpen && (/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
 					console.warn("unparseable: " + parsed.moves[i]);
 					continue;
 				}
@@ -302,6 +314,13 @@ function loadCurrentGameState(){
 		return;
 	}
 	const parsed = parsePTN(currentGame);
+	// The stored PTN carries the opening variant, so honour it here too — the
+	// board-mode toggle can run against game data that never saw a Game Start
+	// (e.g. a PTN pasted through Load Game). Only override when the tag is
+	// actually present, so a live game's opening is never clobbered.
+	if(parsed && parsed.tags && parsed.tags.Opening){
+		gameData.opening = parsed.tags.Opening.trim().toLowerCase();
+	}
 	clearNotationMenu();
 	initCounters(0);
 	if(is2DBoard){
@@ -311,7 +330,10 @@ function loadCurrentGameState(){
 			// Double Black Stack: White's opening ply "2a1" is a valid 2-flat black
 			// stack placement, but it matches neither pattern below, so accept it
 			// explicitly — otherwise the move list rebuilds a move short and misaligned.
-			const isDbsOpen = (i === 0 && gameData.opening === 'double black stack' && /^2[a-h][0-8]$/.test(parsed.moves[i]));
+			// Keyed off move_count (as board.loadptn is) rather than the loop index:
+			// parsePTN leaves empty-valued tags such as [Result ""] in the move array,
+			// so the opening ply is not reliably at index 0.
+			const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][0-8]$/.test(parsed.moves[i]));
 			if(!isDbsOpen && (/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
 				console.warn("unparseable: " + parsed.moves[i]);
 				continue;
