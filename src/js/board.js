@@ -3884,7 +3884,10 @@ const board = {
 			const coords = this.lastMovedSquareList.at(-1);
 			this.highlightLastMove_sq(this.get_board_obj(coords.file, coords.rank), gameData.move_count - 1);
 		}
-		if(parsed.tags.Result !== undefined){
+		// Presence of the tag is not the test — getNotation writes [Result ""]
+		// for a game still in progress, so an empty value has to leave the game
+		// running rather than declare it over.
+		if(parsed.tags.Result){
 			gameData.result = parsed.tags.Result;
 			gameOver();
 		}

@@ -1,10 +1,21 @@
+// A PTN tag: [Name "value"]. The value may be empty — getNotation writes every
+// tag unconditionally, so a game still in progress is stored carrying
+// [Result ""]. Requiring a character between the quotes meant such a tag was
+// neither captured here nor stripped from the body, so it reached
+// parsePTNMoves and split into the bogus plies `[Result` and `""]`.
+//
+// Kept as one pattern because the header and the body-stripping pass have to
+// agree on what a tag is; a flagged copy is built per use so the two call sites
+// don't share a lastIndex.
+const PTN_TAG_RE = /\[(\S+)\s+"([^"]*)"\]/;
+
 function parsePTN(text){
 	text = text.replace(/\r/g, "");
 	text = text.replace(/\{[^}]+\}/gm, "");
 
 	const header = parsePTNHeader(text);
 
-	const body = text.replace(/\[(\S+)\s+\"([^"]+)\"\]/g, "").trim();
+	const body = text.replace(new RegExp(PTN_TAG_RE.source, "g"), "").trim();
 	const moves = parsePTNMoves(body);
 	if(header && moves){
 		return {
@@ -18,7 +29,7 @@ function parsePTN(text){
 function parsePTNHeader(header){
 	const tags = {};
 	let match;
-	const re = /\[(\S+)\s+\"([^"]+)\"\]/gm;
+	const re = new RegExp(PTN_TAG_RE.source, "gm");
 	while((match = re.exec(header)) !== null){
 		tags[match[1]] = match[2];
 	}
@@ -30,7 +41,10 @@ function parsePTNMoves(body){
 	const moves = [];
 	for(let i = 0; i < bits.length; i++){
 		const tok = bits[i];
-		if(tok.match(/\d+\./)){
+		// Splitting on whitespace yields an empty token at either end when the
+		// body is not tight against its plies, and a caller passing raw text
+		// has no reason to expect one back as a ply.
+		if(tok === "" || tok.match(/\d+\./)){
 			continue;
 		}
 		moves.push(tok);

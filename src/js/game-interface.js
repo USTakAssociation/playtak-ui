@@ -245,8 +245,10 @@ function load(){
 	const isTPS = tpsRegex.test(text);
 	let parsed = parsePTN(text);
 	if(parsed !== null && !isTPS){
+		// An empty Size is as unusable as a missing one — and now reaches here,
+		// since [Size ""] parses to "" rather than being dropped on the floor.
 		if(parsed.tags === undefined || parsed.tags === null
-			|| parsed.tags.Size === undefined || parsed.tags.Size === null
+			|| !parsed.tags.Size
 		){
 			alert('warning','Invalid PTN: no size tag found');
 			return;
@@ -300,9 +302,9 @@ function load(){
 				// Double Black Stack: White's opening ply "2a1" is a valid 2-flat black
 				// stack placement, but it matches neither pattern below, so accept it
 				// explicitly — otherwise the move list rebuilds a move short and misaligned.
-				// Keyed off move_count (as board.loadptn is) rather than the loop index:
-				// parsePTN leaves empty-valued tags such as [Result ""] in the move array,
-				// so the opening ply is not reliably at index 0.
+				// Keyed off move_count (as board.loadptn is) rather than the loop index,
+				// so that a ply the loop skips cannot shift which ply is treated as the
+				// opening.
 				const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][1-8]$/.test(parsed.moves[i]));
 				if(!isDbsOpen && matchPTNPlacement(parsed.moves[i]) === null && matchPTNMovement(parsed.moves[i]) === null){
 					console.warn("unparseable: " + parsed.moves[i]);
@@ -348,6 +350,11 @@ function loadCurrentGameState(){
 		gameData.opening = parsed.tags.Opening.trim().toLowerCase();
 	}
 	clearNotationMenu();
+	// clearNotationMenu() blanks and hides the rules row, and the stored PTN has
+	// no Clock tag to rebuild it from — but gameData still holds the time control
+	// from Game Start, so repaint from there. Without this, toggling the board
+	// mode mid-game dropped the increment ("+:01×n") and extra-time rules.
+	renderVariableRules();
 	initCounters(0);
 	if(is2DBoard){
 		set2DBoard(currentGame);
@@ -356,9 +363,9 @@ function loadCurrentGameState(){
 			// Double Black Stack: White's opening ply "2a1" is a valid 2-flat black
 			// stack placement, but it matches neither pattern below, so accept it
 			// explicitly — otherwise the move list rebuilds a move short and misaligned.
-			// Keyed off move_count (as board.loadptn is) rather than the loop index:
-			// parsePTN leaves empty-valued tags such as [Result ""] in the move array,
-			// so the opening ply is not reliably at index 0.
+			// Keyed off move_count (as board.loadptn is) rather than the loop index,
+			// so that a ply the loop skips cannot shift which ply is treated as the
+			// opening.
 			const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][1-8]$/.test(parsed.moves[i]));
 			if(!isDbsOpen && matchPTNPlacement(parsed.moves[i]) === null && matchPTNMovement(parsed.moves[i]) === null){
 				console.warn("unparseable: " + parsed.moves[i]);
