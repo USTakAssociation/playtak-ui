@@ -119,7 +119,10 @@ function playScratch(){
 	$("#creategamemodal").modal("hide");
 }
 
-function initBoard(){
+// Populate the rules row beneath the players — komi, stone counts, increment,
+// extra time — from gameData. Split out of initBoard so a game loaded from a
+// PTN can show the same information without also resetting the board.
+function renderVariableRules(){
 	if(gameData.komi > 0){
 		$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "")).css("display", "");
 		$("#komirule-separator").css("display", "");
@@ -129,8 +132,6 @@ function initBoard(){
 		$("#komirule-separator").css("display", "none");
 	}
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
-	document.getElementById("player-opp").className = "selectplayer";
-	document.getElementById("player-me").className = "";
 
 	if(gameData.increment > 0){
 		document.getElementById("time-increment").style.display = 'block';
@@ -157,6 +158,13 @@ function initBoard(){
 		document.getElementById("extra-time-rule").style.display = 'block';
 		document.getElementById("extra-time-rule").innerHTML = `${gameData.triggerMove}/+${gameData.timeAmount/60}`;
 	}
+}
+
+function initBoard(){
+	renderVariableRules();
+	document.getElementById("player-opp").className = "selectplayer";
+	document.getElementById("player-me").className = "";
+
 	// reset the game data and set new values
 	if(!is2DBoard){
 		board.clear();
@@ -245,18 +253,36 @@ function load(){
 		}
 		$('.player1-name:first').html(parsed.tags.Player1);
 		$('.player2-name:first').html(parsed.tags.Player2);
-		if(parsed.tags.Clock !== undefined){
-			$('.player1-time:first').html(parsed.tags.Clock);
-			$('.player2-time:first').html(parsed.tags.Clock);
+		// The Clock tag is a time control, not a remaining time, so writing it
+		// into the clocks verbatim put "10:0 +20 @35 +10:0" where a countdown
+		// belongs. Read it apart: the base duration starts both clocks, and the
+		// increment and bonus belong in the rules row, rendered further below.
+		const clock = parsePTNClock(parsed.tags.Clock);
+		if(clock){
+			gameData.time = clock.time;
+			gameData.increment = clock.increment;
+			gameData.incrementScales = clock.incrementScales;
+			gameData.triggerMove = clock.triggerMove;
+			gameData.timeAmount = clock.timeAmount;
+			$('.player1-time:first').html(formatTime(clock.time * 1000));
+			$('.player2-time:first').html(formatTime(clock.time * 1000));
 		}
 		gameData.size = parsed.tags.Size;
-		gameData.komi = parsed.tags.Komi || 0;
+		// gameData.komi is half-komi everywhere else — the server assigns the raw
+		// field and every consumer halves it — but the Komi tag holds the whole
+		// value, so it has to be doubled on the way in. Without this the komi was
+		// halved for the rules row below, for the flat count, and again on export.
+		gameData.komi = (Number(parsed.tags.Komi) || 0) * 2;
 		gameData.pieces = parsed.tags.Flats || defaultPiecesAndCaps[gameData.size][0];
 		gameData.capstones = parsed.tags.Caps || defaultPiecesAndCaps[gameData.size][1];
 		// The opening variant drives how White's first ply is notated and rendered
 		// (Double Black Stack writes it as "2a1"), so it has to be restored from the
 		// tag before any move is validated or replayed below.
 		gameData.opening = (parsed.tags.Opening || 'swap').trim().toLowerCase();
+		// The rules row was cleared by clearNotationMenu above and, unlike a game
+		// started from the server, nothing repopulated it — initBoard does that,
+		// but calling it here would reset the board we are about to load into.
+		renderVariableRules();
 	}
 	else if(!parsed && !isTPS){
 		alert('warning','Invalid PTN/TPS');
