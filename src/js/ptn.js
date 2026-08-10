@@ -38,6 +38,68 @@ function parsePTNMoves(body){
 	return moves;
 }
 
+// A ply is either a placement ("a1", "Sc3", "Cd4") or a movement
+// ("3c3>111", "a1+"). Both were written inline at each load site, which is how
+// they drifted apart; keep them here so every caller reads the same notation.
+//
+// Ranks are 1-8 and drop counts are 1-8: rank 0 would index off the front of
+// the grid (parseInt(rank) - 1 === -1) and a drop of 0 moves no pieces, so
+// neither can appear in real notation. Leaving them in the character class let
+// a malformed ply corrupt the board silently instead of being rejected here.
+//
+// The drop list stays optional, because both numbers are implied when absent:
+// an omitted count is 1, and an omitted drop list means the whole count lands
+// on a single square. So "a1+" moves one piece to a2, and "3a1+" drops all
+// three on a2. The caller fills those in.
+const PTN_PLACEMENT_RE = /^([SFC]?)([a-h])([1-8])$/;
+const PTN_MOVEMENT_RE = /^([1-9]?)([a-h])([1-8])([><+-])([1-8]*)$/;
+
+// Both return the match (with capture groups) or null, so callers can either
+// test for validity or read the parts out.
+function matchPTNPlacement(move){
+	return PTN_PLACEMENT_RE.exec(move);
+}
+
+function matchPTNMovement(move){
+	return PTN_MOVEMENT_RE.exec(move);
+}
+
+// "3:0:0", "10:0" and "30" are hours:minutes:seconds, minutes:seconds and
+// seconds respectively — the shapes the Clock tag uses for a duration.
+function ptnDurationToSeconds(text){
+	return String(text).split(":").reduce((total, part) => total * 60 + (parseInt(part, 10) || 0), 0);
+}
+
+// Read a PTN Clock tag into the fields the interface keeps on gameData.
+//
+// The tag is a time control, not a remaining time: a base duration, an
+// optional increment (with a trailing "n" when it scales with the move
+// number), and an optional "@move +duration" bonus. e.g.
+//   "10:0 +20"              10 minutes, 20 second increment
+//   "3:0:0 +1n"             3 hours, increment of 1 second per move elapsed
+//   "10:0 +20 @35 +10:0"    ...plus 10 minutes granted at move 35
+//
+// Returns null when the tag does not start with a duration, so callers can
+// leave their defaults alone rather than zeroing a clock over a stray value.
+function parsePTNClock(clock){
+	if(!clock){
+		return null;
+	}
+	const match = String(clock).trim().match(
+		/^(\d+(?::\d+){0,2})(?:\s*\+(\d+)(n)?)?(?:\s*@(\d+)\s*\+(\d+(?::\d+){0,2}))?/i
+	);
+	if(!match){
+		return null;
+	}
+	return {
+		time: ptnDurationToSeconds(match[1]),
+		increment: match[2] ? parseInt(match[2], 10) : 0,
+		incrementScales: Boolean(match[3]),
+		triggerMove: match[4] ? parseInt(match[4], 10) : 0,
+		timeAmount: match[5] ? ptnDurationToSeconds(match[5]) : 0
+	};
+}
+
 // Play Tak Server notation conversion functions
 // copied from https://gist.github.com/gruppler/031b8863b9439700d5ab30694aab0b9d
 // takes in psn and converts it to ptn

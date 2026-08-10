@@ -3792,7 +3792,7 @@ const board = {
 				this.addDoubleBlackStackFlatIfApplicable(hlt);
 				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 			}
-			else if((match = /^([SFC]?)([a-h])([1-8])$/.exec(move)) !== null){
+			else if((match = matchPTNPlacement(move)) !== null){
 				const piece = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
@@ -3812,7 +3812,7 @@ const board = {
 				this.pushPieceOntoSquare(hlt,obj);
 				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 			}
-			else if((match = /^([1-9]?)([a-h])([1-8])([><+-])(\d*)$/.exec(move)) !== null){
+			else if((match = matchPTNMovement(move)) !== null){
 				const count = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
