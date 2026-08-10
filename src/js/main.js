@@ -695,7 +695,21 @@ async function fetchEvents() {
 		const results = await fetch(url + path, {
 			method: "GET",
 		});
+		// An error response is still JSON, so parsing it succeeds and the failure
+		// only surfaced once createEventTable read .categories off it. The events
+		// list comes from a Google Sheet the API reaches with a credential that
+		// contributors do not have, so a local API answers 500 as a matter of
+		// course — check the response here and report it once, rather than as a
+		// TypeError from the middle of rendering.
+		if (!results.ok) {
+			throw new Error(
+				`Events request failed: ${results.status} ${results.statusText}`,
+			);
+		}
 		const data = await results.json();
+		if (!data || !Array.isArray(data.categories) || !Array.isArray(data.data)) {
+			throw new Error("Events response is missing its categories/data lists");
+		}
 		createEventTable(data);
 		hideElement("loading-events");
 	} catch (error) {
