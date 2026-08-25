@@ -519,46 +519,27 @@
 				<div class="tab-pane fade show active settings-pane" id="board">
 					<form onsubmit="return false;">
 						<div>
-							<div class="margin-top--8">
-								<label>
-									<input id="2d-board-checkbox" type="checkbox" onClick="toggle2DBoard()"/>
-									PTN Ninja Board
-								</label>
+							<h4>Board Settings</h4>
+							<div class="board-mode-toggle" role="group" aria-label="Board mode">
+								<button type="button" id="board-mode-2d" class="board-mode-option" aria-pressed="false" onclick="setBoardMode('2d')">2D</button>
+								<button type="button" id="board-mode-3d" class="board-mode-option" aria-pressed="false" onclick="setBoardMode('3d')">3D</button>
 							</div>
 							<div id="2d-settings" style="display: none;">
-								<h4>PTN Ninja Settings</h4>
+								<p class="board-mode-credit">Powered by <a href="https://ptn.ninja/" target="_blank" rel="noopener noreferrer">ptn.ninja</a></p>
 								<div class="flex flex-column gap--8">
-									<div class="dropdown">
-										<button id="set-2d-theme" class="btn btn-secondary select dropdown-toggle form-control text-left" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-											Select a theme
-										</button>
-										<ul id="2d-theme-options" class="dropdown-menu settings-drop-down">
-										</ul>
+									<div>
+										<label for="set-2d-theme">Theme</label>
+										<div class="dropdown">
+											<button id="set-2d-theme" class="btn btn-secondary select dropdown-toggle form-control text-left" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Select a theme
+											</button>
+											<ul id="2d-theme-options" class="dropdown-menu settings-drop-down">
+											</ul>
+										</div>
 									</div>
 									<div>
 										<input type="text" name="2d-custom" id="2d-custom-theme" class="form-control">
 										<button class="btn btn-pill btn-secondary btn-slim margin-top--8" onclick="set2DCustomTheme(); event.preventDefault();">Set Custom</button>
-									</div>
-									<div>
-										<label>
-											<input type="checkbox" name="2d-board-3d" id="2d-3d-toggle" onchange="toggle2DBoard3D(); event.preventDefault();">
-											Toggle 3D board
-										</label>
-									</div>
-									<div id="2d-board-3d-options" class="flex-column gap--16" style="display: none;">
-										<div>
-											<label>
-												<input type="checkbox" name="2d-ortho" id="2d-ortho" onchange="toggle2DOrtho(); event.preventDefault();">
-												Orthographic
-											</label>
-										</div>
-										<div>
-											<label>
-												Perspective <br />
-												<input id="2d-perspective-slider" type="range" value="5" step="1" min="1" max="10" oninput="perspective2DChange(this.value)" onchange="perspective2DChange(this.value)"/>
-												<span id="2d-perspective-display">5</span>
-											</label>
-										</div>
 									</div>
 									<div>
 										<label>
@@ -594,7 +575,6 @@
 							</div>
 						</div>
 						<div id="3d-settings" class="flex flex-column gap--8">
-							<h4>3D Settings</h4>
 							<div>
 								<label>
 									<input id="animations-checkbox" type="checkbox" onChange="toggleAnimations(event)" checked />

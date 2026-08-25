@@ -149,6 +149,23 @@ let settingscounter = 0;
 let is2DBoard = false;
 let fson = false;
 
+// Viewport width at or below which a brand-new user gets the 2D board by default.
+const MOBILE_BOARD_BREAKPOINT = 990;
+
+// Which board to show. An explicit choice always wins; only users who have never
+// picked a side fall through to the viewport-based default. The default is
+// deliberately not persisted, so resizing the window never silently locks it in.
+function prefers2DBoard() {
+	const stored = localStorage.getItem("2d_board");
+	if (stored === "true") {
+		return true;
+	}
+	if (stored === "false") {
+		return false;
+	}
+	return window.innerWidth <= MOBILE_BOARD_BREAKPOINT;
+}
+
 function alert(type, msg) {
 	$("#alert-text").text(msg);
 	const $alert = $("#alert");
@@ -228,11 +245,10 @@ function init() {
 	} else {
 		ninjaElement.src = "https://ptn.ninja/" + ninjaParams;
 	}
-	if (localStorage.getItem("2d_board") === "true") {
+	if (prefers2DBoard()) {
 		document.getElementById("ninja-wrapper").style.display = "block";
 		document.getElementById("3d-settings").style.display = "none";
 		document.getElementById("2d-settings").style.display = "block";
-		document.getElementById("2d-board-checkbox").checked = true;
 		is2DBoard = true;
 		init2DBoard();
 	} else {
@@ -240,6 +256,7 @@ function init() {
 		load3DSettings();
 		init3DBoard();
 	}
+	updateBoardModeButtons();
 	storeNotation();
 }
 
@@ -792,7 +809,7 @@ function filterTable(category) {
 }
 
 $(document).ready(function () {
-	if (localStorage.getItem("2d_board") === "true") {
+	if (prefers2DBoard()) {
 		is2DBoard = true;
 	}
 	if (localStorage.getItem("sound") === "false") {

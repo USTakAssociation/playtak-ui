@@ -574,6 +574,65 @@ a.navitem, div.navitem{
 	display: flex;
 }
 
+/* Segmented 2D / 3D board-mode switch at the top of the Board settings pane.
+   Light theme needs a grey trough so the white active button still reads;
+   dark theme matches the sidebar so the trough looks transparent. */
+.board-mode-toggle {
+	display: flex;
+	width: 100%;
+	padding: 3px;
+	gap: 3px;
+	border: 1px solid var(--secondary-border-color);
+	border-radius: 999px;
+	background-color: #d3d3d3;
+}
+.dark-theme .board-mode-toggle {
+	background-color: var(--primary-bg-color);
+}
+
+.board-mode-option {
+	flex: 1 1 0;
+	min-width: 0;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 999px;
+	background-color: transparent;
+	color: #8a8a8a;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 28px;
+	cursor: pointer;
+}
+/* Hovering the active button is a no-op; only the inactive label brightens. */
+.board-mode-option:not(.active):hover {
+	color: #000000;
+}
+.dark-theme .board-mode-option:not(.active):hover {
+	color: #ffffff;
+}
+
+.board-mode-option.active {
+	background-color: #ffffff;
+	color: #000000;
+	box-shadow: 0px 1px 4px rgba(20, 20, 20, 0.06);
+	cursor: default;
+}
+
+.board-mode-credit {
+	margin: 2px 0 16px 0;
+	font-size: 12px;
+	color: #8a8a8a;
+}
+
+/* In 3D mode the toggle is followed straight away by the first checkbox, so the
+   breathing room the credit line provides in 2D mode has to come from here.
+   Written as an attribute selector because a CSS id selector may not start with
+   a digit — "#3d-settings" is a parse error and the whole rule gets dropped. */
+[id="3d-settings"] {
+	margin-top: 16px;
+}
+
 /* || Modals */
 .modal {
 	text-align: center;
