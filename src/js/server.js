@@ -193,8 +193,10 @@ var server = {
 		if(moveData.type === 'P'){
 			// file,rank,caporwall
 			if(is2DBoard){
-				appendPly(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
-				notate(`${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2].toLowerCase()}`);
+				// Double Black Stack: white's first ply is written "2a1"
+				const dbsPrefix = (gameData.opening === 'double black stack' && gameData.move_count === 0) ? '2' : '';
+				appendPly(`${dbsPrefix}${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2]}`);
+				notate(`${dbsPrefix}${spl[3] ? spl[3] === 'W' ? 'S': spl[3] : ''}${spl[2].toLowerCase()}`);
 				incrementMoveCounter();
 				storeNotation();
 				if(!loadingGameHistory){
@@ -254,6 +256,17 @@ var server = {
 				);
 			}
 		}
+		// The server sends the Time update immediately BEFORE the move message,
+		// so when that Time arrived move_count was still the pre-move value: the
+		// clock was frozen (pre-game) or stopped, and only the next move's Time
+		// would restart it. Now that the move is applied and move_count is
+		// current, (re)start the clocks so they begin counting the new side's
+		// time right away. Skipped during the initial history burst, which ends
+		// when the first Time message clears loadingGameHistory.
+		if(!loadingGameHistory && lastTimeUpdate && !gameData.is_game_end){
+			startTime(true);
+			forward2DGameTime(lastWt, lastBt);
+		}
 	},
 
 	connect: function(){
@@ -306,6 +319,9 @@ var server = {
 				server.rendeerseekslist();
 				server.updateplayerinfo();
 				stopTime();
+				if(is2DBoard){
+					set2DTimerLive(false);
+				}
 				document.getElementById("removeSeek").removeAttribute("disabled");
 				document.getElementById("createSeek").removeAttribute("disabled");
 
@@ -364,7 +380,7 @@ var server = {
 	},
 	sendClient: function(){
 		server.send("Client TakWeb-22.04.12");
-		server.send("Protocol 2");
+		server.send("Protocol 4");
 	},
 	login: function(){
 		this.anotherlogin=false;
@@ -509,17 +525,20 @@ var server = {
 			gameData.size = +spl[7];
 			gameData.time = +spl[8];
 			gameData.increment = +spl[9];
-			gameData.komi = +spl[10];
-			gameData.pieces = +spl[11];
-			gameData.capstones = +spl[12];
-			gameData.unrated = +spl[13];
-			gameData.tournament = +spl[14];
-			gameData.triggerMove = +spl[15];
-			gameData.timeAmount = +spl[16];
-			gameData.bot = +spl[17];
+			gameData.incrementScales = +(spl[10] || 0) === 1;
+			gameData.komi = +spl[11];
+			gameData.pieces = +spl[12];
+			gameData.capstones = +spl[13];
+			gameData.unrated = +spl[14];
+			gameData.tournament = +spl[15];
+			gameData.triggerMove = +spl[16];
+			gameData.timeAmount = +spl[17];
+			gameData.bot = +spl[18];
+			// protocol 4 appends the opening code after the bot flag
+			gameData.opening = openingNameFromCode(+(spl[19] || 0));
 			gameData.is_scratch = false;
 			gameData.observing = false;
-			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]${gameData.opening !== 'swap' ? `[Opening "${gameData.opening}"]` : ''}`);
 			initBoard();
 			loadingGameHistory = true;
 			// store the game object in local storage
@@ -577,6 +596,18 @@ var server = {
 			const time = gameData.time;
 			settimers(time * 1000, time * 1000);
 
+			// Forward player names + initial clock values to the PTN Ninja iframe.
+			// Live ticking is enabled once the first Time message arrives.
+			if(is2DBoard){
+				set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]${gameData.opening !== 'swap' ? `[Opening "${gameData.opening}"]` : ''}[Player1 "${p1}"][Player2 "${p2}"]`);
+				set2DTimerLive(false);
+				set2DGameTime({
+					time1: time * 1000,
+					time2: time * 1000,
+					timerTurn: 1
+				});
+			}
+
 			let opponentname;
 			if(spl[6] === "white"){
 				//I am white
@@ -589,7 +620,7 @@ var server = {
 			chathandler.createRoom("priv-" + opponentname, "<b>" + opponentname + "</b>");
 			chathandler.selectRoom("priv-" + opponentname);
 			gameData.chatRoom = "priv-" + opponentname;
-			chathandler.insertGameSeparator(gameData.chatRoom);
+			chathandler.insertGameSeparator(gameData.chatRoom, gameData.id);
 
 			document.getElementById("chime-sound").currentTime = 0;
 			document.getElementById("chime-sound").play();
@@ -612,19 +643,22 @@ var server = {
 			gameData.size = +spl[4];
 			gameData.time = +spl[5];
 			gameData.increment = +spl[6];
-			gameData.komi = +spl[7];
-			gameData.pieces = +spl[8];
-			gameData.capstones = +spl[9];
-			gameData.unrated = +spl[10];
-			gameData.tournament = +spl[11];
-			gameData.triggerMove = +spl[12];
-			gameData.timeAmount = +spl[13];
+			gameData.incrementScales = +(spl[7] || 0) === 1;
+			gameData.komi = +spl[8];
+			gameData.pieces = +spl[9];
+			gameData.capstones = +spl[10];
+			gameData.unrated = +spl[11];
+			gameData.tournament = +spl[12];
+			gameData.triggerMove = +spl[13];
+			gameData.timeAmount = +spl[14];
+			// protocol 4 appends the opening code after timeAmount
+			gameData.opening = openingNameFromCode(+(spl[15] || 0));
 			gameData.bot = 1;
 			gameData.observing = true;
 			gameData.is_scratch = false;
 			gameData.chatRoom = "room-" + [p1, p2].sort().join("-");
-			chathandler.insertGameSeparator(gameData.chatRoom);
-			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+			chathandler.insertGameSeparator(gameData.chatRoom, gameData.id);
+			storeNotation(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]${gameData.opening !== 'swap' ? `[Opening "${gameData.opening}"]` : ''}`);
 			initBoard();
 			loadingGameHistory = true;
 			if(is2DBoard){
@@ -636,6 +670,17 @@ var server = {
 			document.getElementById('rematch').style.display = "none";
 			const time = +spl[5];
 			settimers(time * 1000, time * 1000);
+
+			// Forward player names + initial clock values to the PTN Ninja iframe.
+			if(is2DBoard){
+				set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]${gameData.opening !== 'swap' ? `[Opening "${gameData.opening}"]` : ''}[Player1 "${p1}"][Player2 "${p2}"]`);
+				set2DTimerLive(false);
+				set2DGameTime({
+					time1: time * 1000,
+					time2: time * 1000,
+					timerTurn: 1
+				});
+			}
 		}
 		else if(e.startsWith("GameList Add ")){
 			//GameList Add Game#1 player1 vs player2, 4x4, 180, 15, 0 half-moves played, player1 to move
@@ -644,16 +689,19 @@ var server = {
 				id: +spl[2],
 				time: +spl[6],
 				increment: +spl[7],
+				incrementScales: +(spl[8] || 0) === 1,
 				player1: spl[3],
 				player2: spl[4],
 				size: +spl[5],
-				komi: +spl[8],
-				pieces: +spl[9],
-				capstones: +spl[10],
-				unrated: spl[11] == 1,
-				tournament: spl[12] == 1,
-				triggerMove: spl[13],
-				timeAmount: parseInt(spl[14]) / 60
+				komi: +spl[9],
+				pieces: +spl[10],
+				capstones: +spl[11],
+				unrated: spl[12] == 1,
+				tournament: spl[13] == 1,
+				triggerMove: spl[14],
+				timeAmount: parseInt(spl[15]) / 60,
+				// protocol 4 appends the opening code after timeAmount
+				opening: openingNameFromCode(+(spl[16] || 0))
 			};
 			this.gameslist.push(game);
 			this.addGameToWatchList(game);
@@ -701,6 +749,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 Timems 170000 200000
 				else if(spl[1] === "Timems"){
@@ -712,6 +761,7 @@ var server = {
 
 					lastTimeUpdate = invarianttime();
 					startTime(true);
+					forward2DGameTime(wt, bt);
 				}
 				//Game#1 RequestUndo
 				else if(spl[1] === "RequestUndo"){
@@ -739,6 +789,18 @@ var server = {
 					$("#draw").removeClass("i-offered-draw").removeClass("opp-offered-draw").addClass("offer-draw");
 					alert("info", "Draw offer is taken back by your opponent");
 				}
+				//Game#1 GivenTime <toColor> <ms>
+				else if(spl[1] === "GivenTime"){
+					const toColor = spl[2];
+					const seconds = Math.round((+spl[3] || 0) / 1000);
+					const youReceived = toColor === gameData.my_color;
+					if(youReceived){
+						alert("info", "Your opponent gave you " + seconds + " seconds");
+					}
+					else{
+						alert("info", "You gave your opponent " + seconds + " seconds");
+					}
+				}
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
 					gameData.result = spl[2];
@@ -749,9 +811,11 @@ var server = {
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 					document.title = "Play Tak";
 					if(!is2DBoard || !gameData.is_game_end){
 						// Wait for animation to complete before showing game-over dialog
@@ -780,15 +844,17 @@ var server = {
 					const msg = "Game abandoned by " + spl[2] + "." + (gameData.observing ? "" : " You win!");
 
 					if(!gameData.is_scratch && gameData.chatRoom){
-						chathandler.insertTimeMarker(gameData.chatRoom);
 						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
 							chathandler.insertMoveMarker(gameData.chatRoom, gameData.lastMoveLabel);
 							gameData.lastShownMoveLabel = gameData.lastMoveLabel;
 						}
 						chathandler.insertMoveMarker(gameData.chatRoom, gameData.result);
-						chathandler.insertGameSeparator(gameData.chatRoom);
+						chathandler.insertTimeMarker(gameData.chatRoom);
 					}
 					stopTime();
+					if(is2DBoard){
+						set2DTimerLive(false);
+					}
 
 					// Wait for animation to complete before showing game-over dialog
 					animation.whenComplete(function(){
@@ -961,16 +1027,18 @@ var server = {
 				size: spl[4] + "x" + spl[4],
 				time: Number(spl[5]),
 				increment: Number(spl[6]),
-				color: spl[7],
-				komi: +spl[8],
-				pieces: +spl[9],
-				capstones: +spl[10],
-				unrated: spl[11] == 1,
-				tournament: spl[12] == 1,
-				trigger_move: spl[13],
-				time_amount: (parseInt(spl[14]) / 60).toString(),
-				opponent: spl[15],
-				bot: spl[16],
+				increment_scales: +(spl[7] || 0) === 1,
+				color: spl[8],
+				komi: +spl[9],
+				pieces: +spl[10],
+				capstones: +spl[11],
+				unrated: spl[12] == 1,
+				tournament: spl[13] == 1,
+				trigger_move: spl[14],
+				time_amount: (parseInt(spl[15]) / 60).toString(),
+				opponent: spl[16],
+				bot: spl[17],
+				opening: openingNameFromCode(+(spl[18] || 0)),
 				player_rating: playerRating
 			});
 			this.rendeerseekslist();
@@ -1079,15 +1147,15 @@ var server = {
 		let gameType = "";
 		let gameTypeText = "";
 		if(!game.unrated && !game.tournament){
-			gameType = "N";
+			gameType = "Normal";
 			gameTypeText = "Normal game";
 		}
 		else if(game.unrated && !game.tournament){
-			gameType = "U";
+			gameType = "Unrated";
 			gameTypeText = "Unrated game";
 		}
 		else if(!game.unrated && game.tournament){
-			gameType = "T";
+			gameType = "Tournament";
 			gameTypeText = "Tournament game";
 		}
 		const players = document.createElement("button");
@@ -1104,12 +1172,39 @@ var server = {
 		$('<td/>').append(actionButton).attr("data-toggle", "tooltip").attr("title", "Watch game").click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		// game details
-		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").addClass("right").appendTo(row);
-		$('<td/>').append(minuteseconds(game.time) + ' +'+minuteseconds(game.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control and increment").appendTo(row);
-		$('<td/>').append('+'+Math.floor(game.komi/2)+"."+(game.komi&1?"5":"0")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
-		$('<td/>').append(game.pieces+"/"+game.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
-		$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", gameTypeText).appendTo(row);
-		$("<td/>").append(game.triggerMove + "/+" + parseInt(game.timeAmount)).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", "Trigger move and extra time to add in minutes").appendTo(row);
+		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").appendTo(row);
+		// shared rule values, reused by the Rules cell and the mobile detail menu
+		const stdPieces = [0,0,0,10,15,21,30,40,50][game.size];
+		const stdCaps = [0,0,0,0,0,1,1,2,2][game.size];
+		const piecesVary = (game.pieces !== stdPieces || game.capstones !== stdCaps);
+		const komiText = Math.floor(game.komi/2) + (game.komi&1 ? ".5" : "");
+		const gameOpeningFull = game.opening === "double black stack" ? "Double Black Stack" : "Single Swap";
+		const timeText = formatTimeControl(game.time, game.increment, game.incrementScales);
+		const hasExtra = (Number(game.triggerMove) > 0 && Number(game.timeAmount) > 0);
+		const extraText = formatExtraTime(game.timeAmount, game.triggerMove);
+		// Time: base time + increment (playtak-games style); extra time on a 2nd line
+		$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", game.incrementScales ? "Time (minutes) and increment (seconds). n is the current move number" : "Time (minutes) and increment (seconds)").appendTo(row);
+		// Rules: consolidated komi / pieces / opening (see the seek list for details).
+		const rulesLines = [];
+		const rulesTips = [];
+		if(game.komi > 0){
+			rulesLines.push("Komi: " + komiText);
+			rulesTips.push("Komi: if the game ends without a road, Black adds this to their flat count.");
+		}
+		if(piecesVary){
+			rulesLines.push("Pieces: " + game.pieces + "/" + game.capstones);
+			rulesTips.push("Pieces: the number of stones/capstones each player has.");
+		}
+		if(game.opening && game.opening !== "swap"){
+			rulesLines.push(gameOpeningFull);
+			rulesTips.push("Double Black Stack: White opens by placing a stack of two black flats.");
+		}
+		const rulesCell = $('<td/>').append(rulesLines.join("<br>")).addClass("rules-col rules-rule");
+		if(rulesTips.length){
+			rulesCell.attr("data-toggle", "tooltip").attr("data-html", "true").attr("title", rulesTips.join("<br>"));
+		}
+		rulesCell.appendTo(row);
+		$('<td/>').append(gameType).addClass("hide-sm").attr("data-toggle", "tooltip").attr("title", gameTypeText).appendTo(row);
 
 		const dropdownButton = document.createElement("button");
 		dropdownButton.className = "btn btn-transparent dropdown-toggle";
@@ -1125,50 +1220,26 @@ var server = {
 		dropdownMenu.id = "game-" + game.id + "-menu";
 		// aria-label by
 		dropdownMenu.setAttribute("aria-labelledby", "game-" + game.id);
-		// add the drop down items
-		// time
-		const timeItem = document.createElement("span");
-		timeItem.className = "dropdown-item time-rule-menu";
-		timeItem.style.display = "none";
-		timeItem.innerHTML = `<strong>Time Control:</strong> ${minuteseconds(game.time)}`;
-		dropdownMenu.appendChild(timeItem);
-		// increment
-		const incrementItem = document.createElement("span");
-		incrementItem.className = "dropdown-item time-rule-menu";
-		incrementItem.style.display = "none";
-		incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(game.increment)}`;
-		dropdownMenu.appendChild(incrementItem);
-		// komi
-		const komiItem = document.createElement("span");
-		komiItem.className = "dropdown-item komi-rule-menu";
-		komiItem.style.display = "none";
-		komiItem.innerHTML = `<strong>Komi:</strong> +${Math.floor(game.komi/2)}.${(game.komi&1)?"5":"0"}`;
-		dropdownMenu.appendChild(komiItem);
-		// pieces
-		const piecesItem = document.createElement("span");
-		piecesItem.className = "dropdown-item";
-		piecesItem.innerHTML = `<strong>Pieces:</strong> ${game.pieces}/${game.capstones}`;
-		dropdownMenu.appendChild(piecesItem);
-		// capstones
-		const capstonesItem = document.createElement("span");
-		capstonesItem.className = "dropdown-item";
-		capstonesItem.innerHTML = `<strong>Capstones:</strong> ${game.capstones}`;
-		dropdownMenu.appendChild(capstonesItem);
-		// game type
-		const gameTypeItem = document.createElement("span");
-		gameTypeItem.className = "dropdown-item";
-		gameTypeItem.innerHTML = `<strong>Game Type:</strong> ${gameTypeText}`;
-		dropdownMenu.appendChild(gameTypeItem);
-		// trigger move
-		const triggerMoveItem = document.createElement("span");
-		triggerMoveItem.className = "dropdown-item";
-		triggerMoveItem.innerHTML = `<strong>Trigger Move:</strong> ${game.triggerMove}`;
-		dropdownMenu.appendChild(triggerMoveItem);
-		// extra time
-		const extraTimeItem = document.createElement("span");
-		extraTimeItem.className = "dropdown-item";
-		extraTimeItem.innerHTML = `<strong>Extra Time:</strong> +${game.timeAmount} minutes`;
-		dropdownMenu.appendChild(extraTimeItem);
+		// Detail menu items, revealed as their column drops out at narrower widths.
+		const addMenuItem = function(html, cls){
+			const item = document.createElement("span");
+			item.className = "dropdown-item" + (cls ? " " + cls : "");
+			if(cls){ item.style.display = "none"; }
+			item.innerHTML = html;
+			dropdownMenu.appendChild(item);
+		};
+		// Time control mirrors the Time column; extra time follows it when set.
+		addMenuItem(`<strong>Time Control:</strong> ${timeText}`, "time-rule-menu");
+		if(hasExtra){ addMenuItem(`<strong>Extra Time:</strong> ${extraText}`, "time-rule-menu"); }
+		// Rules detail, shown only when the Rules column is hidden.
+		if(game.komi > 0){ addMenuItem(`<strong>Komi:</strong> ${komiText}`, "rules-rule-menu"); }
+		if(piecesVary){
+			addMenuItem(`<strong>Pieces:</strong> ${game.pieces}/${game.capstones}`, "rules-rule-menu");
+			addMenuItem(`<strong>Capstones:</strong> ${game.capstones}`, "rules-rule-menu");
+		}
+		if(game.opening && game.opening !== "swap"){ addMenuItem(`<strong>Opening:</strong> ${gameOpeningFull}`, "rules-rule-menu"); }
+		// Game type, shown when the Type column is hidden.
+		addMenuItem(`<strong>Game Type:</strong> ${gameTypeText}`);
 		// create  dropdown div with dropdown class
 		const dropdownDiv = document.createElement("div");
 		dropdownDiv.className = "dropdown";
@@ -1289,17 +1360,20 @@ var server = {
 			let gameType = "";
 			let gameTypeText = "";
 			if(!seek.unrated && !seek.tournament){
-				gameType = "N";
+				gameType = "Normal";
 				gameTypeText = "Normal game";
 			}
 			else if(seek.unrated && !seek.tournament){
-				gameType = "U";
+				gameType = "Unrated";
 				gameTypeText = "Unrated game";
 			}
 			else if(!seek.unrated && seek.tournament){
-				gameType = "T";
+				gameType = "Tournament";
 				gameTypeText = "Tournament game";
 			}
+
+			// Opening: full label used in the Rules column and the mobile detail menu.
+			const openingFull = seek.opening === "double black stack" ? "Double Black Stack" : "Single Swap";
 
 			const challengePlayerButton = document.createElement("button");
 			challengePlayerButton.className = "btn btn-transparent seek-button";
@@ -1324,12 +1398,42 @@ var server = {
 			}).attr("data-toggle", "tooltip").attr("title", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row);
 			$('<td/>').append(ratingdecoration + " " + (seek.player_rating || "")).addClass("right").attr("data-toggle", "tooltip").attr("title",ratingtext).appendTo(row);
 			// game details
-			$('<td/>').append(sizespan).addClass("right").appendTo(row);
-			$('<td/>').append(minuteseconds(seek.time) + ' +'+minuteseconds(seek.increment)).addClass("right time-rule").attr("data-toggle", "tooltip").attr("title","Time control and increment").appendTo(row);
-			$('<td/>').append((Math.floor(seek.komi/2)||(seek.komi&1?"":"0"))+(seek.komi&1?"&frac12;":"")).addClass("right komi-rule").attr("data-toggle", "tooltip").attr("title","Komi - If the game ends without a road, black will get this number on top of their flat count when the winner is determined").appendTo(row);
-			$('<td/>').append(seek.pieces+"/"+seek.capstones).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title","Stone count - The number of stones/capstones that each player has in this game").appendTo(row);
-			$('<td/>').append(gameType).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title",gameTypeText).appendTo(row);
-			$('<td/>').append(seek.trigger_move+"/+"+seek.time_amount).addClass("right hide-sm").attr("data-toggle", "tooltip").attr("title", "Extra Time - The trigger move the player must reach and the time to add to the clock").appendTo(row);
+			$('<td/>').append(sizespan).appendTo(row);
+			// shared rule values, reused by the Rules cell and the mobile detail menu
+			const seekSize = parseInt(seek.size);
+			const stdPieces = [0,0,0,10,15,21,30,40,50][seekSize];
+			const stdCaps = [0,0,0,0,0,1,1,2,2][seekSize];
+			const piecesVary = (seek.pieces !== stdPieces || seek.capstones !== stdCaps);
+			const komiText = Math.floor(seek.komi/2) + (seek.komi&1 ? ".5" : "");
+			const timeText = formatTimeControl(seek.time, seek.increment, seek.increment_scales);
+			const hasExtra = (Number(seek.trigger_move) > 0 && Number(seek.time_amount) > 0);
+			const extraText = formatExtraTime(seek.time_amount, seek.trigger_move);
+			// Time: base time + increment (playtak-games style); extra time on a 2nd line
+			$('<td/>').append(timeText + (hasExtra ? "<br>" + extraText : "")).addClass("time-rule").attr("data-toggle", "tooltip").attr("title", seek.increment_scales ? "Time (minutes) and increment (seconds). n is the current move number" : "Time (minutes) and increment (seconds)").appendTo(row);
+			// Rules: consolidated komi / pieces / opening. Only non-default values are
+			// shown, each on its own line. The opening name appears without an "Opening:"
+			// label (kept compact via a smaller, wrappable font); the per-row tooltip
+			// explains only the rules that actually apply to this seek.
+			const rulesLines = [];
+			const rulesTips = [];
+			if(seek.komi > 0){
+				rulesLines.push("Komi: " + komiText);
+				rulesTips.push("Komi: if the game ends without a road, Black adds this to their flat count.");
+			}
+			if(piecesVary){
+				rulesLines.push("Pieces: " + seek.pieces + "/" + seek.capstones);
+				rulesTips.push("Pieces: the number of stones/capstones each player has.");
+			}
+			if(seek.opening !== "swap"){
+				rulesLines.push(openingFull);
+				rulesTips.push("Double Black Stack: White opens by placing a stack of two black flats.");
+			}
+			const rulesCell = $('<td/>').append(rulesLines.join("<br>")).addClass("rules-col rules-rule");
+			if(rulesTips.length){
+				rulesCell.attr("data-toggle", "tooltip").attr("data-html", "true").attr("title", rulesTips.join("<br>"));
+			}
+			rulesCell.appendTo(row);
+			$('<td/>').append(gameType).addClass("hide-sm").attr("data-toggle", "tooltip").attr("title",gameTypeText).appendTo(row);
 			// add the same deetails to a dropdown on mobile
 			const dropdownButton = document.createElement("button");
 			dropdownButton.className = "btn btn-transparent dropdown-toggle";
@@ -1345,53 +1449,26 @@ var server = {
 			dropdownMenu.id = "seek-" + seek.id + "-menu";
 			// aria-label by
 			dropdownMenu.setAttribute("aria-labelledby", "seek-" + seek.id);
-			// add the drop down items
-			// time
-			const timeItem = document.createElement("span");
-			timeItem.className = "dropdown-item time-rule-menu";
-			// set default display none
-			timeItem.style.display = "none";
-			timeItem.innerHTML = `<strong>Time Control:</strong> ${minuteseconds(seek.time)}`;
-			dropdownMenu.appendChild(timeItem);
-			// increment
-			const incrementItem = document.createElement("span");
-			incrementItem.className = "dropdown-item time-rule-menu";
-			// set default display none
-			incrementItem.style.display = "none";
-			incrementItem.innerHTML = `<strong>Increment:</strong> +${minuteseconds(seek.increment)}`;
-			dropdownMenu.appendChild(incrementItem);
-			// komi
-			const komiItem = document.createElement("span");
-			komiItem.className = "dropdown-item komi-rule-menu";
-			// set default display none
-			komiItem.style.display = "none";
-			komiItem.innerHTML = `<strong>Komi:</strong> +${Math.floor(seek.komi/2)}.${(seek.komi&1)?"5":"0"}`;
-			dropdownMenu.appendChild(komiItem);
-			// pieces
-			const piecesItem = document.createElement("span");
-			piecesItem.className = "dropdown-item";
-			piecesItem.innerHTML = `<strong>Pieces:</strong> ${seek.pieces}/${seek.capstones}`;
-			dropdownMenu.appendChild(piecesItem);
-			// capstones
-			const capstonesItem = document.createElement("span");
-			capstonesItem.className = "dropdown-item";
-			capstonesItem.innerHTML = `<strong>Capstones:</strong> ${seek.capstones}`;
-			dropdownMenu.appendChild(capstonesItem);
-			// game type
-			const gameTypeItem = document.createElement("span");
-			gameTypeItem.className = "dropdown-item";
-			gameTypeItem.innerHTML = `<strong>Game Type:</strong> ${gameTypeText}`;
-			dropdownMenu.appendChild(gameTypeItem);
-			// trigger move
-			const triggerMoveItem = document.createElement("span");
-			triggerMoveItem.className = "dropdown-item";
-			triggerMoveItem.innerHTML = `<strong>Trigger Move:</strong> ${seek.trigger_move}`;
-			dropdownMenu.appendChild(triggerMoveItem);
-			// extra time
-			const extraTimeItem = document.createElement("span");
-			extraTimeItem.className = "dropdown-item";
-			extraTimeItem.innerHTML = `<strong>Extra Time:</strong> +${seek.time_amount} minutes`;
-			dropdownMenu.appendChild(extraTimeItem);
+			// Detail menu items, revealed as their column drops out at narrower widths.
+			const addMenuItem = function(html, cls){
+				const item = document.createElement("span");
+				item.className = "dropdown-item" + (cls ? " " + cls : "");
+				if(cls){ item.style.display = "none"; }
+				item.innerHTML = html;
+				dropdownMenu.appendChild(item);
+			};
+			// Time control mirrors the Time column; extra time follows it when set.
+			addMenuItem(`<strong>Time Control:</strong> ${timeText}`, "time-rule-menu");
+			if(hasExtra){ addMenuItem(`<strong>Extra Time:</strong> ${extraText}`, "time-rule-menu"); }
+			// Rules detail, shown only when the Rules column is hidden.
+			if(seek.komi > 0){ addMenuItem(`<strong>Komi:</strong> ${komiText}`, "rules-rule-menu"); }
+			if(piecesVary){
+				addMenuItem(`<strong>Pieces:</strong> ${seek.pieces}/${seek.capstones}`, "rules-rule-menu");
+				addMenuItem(`<strong>Capstones:</strong> ${seek.capstones}`, "rules-rule-menu");
+			}
+			if(seek.opening !== "swap"){ addMenuItem(`<strong>Opening:</strong> ${openingFull}`, "rules-rule-menu"); }
+			// Game type, shown when the Type column is hidden.
+			addMenuItem(`<strong>Game Type:</strong> ${gameTypeText}`);
 			// create  dropdown div with dropdown class
 			const dropdownDiv = document.createElement("div");
 			dropdownDiv.className = "dropdown";
@@ -1522,14 +1599,18 @@ var server = {
 			capstones: document.getElementById("capcount").value,
 			type: document.getElementById("gametype").value,
 			trigger_move: document.getElementById("triggerMove").value,
-			time_amount: document.getElementById("timeAmount").value
+			time_amount: document.getElementById("timeAmount").value,
+			opening: document.getElementById("openingselect").value
 		};
 		// save the current game seetings to local storage
 		localStorage.setItem("current-game-settings", JSON.stringify(game));
 		const opponent = document.getElementById("opname").value.replace(/[^A-Za-z0-9_]/g,"");
 		const unrated = (game.type==2?1:0);
 		const tournament = (game.type==1?1:0);
-		const seekCMD =`Seek ${game.size} ${game.time} ${game.increment} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opponent}`;
+		const incParsed = parseIncrementValue(game.increment);
+		const opening = openingCodeFromName(game.opening);
+		// protocol 4 seek: opening code (0 = swap, 1 = double black stack) goes before the opponent.
+		const seekCMD =`Seek ${game.size} ${game.time} ${incParsed.increment} ${incParsed.increment_scales ? 1 : 0} ${game.color} ${game.komi} ${game.pieces} ${game.capstones} ${unrated} ${tournament} ${game.trigger_move || 0} ${game.time_amount || 0} ${opening} ${opponent}`;
 		this.send(seekCMD);
 		$('#creategamemodal').modal('hide');
 		server.newSeek = true;
@@ -1586,6 +1667,12 @@ var server = {
 
 		this.send("Game#" + gameData.id + " Resign");
 	},
+	giveTime: function(){
+		if(gameData.is_scratch){return;}
+		else if(gameData.observing){return;}
+
+		this.send("Game#" + gameData.id + " GiveTime");
+	},
 	acceptseek: function(e, skipDebounce){
 		if(!skipDebounce && this.changeseektime+800>Date.now()){
 			return;
@@ -1635,7 +1722,7 @@ var server = {
 			}
 			// swap the player color for the new seek
 			const newColor = game.my_color === "black" ? "W" : "B";
-			this.send(`Rematch ${game.id} ${game.size} ${game.time} ${game.increment} ${newColor} ${game.komi} ${game.pieces} ${game.capstones} ${game.unrated} ${game.tournament} ${game.triggerMove} ${game.timeAmount} ${game.opponent}`);
+			this.send(`Rematch ${game.id} ${game.size} ${game.time} ${game.increment} ${game.incrementScales ? 1 : 0} ${newColor} ${game.komi} ${game.pieces} ${game.capstones} ${game.unrated} ${game.tournament} ${game.triggerMove} ${game.timeAmount} ${openingCodeFromName(game.opening)} ${game.opponent}`);
 			document.getElementById("rematch").setAttribute("disabled", "disabled");
 			document.getElementById('createSeek').setAttribute("disabled", "disabled");
 			document.getElementById("removeSeek").setAttribute("hidden", "true");

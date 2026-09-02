@@ -416,12 +416,19 @@ function generateCamera(){
 		const scale=Math.max(scalex,scaley);
 		const xpadding=(window.innerWidth-cutleft-cutright)*(1-scalex/scale);
 		const ypadding=(window.innerHeight-cuttop-cutbottom)*(1-scaley/scale);
-		cutleft+=xpadding/2;
-		cutright+=xpadding/2;
-		cuttop+=ypadding/2;
-		cutbottom+=ypadding/2;
+		const paddedCutLeft = cutleft + xpadding / 2;
+		const paddedCutRight = cutright + xpadding / 2;
+		const paddedCutTop = cuttop + ypadding / 2;
+		const paddedCutBottom = cutbottom + ypadding / 2;
 
-		camera = new THREE.OrthographicCamera(-maxleft-cutleft*scale,-maxright+cutright*scale,maxtop+cuttop*scale,maxbottom-cutbottom*scale,2000,5000);
+		camera = new THREE.OrthographicCamera(
+			-maxleft - paddedCutLeft * scale,
+			-maxright + paddedCutRight * scale,
+			maxtop + paddedCutTop * scale,
+			maxbottom - paddedCutBottom * scale,
+			2000,
+			5000
+		);
 		const campos=invcamdir.multiplyScalar(3500);
 		camera.position.set(campos.x,campos.y,campos.z);
 
@@ -841,14 +848,30 @@ const pieceFactory = {
 		const materialMine = (playerNum === WHITE_PLAYER ? materials.white_piece : materials.black_piece);
 		const geometry=piecegeometry(playerNum === WHITE_PLAYER?"white":"black");
 
-		const stackno = Math.floor(pieceNum / 10);
-		const stackheight = pieceNum % 10;
+		let stackno = Math.floor(pieceNum / 10);
+		let stackheight = pieceNum % 10;
 		const piece = new THREE.Mesh(geometry,materialMine);
 		piece.iswhitepiece = (playerNum === WHITE_PLAYER);
 		// Swap first-to-play flat stone positions for first turn rule
 		// getfromstack returns the highest pieceNum first, so tottiles-1 is first to play
 		const firstToPlayPieceNum = board.tottiles - 1;
-		const isFirstToPlay = (pieceNum === firstToPlayPieceNum);
+		let isFirstToPlay = (pieceNum === firstToPlayPieceNum);
+		// Double Black Stack: white's first move places TWO black flats, so stage a
+		// second black flat (the extra drawn from black's reserves) on white's side,
+		// resting directly on top of the first swapped black flat so both are visible
+		// (rather than at this piece's own reserve slot, which would overlap white's).
+		if(gameData.opening === 'double black stack' && playerNum === BLACK_PLAYER && pieceNum === firstToPlayPieceNum - 1){
+			isFirstToPlay = true;
+			stackno = Math.floor(firstToPlayPieceNum / 10);
+			stackheight = (firstToPlayPieceNum % 10) + 1;
+		}
+		// Double Black Stack: black donates an extra flat to white's opening stack, so
+		// black's reserve pile is one shorter. The white first-to-play flat that rests
+		// on top of black's reserves must drop a level so it doesn't float over the gap.
+		// (Only when that flat shares a column with the donated flat, i.e. not at a column base.)
+		if(gameData.opening === 'double black stack' && playerNum === WHITE_PLAYER && pieceNum === firstToPlayPieceNum && (firstToPlayPieceNum % 10) > 0){
+			stackheight = (firstToPlayPieceNum % 10) - 1;
+		}
 		const positionAsWhite = (playerNum === WHITE_PLAYER) !== isFirstToPlay;
 		const invertBlackZ = shouldInvertBlackPiecesZ();
 		if(positionAsWhite){
@@ -1540,6 +1563,7 @@ const board = {
 	totalhighlighted: null,
 	selected: null,
 	selectedStack: null,
+	selectedCompanion: null, // Double Black Stack: the second black flat lifted with the first
 	boardside: "white",
 	overlay: null,
 	isBot: false,
@@ -1591,6 +1615,7 @@ const board = {
 		this.lastMoveHighlighted = null;
 		this.selected = null;
 		this.selectedStack = null;
+		this.selectedCompanion = null;
 		this.move = {start: null, end: null, dir: 'U', squares: []};
 		//gameData.observing = typeof obs !== 'undefined' ? obs : false
 		this.board_history = [];
@@ -2079,6 +2104,15 @@ const board = {
 	get_board_obj: function(file,rank){
 		return this.sq[file][gameData.size - 1 - rank].board_object;
 	},
+	// Square notation spans the largest board (a-h, 1-8), so a coordinate parsed
+	// from a PTN can name a square this board does not have. get_board_obj would
+	// index outside this.sq and throw, so callers handling untrusted notation
+	// must check first. Uses the allocated dimension rather than gameData.size,
+	// which load() leaves as a string from the PTN tag.
+	isOnBoard: function(file,rank){
+		const n = this.sq.length;
+		return file >= 0 && file < n && rank >= 0 && rank < n;
+	},
 	incmovecnt: function(){
 		this.save_board_pos();
 		incrementMoveCounter();
@@ -2405,17 +2439,34 @@ const board = {
 	},
 	placePieceOnSquare: function(piece, sq, hideSelectionShadowAfter){
 		const self = this;
-		animation.push([piece]);
+		// Double Black Stack (DBS): white's first move places a second black flat on top,
+		// animated together with the first flat so the pair moves down as a unit.
+		// select() sets selectedCompanion for the lift-then-place flow; the direct
+		// click-to-place flow skips select(), so resolve the companion here too
+		// (otherwise the second flat teleports instead of animating). Falls back to
+		// null for non-DBS moves, so the single-piece path is unchanged.
+		const companion = this.selectedCompanion || this.getDoubleBlackStackCompanion();
+		const movers = companion ? [piece, companion] : [piece];
+		animation.push(movers);
 		if(piece.aoPlane && animationsEnabled){
 			piece.aoPlane.fadeIn = true;
 			piece.aoPlane.material.opacity = 0;
 		}
 		this.pushPieceOntoSquare(sq, piece);
+		if(companion){
+			if(companion.aoPlane && animationsEnabled){
+				companion.aoPlane.fadeIn = true;
+				companion.aoPlane.material.opacity = 0;
+			}
+			this.pushPieceOntoSquare(sq, companion);
+			this.blackpiecesleft--;
+			this.selectedCompanion = null;
+		}
 		if(hideSelectionShadowAfter){
-			animation.push([piece], 'jump', 300, function(){self.hideSelectionShadow();});
+			animation.push(movers, 'jump', 300, function(){self.hideSelectionShadow();});
 		}
 		else{
-			animation.push([piece], 'jump', 300);
+			animation.push(movers, 'jump', 300);
 		}
 		animation.play(playMoveSound);
 
@@ -2448,6 +2499,11 @@ const board = {
 				}
 			}
 		}
+		// If no lifted companion was animated above (e.g. a fallback path), add the
+		// extra black flat now. The own-move flow normally handles it inline above.
+		if(!companion){
+			this.addDoubleBlackStackFlatIfApplicable(sq);
+		}
 		this.incmovecnt();
 	},
 	// Get the swapped first-turn piece (opponent's color positioned on player's side)
@@ -2462,6 +2518,37 @@ const board = {
 			if(!obj.onsquare && !obj.iscapstone &&
 					obj.pieceNum === targetPieceNum &&
 					obj.iswhitepiece === wantWhitePiece){
+				return obj;
+			}
+		}
+		return null;
+	},
+	// Double Black Stack opening: on white's first move, place a second black flat
+	// on top of the swapped black flat, drawn from black's reserves (rendered "2a1").
+	// Must run after the first flat is on the square and before the position snapshot
+	// (incmovecnt) so board_history captures both flats.
+	addDoubleBlackStackFlatIfApplicable: function(sq){
+		if(gameData.opening !== 'double black stack' || gameData.move_count !== 0){
+			return;
+		}
+		const obj = this.getfromstack(false, false); // a black flat
+		if(!obj){
+			return;
+		}
+		obj.isFirstTurnPiece = true;
+		this.pushPieceOntoSquare(sq, obj);
+		this.blackpiecesleft--;
+	},
+	// The second staged black flat (pieceNum tottiles-2) for the Double Black Stack
+	// opening — the companion that lifts/lowers/places together with the first flat.
+	getDoubleBlackStackCompanion: function(){
+		if(gameData.opening !== 'double black stack' || gameData.move_count !== 0){
+			return null;
+		}
+		const targetPieceNum = this.tottiles - 2;
+		for(let i = 0; i < this.piece_objects.length; i++){
+			const obj = this.piece_objects[i];
+			if(!obj.onsquare && !obj.iscapstone && !obj.iswhitepiece && obj.pieceNum === targetPieceNum){
 				return obj;
 			}
 		}
@@ -2488,6 +2575,11 @@ const board = {
 			obj.isFirstTurnPiece = true;
 		}
 
+		// Double Black Stack: on the opponent's screen, white's first move places a
+		// second black flat that must animate together with the first (same frame).
+		const companion = this.getDoubleBlackStackCompanion();
+		if(companion){ companion.isFirstTurnPiece = true; }
+
 		const hlt = this.get_board_obj(file.charCodeAt(0) - 'A'.charCodeAt(0),rank - 1);
 		if(skipAnimation || oldpos !== -1){
 			// Just place the piece without animation (loading history or viewing earlier position)
@@ -2495,6 +2587,10 @@ const board = {
 				this.standup(obj);
 			}
 			this.pushPieceOntoSquare(hlt,obj);
+			if(companion){
+				this.pushPieceOntoSquare(hlt, companion);
+				this.blackpiecesleft--;
+			}
 			// Still play sound if viewing earlier position (not loading history)
 			if(oldpos !== -1 && !skipAnimation){
 				playMoveSound();
@@ -2503,21 +2599,32 @@ const board = {
 		else{
 			// Enable drop shadow during animation
 			obj.castShadow = true;
+			if(companion){ companion.castShadow = true; }
+			const movers = companion ? [obj, companion] : [obj];
 			// Record start position before any changes
-			animation.push([obj]);
+			animation.push(movers);
 			// Apply standup rotation if wall
 			if(caporwall === 'W'){
 				this.standup(obj);
 			}
 			this.pushPieceOntoSquare(hlt,obj);
-			animation.push([obj], 'jump', 300, function(){
+			if(companion){
+				this.pushPieceOntoSquare(hlt, companion);
+				this.blackpiecesleft--;
+			}
+			animation.push(movers, 'jump', 300, function(){
 				obj.castShadow = false;
+				if(companion){ companion.castShadow = false; }
 			});
 			animation.play(playMoveSound);
 		}
 		this.highlightLastMove_sq(hlt, gameData.move_count);
 		this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 
+		// Only fall back to the teleport helper when no companion was animated above.
+		if(!companion){
+			this.addDoubleBlackStackFlatIfApplicable(hlt);
+		}
 		this.notatePmove(file + rank,caporwall);
 		this.incmovecnt();
 
@@ -2790,7 +2897,9 @@ const board = {
 		if(pos === 'W'){pos = 'S';}
 		else if(pos === 'C'){pos = 'C';}
 		else{pos = '';}
-		notate(pos + sqname.toLowerCase());
+		// Double Black Stack: white's first ply is written "2a1"
+		const dbsPrefix = (gameData.opening === 'double black stack' && gameData.move_count === 0) ? '2' : '';
+		notate(dbsPrefix + pos + sqname.toLowerCase());
 		storeNotation();
 	},
 	//all params are nums
@@ -3143,7 +3252,11 @@ const board = {
 		return 'OUTSIDE';
 	},
 	select: function(obj){
-		animation.push([obj]);
+		// Double Black Stack: lift the companion black flat together with the first flat.
+		const companion = this.getDoubleBlackStackCompanion();
+		const dbsCompanion = (companion && companion !== obj) ? companion : null;
+		const movers = dbsCompanion ? [obj, dbsCompanion] : [obj];
+		animation.push(movers);
 		// Reposition unplayed pieces to correct location before lifting
 		// (piece_size may have changed since piece was created)
 		if(!obj.onsquare){
@@ -3170,7 +3283,11 @@ const board = {
 			}
 			else{
 				const stackno = Math.floor(obj.pieceNum / 10);
-				const stackheight = obj.pieceNum % 10;
+				let stackheight = obj.pieceNum % 10;
+				// Double Black Stack: white's first-to-play flat rests one lower (black donated a flat).
+				if(gameData.opening === 'double black stack' && obj.iswhitepiece && obj.pieceNum === board.tottiles - 1 && ((board.tottiles - 1) % 10) > 0){
+					stackheight -= 1;
+				}
 				const baseY = obj.isstanding ? (piece_size/2-sq_height/2) : (stackheight*piece_height+piece_height/2-sq_height/2);
 				const posAsWhite = obj.positionAsWhite !== undefined ? obj.positionAsWhite : obj.iswhitepiece;
 				if(posAsWhite){
@@ -3197,6 +3314,12 @@ const board = {
 			obj.position.y += stack_selection_height;
 		}
 		this.selected = obj;
+		// Lift the Double Black Stack companion by the same amount so it stays stacked on top.
+		if(dbsCompanion){
+			dbsCompanion.position.y += stack_selection_height;
+			if(dbsCompanion.aoPlane){ dbsCompanion.aoPlane.material.opacity = 0; }
+			this.selectedCompanion = dbsCompanion;
+		}
 		this.showSelectionShadow(obj);
 		// Fade out AO shadow when lifting
 		if(obj.aoPlane && animationsEnabled){
@@ -3217,7 +3340,7 @@ const board = {
 				pieceBelow.aoPlane.material.opacity = shouldShowBelow ? 1.0 : 0;
 			}
 		}
-		animation.push([obj], 'move', 100);
+		animation.push(movers, 'move', 100);
 		animation.play();
 	},
 	unselect: function(options){
@@ -3225,7 +3348,10 @@ const board = {
 		if(this.selected){
 			const self = this;
 			const piece = this.selected;
-			animate && animation.push([piece]);
+			// Double Black Stack: lower the companion black flat together with the first.
+			const companion = this.selectedCompanion;
+			const movers = companion ? [piece, companion] : [piece];
+			animate && animation.push(movers);
 			// If piece is standing (wall), flatten it back and adjust height accordingly
 			if(piece.isstanding && !piece.iscapstone){
 				piece.position.y -= stack_selection_height + (piece_size / 2 - piece_height / 2);
@@ -3239,6 +3365,14 @@ const board = {
 			}
 			else{
 				piece.position.y -= stack_selection_height;
+			}
+			if(companion){
+				companion.position.y -= stack_selection_height;
+				if(companion.aoPlane){
+					companion.aoPlane.visible = shadowsEnabled;
+					companion.aoPlane.fadeIn = shadowsEnabled;
+					companion.aoPlane.material.opacity = 0;
+				}
 			}
 			// Restore AO visibility for unplayed pieces being dropped back
 			if(piece.aoPlane && !piece.onsquare){
@@ -3255,15 +3389,20 @@ const board = {
 					stack[pieceIndex - 1].aoPlane.material.opacity = 0;
 				}
 			}
-			animate && animation.push([piece], 'move', 75, function(){
+			animate && animation.push(movers, 'move', 75, function(){
 				self.hideSelectionShadow();
 				// Ensure AO is visible after animation completes
 				if(piece.aoPlane && !piece.onsquare){
 					piece.aoPlane.material.opacity = 1.0;
 					piece.aoPlane.fadeIn = false;
 				}
+				if(companion && companion.aoPlane && !companion.onsquare){
+					companion.aoPlane.material.opacity = 1.0;
+					companion.aoPlane.fadeIn = false;
+				}
 			});
 			this.selected = null;
+			this.selectedCompanion = null;
 			if(!animate){
 				this.hideSelectionShadow();
 				if(piece.aoPlane && !piece.onsquare){
@@ -3346,10 +3485,17 @@ const board = {
 		if(this.selected && !this.selected.onsquare){
 			const piece = this.selected;
 			const needsFlatten = piece.isstanding && !piece.iscapstone;
+			// Double Black Stack: lower the companion black flat together with the first.
+			const companion = this.selectedCompanion;
+			const movers = companion ? [piece, companion] : [piece];
 			// Record current position for animation start
-			animation.push([piece]);
+			animation.push(movers);
 			// Calculate absolute final position (not relative to current)
-			const stackheight = piece.pieceNum % 10;
+			let stackheight = piece.pieceNum % 10;
+			// Double Black Stack: white's first-to-play flat rests one lower (black donated a flat).
+			if(gameData.opening === 'double black stack' && piece.iswhitepiece && piece.pieceNum === board.tottiles - 1 && ((board.tottiles - 1) % 10) > 0){
+				stackheight -= 1;
+			}
 			let finalY;
 			if(piece.iscapstone){
 				finalY = capstone_height/2 - sq_height/2;
@@ -3379,8 +3525,17 @@ const board = {
 					piece.aoPlane.material.opacity = 0;
 				}
 			}
+			// Lower the companion back to its staged position (one level above the
+			// first flat's rest slot) by reversing the selection lift.
+			if(companion){
+				companion.position.y -= stack_selection_height;
+				if(companion.aoPlane){
+					companion.aoPlane.visible = false;
+					companion.aoPlane.material.opacity = 0;
+				}
+			}
 			const self = this;
-			animation.push([piece], 'move', 100, function(){
+			animation.push(movers, 'move', 100, function(){
 				self.hideSelectionShadow();
 				// Ensure AO is visible after animation completes (only for bottom pieces)
 				if(piece.aoPlane && isBottomOfStack){
@@ -3390,6 +3545,7 @@ const board = {
 			});
 			animation.play();
 			this.selected = null;
+			this.selectedCompanion = null;
 			return;
 		}
 		// Animate selected stack back to starting position
@@ -3611,11 +3767,39 @@ const board = {
 
 		for(let ply = 0;ply < parsed.moves.length;ply++){
 			const move = parsed.moves[ply];
-			let match;
-			if((match = /^([SFC]?)([a-h])([0-8])$/.exec(move)) !== null){
+			let match, dbsMatch;
+			// Double Black Stack: White's opening ply is stored as "2a1" (a 2-flat
+			// black stack). That token matches neither notation pattern below, so
+			// without this branch the ply is dropped and every later move loads with
+			// the wrong colour/position (move_count never advances). Mirror live play
+			// (addDoubleBlackStackFlatIfApplicable): place the swapped black flat,
+			// then a second black flat on top.
+			if(gameData.opening === 'double black stack' && gameData.move_count === 0 &&
+				(dbsMatch = /^2([a-h])([1-8])$/.exec(move)) !== null){
+				const file = dbsMatch[1].charCodeAt(0) - 'a'.charCodeAt(0);
+				const rank = parseInt(dbsMatch[2]) - 1;
+				if(!this.isOnBoard(file,rank)){
+					console.warn("unparseable: " + move);
+					continue;
+				}
+				const obj = this.getfromstack(false, false); // a black flat
+				if(!obj){
+					console.warn("bad PTN: too many pieces");
+					return;
+				}
+				const hlt = this.get_board_obj(file,rank);
+				this.pushPieceOntoSquare(hlt,obj);
+				this.addDoubleBlackStackFlatIfApplicable(hlt);
+				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
+			}
+			else if((match = matchPTNPlacement(move)) !== null){
 				const piece = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
+				if(!this.isOnBoard(file,rank)){
+					console.warn("unparseable: " + move);
+					continue;
+				}
 				const obj = this.getfromstack((piece === 'C'),isWhitePieceToMove());
 				if(!obj){
 					console.warn("bad PTN: too many pieces");
@@ -3628,7 +3812,7 @@ const board = {
 				this.pushPieceOntoSquare(hlt,obj);
 				this.lastMovedSquareList.push({file: hlt.file, rank: hlt.rank});
 			}
-			else if((match = /^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(move)) !== null){
+			else if((match = matchPTNMovement(move)) !== null){
 				const count = match[1];
 				const file = match[2].charCodeAt(0) - 'a'.charCodeAt(0);
 				const rank = parseInt(match[3]) - 1;
@@ -3657,6 +3841,16 @@ const board = {
 				}
 				else if(dir == '+'){
 					dr = 1;
+				}
+
+				// Validate the whole path up front. get_stack returns the live stack and
+				// the drop loop mutates squares as it goes, so discovering an off-board
+				// square partway through would leave a half-applied move on the board.
+				// The drops run in a straight line, so the endpoints bound the rest.
+				if(!this.isOnBoard(file,rank)
+					|| !this.isOnBoard(file + drops.length * df, rank + drops.length * dr)){
+					console.warn("unparseable: " + move);
+					continue;
 				}
 
 				const s1 = this.get_board_obj(file,rank);
@@ -3690,7 +3884,10 @@ const board = {
 			const coords = this.lastMovedSquareList.at(-1);
 			this.highlightLastMove_sq(this.get_board_obj(coords.file, coords.rank), gameData.move_count - 1);
 		}
-		if(parsed.tags.Result !== undefined){
+		// Presence of the tag is not the test — getNotation writes [Result ""]
+		// for a game still in progress, so an empty value has to leave the game
+		// running rather than declare it over.
+		if(parsed.tags.Result){
 			gameData.result = parsed.tags.Result;
 			gameOver();
 		}

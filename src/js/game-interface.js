@@ -10,11 +10,13 @@ let gameData = {
 	size: 5,
 	time: null,
 	increment: null,
+	incrementScales: false,
 	komi: 0,
 	pieces: 21,
 	capstones: 1,
 	unrated: false,
 	tournament: false,
+	opening: 'swap',
 	triggerMove: 0,
 	timeAmount: 0,
 	bot: 0,
@@ -58,11 +60,13 @@ function resetGameDataToDefault(){
 		size: 5,
 		time: null,
 		increment: null,
+		incrementScales: false,
 		komi: 0,
 		pieces: 21,
 		capstones: 1,
 		unrated: false,
 		tournament: false,
+		opening: 'swap',
 		triggerMove: 0,
 		timeAmount: 0,
 		bot: 0,
@@ -100,6 +104,7 @@ function playScratch(){
 		gameData.size = parseInt(document.getElementById("scratchBoardSize").value);
 		gameData.pieces = parseInt(document.getElementById("scratchPieceCount").value);
 		gameData.capstones = parseInt(document.getElementById("scratchCapCount").value);
+		gameData.opening = document.getElementById("scratchOpeningSelect").value;
 		gameData.komi = 0;
 		gameData.id = 0;
 		initBoard();
@@ -114,23 +119,60 @@ function playScratch(){
 	$("#creategamemodal").modal("hide");
 }
 
-function initBoard(){
-	$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
+// Populate the rules row beneath the players — komi, stone counts, increment,
+// extra time — from gameData. Split out of initBoard so a game loaded from a
+// PTN can show the same information without also resetting the board.
+function renderVariableRules(){
+	if(gameData.komi > 0){
+		$("#komirule").html("+" + (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "")).css("display", "");
+		$("#komirule-separator").css("display", "");
+	}
+	else{
+		$("#komirule").css("display", "none");
+		$("#komirule-separator").css("display", "none");
+	}
 	$("#piecerule").html(gameData.pieces + "/" + gameData.capstones);
-	document.getElementById("player-opp").className = "selectplayer";
-	document.getElementById("player-me").className = "";
-	if(gameData.triggerMove > 0){
+
+	if(gameData.increment > 0){
+		document.getElementById("time-increment").style.display = 'block';
+		const $incrementRule = $("#time-increment-rule");
+		$incrementRule.css('display', 'block');
+		$incrementRule.html(`+${minuteseconds(gameData.increment)}${gameData.incrementScales ? '&times;n' : ''}`);
+		const tooltipText = gameData.incrementScales
+			? `Time increment - +${gameData.increment} seconds added each move, scaled by move number`
+			: 'Time increment - Extra time added each move';
+		// If Bootstrap has already initialized a tooltip on this node, it has
+		// moved the original title to `data-original-title` and stripped the
+		// native `title` — so set both attrs to keep things in sync and avoid
+		// a duplicate native browser tooltip showing alongside Bootstrap's.
+		if($incrementRule.data('bs.tooltip')){
+			$incrementRule.attr('data-original-title', tooltipText).removeAttr('title');
+		}
+		else{
+			$incrementRule.attr('title', tooltipText);
+		}
+	}
+
+	if(gameData.triggerMove > 0 && gameData.timeAmount > 0){
 		document.getElementById("extra-time").style.display = 'block';
+		document.getElementById("extra-time-rule").style.display = 'block';
 		document.getElementById("extra-time-rule").innerHTML = `${gameData.triggerMove}/+${gameData.timeAmount/60}`;
 	}
-	// reset the game data and new new values
+}
+
+function initBoard(){
+	renderVariableRules();
+	document.getElementById("player-opp").className = "selectplayer";
+	document.getElementById("player-me").className = "";
+
+	// reset the game data and set new values
 	if(!is2DBoard){
 		board.clear();
 		board.create(gameData.size, gameData.pieces, gameData.capstones);
 		board.initEmpty();
 		return;
 	}
-	set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]`);
+	set2DBoard(`[Size "${gameData.size}"][Komi "${gameData.komi/2}"][Flats "${gameData.pieces}"][Caps "${gameData.capstones}"]${gameData.opening !== 'swap' ? `[Opening "${gameData.opening}"]` : ''}`);
 	if(gameData.my_color === 'black'){
 		setDisable2DBoard(true);
 	}
@@ -176,6 +218,13 @@ function incrementMoveCounter(){
 	}
 
 	$('#undo').removeClass('i-requested-undo').removeClass('opp-requested-undo').addClass('request-undo');
+
+	// Flip the active clock in the PTN Ninja iframe so its countdown follows the
+	// new turn between server Time updates. Skip during history replay.
+	if(is2DBoard && !loadingGameHistory){
+		const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
+		set2DGameTimerTurn(timerTurn);
+	}
 }
 
 function load(){
@@ -196,22 +245,46 @@ function load(){
 	const isTPS = tpsRegex.test(text);
 	let parsed = parsePTN(text);
 	if(parsed !== null && !isTPS){
+		// An empty Size is as unusable as a missing one — and now reaches here,
+		// since [Size ""] parses to "" rather than being dropped on the floor.
 		if(parsed.tags === undefined || parsed.tags === null
-			|| parsed.tags.Size === undefined || parsed.tags.Size === null
+			|| !parsed.tags.Size
 		){
 			alert('warning','Invalid PTN: no size tag found');
 			return;
 		}
 		$('.player1-name:first').html(parsed.tags.Player1);
 		$('.player2-name:first').html(parsed.tags.Player2);
-		if(parsed.tags.Clock !== undefined){
-			$('.player1-time:first').html(parsed.tags.Clock);
-			$('.player2-time:first').html(parsed.tags.Clock);
+		// The Clock tag is a time control, not a remaining time, so writing it
+		// into the clocks verbatim put "10:0 +20 @35 +10:0" where a countdown
+		// belongs. Read it apart: the base duration starts both clocks, and the
+		// increment and bonus belong in the rules row, rendered further below.
+		const clock = parsePTNClock(parsed.tags.Clock);
+		if(clock){
+			gameData.time = clock.time;
+			gameData.increment = clock.increment;
+			gameData.incrementScales = clock.incrementScales;
+			gameData.triggerMove = clock.triggerMove;
+			gameData.timeAmount = clock.timeAmount;
+			$('.player1-time:first').html(formatTime(clock.time * 1000));
+			$('.player2-time:first').html(formatTime(clock.time * 1000));
 		}
 		gameData.size = parsed.tags.Size;
-		gameData.komi = parsed.tags.Komi || 0;
+		// gameData.komi is half-komi everywhere else — the server assigns the raw
+		// field and every consumer halves it — but the Komi tag holds the whole
+		// value, so it has to be doubled on the way in. Without this the komi was
+		// halved for the rules row below, for the flat count, and again on export.
+		gameData.komi = (Number(parsed.tags.Komi) || 0) * 2;
 		gameData.pieces = parsed.tags.Flats || defaultPiecesAndCaps[gameData.size][0];
 		gameData.capstones = parsed.tags.Caps || defaultPiecesAndCaps[gameData.size][1];
+		// The opening variant drives how White's first ply is notated and rendered
+		// (Double Black Stack writes it as "2a1"), so it has to be restored from the
+		// tag before any move is validated or replayed below.
+		gameData.opening = (parsed.tags.Opening || 'swap').trim().toLowerCase();
+		// The rules row was cleared by clearNotationMenu above and, unlike a game
+		// started from the server, nothing repopulated it — initBoard does that,
+		// but calling it here would reset the board we are about to load into.
+		renderVariableRules();
 	}
 	else if(!parsed && !isTPS){
 		alert('warning','Invalid PTN/TPS');
@@ -226,7 +299,14 @@ function load(){
 				parsed.moves.pop();
 			}
 			for(let i = 0; i < parsed.moves.length; i++){
-				if((/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
+				// Double Black Stack: White's opening ply "2a1" is a valid 2-flat black
+				// stack placement, but it matches neither pattern below, so accept it
+				// explicitly — otherwise the move list rebuilds a move short and misaligned.
+				// Keyed off move_count (as board.loadptn is) rather than the loop index,
+				// so that a ply the loop skips cannot shift which ply is treated as the
+				// opening.
+				const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][1-8]$/.test(parsed.moves[i]));
+				if(!isDbsOpen && matchPTNPlacement(parsed.moves[i]) === null && matchPTNMovement(parsed.moves[i]) === null){
 					console.warn("unparseable: " + parsed.moves[i]);
 					continue;
 				}
@@ -262,13 +342,32 @@ function loadCurrentGameState(){
 		return;
 	}
 	const parsed = parsePTN(currentGame);
+	// The stored PTN carries the opening variant, so honour it here too — the
+	// board-mode toggle can run against game data that never saw a Game Start
+	// (e.g. a PTN pasted through Load Game). Only override when the tag is
+	// actually present, so a live game's opening is never clobbered.
+	if(parsed && parsed.tags && parsed.tags.Opening){
+		gameData.opening = parsed.tags.Opening.trim().toLowerCase();
+	}
 	clearNotationMenu();
+	// clearNotationMenu() blanks and hides the rules row, and the stored PTN has
+	// no Clock tag to rebuild it from — but gameData still holds the time control
+	// from Game Start, so repaint from there. Without this, toggling the board
+	// mode mid-game dropped the increment ("+:01×n") and extra-time rules.
+	renderVariableRules();
 	initCounters(0);
 	if(is2DBoard){
 		set2DBoard(currentGame);
 		send2DAction('LAST');
 		for(let i = 0; i < parsed.moves.length; i++){
-			if((/^([SFC]?)([a-h])([0-8])$/.exec(parsed.moves[i])) === null && (/^([1-9]?)([a-h])([0-8])([><+-])(\d*)$/.exec(parsed.moves[i])) === null){
+			// Double Black Stack: White's opening ply "2a1" is a valid 2-flat black
+			// stack placement, but it matches neither pattern below, so accept it
+			// explicitly — otherwise the move list rebuilds a move short and misaligned.
+			// Keyed off move_count (as board.loadptn is) rather than the loop index,
+			// so that a ply the loop skips cannot shift which ply is treated as the
+			// opening.
+			const isDbsOpen = (gameData.move_count === 0 && gameData.opening === 'double black stack' && /^2[a-h][1-8]$/.test(parsed.moves[i]));
+			if(!isDbsOpen && matchPTNPlacement(parsed.moves[i]) === null && matchPTNMovement(parsed.moves[i]) === null){
 				console.warn("unparseable: " + parsed.moves[i]);
 				continue;
 			}
@@ -288,6 +387,26 @@ function loadCurrentGameState(){
 	if(parsed.tags){
 		$(".player1-name:first").html(parsed.tags.Player1 || 'You');
 		$(".player2-name:first").html(parsed.tags.Player2 || 'You');
+	}
+
+	// clearNotationMenu() zeroed the clocks; restore them from the latest
+	// server-authoritative values so the built-in clocks don't display 00:00
+	// until the next Time message arrives.
+	if(lastTimeUpdate){
+		if(gameData.is_game_end){
+			settimers(lastWt, lastBt);
+		}
+		else{
+			startTime(true);
+		}
+		// Also forward the current clock state to the PTN Ninja iframe. This
+		// covers toggling the 2D board on mid-game (e.g. after refreshing the
+		// page with the 2D board disabled): the iframe was not receiving Time
+		// updates while hidden, so its clocks would otherwise stay unset until
+		// the next move.
+		if(is2DBoard){
+			forward2DGameTime(lastWt, lastBt);
+		}
 	}
 }
 
@@ -310,6 +429,16 @@ function adjustBoardWidth(){
 // time controls
 function startTime(fromFn){
 	if(typeof fromFn === 'undefined' && !server.timervar){return;}
+	// The clock only runs once the first move has been played. The server keeps
+	// both clocks fixed at the starting time and never ticks pre-game. Players
+	// don't receive a Time update before the game starts, but spectators get one
+	// on Observe, so without this guard their active clock would count down
+	// locally even though the game hasn't started.
+	if(gameData.move_count === 0){
+		settimers(lastWt, lastBt);
+		stopTime();
+		return;
+	}
 	const t = invarianttime();
 	const elapsed = t - lastTimeUpdate;
 	let t1;
@@ -343,6 +472,38 @@ function startTime(fromFn){
 function stopTime(){
 	clearTimeout(server.timervar);
 	server.timervar = null;
+}
+
+// Forward authoritative clock values from the PlayTak server to the PTN Ninja
+// iframe (when the 2D board is active). Enables live countdown on first call.
+// The caller passes the raw remaining-time values from the last authoritative
+// server Time update (lastWt/lastBt). Since the iframe stamps its reference
+// point to "now" (Date.now()) when the message arrives, we subtract the time
+// elapsed since lastTimeUpdate from the active side so the forwarded values
+// correspond to the current moment. Without this, toggling the board on
+// after a delay would freeze the iframe clock at the stale snapshot value.
+function forward2DGameTime(p1t, p2t){
+	if(!is2DBoard){return;}
+	// Mirror startTime(): the clock is not live until the first move is played.
+	const gameStarted = gameData.move_count > 0;
+	const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
+	let time1 = p1t;
+	let time2 = p2t;
+	if(gameStarted && lastTimeUpdate && !gameData.is_game_end){
+		const elapsed = Math.max(invarianttime() - lastTimeUpdate, 0);
+		if(timerTurn === 1){
+			time1 = Math.max(p1t - elapsed, 0);
+		}
+		else{
+			time2 = Math.max(p2t - elapsed, 0);
+		}
+	}
+	set2DGameTime({
+		time1: time1,
+		time2: time2,
+		timerTurn: timerTurn
+	});
+	set2DTimerLive(gameStarted && !gameData.is_game_end);
 }
 
 function settimers(p1t,p2t,noHurry){
@@ -383,10 +544,18 @@ function formatTime(time){
 function clearNotationMenu(){
 	const tbl = document.getElementById("moveslist");
 	while(tbl.rows.length > 0){tbl.deleteRow(0);}
+	document.getElementById("time-increment-rule").innerHTML = '';
+	document.getElementById("time-increment-rule").style.display = "none";
+	document.getElementById("time-increment").style.display = "none";
+
 	document.getElementById("extra-time-rule").innerHTML = '';
+	document.getElementById("extra-time-rule").style.display = "none";
 	document.getElementById("extra-time").style.display = "none";
 	$('#draw').removeClass('i-offered-draw').removeClass('opp-offered-draw').addClass('offer-draw');
 	stopTime();
+	if(is2DBoard){
+		set2DTimerLive(false);
+	}
 
 	$('#player-me-name').removeClass('player1-name');
 	$('#player-me-name').removeClass('player2-name');
@@ -683,6 +852,13 @@ function undoMove(){
 	$('.curmove:first').removeClass('curmove');
 	$('.moveno'+(gameData.move_shown-1)+':first').addClass('curmove');
 	storeNotation();
+
+	// Flip the active clock in the PTN Ninja iframe back to the undone player's
+	// side. The subsequent server Time message will correct clock values.
+	if(is2DBoard){
+		const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
+		set2DGameTimerTurn(timerTurn);
+	}
 }
 
 function checkIfMyMove(){
@@ -690,6 +866,36 @@ function checkIfMyMove(){
 	if(gameData.observing){return false;}
 	const toMove = (gameData.move_count % 2 === 0) ? "white" : "black";
 	return toMove === gameData.my_color;
+}
+
+// Opening variants. The array index is the compact code used on the space-delimited
+// Seek wire protocol; the string is the canonical PTN Ninja "Opening" tag value.
+const OPENING_NAMES = ['swap', 'double black stack'];
+function openingNameFromCode(code){
+	return OPENING_NAMES[code] || 'swap';
+}
+function openingCodeFromName(name){
+	const i = OPENING_NAMES.indexOf(name);
+	return i < 0 ? 0 : i;
+}
+
+// Time-control display for the seek/watch tables and the playtak-games table.
+// "10 + 20" = 10 min base with a 20 s increment; "10 min" when there's no
+// increment. With increment scaling the increment is shown as n (the move
+// number it scales by): "10 + n", "5 + 2n".
+function formatTimeControl(timeSeconds, increment, incrementScales){
+	const mins = timeSeconds / 60;
+	const inc = Number(increment);
+	if(inc > 0){
+		const incText = incrementScales ? (inc === 1 ? "n" : inc + "n") : inc;
+		return mins + " + " + incText;
+	}
+	return mins + " min";
+}
+// Extra ("byoyomi-style") time display, e.g. "+5 min @35" — 5 minutes added
+// once the game reaches move 35.
+function formatExtraTime(timeAmountMinutes, triggerMove){
+	return "+" + timeAmountMinutes + " min @" + triggerMove;
 }
 
 function isWhitePieceToMove(){
@@ -752,9 +958,9 @@ function handleGameOverState(){
 		if(!is2DBoard){
 			gameData.flatCount = board.flatscore();
 		}
-		let komi = (Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : "");
-		if(komi){
-			komi = "+" + komi;
+		let komi = "";
+		if(gameData.komi > 0){
+			komi = "+" + ((Math.floor(gameData.komi / 2) || (gameData.komi & 1 ? "" : "0")) + (gameData.komi & 1 ? "&frac12;" : ""));
 		}
 		type = "having more top flats (" + gameData.flatCount[0] + " to " + gameData.flatCount[1] + komi + ")";
 	}

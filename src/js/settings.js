@@ -650,6 +650,22 @@ function toggle2DHighlightSquare(){
 	});
 }
 
+function toggle2DHeader(){
+	const checked = document.getElementById('2d-header-toggle').checked;
+	localStorage.setItem('2d-header', checked);
+	// Tied together: the "game header" covers both the turn indicator strip
+	// and the player clocks that live inside it (or above the board).
+	set2DUI({
+		turnIndicator: checked,
+		gameTimer: checked
+	});
+}
+
+function show2DHeaderEnabled(){
+	// Default to true when not set in localStorage
+	return localStorage.getItem('2d-header') !== 'false';
+}
+
 function generate2DThemes(themes){
 	const optionsElement = document.getElementById("2d-theme-options");
 	optionsElement.innerHTML = '';
@@ -737,6 +753,14 @@ function load2DSettings(){
 		document.getElementById('2d-highlight-toggle').checked = value;
 		set2DUI({ highlightSquares: value });
 	}
+
+	// Show game header: default to true when not set
+	const showHeader = show2DHeaderEnabled();
+	document.getElementById('2d-header-toggle').checked = showHeader;
+	set2DUI({
+		turnIndicator: showHeader,
+		gameTimer: showHeader
+	});
 }
 
 /*
