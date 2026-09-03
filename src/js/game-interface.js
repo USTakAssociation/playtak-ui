@@ -137,9 +137,14 @@ function renderVariableRules(){
 		document.getElementById("time-increment").style.display = 'block';
 		const $incrementRule = $("#time-increment-rule");
 		$incrementRule.css('display', 'block');
-		$incrementRule.html(`+${minuteseconds(gameData.increment)}${gameData.incrementScales ? '&times;n' : ''}`);
+		// A scaling increment reads as "+n" / "+2n", matching the create-game
+		// dropdown and the seek/watch tables; a fixed one keeps the clock format.
+		$incrementRule.html(gameData.incrementScales
+			? `+${scalingIncrementLabel(gameData.increment)}`
+			: `+${minuteseconds(gameData.increment)}`);
+		const inc = Number(gameData.increment);
 		const tooltipText = gameData.incrementScales
-			? `Time increment - +${gameData.increment} seconds added each move, scaled by move number`
+			? `Time increment - n is the current move number, so the increment grows each move: move 1 = +${inc}s, move 2 = +${inc * 2}s, move 3 = +${inc * 3}s…`
 			: 'Time increment - Extra time added each move';
 		// If Bootstrap has already initialized a tooltip on this node, it has
 		// moved the original title to `data-original-title` and stripped the
@@ -353,7 +358,7 @@ function loadCurrentGameState(){
 	// clearNotationMenu() blanks and hides the rules row, and the stored PTN has
 	// no Clock tag to rebuild it from — but gameData still holds the time control
 	// from Game Start, so repaint from there. Without this, toggling the board
-	// mode mid-game dropped the increment ("+:01×n") and extra-time rules.
+	// mode mid-game dropped the increment ("+n") and extra-time rules.
 	renderVariableRules();
 	initCounters(0);
 	if(is2DBoard){
@@ -879,6 +884,14 @@ function openingCodeFromName(name){
 	return i < 0 ? 0 : i;
 }
 
+// A scaling increment written the way the create-game dropdown labels it and
+// the seek/watch tables render it: "n" for 1, "2n" for 2. Shared so the rules
+// row beneath the players can't drift from those.
+function scalingIncrementLabel(increment){
+	const inc = Number(increment);
+	return inc === 1 ? "n" : inc + "n";
+}
+
 // Time-control display for the seek/watch tables and the playtak-games table.
 // "10 + 20" = 10 min base with a 20 s increment; "10 min" when there's no
 // increment. With increment scaling the increment is shown as n (the move
@@ -887,7 +900,7 @@ function formatTimeControl(timeSeconds, increment, incrementScales){
 	const mins = timeSeconds / 60;
 	const inc = Number(increment);
 	if(inc > 0){
-		const incText = incrementScales ? (inc === 1 ? "n" : inc + "n") : inc;
+		const incText = incrementScales ? scalingIncrementLabel(inc) : inc;
 		return mins + " + " + incText;
 	}
 	return mins + " min";
