@@ -620,6 +620,34 @@ function set2DCustomTheme(){
 	set2DUI({theme: JSON.parse(customTheme)});
 }
 
+// PTN Ninja's "2.5D" board: the flat board drawn with perspective. Named to
+// keep it distinct from the fully 3D board the 3D mode renders.
+function toggle2DBoard3D(){
+	localStorage.setItem('2d-board-3d', document.getElementById('2d-3d-toggle').checked);
+	set2DUI({
+		board3D: document.getElementById('2d-3d-toggle').checked
+	});
+	const options = document.getElementById('2d-board-3d-options');
+	if(document.getElementById('2d-3d-toggle').checked){
+		options.style.display = 'flex';
+	}
+	else{
+		options.style.display = 'none';
+	}
+}
+
+function toggle2DOrtho(){
+	const value = document.getElementById('2d-ortho').checked;
+	localStorage.setItem('2d-ortho', value);
+	set2DUI({ orthographic: value});
+}
+
+function perspective2DChange(value){
+	document.getElementById('2d-perspective-display').innerText = value;
+	localStorage.setItem('2d-perspective', value);
+	set2DUI({ perspective: value });
+}
+
 function toggle2DAnimations(){
 	const checked = document.getElementById('2d-animations-toggle').checked;
 	localStorage.setItem('2d-animations', checked);
@@ -701,12 +729,34 @@ function load2DSettings(){
 		set2DTheme(default2DThemes.some(t => t.id === saved) ? saved : DEFAULT_2D_THEME);
 	}
 
-	// PTN Ninja's own 3D rendering is no longer exposed in the sidebar; keep the
-	// embed flat regardless of any preference saved before the control was removed.
-	set2DUI({ board3D: false });
-	localStorage.removeItem('2d-board-3d');
-	localStorage.removeItem('2d-ortho');
-	localStorage.removeItem('2d-perspective');
+	if(localStorage.getItem('2d-board-3d')){
+		const value = localStorage.getItem('2d-board-3d') === 'true' ? true : false;
+		document.getElementById('2d-3d-toggle').checked = value;
+		set2DUI({
+			board3D: value
+		});
+		const options = document.getElementById('2d-board-3d-options');
+		if(value){
+			options.style.display = 'flex';
+		}
+		else{
+			options.style.display = 'none';
+		}
+	}
+
+	if(localStorage.getItem('2d-ortho')){
+		const value = localStorage.getItem('2d-ortho') === 'true' ? true : false;
+		document.getElementById('2d-ortho').checked = value;
+		set2DUI({
+			orthographic: value
+		});
+	}
+
+	if(localStorage.getItem('2d-perspective')){
+		document.getElementById("2d-perspective-slider").value = localStorage.getItem('2d-perspective');
+		document.getElementById('2d-perspective-display').innerText = localStorage.getItem('2d-perspective');
+		set2DUI({ perspective: localStorage.getItem('2d-perspective') });
+	}
 
 	if(localStorage.getItem('2d-animations')){
 		const value = localStorage.getItem('2d-animations') === 'true' ? true : false;

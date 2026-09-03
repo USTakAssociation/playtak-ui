@@ -571,6 +571,27 @@
 											Show game header
 										</label>
 									</div>
+									<div>
+										<label>
+											<input type="checkbox" name="2d-board-3d" id="2d-3d-toggle" onchange="toggle2DBoard3D(); event.preventDefault();">
+											Toggle 2.5D board
+										</label>
+									</div>
+									<div id="2d-board-3d-options" class="flex-column gap--16" style="display: none;">
+										<div>
+											<label>
+												<input type="checkbox" name="2d-ortho" id="2d-ortho" onchange="toggle2DOrtho(); event.preventDefault();">
+												Orthographic
+											</label>
+										</div>
+										<div>
+											<label>
+												Perspective <br />
+												<input id="2d-perspective-slider" type="range" value="5" step="1" min="1" max="10" oninput="perspective2DChange(this.value)" onchange="perspective2DChange(this.value)"/>
+												<span id="2d-perspective-display">5</span>
+											</label>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>

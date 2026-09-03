@@ -28,6 +28,17 @@ async function messageHandler(event){
 	switch (action){
 		case "SET_UI":
 			// check for the key is in the object
+			if(value.hasOwnProperty("board3D")){
+				localStorage.setItem('2d-board-3d', value.board3D);
+				document.getElementById("2d-3d-toggle").checked = value.board3D;
+				const options = document.getElementById('2d-board-3d-options');
+				if(document.getElementById('2d-3d-toggle').checked){
+					options.style.display = 'flex';
+				}
+				else{
+					options.style.display = 'none';
+				}
+			}
 			if(value.hasOwnProperty("animateBoard")){
 				document.getElementById("2d-animations-toggle").checked = value.animateBoard;
 				localStorage.setItem('2d-axis', value.animateBoard);
