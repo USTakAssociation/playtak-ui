@@ -136,7 +136,20 @@ const gamePresets = {
 	}
 };
 
-let ismobile = false;
+// Evaluated at load rather than inside init(): prefers2DBoard() reads ismobile
+// from $(document).ready, which runs before init() does. Leaving it unset until
+// init() would make the two prefers2DBoard() call sites disagree.
+function isMobileUserAgent() {
+	const ua = navigator.userAgent.toLowerCase();
+	return (
+		ua.indexOf("android") > -1 ||
+		ua.indexOf("iphone") > -1 ||
+		ua.indexOf("ipod") > -1 ||
+		ua.indexOf("ipad") > -1
+	);
+}
+
+let ismobile = isMobileUserAgent();
 let isidevice = false;
 let fixedcamera = false;
 let clickthrough = true;
@@ -148,6 +161,20 @@ let clearcolor = parseInt(boardDefaults.backgroundColor.replace("#", "0x"));
 let settingscounter = 0;
 let is2DBoard = false;
 let fson = false;
+
+// Which board to show. An explicit choice always wins; only users who have never
+// picked a side fall through to the mobile default. The default is deliberately
+// not persisted, so it never silently locks a mode in.
+function prefers2DBoard() {
+	const stored = localStorage.getItem("2d_board");
+	if (stored === "true") {
+		return true;
+	}
+	if (stored === "false") {
+		return false;
+	}
+	return ismobile;
+}
 
 function alert(type, msg) {
 	$("#alert-text").text(msg);
@@ -172,15 +199,9 @@ function togglefs() {
 }
 
 function init() {
+	// ismobile is already set at load; isidevice stays here because it attaches
+	// gesture handlers to document.body.
 	const ua = navigator.userAgent.toLowerCase();
-	if (
-		ua.indexOf("android") > -1 ||
-		ua.indexOf("iphone") > -1 ||
-		ua.indexOf("ipod") > -1 ||
-		ua.indexOf("ipad") > -1
-	) {
-		ismobile = true;
-	}
 	if (
 		ua.indexOf("iphone") > -1 ||
 		ua.indexOf("ipod") > -1 ||
@@ -228,11 +249,10 @@ function init() {
 	} else {
 		ninjaElement.src = "https://ptn.ninja/" + ninjaParams;
 	}
-	if (localStorage.getItem("2d_board") === "true") {
+	if (prefers2DBoard()) {
 		document.getElementById("ninja-wrapper").style.display = "block";
 		document.getElementById("3d-settings").style.display = "none";
 		document.getElementById("2d-settings").style.display = "block";
-		document.getElementById("2d-board-checkbox").checked = true;
 		is2DBoard = true;
 		init2DBoard();
 	} else {
@@ -240,6 +260,7 @@ function init() {
 		load3DSettings();
 		init3DBoard();
 	}
+	updateBoardModeButtons();
 	storeNotation();
 }
 
@@ -792,7 +813,7 @@ function filterTable(category) {
 }
 
 $(document).ready(function () {
-	if (localStorage.getItem("2d_board") === "true") {
+	if (prefers2DBoard()) {
 		is2DBoard = true;
 	}
 	if (localStorage.getItem("sound") === "false") {

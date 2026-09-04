@@ -19,6 +19,9 @@ const default2DThemes = [
 	{ id: "zen", name: "Zen"}
 ];
 
+// Theme the 2D board starts on when the user has never picked one.
+const DEFAULT_2D_THEME = "aaron";
+
 // sound controls
 function turnsoundon(){
 	const movesound = document.getElementById("move-sound");
@@ -511,13 +514,36 @@ function sliderScale(scaleIn,lazy){
 	}
 }
 
-function toggle2DBoard(){
+// Reflect the current board mode on the 2D/3D segmented switch.
+function updateBoardModeButtons(){
+	const buttons = {
+		'2d': document.getElementById('board-mode-2d'),
+		'3d': document.getElementById('board-mode-3d')
+	};
+	const active = is2DBoard ? '2d' : '3d';
+	for(const mode in buttons){
+		const button = buttons[mode];
+		if(!button){
+			continue;
+		}
+		button.classList.toggle('active', mode === active);
+		button.setAttribute('aria-pressed', mode === active ? 'true' : 'false');
+	}
+}
+
+function setBoardMode(mode){
+	const want2D = mode === '2d';
+	// Clicking the already-active button must not tear down and rebuild the board.
+	if(want2D === is2DBoard){
+		return;
+	}
 	isSwitchingBoardMode = true;
 	removeBoardMessageHandler();
 	removeEventListeners();
-	if(document.getElementById('2d-board-checkbox').checked){
+	if(want2D){
 		localStorage.setItem('2d_board','true');
 		is2DBoard = true;
+		updateBoardModeButtons();
 		// hide the 3d board and show the 2d board
 		document.getElementById("gamecanvas").style.display = "none";
 		document.getElementById("ninja-wrapper").style.display = "block";
@@ -532,6 +558,7 @@ function toggle2DBoard(){
 		document.getElementById("3d-settings").style.display = "flex";
 		localStorage.setItem('2d_board','false');
 		is2DBoard = false;
+		updateBoardModeButtons();
 		document.getElementById("ninja-wrapper").style.display = "none";
 		document.getElementById("gamecanvas").style.display = "block";
 		makeStyleSelector();
@@ -566,6 +593,7 @@ function set2DTheme(theme){
 	const themeObject = default2DThemes.find(t => t.id === theme);
 	if(!themeObject){
 		alert('danger', 'Theme not found: ' + theme);
+		return;
 	}
 	document.getElementById('set-2d-theme').innerText = themeObject.name;
 	document.getElementById(theme).classList.add('active');
@@ -593,6 +621,8 @@ function set2DCustomTheme(){
 	set2DUI({theme: JSON.parse(customTheme)});
 }
 
+// PTN Ninja's "2.5D" board: the flat board drawn with perspective. Named to
+// keep it distinct from the fully 3D board the 3D mode renders.
 function toggle2DBoard3D(){
 	localStorage.setItem('2d-board-3d', document.getElementById('2d-3d-toggle').checked);
 	set2DUI({
@@ -692,14 +722,12 @@ function load2DSettings(){
 		document.getElementById('2d-custom-theme').value = localStorage.getItem("2d-custom-theme");
 		set2DUI({theme: JSON.parse(localStorage.getItem("2d-custom-theme"))});
 	}
-	else if(localStorage.getItem('2d-theme')){
-		let theme = default2DThemes.find(t => t.id === localStorage.getItem("2d-custom-theme"));
-		if(!theme){
-			// if not found, set to default theme
-			theme = default2DThemes[7];
-		}
-		document.getElementById('set-2d-theme').innerText = theme.name;
-		set2DTheme(localStorage.getItem('2d-theme'));
+	else{
+		// Fall back to the default theme when nothing is saved, or when a saved id
+		// is no longer one we offer. set2DTheme handles the label, the active
+		// highlight in the dropdown and persisting the choice.
+		const saved = localStorage.getItem('2d-theme');
+		set2DTheme(default2DThemes.some(t => t.id === saved) ? saved : DEFAULT_2D_THEME);
 	}
 
 	if(localStorage.getItem('2d-board-3d')){
