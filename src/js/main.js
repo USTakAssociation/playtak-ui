@@ -136,7 +136,20 @@ const gamePresets = {
 	}
 };
 
-let ismobile = false;
+// Evaluated at load rather than inside init(): prefers2DBoard() reads ismobile
+// from $(document).ready, which runs before init() does. Leaving it unset until
+// init() would make the two prefers2DBoard() call sites disagree.
+function isMobileUserAgent() {
+	const ua = navigator.userAgent.toLowerCase();
+	return (
+		ua.indexOf("android") > -1 ||
+		ua.indexOf("iphone") > -1 ||
+		ua.indexOf("ipod") > -1 ||
+		ua.indexOf("ipad") > -1
+	);
+}
+
+let ismobile = isMobileUserAgent();
 let isidevice = false;
 let fixedcamera = false;
 let clickthrough = true;
@@ -149,12 +162,9 @@ let settingscounter = 0;
 let is2DBoard = false;
 let fson = false;
 
-// Viewport width at or below which a brand-new user gets the 2D board by default.
-const MOBILE_BOARD_BREAKPOINT = 990;
-
 // Which board to show. An explicit choice always wins; only users who have never
-// picked a side fall through to the viewport-based default. The default is
-// deliberately not persisted, so resizing the window never silently locks it in.
+// picked a side fall through to the mobile default. The default is deliberately
+// not persisted, so it never silently locks a mode in.
 function prefers2DBoard() {
 	const stored = localStorage.getItem("2d_board");
 	if (stored === "true") {
@@ -163,7 +173,7 @@ function prefers2DBoard() {
 	if (stored === "false") {
 		return false;
 	}
-	return window.innerWidth <= MOBILE_BOARD_BREAKPOINT;
+	return ismobile;
 }
 
 function alert(type, msg) {
@@ -189,15 +199,9 @@ function togglefs() {
 }
 
 function init() {
+	// ismobile is already set at load; isidevice stays here because it attaches
+	// gesture handlers to document.body.
 	const ua = navigator.userAgent.toLowerCase();
-	if (
-		ua.indexOf("android") > -1 ||
-		ua.indexOf("iphone") > -1 ||
-		ua.indexOf("ipod") > -1 ||
-		ua.indexOf("ipad") > -1
-	) {
-		ismobile = true;
-	}
 	if (
 		ua.indexOf("iphone") > -1 ||
 		ua.indexOf("ipod") > -1 ||
