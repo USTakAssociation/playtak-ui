@@ -177,7 +177,8 @@ function showLastMoveHighlighter(event){
 	else{
 		// Re-highlight the last moved square when turning on
 		if(board.lastMovedSquareList.length > 0){
-			board.highlightLastMove_sq(board.lastMovedSquareList.at(-1));
+			const coords = board.lastMovedSquareList.at(-1);
+			board.highlightLastMove_sq(board.get_board_obj(coords.file, coords.rank), gameData.move_count - 1);
 		}
 	}
 }
