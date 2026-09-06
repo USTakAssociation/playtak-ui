@@ -16,6 +16,36 @@
 	overflow-x: hidden;
 }
 
+/* Dark theme
+   The .landing block above re-declares the palette, so the values set on
+   body.dark-theme in main.css never reach anything inside the landing page.
+   Re-declare them here at higher specificity. --secondary-font-color stays
+   white: it labels the parallax heading and the navy .btn-primary. */
+.dark-theme .landing {
+	--primary-color: #7ea2f0;
+	--primary-bg-color: #191f25;
+	--secondary-bg-color: #2f2e2e;
+	--primary-font-color: #c8c8c8;
+}
+
+/* Wordmark and stack art are pure #000/#fff, so a straight invert is correct. */
+.dark-theme .landing .playtak-logo svg {
+	filter: invert(1);
+}
+
+/* board-top.svg / board-bottom.svg fade to white to meet a white page.
+   Multiplying against the page background sinks that fade into the dark
+   background instead of leaving a white band. */
+.dark-theme .landing .header,
+.dark-theme .landing .footer {
+	background-blend-mode: multiply;
+}
+
+/* The light half of the parallax scrim has to darken with the page. */
+.dark-theme .landing .parallax {
+	--parallax-scrim: rgb(25 31 37 / 55%);
+}
+
 .landing .landing-wrapper {
 	width: 100vw;
 	height: 100vh;
@@ -76,7 +106,8 @@
 }
 
 .landing .parallax {
-	background-image: linear-gradient(0deg, rgb(53 68 136), rgb(255 255 255 / 30%)), url('../images/parallax.jpg');
+	--parallax-scrim: rgb(255 255 255 / 30%);
+	background-image: linear-gradient(0deg, rgb(53 68 136), var(--parallax-scrim)), url('../images/parallax.jpg');
 	background-position: center;
 	background-attachment: fixed;
 	background-repeat: no-repeat;
@@ -90,6 +121,10 @@
 
 .landing .heading-text a{
 	color: var(--secondary-font-color);
+}
+
+.landing .heading-text svg {
+	fill: var(--secondary-font-color);
 }
 
 .landing .heading-text a span {
@@ -135,7 +170,7 @@
 
 .landing .footer-banner{
 	height: 50px;
-	background-color: var(--primary-color);
+	background-color: var(--secondary-color);
 }
 
 /* utilities */
