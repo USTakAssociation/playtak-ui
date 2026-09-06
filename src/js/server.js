@@ -1167,7 +1167,7 @@ var server = {
 		players.innerHTML = p1Element + " vs " + p2Element;
 		const actionButton = document.createElement("button");
 		actionButton.className = "btn btn-transparent";
-		actionButton.innerHTML = `<svg viewBox="0 0 576 512"><path d="M160 256C160 185.3 217.3 128 288 128C358.7 128 416 185.3 416 256C416 326.7 358.7 384 288 384C217.3 384 160 326.7 160 256zM288 336C332.2 336 368 300.2 368 256C368 211.8 332.2 176 288 176C287.3 176 286.7 176 285.1 176C287.3 181.1 288 186.5 288 192C288 227.3 259.3 256 224 256C218.5 256 213.1 255.3 208 253.1C208 254.7 208 255.3 208 255.1C208 300.2 243.8 336 288 336L288 336zM95.42 112.6C142.5 68.84 207.2 32 288 32C368.8 32 433.5 68.84 480.6 112.6C527.4 156 558.7 207.1 573.5 243.7C576.8 251.6 576.8 260.4 573.5 268.3C558.7 304 527.4 355.1 480.6 399.4C433.5 443.2 368.8 480 288 480C207.2 480 142.5 443.2 95.42 399.4C48.62 355.1 17.34 304 2.461 268.3C-.8205 260.4-.8205 251.6 2.461 243.7C17.34 207.1 48.62 156 95.42 112.6V112.6zM288 80C222.8 80 169.2 109.6 128.1 147.7C89.6 183.5 63.02 225.1 49.44 256C63.02 286 89.6 328.5 128.1 364.3C169.2 402.4 222.8 432 288 432C353.2 432 406.8 402.4 447.9 364.3C486.4 328.5 512.1 286 526.6 256C512.1 225.1 486.4 183.5 447.9 147.7C406.8 109.6 353.2 80 288 80V80z"/></svg>`;
+		actionButton.innerHTML = watchIcon;
 		const row = $('<tr/>').attr("id", "game-" + game.id).addClass('game'+game.id).appendTo($('#gamelist'));
 		$('<td/>').append(actionButton).attr("data-toggle", "tooltip").attr("title", "Watch game").click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
@@ -1208,8 +1208,7 @@ var server = {
 
 		const dropdownButton = document.createElement("button");
 		dropdownButton.className = "btn btn-transparent dropdown-toggle";
-		// vertical elipse svg icon
-		dropdownButton.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12,8A2,2 0 1,1 10,6A2,2 0 0,1 12,8M12,14A2,2 0 1,1 10,12A2,2 0 0,1 12,14M12,20A2,2 0 1,1 10,18A2,2 0 0,1 12,20Z"/></svg>`;
+		dropdownButton.innerHTML = ellipsisIcon;
 		dropdownButton.setAttribute("data-toggle", "dropdown");
 		dropdownButton.setAttribute("aria-haspopup", "true");
 		dropdownButton.setAttribute("aria-expanded", "false");
@@ -1303,6 +1302,7 @@ var server = {
 					yourColor = colourleft;
 				}
 			}
+			// custom player color icon
 			const imgstring='<svg class="colourcircle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourleft+'"></circle><clipPath id="g-clip"><rect height="16" width="8" x="8" y="0"></rect></clipPath><circle cx="8" cy="8" r="6" stroke-width="2" fill="'+colourright+'" clip-path="url(#g-clip)"></circle></svg>';
 			const sizespan = "<span class='badge'>"+seek.size+"</span>";
 			const row = $('<tr/>')
@@ -1378,8 +1378,6 @@ var server = {
 			const challengePlayerButton = document.createElement("button");
 			challengePlayerButton.className = "btn btn-transparent seek-button";
 			challengePlayerButton.innerHTML = `<span class='playername'>${seek.player}</span>`;
-			const deleteIcon = '<svg viewBox="0 0 24 24"><path d="M17,4V5H15V4H9V5H7V4A2,2,0,0,1,9,2h6A2,2,0,0,1,17,4Z"/><path d="M20,6H4A1,1,0,0,0,4,8H5V20a2,2,0,0,0,2,2H17a2,2,0,0,0,2-2V8h1a1,1,0,0,0,0-2ZM11,17a1,1,0,0,1-2,0V11a1,1,0,0,1,2,0Zm4,0a1,1,0,0,1-2,0V11a1,1,0,0,1,2,0Z"/></svg>';
-			const challengeIcon = `<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414 l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586 L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>`;
 			const actionButton = document.createElement("button");
 			actionButton.className = "btn btn-transparent";
 			actionButton.innerHTML = mySeek ? deleteIcon : challengeIcon;
@@ -1438,7 +1436,7 @@ var server = {
 			const dropdownButton = document.createElement("button");
 			dropdownButton.className = "btn btn-transparent dropdown-toggle";
 			// vertical elipse svg icon
-			dropdownButton.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12,8A2,2 0 1,1 10,6A2,2 0 0,1 12,8M12,14A2,2 0 1,1 10,12A2,2 0 0,1 12,14M12,20A2,2 0 1,1 10,18A2,2 0 0,1 12,20Z"/></svg>`;
+			dropdownButton.innerHTML = ellipsisIcon;
 			dropdownButton.setAttribute("data-toggle", "dropdown");
 			dropdownButton.setAttribute("aria-haspopup", "true");
 			dropdownButton.setAttribute("aria-expanded", "false");
@@ -1518,7 +1516,7 @@ var server = {
 			challengeButton.className = "btn btn-transparent";
 			challengeButton.setAttribute("data-toggle", "tooltip");
 			challengeButton.setAttribute("title", "Challenge " + player);
-			challengeButton.innerHTML = `<svg viewBox="0 0 32 32"><path d="M28.414,24l-3-3l2.293-2.293l-1.414-1.414l-2.236,2.236l-3.588-4.186L25,11.46V6h-5.46L16,10.13  L12.46,6H7v5.46l4.531,3.884l-3.588,4.186l-2.236-2.236l-1.414,1.414L6.586,21l-3,3L7,27.414l3-3l2.293,2.293l1.414-1.414  l-2.237-2.237L16,19.174l4.53,3.882l-2.237,2.237l1.414,1.414L22,24.414l3,3L28.414,24z M6.414,24L8,22.414L8.586,23L7,24.586  L6.414,24z M9,10.54V8h2.54l3.143,3.667l-1.85,2.159L9,10.54z M20.46,8H23v2.54L10.053,21.638l-0.69-0.69L20.46,8z M18.95,16.645 l3.688,4.302l-0.69,0.69l-4.411-3.781L18.95,16.645z M25,24.586L23.414,23L24,22.414L25.586,24L25,24.586z"/></svg>`;
+			challengeButton.innerHTML = challengeIcon;
 			challengeButton.setAttribute("onclick", `server.challengePlayer('${player}')`);
 			row.innerHTML += `${challengeButton.outerHTML}`;
 			// create a message button
@@ -1526,7 +1524,7 @@ var server = {
 			messageButton.className = "btn btn-transparent";
 			messageButton.setAttribute("data-toggle", "tooltip");
 			messageButton.setAttribute("title", "Message " + player);
-			messageButton.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20,2A2,2 0 0,1 22,4V16A2,2 0 0,1 20,18H6L2,22V4C2,2.89 2.9,2 4,2H20M11,6V9H8V11H11V14H13V11H16V9H13V6H11Z"></path></svg>`;
+			messageButton.innerHTML = messageIcon;
 			messageButton.setAttribute("onclick", `server.messagePlayer('${player}')`);
 			row.innerHTML += `${messageButton.outerHTML}`;
 			row.innerHTML += `</td>`;

@@ -84,8 +84,8 @@ h4 {
 	height: 15px;
 }
 .action-icon{
-	height: 20px;
-	width: 20px;
+	height: 24px;
+	width: 24px;
 	vertical-align: middle;
 }
 #gamecanvas{
@@ -147,15 +147,10 @@ header{
 	vertical-align: middle;
 }
 
-.navitem svg{
+/* .navitem svg{
 	fill: var(--primary-fill-color);
 	stroke: var(--primary-stroke-color);
-}
-
-.nav-link:hover svg{
-	fill: var(--primary-fill-color);
-	stroke: var(--primary-stroke-color);
-}
+} */
 
 nav button {
 	display: flex;
@@ -171,11 +166,14 @@ a.navitem, div.navitem{
 	color: var(--primary-font-color);
 }
 
-.navicon{
+.navicon {
 	height: 16px;
 	width: 16px;
 }
-
+.navicon-20 {
+	height: 20px;
+	width: 20px;
+}
 .usta-nav {
 	width: 25px;
 	height: 25px;
@@ -369,8 +367,8 @@ a.navitem, div.navitem{
 
 /* Player styles */
 .playerimg{
-	height: 20px;
-	width: 20px;
+	height: 24px;
+	width: 24px;
 }
 
 #player-opp-img.iswhite, #player-me-img.iswhite {
@@ -465,11 +463,6 @@ a.navitem, div.navitem{
 	font-size: 16px;
 	font-weight: bold;
 	padding: 0;
-}
-
-.chatclose svg {
-	width: 13px;
-	fill: var(--primary-fill-color)
 }
 
 .roombody{
@@ -1288,7 +1281,7 @@ a.btn.btn-primary {
 }
 
 .active .stroke-primary {
-	stroke: var(--dark);
+	stroke: var(--dark-fill-color);
 }
 
 /* || Dark popover — match the dark Bootstrap tooltips (e.g. the increment-scaling help) */
