@@ -135,6 +135,20 @@ const gamePresets = {
 		required_fields: ["opname"],
 	}
 };
+// MIT Icon https://www.svgrepo.com/svg/343672/fullscreen-exit
+const fullscreenIcon = `<svg class="navicon-20" viewBox="0 0 32 32" fill="none" stroke="currentcolor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 12 L12 12 12 4 M20 4 L20 12 28 12 M4 20 L12 20 12 28 M28 20 L20 20 20 28" fill="none"/></svg>`;
+// PD Icon https://www.svgrepo.com/svg/502614/delete
+const deleteIcon = `<svg viewBox="0 0 24 24" fill="none"><g fill="none" stroke="var(--primary-stroke-color)"><path d="M10 11V17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11V17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 7H20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 7H12H18V18C18 19.6569 16.6569 21 15 21H9C7.34315 21 6 19.6569 6 18V7Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
+// Lucide Icons (ISC) - swords - https://lucide.dev/icons/swords
+const challengeIcon = `<svg class="navicon-20" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><g fill="none" stroke="var(--primary-stroke-color)" stroke-width="2" transform="translate(12 12) scale(1.3) translate(-12 -12)"><path d="m13 19 6-6" /><path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" /><path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" /><path d="m16 16 4 4" /><path d="m19 21 2-2" /><path d="m5 14 4 4" /><path d="m5 21-2-2" /><path d="M7.5 16.5 4 20" /></g></svg>`;
+// Message Square Plus Icon - Dazzle UI | https://www.svgrepo.com/svg/533278/message-square-plus
+const messageIcon =	`<svg viewBox="0 0 24 24" fill="none"><path d="M9 11H15M12 8V14M21 20L17.6757 18.3378C17.4237 18.2118 17.2977 18.1488 17.1656 18.1044C17.0484 18.065 16.9277 18.0365 16.8052 18.0193C16.6672 18 16.5263 18 16.2446 18H6.2C5.07989 18 4.51984 18 4.09202 17.782C3.71569 17.5903 3.40973 17.2843 3.21799 16.908C3 16.4802 3 15.9201 3 14.8V7.2C3 6.07989 3 5.51984 3.21799 5.09202C3.40973 4.71569 3.71569 4.40973 4.09202 4.21799C4.51984 4 5.0799 4 6.2 4H17.8C18.9201 4 19.4802 4 19.908 4.21799C20.2843 4.40973 20.5903 4.71569 20.782 5.09202C21 5.51984 21 6.0799 21 7.2V20Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="var(--primary-stroke-color)"/></svg>`;
+// PD Icon https://www.svgrepo.com/svg/535754/dots-vertical
+const ellipsisIcon = `<svg viewBox="0 0 16 16" fill="none"><path d="M8 12C9.10457 12 10 12.8954 10 14C10 15.1046 9.10457 16 8 16C6.89543 16 6 15.1046 6 14C6 12.8954 6.89543 12 8 12Z"/><path d="M8 6C9.10457 6 10 6.89543 10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6Z"/><path d="M10 2C10 0.89543 9.10457 -4.82823e-08 8 0C6.89543 4.82823e-08 6 0.895431 6 2C6 3.10457 6.89543 4 8 4C9.10457 4 10 3.10457 10 2Z"/></svg>`;
+//  MLP Icon https://www.svgrepo.com/svg/503004/close
+const closeIcon = `<svg class="navicon-20" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>`
+// PD icon https://www.svgrepo.com/svg/505373/eye-open 
+const watchIcon = `<svg viewBox="0 0 24 24" fill="none"><g fill="none" stroke="var(--primary-stroke-color)"><path d="M12 5C5.63636 5 2 12 2 12C2 12 5.63636 19 12 19C18.3636 19 22 12 22 12C22 12 18.3636 5 12 5Z" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
 
 // Evaluated at load rather than inside init(): prefers2DBoard() reads ismobile
 // from $(document).ready, which runs before init() does. Leaving it unset until
@@ -221,8 +235,7 @@ function init() {
 		let li = document.createElement("li");
 		fsbutton.title = "Toggle Fullscreen";
 		fsbutton.className = "navitem";
-		fsbutton.innerHTML =
-			'<svg viewBox="0 0 14 14" class="navicon"><g fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g id="Core" transform="translate(-257.000000, -257.000000)"><g id="fullscreen-exit" transform="translate(257.000000, 257.000000)"><path d="M0,11 L3,11 L3,14 L5,14 L5,9 L0,9 L0,11 L0,11 Z M3,3 L0,3 L0,5 L5,5 L5,0 L3,0 L3,3 L3,3 Z M9,14 L11,14 L11,11 L14,11 L14,9 L9,9 L9,14 L9,14 Z M11,3 L11,0 L9,0 L9,5 L14,5 L14,3 L11,3 L11,3 Z" id="Shape"/></g></g></g></svg>';
+		fsbutton.innerHTML = fullscreenIcon;
 		fsbutton.onclick = togglefs;
 		li.appendChild(fsbutton);
 		document.getElementById("main-nav").appendChild(li);
