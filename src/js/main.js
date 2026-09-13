@@ -28,6 +28,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "",
 		time_amount: "",
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	intermediate: {
@@ -41,6 +42,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "",
 		time_amount: "",
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	league: {
@@ -54,6 +56,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	"7_open": {
@@ -67,6 +70,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: 40,
 		time_amount: 600, // seconds
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	"7_blitz": {
@@ -80,6 +84,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	"trans-atlan": {
@@ -93,6 +98,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "35",
 		time_amount: "600", // seconds
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	"tak-open": {
@@ -106,6 +112,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	mentee: {
@@ -119,6 +126,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
+		opening: "swap",
 		required_fields: ["opname"],
 	},
 	"tiebreaker-blitz": {
@@ -132,6 +140,7 @@ const gamePresets = {
 		increment_scales: false,
 		trigger_move: "",
 		time_amount: "", // seconds
+		opening: "swap",
 		required_fields: ["opname"],
 	}
 };
@@ -585,6 +594,8 @@ function changePreset(event) {
 		document.getElementById("triggerMove").setAttribute("disabled", "true");
 		document.getElementById("timeAmount").value = preset.time_amount;
 		document.getElementById("timeAmount").setAttribute("disabled", "true");
+		document.getElementById("openingselect").value = preset.opening;
+		document.getElementById("openingselect").setAttribute("disabled", "true");
 		// set the required attributes for the fields that are required in the preset
 		for (let i = 0; i < preset.required_fields.length; i++) {
 			const element = document.getElementById(preset.required_fields[i]);
