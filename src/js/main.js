@@ -480,9 +480,102 @@ function copyNotationToClipboard() {
 	);
 }
 
-function openInPtnNinja() {
-	const link = "https://ptn.ninja/" + encodeURIComponent(getNotation());
-	window.open(link, "_blank");
+const PTN_NINJA_URL = "https://ptn.ninja/";
+// ptn.ninja rejects URLs longer than about 8 KB.
+const PTN_NINJA_MAX_URL_LENGTH = 8000;
+
+// Only the PTN Ninja link carries each move's clock, so the game can be replayed
+// with its timing while copied and downloaded PTN stays compact. The clocks come
+// from the games history API, which has them once the server has saved the game.
+// { gameId, ptn, promise }: ptn is undefined while the request is pending and
+// null if the clocks could not be fetched.
+let ptnWithClocksRequest = null;
+
+function getGamesHistoryApiUrl(){
+	const host = window.location.hostname;
+	if(host === "localhost" || host === "127.0.0.1" || host.indexOf("192.168.") === 0){
+		return "http://" + host + ":3004/v1/games-history";
+	}
+	if(window.location.host.indexOf("beta") > -1){
+		return "https://api.beta.playtak.com/v1/games-history";
+	}
+	return "https://api.playtak.com/v1/games-history";
+}
+
+async function fetchPtnWithClocks(gameId, moveCount){
+	const url = getGamesHistoryApiUrl() + "/ptn/" + gameId + "?clocks=true";
+	// The server saves the game as it announces the result, so this can race
+	// that write; a saved game with moves always has clocks, so retry once.
+	for(let attempt = 0; attempt < 2; attempt++){
+		if(attempt > 0){
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+		}
+		try{
+			const response = await fetch(url);
+			const ptn = await response.text();
+			// A missing game is answered with a JSON error body, not PTN.
+			if(response.ok && ptn.startsWith("[") && (moveCount === 0 || ptn.indexOf("{clock") > -1)){
+				return ptn;
+			}
+		}
+		catch(error){
+			console.error("Unable to fetch the game's clocks", error);
+		}
+	}
+	return null;
+}
+
+// Called when an online game ends, so the clocks are usually ready by the time
+// the player opens the game in PTN Ninja.
+function prepareOpenInPtnNinja(){
+	if(!gameData.id){
+		return;
+	}
+	const request = { gameId: gameData.id, ptn: undefined };
+	request.promise = fetchPtnWithClocks(request.gameId, gameData.move_count).then((ptn) => {
+		request.ptn = ptn;
+		return ptn;
+	});
+	ptnWithClocksRequest = request;
+}
+
+function getPtnNinjaLink(ptnWithClocks){
+	// Each ply carries one clock note, plus one for the player to move at the end.
+	// The saved game only matches the board if no moves were undone or played on
+	// it after the game ended.
+	const clockNotes = ptnWithClocks ? ptnWithClocks.split("{clock").length - 1 : 0;
+	if(ptnWithClocks && clockNotes === gameData.move_count - gameData.move_start + 1){
+		// Compressed (PTN Ninja detects this) to keep long games under the URL limit.
+		const link = PTN_NINJA_URL + LZString.compressToEncodedURIComponent(ptnWithClocks);
+		if(link.length <= PTN_NINJA_MAX_URL_LENGTH){
+			return link;
+		}
+	}
+	return PTN_NINJA_URL + encodeURIComponent(getNotation());
+}
+
+function openInPtnNinja(){
+	const request = ptnWithClocksRequest;
+	if(!request || request.gameId !== gameData.id){
+		window.open(getPtnNinjaLink(null), "_blank");
+		return;
+	}
+	if(request.ptn !== undefined){
+		window.open(getPtnNinjaLink(request.ptn), "_blank");
+		return;
+	}
+	// Still fetching: open the tab now, while this click still counts as a user
+	// action for popup blockers, and point it at PTN Ninja once the clocks arrive.
+	const ninjaWindow = window.open("", "_blank");
+	request.promise.then((ptn) => {
+		const link = getPtnNinjaLink(ptn);
+		if(ninjaWindow){
+			ninjaWindow.location.href = link;
+		}
+		else{
+			window.open(link, "_blank");
+		}
+	});
 }
 
 function copyNotationLink() {

@@ -804,6 +804,7 @@ var server = {
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
 					gameData.result = spl[2];
+					prepareOpenInPtnNinja();
 					if(!gameData.is_scratch && gameData.chatRoom){
 						chathandler.insertTimeMarker(gameData.chatRoom);
 						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
@@ -833,6 +834,7 @@ var server = {
 				else if(spl[1] === "Abandoned."){
 					//Game#1 Abandoned. name quit
 					document.title = "Play Tak";
+					prepareOpenInPtnNinja();
 
 					if(gameData.my_color === "white"){
 						gameData.result = "1-0";
