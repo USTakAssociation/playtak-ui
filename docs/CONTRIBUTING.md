@@ -7,6 +7,11 @@ We love your input! We want to make contributing to this project as easy and tra
 - Proposing new features
 - Becoming a maintainer
 
+## Code of Conduct
+This project and everyone participating in it is governed by our
+[Code of Conduct](../CODE_OF_CONDUCT.md). By participating, you are expected
+to uphold this code.
+
 ## We Develop with Github
 We use github to host code, to track issues and feature requests, as well as accept pull requests.
 
