@@ -59,14 +59,20 @@
 	background-color: var(--primary-bg-color);
 }
 
+.landing .playtak-logo {
+	min-width: 0;
+	max-width: 100%;
+}
+
 .landing .playtak-logo svg {
 	width: 35rem;
 	height: 22rem;
+	max-width: 100%;
 	fill: inherit;
 	stroke: inherit;
 }
 
-.landing .hero{
+.landing .hero {
 	margin: 8vh 0;
 }
 
@@ -217,12 +223,13 @@
 	.landing .playtak-logo svg {
 			width: 30rem;
 			height: 20rem;
+			max-width: 100%;
 			fill: inherit;
 			stroke: inherit;
 	}
 	
 	.landing .hero-actions {
-		min-width: 50%;
+		min-width: 80%;
 	}
 	.landing .parallax{
 		background-attachment: scroll;

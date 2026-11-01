@@ -193,6 +193,8 @@ var chathandler={
 			server.chat("priv", this.cur_room.split("priv-")[1], msg);
 		}
 		$('#chat-me').val('');
+		// Blur so the button doesn't stay stuck in its :active/pressed style after clicking
+		document.getElementById('send-button').blur();
 		return false;
 	}
 };

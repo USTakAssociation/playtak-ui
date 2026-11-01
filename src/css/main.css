@@ -63,6 +63,7 @@ svg {
 	fill: var(--primary-fill-color);
 	width: 24px;
 	height: 24px;
+	vertical-align: center;
 }
 
 h4 {
@@ -86,7 +87,7 @@ h4 {
 .action-icon{
 	height: 24px;
 	width: 24px;
-	vertical-align: middle;
+	vertical-align: center;
 }
 #gamecanvas{
 	display: block;
@@ -146,11 +147,6 @@ header{
 	height: 36px;
 	vertical-align: middle;
 }
-
-/* .navitem svg{
-	fill: var(--primary-fill-color);
-	stroke: var(--primary-stroke-color);
-} */
 
 nav button {
 	display: flex;
@@ -865,6 +861,10 @@ a.active svg {
 	display: flex;
 }
 
+.flex-wrap {
+	flex-wrap: wrap;
+}
+
 .flex-space-between {
 	justify-content: space-between;
 }
@@ -1052,11 +1052,9 @@ a.btn.btn-primary {
 }
 .btn svg {
 	fill: var(--primary-fill-color);
-	vertical-align: middle;
 }
 .btn.btn-primary svg {
 	fill: var(--secondary-fill-color);
-	vertical-align: middle;
 }
 .btn-primary:hover, .btn-primary:focus {
 	color: var(--primary-font-color-50);
