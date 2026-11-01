@@ -103,7 +103,7 @@
 				<button class="navitem" onclick="toggleSettingsDrawer(true)" data-toggle="tooltip" data-placement="bottom" title="Open settings menu">
 					<!-- Apache icon https://www.svgrepo.com/svg/340999/settings -->
 					<svg class="action-icon" viewBox="0 0 32 32" id="icon">
-						<g>
+						<g stroke="var(--primary-fill-color)" stroke-width="0.35" stroke-linejoin="round">
 							<path d="M27,16.76c0-.25,0-.5,0-.76s0-.51,0-.77l1.92-1.68A2,2,0,0,0,29.3,11L26.94,7a2,2,0,0,0-1.73-1,2,2,0,0,0-.64.1l-2.43.82a11.35,11.35,0,0,0-1.31-.75l-.51-2.52a2,2,0,0,0-2-1.61H13.64a2,2,0,0,0-2,1.61l-.51,2.52a11.48,11.48,0,0,0-1.32.75L7.43,6.06A2,2,0,0,0,6.79,6,2,2,0,0,0,5.06,7L2.7,11a2,2,0,0,0,.41,2.51L5,15.24c0,.25,0,.5,0,.76s0,.51,0,.77L3.11,18.45A2,2,0,0,0,2.7,21L5.06,25a2,2,0,0,0,1.73,1,2,2,0,0,0,.64-.1l2.43-.82a11.35,11.35,0,0,0,1.31.75l.51,2.52a2,2,0,0,0,2,1.61h4.72a2,2,0,0,0,2-1.61l.51-2.52a11.48,11.48,0,0,0,1.32-.75l2.42.82a2,2,0,0,0,.64.1,2,2,0,0,0,1.73-1L29.3,21a2,2,0,0,0-.41-2.51ZM25.21,24l-3.43-1.16a8.86,8.86,0,0,1-2.71,1.57L18.36,28H13.64l-.71-3.55a9.36,9.36,0,0,1-2.7-1.57L6.79,24,4.43,20l2.72-2.4a8.9,8.9,0,0,1,0-3.13L4.43,12,6.79,8l3.43,1.16a8.86,8.86,0,0,1,2.71-1.57L13.64,4h4.72l.71,3.55a9.36,9.36,0,0,1,2.7,1.57L25.21,8,27.57,12l-2.72,2.4a8.9,8.9,0,0,1,0,3.13L27.57,20Z" transform="translate(0 0)"/>
 							<path d="M16,22a6,6,0,1,1,6-6A5.94,5.94,0,0,1,16,22Zm0-10a3.91,3.91,0,0,0-4,4,3.91,3.91,0,0,0,4,4,3.91,3.91,0,0,0,4-4A3.91,3.91,0,0,0,16,12Z" transform="translate(0 0)"/>
 						</g>
@@ -139,7 +139,7 @@
 					<li>
 						<button class="navitem" onclick="$('#creategamemodal').modal('show'); closeMobileMenu()" data-toggle="tooltip" data-placement="auto" title="Create an online game, a scratch board, or load from PTN/TPS">
 							<!-- MDI Icon (Apache 2.0) - checkerboard-plus - https://pictogrammers.com/library/mdi/icon/checkerboard-plus/ -->
-							<svg class="navicon" viewBox="0 0 24 24">
+							<svg class="navicon-20" viewBox="0 0 24 24">
 								<path d="M19 17H22V19H19V22H17V19H14V17H17V14H19V17M8 16H12V12H8V16M12 12H16V8H12V12M2 2V22H13.54C13 21.42 12.63 20.74 12.36 20H8V16H4V12H8V8H4V4H8V8H12V4H16V8H20V12.36C20.74 12.63 21.42 13 22 13.54V2H2Z"></path>
 							</svg>
 							New Game
@@ -149,16 +149,16 @@
 						<button class="navitem" style="min-width: 124px" onclick="$('#joingame-modal').modal('show'); closeMobileMenu()"
 							data-toggle="tooltip" data-placement="auto" title="Available humans + AIs to play against">
 							<!-- Lucide Icons (ISC) - swords - https://lucide.dev/icons/swords -->
-							<svg class="navicon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-								<g fill="none" stroke="var(--primary-stroke-color)" stroke-width="2" transform="translate(12 12) scale(1.3) translate(-12 -12)">
-									<path d="m13 19 6-6" />
-									<path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" />
-									<path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" />
-									<path d="m16 16 4 4" />
-									<path d="m19 21 2-2" />
-									<path d="m5 14 4 4" />
-									<path d="m5 21-2-2" />
-									<path d="M7.5 16.5 4 20" />
+							<svg class="navicon-20" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+								<g fill="none" stroke="var(--primary-stroke-color)" stroke-width="2" >
+									<path vector-effect="non-scaling-stroke" d="m13 19 6-6" />
+									<path vector-effect="non-scaling-stroke" d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" />
+									<path vector-effect="non-scaling-stroke" d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" />
+									<path vector-effect="non-scaling-stroke" d="m16 16 4 4" />
+									<path vector-effect="non-scaling-stroke" d="m19 21 2-2" />
+									<path vector-effect="non-scaling-stroke" d="m5 14 4 4" />
+									<path vector-effect="non-scaling-stroke" d="m5 21-2-2" />
+									<path vector-effect="non-scaling-stroke" d="M7.5 16.5 4 20" />
 								</g>
 							</svg>
 							Join Game
@@ -170,12 +170,9 @@
 					<li>
 						<button class="navitem" style="min-width: 76px" onclick="$('#watchgame-modal').modal('show'); closeMobileMenu()"
 							data-toggle="tooltip" data-placement="auto" title="Games in progress">
-							<!-- PD icon https://www.svgrepo.com/svg/505373/eye-open -->
-							<svg class="verticle-align--middle" viewBox="0 0 24 24" fill="none">
-								<g fill="none" stroke="var(--primary-stroke-color)">
-									<path d="M12 5C5.63636 5 2 12 2 12C2 12 5.63636 19 12 19C18.3636 19 22 12 22 12C22 12 18.3636 5 12 5Z" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-								</g>
+							<!-- Remix Icon (Apache 2.0) - eye-line - https://remixicon.com/icon/eye-line -->
+							<svg class="navicon-20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+								<path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"/>
 							</svg>
 							Watch
 							<span class="badge" id="gamecount">0</span>
@@ -186,13 +183,9 @@
 						class="navitem"
 						onclick="$('#help-modal').modal('show'); closeMobileMenu();"
 						data-toggle="tooltip" data-placement="auto" title="Information on game rules and Tak communities">
-							<!-- MIT Icon https://www.svgrepo.com/svg/445803/help-circle -->
-							<svg class="navicon-20 verticle-align--middle" viewBox="0 0 48 48">
-								<g>
-									<path d="M24,2A22,22,0,1,0,46,24,21.9,21.9,0,0,0,24,2Zm0,40A18,18,0,1,1,42,24,18.1,18.1,0,0,1,24,42Z"/>
-									<path d="M24,38h-.4l-.4-.2h-.3l-.3-.3-.3-.3c0-.1-.1-.2-.2-.3s0-.3-.1-.4v-.8c.1-.1.1-.2.1-.4s.2-.2.2-.3l.3-.3a1.9,1.9,0,0,1,1.8-.6h.4l.3.2.3.3.3.3c0,.1.1.2.1.3s.1.3.2.4v.8c-.1.1-.1.2-.2.4s-.1.2-.1.3l-.3.3-.3.3h-.3l-.4.2Z"/>
-									<path d="M24.4,30h-.8a2,2,0,0,1-1.1-2.6,7.3,7.3,0,0,1,3.6-3.9A4.9,4.9,0,0,0,25,14.1a5.3,5.3,0,0,0-4.2,1A5.3,5.3,0,0,0,19,18.9a2,2,0,0,1-4,0,8.8,8.8,0,0,1,3.3-6.8,8.8,8.8,0,0,1,7.5-1.9,8.9,8.9,0,0,1,2,16.8,3.7,3.7,0,0,0-1.6,1.7A1.9,1.9,0,0,1,24.4,30Z"/>
-								</g>
+							<!-- MDI Icon (Apache 2.0) - help-circle-outline - https://pictogrammers.com/library/mdi/icon/help-circle-outline/ -->
+							<svg class="navicon-20" viewBox="0 0 24 24">
+								<path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/>
 							</svg>
 							Help
 						</button>
@@ -201,13 +194,13 @@
 						<a class="navitem" href="/games" target="_blank"
 						data-toggle="tooltip" data-placement="auto" title="Find and review old games">
 							<!-- MIT Icon https://www.svgrepo.com/svg/325099/db-search -->
-							<svg class="navicon-20 verticle-align--middle" viewBox="0 0 24 24" fill="none">
-								<g stroke="var(--primary-stroke-color)">
-									<path d="M20.5 20.5L22 22" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M16 18.5C16 19.8807 17.1193 21 18.5 21C19.1916 21 19.8175 20.7192 20.2701 20.2654C20.7211 19.8132 21 19.1892 21 18.5C21 17.1193 19.8807 16 18.5 16C17.1193 16 16 17.1193 16 18.5Z" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M4 6V12C4 12 4 15 11 15C18 15 18 12 18 12V6"  fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M11 3C18 3 18 6 18 6C18 6 18 9 11 9C4 9 4 6 4 6C4 6 4 3 11 3Z"  fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M11 21C4 21 4 18 4 18V12"  fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+							<svg class="navicon-20" viewBox="0 0 24 24" fill="none">
+								<g stroke="var(--primary-stroke-color)" stroke-width="1.8">
+									<path d="M20.5 20.5L22 22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M16 18.5C16 19.8807 17.1193 21 18.5 21C19.1916 21 19.8175 20.7192 20.2701 20.2654C20.7211 19.8132 21 19.1892 21 18.5C21 17.1193 19.8807 16 18.5 16C17.1193 16 16 17.1193 16 18.5Z" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M4 6V12C4 12 4 15 11 15C18 15 18 12 18 12V6"  fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M11 3C18 3 18 6 18 6C18 6 18 9 11 9C4 9 4 6 4 6C4 6 4 3 11 3Z"  fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M11 21C4 21 4 18 4 18V12"  fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 								</g>
 							</svg>
 							Games Database
@@ -220,7 +213,7 @@
 							onclick="showEvents(); closeMobileMenu();"
 							data-toggle="tooltip" data-placement="auto" title="View Events">
 							<!-- USTA Logo -->
-							<svg class="navicon verticle-align--middle usta-nav" inkscape:version="0.91 r13725" width="617.8125" height="508.125" viewBox="0 0 617.8125 508.125" sodipodi:docname="USTA Logo Vector.svg">
+							<svg class="navicon usta-nav" inkscape:version="0.91 r13725" width="617.8125" height="508.125" viewBox="0 0 617.8125 508.125" sodipodi:docname="USTA Logo Vector.svg">
 								<defs id="defs3489" />
 								<g inkscape:groupmode="layer" id="layer3" inkscape:label="Board Trace" style="display:inline">
 									<path class="inverse-line" style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:7.19999981;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 5.5532787,216.57787 310.05806,4.6277322 611.7862,228.60997 301.72814,502.57172 Z" id="path3496" inkscape:connector-curvature="0" />
@@ -272,7 +265,7 @@
 						data-toggle="tooltip"
 						title="Show active online players, and total number of online players">
 							<!-- MIT Icon https://www.svgrepo.com/svg/347809/people -->
-							<svg class="navicon-20 verticle-align--middle" viewBox="0 0 24 24">
+							<svg class="navicon-20" viewBox="0 0 24 24">
 								<g stroke="var(--primary-fill-color)" stroke-width="0.6">
 									<path fill-rule="evenodd" d="M3.5 8a5.5 5.5 0 118.596 4.547 9.005 9.005 0 015.9 8.18.75.75 0 01-1.5.045 7.5 7.5 0 00-14.993 0 .75.75 0 01-1.499-.044 9.005 9.005 0 015.9-8.181A5.494 5.494 0 013.5 8zM9 4a4 4 0 100 8 4 4 0 000-8z"/>
 									<path d="M17.29 8c-.148 0-.292.01-.434.03a.75.75 0 11-.212-1.484 4.53 4.53 0 013.38 8.097 6.69 6.69 0 013.956 6.107.75.75 0 01-1.5 0 5.193 5.193 0 00-3.696-4.972l-.534-.16v-1.676l.41-.209A3.03 3.03 0 0017.29 8z"/>
@@ -284,7 +277,7 @@
 					<li>
 						<a class="navitem" data-toggle="tooltip" data-placement="auto" title="Find players on discord" href="https://discord.gg/2xEt42X" target="_blank" rel="noopener noreferrer">
 							<!-- Apache Icon https://www.svgrepo.com/svg/504277/discord -->
-							<svg class="verticle-align--middle" viewBox="0 0 192 192" fill="none">
+							<svg class="" viewBox="0 0 192 192" fill="none">
 								<g fill="none" stroke="var(--primary-fill-color)">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="12" d="m68 138-8 16c-10.19-4.246-20.742-8.492-31.96-15.8-3.912-2.549-6.284-6.88-6.378-11.548-.488-23.964 5.134-48.056 19.369-73.528 1.863-3.334 4.967-5.778 8.567-7.056C58.186 43.02 64.016 40.664 74 39l6 11s6-2 16-2 16 2 16 2l6-11c9.984 1.664 15.814 4.02 24.402 7.068 3.6 1.278 6.704 3.722 8.567 7.056 14.235 25.472 19.857 49.564 19.37 73.528-.095 4.668-2.467 8.999-6.379 11.548-11.218 7.308-21.769 11.554-31.96 15.8l-8-16m-68-8s20 10 40 10 40-10 40-10"/>
 									<ellipse cx="71" cy="101" rx="13" ry="15" fill="var(--primary-fill-color)" />
@@ -380,11 +373,10 @@
 						onclick="server.draw()"
 						data-toggle="tooltip" data-placement="auto" title="Request draw - Game is drawn if your opponent agrees"
 					>
-						<!-- MLP Icon https://www.svgrepo.com/svg/448461/handshake -->
-						<svg class="action-icon" viewBox="0 0 16 16">
+						<!-- MDI Icon (Apache 2.0) - handshake-outline - https://pictogrammers.com/library/mdi/icon/handshake-outline/ -->
+						<svg class="action-icon" viewBox="0 0 24 24">
 							<g id="draw">
-								<path fill-rule="evenodd" d="M5 2.75a.75.75 0 00-.53.22l-.78.78H.75a.75.75 0 000 1.5H2v5a.75.75 0 01-.75.75h-.5a.75.75 0 000 1.5h.5a2.25 2.25 0 002.016-1.25h.557l3.063 1.531a2.25 2.25 0 002.254-.14l2.087-1.391h1.507a2.25 2.25 0 002.016 1.25h.5a.75.75 0 000-1.5h-.5a.75.75 0 01-.75-.75v-5h1.25a.75.75 0 000-1.5h-2.94l-.78-.78a.75.75 0 00-.53-.22H5zm-1 2.5h-.5v4.5H4a.75.75 0 01.335.08l3.222 1.61a.75.75 0 00.751-.047l1.652-1.101-.584-.876a.75.75 0 011.248-.832l.777 1.166H12.5v-4.5H12a.75.75 0 01-.53-.22l-.78-.78H8.81L7.065 5.997a.711.711 0 00.971 1.038l.971-.85a.75.75 0 11.988 1.13l-.971.85a2.211 2.211 0 01-3.02-3.229l.686-.686H5.311l-.78.78A.75.75 0 014 5.25z" clip-rule="evenodd"/>
-								<path d="M1.25 9.625a.625.625 0 11-1.25 0 .625.625 0 011.25 0zM16 9.625a.625.625 0 11-1.25 0 .625.625 0 011.25 0z"/>
+								<path d="M21.71 8.71C22.96 7.46 22.39 6 21.71 5.29L18.71 2.29C17.45 1.04 16 1.61 15.29 2.29L13.59 4H11C9.1 4 8 5 7.44 6.15L3 10.59V14.59L2.29 15.29C1.04 16.55 1.61 18 2.29 18.71L5.29 21.71C5.83 22.25 6.41 22.45 6.96 22.45C7.67 22.45 8.32 22.1 8.71 21.71L11.41 19H15C16.7 19 17.56 17.94 17.87 16.9C19 16.6 19.62 15.74 19.87 14.9C21.42 14.5 22 13.03 22 12V9H21.41L21.71 8.71M20 12C20 12.45 19.81 13 19 13L18 13L18 14C18 14.45 17.81 15 17 15L16 15L16 16C16 16.45 15.81 17 15 17H10.59L7.31 20.28C7 20.57 6.82 20.4 6.71 20.29L3.72 17.31C3.43 17 3.6 16.82 3.71 16.71L5 15.41V11.41L7 9.41V11C7 12.21 7.8 14 10 14S13 12.21 13 11H20V12M20.29 7.29L18.59 9H11V11C11 11.45 10.81 12 10 12S9 11.45 9 11V8C9 7.54 9.17 6 11 6H14.41L16.69 3.72C17 3.43 17.18 3.6 17.29 3.71L20.28 6.69C20.57 7 20.4 7.18 20.29 7.29Z"/>
 							</g>
 						</svg>
 					</button>
@@ -530,7 +522,7 @@
 				<div>
 					<a class="btn btn-pill btn-primary btn-slim margin-bottom--8 flex flex-align-center flex-center" href="https://discord.gg/2xEt42X" target="_blank" rel="noopener noreferrer">
 						<!-- Apache Icon https://www.svgrepo.com/svg/504277/discord -->
-						<svg class="margin-right--8 verticle-align--middle" viewBox="0 0 192 192" fill="none">
+						<svg class="margin-right--8" viewBox="0 0 192 192" fill="none">
 							<g fill="none" stroke="white">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="12" d="m68 138-8 16c-10.19-4.246-20.742-8.492-31.96-15.8-3.912-2.549-6.284-6.88-6.378-11.548-.488-23.964 5.134-48.056 19.369-73.528 1.863-3.334 4.967-5.778 8.567-7.056C58.186 43.02 64.016 40.664 74 39l6 11s6-2 16-2 16 2 16 2l6-11c9.984 1.664 15.814 4.02 24.402 7.068 3.6 1.278 6.704 3.722 8.567 7.056 14.235 25.472 19.857 49.564 19.37 73.528-.095 4.668-2.467 8.999-6.379 11.548-11.218 7.308-21.769 11.554-31.96 15.8l-8-16m-68-8s20 10 40 10 40-10 40-10"/>
 								<ellipse cx="71" cy="101" rx="13" ry="15" fill="white" />
@@ -548,7 +540,7 @@
 						<div>
 							<button id="send-button" type="submit" class="btn btn-pill btn-secondary btn-slim fullw margin-top--8  flex flex-align-center flex-center">
 								<!-- PD Icon https://www.svgrepo.com/svg/502827/send-2 -->
-								<svg class="svg-small margin-right--8 fill-primary" viewBox="0 0 24 24" fill="none">
+								<svg class="navicon-20 margin-right--8 fill-primary" viewBox="0 0 24 24" fill="none">
 									<g fill="none" stroke="var(--primary-fill-color)">
 										<path d="M20 4L3 9.31372L10.5 13.5M20 4L14.5 21L10.5 13.5M20 4L10.5 13.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 									</g>
@@ -591,7 +583,7 @@
 						<a href="#interface" class="nav-link" data-toggle="tab">
 							<!-- MIT Icon https://www.svgrepo.com/svg/348314/controls-alt -->
 							<svg class="stroke-primary" viewBox="0 0 24 24" fill="none">
-								<g stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<g stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
 									<circle cx="9" cy="6" r="2" fill="none"/>
 									<path d="M4 6H7"/>
 									<path d="M11 6H20"/>
@@ -610,7 +602,7 @@
 							<!-- PD Icon https://www.svgrepo.com/svg/502786/password-2 -->
 							<svg class="stroke-primary" viewBox="0 0 24 24" fill="none">
 								<g fill="none">
-									<path d="M21 8.5V6C21 4.89543 20.1046 4 19 4H5C3.89543 4 3 4.89543 3 6V11C3 12.1046 3.89543 13 5 13H10.875M19 14V12C19 10.8954 18.1046 10 17 10C15.8954 10 15 10.8954 15 12V14M14 20H20C20.5523 20 21 19.5523 21 19V15C21 14.4477 20.5523 14 20 14H14C13.4477 14 13 14.4477 13 15V19C13 19.5523 13.4477 20 14 20Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M21 8.5V6C21 4.89543 20.1046 4 19 4H5C3.89543 4 3 4.89543 3 6V11C3 12.1046 3.89543 13 5 13H10.875M19 14V12C19 10.8954 18.1046 10 17 10C15.8954 10 15 10.8954 15 12V14M14 20H20C20.5523 20 21 19.5523 21 19V15C21 14.4477 20.5523 14 20 14H14C13.4477 14 13 14.4477 13 15V19C13 19.5523 13.4477 20 14 20Z" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
 									<circle cx="7.5" cy="8.5" r="1.5"/>
 									<circle cx="12" cy="8.5" r="1.5"/>
 								</g>
@@ -1013,7 +1005,10 @@
 							</svg>
 							New Game
 						</h4>
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<button type="button" class="close" data-dismiss="modal">
+							<!-- MLP Icon https://www.svgrepo.com/svg/503004/close -->
+							<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>
+						</button>
 					</div>
 					<div class="modal-body">
 						<ul class="nav nav-tabs" role="tablist">
@@ -1027,10 +1022,12 @@
 									aria-selected="true"
 								>
 									<!-- MIT Icon https://www.svgrepo.com/svg/500504/circle-plus -->
-									<svg class="stroke-primary" viewBox="0 0 1024 1024">
-										<path d="M352 480h320a32 32 0 1 1 0 64H352a32 32 0 0 1 0-64z"/>
-										<path d="M480 672V352a32 32 0 1 1 64 0v320a32 32 0 0 1-64 0z"/>
-										<path d="M512 896a384 384 0 1 0 0-768 384 384 0 0 0 0 768zm0 64a448 448 0 1 1 0-896 448 448 0 0 1 0 896z"/>
+									<svg class="stroke-primary navicon-20" viewBox="0 0 1024 1024">
+										<g stroke-width="40" stroke-linejoin="round">
+											<path d="M352 480h320a32 32 0 1 1 0 64H352a32 32 0 0 1 0-64z"/>
+											<path d="M480 672V352a32 32 0 1 1 64 0v320a32 32 0 0 1-64 0z"/>
+											<path d="M512 896a384 384 0 1 0 0-768 384 384 0 0 0 0 768zm0 64a448 448 0 1 1 0-896 448 448 0 0 1 0 896z"/>
+										</g>
 									</svg>
 									Create Game
 								</a>
@@ -1045,7 +1042,7 @@
 									aria-selected="false"
 								>
 									<!-- MIT Icon https://www.svgrepo.com/svg/509349/edit-2 -->
-									<svg viewBox="0 0 20 20" fill="none">
+									<svg class="navicon-20" viewBox="0 0 20 20" fill="none">
 										<path fill-rule="evenodd" d="M15.198 3.52a1.612 1.612 0 012.223 2.336L6.346 16.421l-2.854.375 1.17-3.272L15.197 3.521zm3.725-1.322a3.612 3.612 0 00-5.102-.128L3.11 12.238a1 1 0 00-.253.388l-1.8 5.037a1 1 0 001.072 1.328l4.8-.63a1 1 0 00.56-.267L18.8 7.304a3.612 3.612 0 00.122-5.106zM12 17a1 1 0 100 2h6a1 1 0 100-2h-6z"/>
 									</svg>
 									Play Scratch
@@ -1061,8 +1058,8 @@
 									aria-selected="false"
 								>
 									<!-- MIT Icon https://www.svgrepo.com/svg/435972/upload -->
-									<svg viewBox="-0.01 0 16.021 16.021" id="upload-16px">
-										<path id="Path_19" data-name="Path 19" d="M26.172,4.877a.5.5,0,0,1-.05-.7l3.5-4.029a.519.519,0,0,1,.756,0l3.5,4.029a.5.5,0,0,1-.756.656L30.5,1.809V12.5a.5.5,0,0,1-1,0V1.809L26.878,4.828A.5.5,0,0,1,26.172,4.877ZM35,12.5a.5.5,0,1,0-.5.5A.5.5,0,0,0,35,12.5ZM35.5,8h-2a.5.5,0,0,0,0,1h2A1.5,1.5,0,0,1,37,10.5v3A1.5,1.5,0,0,1,35.5,15h-11A1.5,1.5,0,0,1,23,13.5v-3A1.5,1.5,0,0,1,24.5,9h2a.5.5,0,0,0,0-1h-2A2.5,2.5,0,0,0,22,10.5v3A2.5,2.5,0,0,0,24.5,16h11A2.5,2.5,0,0,0,38,13.5v-3A2.5,2.5,0,0,0,35.5,8Z" transform="translate(-22 0.021)"/>
+									<svg class="navicon-20" viewBox="-0.01 0 16.021 16.021">
+										<path class="stroke-primary" stroke-width="0.5" stroke-linejoin="round" d="M26.172,4.877a.5.5,0,0,1-.05-.7l3.5-4.029a.519.519,0,0,1,.756,0l3.5,4.029a.5.5,0,0,1-.756.656L30.5,1.809V12.5a.5.5,0,0,1-1,0V1.809L26.878,4.828A.5.5,0,0,1,26.172,4.877ZM35,12.5a.5.5,0,1,0-.5.5A.5.5,0,0,0,35,12.5ZM35.5,8h-2a.5.5,0,0,0,0,1h2A1.5,1.5,0,0,1,37,10.5v3A1.5,1.5,0,0,1,35.5,15h-11A1.5,1.5,0,0,1,23,13.5v-3A1.5,1.5,0,0,1,24.5,9h2a.5.5,0,0,0,0-1h-2A2.5,2.5,0,0,0,22,10.5v3A2.5,2.5,0,0,0,24.5,16h11A2.5,2.5,0,0,0,38,13.5v-3A2.5,2.5,0,0,0,35.5,8Z" transform="translate(-22 0.021)"/>
 									</svg>
 									Load Game
 								</a>
@@ -1460,7 +1457,10 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h4 class="modal-title">Game Over</h4>
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<button type="button" class="close" data-dismiss="modal">
+							<!-- MLP Icon https://www.svgrepo.com/svg/503004/close -->
+							<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>
+						</button>
 					</div>
 					<div class="modal-body">
 						<div class="flex margin-bottom--8">
@@ -1479,15 +1479,15 @@
 								<button id="rematch" onclick="server.rematch()" data-toggle="tooltip" data-placement="top" title="Request a rematch to the other player" class="game-over-action-button btn btn-pill btn-secondary">
 									<!-- Lucide Icons (ISC) - swords - https://lucide.dev/icons/swords -->
 									<svg class="navicon-20" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-										<g fill="none" stroke="var(--primary-stroke-color)" stroke-width="2" transform="translate(12 12) scale(1.3) translate(-12 -12)">
-											<path d="m13 19 6-6" />
-											<path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" />
-											<path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" />
-											<path d="m16 16 4 4" />
-											<path d="m19 21 2-2" />
-											<path d="m5 14 4 4" />
-											<path d="m5 21-2-2" />
-											<path d="M7.5 16.5 4 20" />
+										<g fill="none" stroke="var(--primary-stroke-color)" stroke-width="2" >
+											<path vector-effect="non-scaling-stroke" d="m13 19 6-6" />
+											<path vector-effect="non-scaling-stroke" d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" />
+											<path vector-effect="non-scaling-stroke" d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" />
+											<path vector-effect="non-scaling-stroke" d="m16 16 4 4" />
+											<path vector-effect="non-scaling-stroke" d="m19 21 2-2" />
+											<path vector-effect="non-scaling-stroke" d="m5 14 4 4" />
+											<path vector-effect="non-scaling-stroke" d="m5 21-2-2" />
+											<path vector-effect="non-scaling-stroke" d="M7.5 16.5 4 20" />
 										</g>
 									</svg>
 									Request Rematch
@@ -1625,7 +1625,7 @@
 									<button id="landing-login-button" class="btn btn-pill btn-secondary margin-bottom--8 flex flex-center flex-align-center" onclick="hideElement('hero-actions'); showElement('landing-login')">Log In</button>
 									<a class="btn btn-pill btn-primary margin-bottom--8 flex flex-center flex-align-center" href="https://discord.gg/2xEt42X" target="_blank" rel="noopener noreferrer">
 										<!-- Apache Icon https://www.svgrepo.com/svg/504277/discord -->
-										<svg class="verticle-align--middle" viewBox="0 0 192 192" fill="none">
+										<svg class="" viewBox="0 0 192 192" fill="none">
 											<g fill="none" stroke="white">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="12" d="m68 138-8 16c-10.19-4.246-20.742-8.492-31.96-15.8-3.912-2.549-6.284-6.88-6.378-11.548-.488-23.964 5.134-48.056 19.369-73.528 1.863-3.334 4.967-5.778 8.567-7.056C58.186 43.02 64.016 40.664 74 39l6 11s6-2 16-2 16 2 16 2l6-11c9.984 1.664 15.814 4.02 24.402 7.068 3.6 1.278 6.704 3.722 8.567 7.056 14.235 25.472 19.857 49.564 19.37 73.528-.095 4.668-2.467 8.999-6.379 11.548-11.218 7.308-21.769 11.554-31.96 15.8l-8-16m-68-8s20 10 40 10 40-10 40-10"/>
 												<ellipse cx="71" cy="101" rx="13" ry="15" fill="white" />
@@ -2040,7 +2040,10 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h4 class="modal-title">Privacy Policy</h4>
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<button type="button" class="close" data-dismiss="modal">
+							<!-- MLP Icon https://www.svgrepo.com/svg/503004/close -->
+							<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>
+						</button>
 					</div>
 					<div class="modal-body">
 						<ul>
@@ -2063,7 +2066,7 @@
 					<div class="modal-header">
 						<h4 class="modal-title">
 							<!-- MIT Icon https://www.svgrepo.com/svg/445803/help-circle -->
-							<svg class="navicon-20 verticle-align--middle" viewBox="0 0 48 48">
+							<svg class="navicon-20" viewBox="0 0 48 48">
 								<g>
 									<path d="M24,2A22,22,0,1,0,46,24,21.9,21.9,0,0,0,24,2Zm0,40A18,18,0,1,1,42,24,18.1,18.1,0,0,1,24,42Z"/>
 									<path d="M24,38h-.4l-.4-.2h-.3l-.3-.3-.3-.3c0-.1-.1-.2-.2-.3s0-.3-.1-.4v-.8c.1-.1.1-.2.1-.4s.2-.2.2-.3l.3-.3a1.9,1.9,0,0,1,1.8-.6h.4l.3.2.3.3.3.3c0,.1.1.2.1.3s.1.3.2.4v.8c-.1.1-.1.2-.2.4s-.1.2-.1.3l-.3.3-.3.3h-.3l-.4.2Z"/>
@@ -2072,7 +2075,10 @@
 							</svg>
 							Help
 						</h4>
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<button type="button" class="close" data-dismiss="modal">
+							<!-- MLP Icon https://www.svgrepo.com/svg/503004/close -->
+							<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>
+						</button>
 					</div>
 					<div class="modal-body">
 						<ul class="nav nav-tabs">
@@ -2377,21 +2383,24 @@
 					<div class="modal-header">
 						<h4 class="modal-title">
 							<!-- Lucide Icons (ISC) - swords - https://lucide.dev/icons/swords -->
-							<svg class="navicon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-								<g fill="none" stroke="var(--primary-stroke-color)" stroke-width="2" transform="translate(12 12) scale(1.3) translate(-12 -12)">
-									<path d="m13 19 6-6" />
-									<path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" />
-									<path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" />
-									<path d="m16 16 4 4" />
-									<path d="m19 21 2-2" />
-									<path d="m5 14 4 4" />
-									<path d="m5 21-2-2" />
-									<path d="M7.5 16.5 4 20" />
+							<svg class="navicon-20" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+								<g fill="none" stroke="var(--primary-stroke-color)" stroke-width="2" >
+									<path vector-effect="non-scaling-stroke" d="m13 19 6-6" />
+									<path vector-effect="non-scaling-stroke" d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" />
+									<path vector-effect="non-scaling-stroke" d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" />
+									<path vector-effect="non-scaling-stroke" d="m16 16 4 4" />
+									<path vector-effect="non-scaling-stroke" d="m19 21 2-2" />
+									<path vector-effect="non-scaling-stroke" d="m5 14 4 4" />
+									<path vector-effect="non-scaling-stroke" d="m5 21-2-2" />
+									<path vector-effect="non-scaling-stroke" d="M7.5 16.5 4 20" />
 								</g>
 							</svg>
 							Join Game
 						</h4>
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<button type="button" class="close" data-dismiss="modal">
+							<!-- MLP Icon https://www.svgrepo.com/svg/503004/close -->
+							<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>
+						</button>
 					</div>
 					<div class="modal-body">
 						<h4>Available Player Games</h4>
@@ -2438,15 +2447,15 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h4 class="modal-title">
-							<!-- PD icon https://www.svgrepo.com/svg/505373/eye-open -->
-							<svg class="verticle-align--middle" viewBox="0 0 24 24" fill="none">
-								<g fill="none" stroke="var(--primary-stroke-color)">
-									<path d="M12 5C5.63636 5 2 12 2 12C2 12 5.63636 19 12 19C18.3636 19 22 12 22 12C22 12 18.3636 5 12 5Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-								</g>
+							<!-- Remix Icon (Apache 2.0) - eye-line - https://remixicon.com/icon/eye-line -->
+							<svg class="navicon-20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+								<path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"/>
 							</svg>
 							Watch Game</h4>
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<button type="button" class="close" data-dismiss="modal">
+							<!-- MLP Icon https://www.svgrepo.com/svg/503004/close -->
+							<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>
+						</button>
 					</div>
 					<div class="modal-body">
 						<table class="linestable">
@@ -2474,7 +2483,7 @@
 					<div class="modal-header">
 						<h4 class="modal-title">
 							<!-- MIT Icon https://www.svgrepo.com/svg/347809/people -->
-							<svg class="verticle-align--middle" viewBox="0 0 24 24">
+							<svg class="navicon-20" viewBox="0 0 24 24">
 								<g stroke="var(--primary-fill-color)" stroke-width="0.6">
 									<path fill-rule="evenodd" d="M3.5 8a5.5 5.5 0 118.596 4.547 9.005 9.005 0 015.9 8.18.75.75 0 01-1.5.045 7.5 7.5 0 00-14.993 0 .75.75 0 01-1.499-.044 9.005 9.005 0 015.9-8.181A5.494 5.494 0 013.5 8zM9 4a4 4 0 100 8 4 4 0 000-8z"/>
 									<path d="M17.29 8c-.148 0-.292.01-.434.03a.75.75 0 11-.212-1.484 4.53 4.53 0 013.38 8.097 6.69 6.69 0 013.956 6.107.75.75 0 01-1.5 0 5.193 5.193 0 00-3.696-4.972l-.534-.16v-1.676l.41-.209A3.03 3.03 0 0017.29 8z"/>
@@ -2482,7 +2491,10 @@
 							</svg>
 							Online Players
 						</h4>
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<button type="button" class="close" data-dismiss="modal">
+							<!-- MLP Icon https://www.svgrepo.com/svg/503004/close -->
+							<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"/></svg>
+						</button>
 					</div>
 					<div class="modal-body table-overflow">
 						<table class="linestable">
