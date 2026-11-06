@@ -134,19 +134,7 @@ async function getPlayersRating(playerName){
 	if(playerName.startsWith("Guest")){
 		return 0;
 	}
-	// set the url based on the current host
-	let url = '';
-	// if localhost, use the local server
-	if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"){
-		url = 'http://' + window.location.hostname + ':3004/v1/ratings/' + playerName;
-	}
-	// if in beta use the beta api url
-	else if(window.location.host.indexOf("beta") > -1){
-		url = 'https://api.beta.playtak.com/v1/ratings/' + playerName;
-	}
-	else{
-		url = 'https://api.playtak.com/v1/ratings/' + playerName;
-	}
+	const url = getApiUrl('/v1/ratings/' + playerName);
 	// fetch the data from the server
 	try{
 		const response = await fetch(url);
@@ -804,6 +792,7 @@ var server = {
 				//Game#1 Over result
 				else if(spl[1] === "Over"){
 					gameData.result = spl[2];
+					prepareOpenInPtnNinja();
 					if(!gameData.is_scratch && gameData.chatRoom){
 						chathandler.insertTimeMarker(gameData.chatRoom);
 						if(gameData.lastMoveLabel !== gameData.lastShownMoveLabel && gameData.lastMoveLabel){
@@ -833,6 +822,7 @@ var server = {
 				else if(spl[1] === "Abandoned."){
 					//Game#1 Abandoned. name quit
 					document.title = "Play Tak";
+					prepareOpenInPtnNinja();
 
 					if(gameData.my_color === "white"){
 						gameData.result = "1-0";
