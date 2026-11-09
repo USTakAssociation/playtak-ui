@@ -4,6 +4,7 @@
 	"description": "playtak web client",
 	"scripts": {
 		"test": "vitest run",
+		"test:e2e": "playwright test",
 		"dev": "http-server ./src -p 3000 -o -c-1",
 		"lint": "eslint ./src --ext .js --ignore-pattern './src/js/thirdparty/*' --ignore-pattern './src/fonts/*'"
 	},
@@ -23,9 +24,10 @@
 	},
 	"homepage": "https://github.com/USTakAssociation/playtak-ui#readme",
 	"devDependencies": {
-		"eslint": "10.8.0",
+		"@playwright/test": "^1.65.0",
+		"eslint": "10.14.0",
 		"http-server": "14.1.1",
-		"vitest": "4.1.10"
+		"vitest": "5.1.0"
 	},
 	"engines": {
 		"pnpm": ">=11.0.0"

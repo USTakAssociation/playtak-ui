@@ -16,7 +16,7 @@ import path from 'path';
 // ptn.js is a plain script of globals rather than a module, so evaluate it and
 // pull the functions out instead of importing them.
 const here = path.dirname(fileURLToPath(import.meta.url));
-const source = readFileSync(path.join(here, '..', 'ptn.js'), 'utf8');
+const source = readFileSync(path.join(here, '..', '..', 'src', 'js', 'ptn.js'), 'utf8');
 // Start at the tag pattern the three functions share, not at parsePTN itself,
 // or the slice loses the const they close over.
 const start = source.indexOf('const PTN_TAG_RE');

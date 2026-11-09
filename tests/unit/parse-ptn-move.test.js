@@ -16,7 +16,7 @@ import path from 'path';
 // ptn.js is a plain script of globals rather than a module, so evaluate it and
 // pull the functions out instead of importing it.
 const here = path.dirname(fileURLToPath(import.meta.url));
-const source = readFileSync(path.join(here, '..', 'ptn.js'), 'utf8');
+const source = readFileSync(path.join(here, '..', '..', 'src', 'js', 'ptn.js'), 'utf8');
 const start = source.indexOf('const PTN_PLACEMENT_RE');
 const end = source.indexOf('function ptnDurationToSeconds');
 const {matchPTNPlacement, matchPTNMovement} = new Function(
