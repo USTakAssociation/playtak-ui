@@ -19,10 +19,21 @@ let table_height = 50;
 
 const light_position = [0, 800, -45];
 const light_radius = [1.8, 1600];
-// three.js r155+ dropped legacy lighting, which silently multiplied light intensities by π
-const LEGACY_LIGHT_SCALE = Math.PI;
-// the point light's distance falloff also changed shape; 0.55 is old/new falloff across the board at light_position
-const POINT_LIGHT_SCALE = LEGACY_LIGHT_SCALE * 0.55;
+// Light intensities. r155+ lighting no longer multiplies by π, so the old r110 values are scaled by π to keep the look;
+// the point light's distance falloff also changed shape and 0.55 is the old/new ratio across the board at light_position.
+// point and hemisphere light the board with shadows on; ambient replaces them when shadows are off.
+const lightIntensity = {
+	point: light_radius[0] * Math.PI * 0.55,
+	hemisphere: 0.6 * Math.PI,
+	shadow: 0.1 * Math.PI,
+	ambient: 1.0 * Math.PI
+};
+
+// Image textures are sRGB; tag them so lighting is computed in linear space.
+function srgb(texture){
+	texture.colorSpace = THREE.SRGBColorSpace;
+	return texture;
+}
 
 const raycaster = new THREE.Raycaster();
 let highlighter;
@@ -570,8 +581,8 @@ const materials = {
 		this.boardLoaded = 0;
 		const loader = new THREE.TextureLoader();
 
-		this.white_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn), transparent: true});
-		this.black_sqr = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn), transparent: true});
+		this.white_sqr = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhiteSquareTextureName(),this.boardLoadedFn)), transparent: true});
+		this.black_sqr = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackSquareTextureName(),this.boardLoadedFn)), transparent: true});
 		const an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_sqr.map.anisotropy=an;
@@ -590,7 +601,7 @@ const materials = {
 	},
 	updateBorderTexture: function(val){
 		const loader = new THREE.TextureLoader();
-		let mesh = new THREE.MeshLambertMaterial({ map: loader.load(val), transparent: true});
+		let mesh = new THREE.MeshLambertMaterial({ map: srgb(loader.load(val)), transparent: true});
 		for(let i = 0; i < this.borders.length; i++){
 			this.borders[i].material = mesh;
 			this.borders[i].receiveShadow = true;
@@ -626,10 +637,10 @@ const materials = {
 		const loader = new THREE.TextureLoader();
 		this.piecesLoaded = 0;
 
-		this.black_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn)});
-		this.white_piece = new THREE.MeshLambertMaterial({map: loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn)});
-		this.white_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn)});
-		this.black_cap = new THREE.MeshLambertMaterial({map: loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn)});
+		this.black_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn))});
+		this.white_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn))});
+		this.white_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn))});
+		this.black_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn))});
 		const an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_piece.map.anisotropy=an;
@@ -711,7 +722,7 @@ const boardFactory = {
 		materials.borders = [];
 		if(localStorage.getItem('borderTexture')){
 			const loader = new THREE.TextureLoader();
-			materials.border = new THREE.MeshLambertMaterial({ map: loader.load(localStorage.getItem('borderTexture')), transparent: true}, materials.boardLoadedFn());
+			materials.border = new THREE.MeshLambertMaterial({ map: srgb(loader.load(localStorage.getItem('borderTexture'))), transparent: true}, materials.boardLoadedFn());
 		}
 		// We use the same geometry for all 4 borders. This means the borders
 		// overlap each other at the corners. Probably OK at this point, but
@@ -1225,7 +1236,7 @@ function updateShadowsVisibility(){
 	// Update shadow light casting
 	if(shadowLight){
 		shadowLight.castShadow = shadowsEnabled;
-		shadowLight.intensity = shadowsEnabled ? 0.1 * LEGACY_LIGHT_SCALE : 0;
+		shadowLight.intensity = shadowsEnabled ? lightIntensity.shadow : 0;
 	}
 	// Update renderer shadow map
 	if(renderer){
@@ -1239,7 +1250,7 @@ function updateShadowsVisibility(){
 		board.hemisphereLight.intensity = shadowsEnabled ? board.hemisphereLightIntensity : 0;
 	}
 	if(board.ambientLight){
-		board.ambientLight.intensity = shadowsEnabled ? 0 : 1.0 * LEGACY_LIGHT_SCALE;
+		board.ambientLight.intensity = shadowsEnabled ? 0 : lightIntensity.ambient;
 	}
 	// Update board AO
 	if(board.boardAO){
@@ -1740,7 +1751,7 @@ const board = {
 		scene.add(this.boardAO);
 	},
 	addOverlay: function(value){
-		const overlay_texture = new THREE.TextureLoader().load(value ?? materials.boardOverlayPath);
+		const overlay_texture = srgb(new THREE.TextureLoader().load(value ?? materials.boardOverlayPath));
 		overlay_texture.wrapS = overlay_texture.wrapT = THREE.ClampToEdgeWrapping;
 		overlay_texture.offset.set(materials.overlayMap[gameData.size].offset.x, materials.overlayMap[gameData.size].offset.y);
 		overlay_texture.repeat.set(materials.overlayMap[gameData.size].repeat.x, materials.overlayMap[gameData.size].repeat.y);
@@ -1769,7 +1780,7 @@ const board = {
 	},
 	// Add the table
 	addtable: function(){
-		const table_texture = new THREE.TextureLoader().load(materials.table_texture_path);
+		const table_texture = srgb(new THREE.TextureLoader().load(materials.table_texture_path));
 		const table_material = new THREE.MeshLambertMaterial({map: table_texture});
 		const geometry = constructBurredBox(table_width, table_height, table_depth, 5, 5, 5);
 		this.table = new THREE.Mesh(geometry, table_material);
@@ -1794,13 +1805,13 @@ const board = {
 	},
 	// Add light for the table
 	addlight: function(){
-		this.pointLight = new THREE.PointLight(0x999999, light_radius[0] * POINT_LIGHT_SCALE, light_radius[1], 0);
+		this.pointLight = new THREE.PointLight(0x999999, lightIntensity.point, light_radius[1], 0);
 		this.pointLight.position.x = light_position[0];
 		this.pointLight.position.y = light_position[1];
 		this.pointLight.position.z = light_position[2];
 		this.pointLight.ispassive = true;
 		scene.add(this.pointLight);
-		this.hemisphereLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, 0.6 * LEGACY_LIGHT_SCALE);
+		this.hemisphereLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, lightIntensity.hemisphere);
 		this.hemisphereLight.color.setHSL(0.15, 0.1, 0.7);
 		this.hemisphereLight.groundColor.setHSL(0.1, 0.8, 1);
 		this.hemisphereLight.ispassive = true;
@@ -1810,8 +1821,8 @@ const board = {
 		this.ambientLight.ispassive = true;
 		scene.add(this.ambientLight);
 		// Store original intensities for toggling
-		this.pointLightIntensity = light_radius[0] * POINT_LIGHT_SCALE;
-		this.hemisphereLightIntensity = 0.6 * LEGACY_LIGHT_SCALE;
+		this.pointLightIntensity = lightIntensity.point;
+		this.hemisphereLightIntensity = lightIntensity.hemisphere;
 	},
 	// Update shadow camera frustum to match board size plus table area
 	updateShadowCamera: function(){
@@ -4194,9 +4205,7 @@ function init3DBoard(){
 
 	scene = new THREE.Scene();
 
-	// r110-style linear output to match the old look; colour management is turned off in three-global.js
 	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: antialiasing_mode });
-	renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 	renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
 	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
 	renderer.setPixelRatio(pixelratio);
@@ -4230,7 +4239,7 @@ function init3DBoard(){
 	// PCFShadowMap is soft in r187+ (it samples around each point using shadow.radius); PCFSoftShadowMap was removed
 	renderer.shadowMap.type = THREE.PCFShadowMap;
 	// Create directional light for shadows (pointing straight down)
-	shadowLight = new THREE.DirectionalLight(0xffffff, 0.1 * LEGACY_LIGHT_SCALE);
+	shadowLight = new THREE.DirectionalLight(0xffffff, lightIntensity.shadow);
 	shadowLight.position.set(0, 500, 0);
 	shadowLight.target.position.set(0, 0, 0);
 	shadowLight.castShadow = true;
