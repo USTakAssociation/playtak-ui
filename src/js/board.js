@@ -19,6 +19,10 @@ let table_height = 50;
 
 const light_position = [0, 800, -45];
 const light_radius = [1.8, 1600];
+// three.js r155+ dropped legacy lighting, which silently multiplied light intensities by π
+const LEGACY_LIGHT_SCALE = Math.PI;
+// the point light's distance falloff also changed shape; 0.55 is old/new falloff across the board at light_position
+const POINT_LIGHT_SCALE = LEGACY_LIGHT_SCALE * 0.55;
 
 const raycaster = new THREE.Raycaster();
 let highlighter;
@@ -285,11 +289,13 @@ function generateCamera(){
 	}
 	let invcamdir;
 	if(camera && !fixedcamera){
-		invcamdir=camera.position.clone().sub(controls.center).normalize();
+		invcamdir=camera.position.clone().sub(controls.target).normalize();
 	}
 	else{
 		invcamdir=new THREE.Vector3(-4,25,25).normalize();
 	}
+	// both branches below create new controls; drop the old ones' event listeners first
+	controls?.dispose();
 	const camdir=invcamdir.clone().negate();
 	const up=new THREE.Vector3(0,1,0);
 	const camleft=new THREE.Vector3();
@@ -387,8 +393,7 @@ function generateCamera(){
 		controls = new THREE.OrbitControls(camera,renderer.domElement);
 		controls.minDistance = camdist/5;
 		controls.maxDistance = camdist*3;
-		controls.enableKeys = false;
-		controls.center.set(camcenter.x,camcenter.y,camcenter.z);
+		controls.target.set(camcenter.x,camcenter.y,camcenter.z);
 		controls.enablePan=false;
 		// Limit vertical rotation to prevent seeing below the board
 		controls.minPolarAngle = 0.1; // Just above horizontal
@@ -435,8 +440,7 @@ function generateCamera(){
 		controls = new THREE.OrbitControls(camera,renderer.domElement);
 		controls.minZoom = 0.5;
 		controls.maxZoom = 3;
-		controls.enableKeys = false;
-		controls.center.set(0,0,0);
+		controls.target.set(0,0,0);
 		controls.enablePan=false;
 		// Limit vertical rotation to prevent seeing below the board
 		controls.minPolarAngle = 0.1;
@@ -460,7 +464,7 @@ function floathashscene(){
 	let hash=0;
 	let multiplier=1;
 	updatepoint(camera.position);
-	updatepoint(controls.center);
+	updatepoint(controls.target);
 	update(camera.zoom);
 	for(let a=0;a<board.piece_objects.length;a++){
 		updatepoint(board.piece_objects[a].position);
@@ -715,8 +719,8 @@ const boardFactory = {
 		let geometry = new THREE.BoxGeometry(board.length,piece_height,border_size);
 		geometry.center();
 		let border;
-		if(localStorage["borderColor"] && !localStorage.getItem('borderTexture')){
-			let color = localStorage["borderColor"];
+		if(!localStorage.getItem('borderTexture')){
+			let color = localStorage["borderColor"] || boardDefaults.borderColor;
 			if(color.startsWith("#")){
 				color = color.substring(1);
 				color = '0x' + color;
@@ -762,7 +766,7 @@ const boardFactory = {
 		}
 		else{
 			const loader = new THREE.FontLoader();
-			loader.load('fonts/helvetiker_regular.typeface.js',gotfont);
+			loader.load('fonts/helvetiker_regular.typeface.json',gotfont);
 		}
 
 		function gotfont(font){
@@ -773,7 +777,7 @@ const boardFactory = {
 				// Top letters
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('A'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{size: letter_size,depth: 1,font: font}
 				);
 				letter = new THREE.Mesh(geometry,materials.letter);
 				letter.visible = visible;
@@ -788,7 +792,7 @@ const boardFactory = {
 				// Bottom letters
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('A'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{size: letter_size,depth: 1,font: font}
 				);
 				letter = new THREE.Mesh(geometry,materials.letter);
 				letter.rotateX(-Math.PI / 2);
@@ -802,7 +806,7 @@ const boardFactory = {
 				// Left side numbers
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('1'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{size: letter_size,depth: 1,font: font}
 				);
 				letter = new THREE.Mesh(geometry,materials.letter);
 				letter.rotateX(-Math.PI / 2);
@@ -816,7 +820,7 @@ const boardFactory = {
 				// Right side numbers
 				geometry = new THREE.TextGeometry(
 					String.fromCharCode('1'.charCodeAt(0) + i),
-					{size: letter_size,height: 1,font: font,weight: 'normal'}
+					{size: letter_size,depth: 1,font: font}
 				);
 				letter = new THREE.Mesh(geometry,materials.letter);
 				letter.rotateX(-Math.PI / 2);
@@ -969,16 +973,16 @@ function piecegeometry(color){
 		geometrytype=piecesMap[materials.black_piece_style_name];
 	}
 	if(!geometrytype.multi_file){
-		for(let a=0;a<12;a++){
-			for(let b=0;b<3;b++){
-				geometry.faceVertexUvs[0][a][b].x=geometry.faceVertexUvs[0][a][b].x==0?9/16:15/16;
-				if(a>3 && a<8){
-					geometry.faceVertexUvs[0][a][b].y=geometry.faceVertexUvs[0][a][b].y==0?1/32:13/32;
-				}
-				else{
-					geometry.faceVertexUvs[0][a][b].y=geometry.faceVertexUvs[0][a][b].y==0?29/64:35/64;
-				}
-			}
+		// map each face onto the flat stone's area of the texture sheet
+		const uv = geometry.attributes.uv;
+		for(let i = 0; i < uv.count; i++){
+			// BoxGeometry has 4 vertices per face in order +x,-x,+y,-y,+z,-z; 8-15 are top and bottom
+			const topOrBottom = i >= 8 && i < 16;
+			const x = uv.getX(i) == 0 ? 9/16 : 15/16;
+			const y = topOrBottom
+				? (uv.getY(i) == 0 ? 1/32 : 13/32)
+				: (uv.getY(i) == 0 ? 29/64 : 35/64);
+			uv.setXY(i, x, y);
 		}
 	}
 	return geometry;
@@ -995,28 +999,20 @@ function capgeometry(color){
 	else{
 		geometrytype=piecesMap[materials.black_cap_style_name];
 	}
-	if(geometrytype.multi_file){
-		for(let a=60;a<120;a++){
-			for(let b=0;b<3;b++){
-				geometry.faceVertexUvs[0][a][b].x=(geometry.faceVertexUvs[0][a][b].x-0.5)*0.25+0.5;
-				geometry.faceVertexUvs[0][a][b].y=(geometry.faceVertexUvs[0][a][b].y-0.5)*0.5+0.5;
-			}
+	const uv = geometry.attributes.uv;
+	// CylinderGeometry lists the side vertices first: (radialSegments + 1) * (heightSegments + 1); the cap vertices follow
+	const sideVertices = (30 + 1) * (1 + 1);
+	for(let i = 0; i < uv.count; i++){
+		const x = uv.getX(i), y = uv.getY(i);
+		if(i < sideVertices){
+			// single sheet: the side wraps onto the left half, rotated
+			if(!geometrytype.multi_file){uv.setXY(i, 0.5 * y, 1 - x);}
 		}
-	}
-	else{
-		for(let a=0;a<60;a++){
-			for(let b=0;b<3;b++){
-				const newx=0.5*geometry.faceVertexUvs[0][a][b].y;
-				const newy=1-geometry.faceVertexUvs[0][a][b].x;
-				geometry.faceVertexUvs[0][a][b].x=newx;
-				geometry.faceVertexUvs[0][a][b].y=newy;
-			}
+		else if(geometrytype.multi_file){
+			uv.setXY(i, (x - 0.5) * 0.25 + 0.5, (y - 0.5) * 0.5 + 0.5);
 		}
-		for(let a=60;a<120;a++){
-			for(let b=0;b<3;b++){
-				geometry.faceVertexUvs[0][a][b].x=(geometry.faceVertexUvs[0][a][b].x-0.5)*0.375+0.75;
-				geometry.faceVertexUvs[0][a][b].y=(geometry.faceVertexUvs[0][a][b].y-0.5)*0.375+0.78125;
-			}
+		else{
+			uv.setXY(i, (x - 0.5) * 0.375 + 0.75, (y - 0.5) * 0.375 + 0.78125);
 		}
 	}
 	return geometry;
@@ -1027,11 +1023,11 @@ function capgeometry(color){
  * as well as burringWidth and burringHeight.
  */
 function constructBurredBox(width, height, depth, burringDepth, burringHeight, burringVertical){
-	const geometry = new THREE.Geometry();
-	geometry.parameters = [];
-	geometry.parameters.width = width;
-	geometry.parameters.height = height;
-	geometry.parameters.depth = depth;
+	// collected as vertex indices, triangles and per-triangle texture coordinates, then built into a BufferGeometry at the end
+	const vertices = [];
+	const faces = [];
+	const faceUvs = [];
+	const face = (a, b, c) => [a, b, c];
 
 	// calculate relative burrings and side height.
 	const relBurWidth = burringDepth / width;
@@ -1076,7 +1072,7 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 	];
 
 	// construct vertices.
-	geometry.vertices.push(
+	vertices.push(
 		// top. 0-3
 		new THREE.Vector3(burringDepth, height, burringDepth),
 		new THREE.Vector3(width - burringDepth, height, burringDepth),
@@ -1112,100 +1108,111 @@ function constructBurredBox(width, height, depth, burringDepth, burringHeight, b
 	// construct faces.
 	// areas.
 	for(let i = 0; i < 6; ++i){
-		geometry.faces.push(
-			new THREE.Face3(i*4 + 2, i*4 + 1, i*4 + 3),
-			new THREE.Face3(i*4 + 1, i*4 + 0, i*4 + 3)
+		faces.push(
+			face(i*4 + 2, i*4 + 1, i*4 + 3),
+			face(i*4 + 1, i*4 + 0, i*4 + 3)
 		);
 	}
 	// texture areas.
 	for(let i = 0; i < 6; ++i){
 		if(i < 2){
-			geometry.faceVertexUvs[0][i*2 + 0] = [tex_area[2], tex_area[1], tex_area[3]];
-			geometry.faceVertexUvs[0][i*2 + 1] = [tex_area[1], tex_area[0], tex_area[3]];
+			faceUvs[i*2 + 0] = [tex_area[2], tex_area[1], tex_area[3]];
+			faceUvs[i*2 + 1] = [tex_area[1], tex_area[0], tex_area[3]];
 		}
 		else{
-			geometry.faceVertexUvs[0][i*2 + 0] = [tex_side_area[2], tex_side_area[1], tex_side_area[3]];
-			geometry.faceVertexUvs[0][i*2 + 1] = [tex_side_area[1], tex_side_area[0], tex_side_area[3]];
+			faceUvs[i*2 + 0] = [tex_side_area[2], tex_side_area[1], tex_side_area[3]];
+			faceUvs[i*2 + 1] = [tex_side_area[1], tex_side_area[0], tex_side_area[3]];
 		}
 	}
 	// edges.
-	geometry.faces.push(
+	faces.push(
 		// top.
-		new THREE.Face3(11, 0, 10),
-		new THREE.Face3(0, 1, 10),
-		new THREE.Face3(15, 2, 14),
-		new THREE.Face3(2, 3, 14),
-		new THREE.Face3(19, 3, 18),
-		new THREE.Face3(3, 0, 18),
-		new THREE.Face3(23, 1, 22),
-		new THREE.Face3(1, 2, 22),
+		face(11, 0, 10),
+		face(0, 1, 10),
+		face(15, 2, 14),
+		face(2, 3, 14),
+		face(19, 3, 18),
+		face(3, 0, 18),
+		face(23, 1, 22),
+		face(1, 2, 22),
 		// bottom.
-		new THREE.Face3(9, 4, 8),
-		new THREE.Face3(4, 5, 8),
-		new THREE.Face3(13, 6, 12),
-		new THREE.Face3(6, 7, 12),
-		new THREE.Face3(21, 7, 20),
-		new THREE.Face3(7, 4, 20),
-		new THREE.Face3(17, 5, 16),
-		new THREE.Face3(5, 6, 16),
+		face(9, 4, 8),
+		face(4, 5, 8),
+		face(13, 6, 12),
+		face(6, 7, 12),
+		face(21, 7, 20),
+		face(7, 4, 20),
+		face(17, 5, 16),
+		face(5, 6, 16),
 		// around.
-		new THREE.Face3(18, 11, 17),
-		new THREE.Face3(11, 8, 17),
-		new THREE.Face3(10, 23, 9),
-		new THREE.Face3(23, 20, 9),
-		new THREE.Face3(22, 15, 21),
-		new THREE.Face3(15, 12, 21),
-		new THREE.Face3(14, 19, 13),
-		new THREE.Face3(19, 16, 13)
+		face(18, 11, 17),
+		face(11, 8, 17),
+		face(10, 23, 9),
+		face(23, 20, 9),
+		face(22, 15, 21),
+		face(15, 12, 21),
+		face(14, 19, 13),
+		face(19, 16, 13)
 	);
 	// textures edges top.
-	geometry.faceVertexUvs[0][12] = [tex_bottom[2], tex_bottom[1], tex_bottom[3]];
-	geometry.faceVertexUvs[0][13] = [tex_bottom[1], tex_bottom[0], tex_bottom[3]];
-	geometry.faceVertexUvs[0][14] = [tex_top[2], tex_top[1], tex_top[3]];
-	geometry.faceVertexUvs[0][15] = [tex_top[1], tex_top[0], tex_top[3]];
-	geometry.faceVertexUvs[0][16] = [tex_left[2], tex_left[1], tex_left[3]];
-	geometry.faceVertexUvs[0][17] = [tex_left[1], tex_left[0], tex_left[3]];
-	geometry.faceVertexUvs[0][18] = [tex_right[2], tex_right[1], tex_right[3]];
-	geometry.faceVertexUvs[0][19] = [tex_right[1], tex_right[0], tex_right[3]];
+	faceUvs[12] = [tex_bottom[2], tex_bottom[1], tex_bottom[3]];
+	faceUvs[13] = [tex_bottom[1], tex_bottom[0], tex_bottom[3]];
+	faceUvs[14] = [tex_top[2], tex_top[1], tex_top[3]];
+	faceUvs[15] = [tex_top[1], tex_top[0], tex_top[3]];
+	faceUvs[16] = [tex_left[2], tex_left[1], tex_left[3]];
+	faceUvs[17] = [tex_left[1], tex_left[0], tex_left[3]];
+	faceUvs[18] = [tex_right[2], tex_right[1], tex_right[3]];
+	faceUvs[19] = [tex_right[1], tex_right[0], tex_right[3]];
 	// textures edges bottom.
-	geometry.faceVertexUvs[0][20] = [tex_bottom[2], tex_bottom[1], tex_bottom[3]];
-	geometry.faceVertexUvs[0][21] = [tex_bottom[1], tex_bottom[0], tex_bottom[3]];
-	geometry.faceVertexUvs[0][22] = [tex_top[2], tex_top[1], tex_top[3]];
-	geometry.faceVertexUvs[0][23] = [tex_top[1], tex_top[0], tex_top[3]];
-	geometry.faceVertexUvs[0][24] = [tex_left[2], tex_left[1], tex_left[3]];
-	geometry.faceVertexUvs[0][25] = [tex_left[1], tex_left[0], tex_left[3]];
-	geometry.faceVertexUvs[0][26] = [tex_right[2], tex_right[1], tex_right[3]];
-	geometry.faceVertexUvs[0][27] = [tex_right[1], tex_right[0], tex_right[3]];
+	faceUvs[20] = [tex_bottom[2], tex_bottom[1], tex_bottom[3]];
+	faceUvs[21] = [tex_bottom[1], tex_bottom[0], tex_bottom[3]];
+	faceUvs[22] = [tex_top[2], tex_top[1], tex_top[3]];
+	faceUvs[23] = [tex_top[1], tex_top[0], tex_top[3]];
+	faceUvs[24] = [tex_left[2], tex_left[1], tex_left[3]];
+	faceUvs[25] = [tex_left[1], tex_left[0], tex_left[3]];
+	faceUvs[26] = [tex_right[2], tex_right[1], tex_right[3]];
+	faceUvs[27] = [tex_right[1], tex_right[0], tex_right[3]];
 	// textures edges around.
 	for(let i = 0; i < 4; ++i){
-		geometry.faceVertexUvs[0][28 + i * 2] = [tex_side_area[3], tex_side_area[3], tex_side_area[0]];
-		geometry.faceVertexUvs[0][28 + i * 2 + 1] = [tex_side_area[3], tex_side_area[0], tex_side_area[0]];
+		faceUvs[28 + i * 2] = [tex_side_area[3], tex_side_area[3], tex_side_area[0]];
+		faceUvs[28 + i * 2 + 1] = [tex_side_area[3], tex_side_area[0], tex_side_area[0]];
 	}
 
 	// corners.
-	geometry.faces.push(
+	faces.push(
 		// top.
-		new THREE.Face3(18, 0, 11),
-		new THREE.Face3(10, 1, 23),
-		new THREE.Face3(22, 2, 15),
-		new THREE.Face3(14, 3, 19),
+		face(18, 0, 11),
+		face(10, 1, 23),
+		face(22, 2, 15),
+		face(14, 3, 19),
 		// bottom.
-		new THREE.Face3(8, 5, 17),
-		new THREE.Face3(20, 4, 9),
-		new THREE.Face3(12, 7, 21),
-		new THREE.Face3(16, 6, 13)
+		face(8, 5, 17),
+		face(20, 4, 9),
+		face(12, 7, 21),
+		face(16, 6, 13)
 	);
 	// texture corners.
 	for(let i = 0; i < 2; ++i){
-		geometry.faceVertexUvs[0][36 + i * 4] = [tex_left[3], tex_left[0], tex_left[3]];
-		geometry.faceVertexUvs[0][37 + i * 4] = [tex_bottom[3], tex_bottom[0], tex_bottom[3]];
-		geometry.faceVertexUvs[0][38 + i * 4] = [tex_right[3], tex_right[0], tex_right[3]];
-		geometry.faceVertexUvs[0][39 + i * 4] = [tex_top[3], tex_top[0], tex_top[3]];
+		faceUvs[36 + i * 4] = [tex_left[3], tex_left[0], tex_left[3]];
+		faceUvs[37 + i * 4] = [tex_bottom[3], tex_bottom[0], tex_bottom[3]];
+		faceUvs[38 + i * 4] = [tex_right[3], tex_right[0], tex_right[3]];
+		faceUvs[39 + i * 4] = [tex_top[3], tex_top[0], tex_top[3]];
 	}
 
 	// do posterior work.
-	geometry.computeBoundingBox();
-	geometry.computeFaceNormals();
+	const positions = [];
+	const uvs = [];
+	faces.forEach((f, i) => {
+		f.forEach((v, k) => {
+			positions.push(vertices[v].x, vertices[v].y, vertices[v].z);
+			uvs.push(faceUvs[i][k].x, faceUvs[i][k].y);
+		});
+	});
+	const geometry = new THREE.BufferGeometry();
+	geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+	geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+	// no shared vertices, so this gives flat per-face normals like the old computeFaceNormals
+	geometry.computeVertexNormals();
 	geometry.center();
 	return geometry;
 }
@@ -1218,7 +1225,7 @@ function updateShadowsVisibility(){
 	// Update shadow light casting
 	if(shadowLight){
 		shadowLight.castShadow = shadowsEnabled;
-		shadowLight.intensity = shadowsEnabled ? 0.1 : 0;
+		shadowLight.intensity = shadowsEnabled ? 0.1 * LEGACY_LIGHT_SCALE : 0;
 	}
 	// Update renderer shadow map
 	if(renderer){
@@ -1232,7 +1239,7 @@ function updateShadowsVisibility(){
 		board.hemisphereLight.intensity = shadowsEnabled ? board.hemisphereLightIntensity : 0;
 	}
 	if(board.ambientLight){
-		board.ambientLight.intensity = shadowsEnabled ? 0 : 1.0;
+		board.ambientLight.intensity = shadowsEnabled ? 0 : 1.0 * LEGACY_LIGHT_SCALE;
 	}
 	// Update board AO
 	if(board.boardAO){
@@ -1467,7 +1474,7 @@ const animation = {
 
 				for(let i = 0; i < objects.length; ++i){
 					// Interpolate rotation using slerp
-					THREE.Quaternion.slerp(fromRot[i], toRot[i], objects[i].quaternion, t);
+					objects[i].quaternion.slerpQuaternions(fromRot[i], toRot[i], t);
 
 					if(type === 'move'){
 						objects[i].position.lerpVectors(from[i], to[i], t);
@@ -1654,8 +1661,8 @@ const board = {
 			this.boardside = "white";
 			camera.position.z = -camera.position.z;
 			camera.position.x = -camera.position.x;
-			controls.center.z = -controls.center.z;
-			controls.center.x = -controls.center.x;
+			controls.target.z = -controls.target.z;
+			controls.target.x = -controls.target.x;
 		}
 	},
 	newOnlinegame: function(sz,col,komi,pieces,capstones, triggerMove, timeAmount){
@@ -1764,9 +1771,6 @@ const board = {
 	addtable: function(){
 		const table_texture = new THREE.TextureLoader().load(materials.table_texture_path);
 		const table_material = new THREE.MeshLambertMaterial({map: table_texture});
-		table_material.magFilter = THREE.LinearFilter;
-		table_material.minFilter = THREE.LinearMipMapFilter;
-		table_material.anisotropy = 1;
 		const geometry = constructBurredBox(table_width, table_height, table_depth, 5, 5, 5);
 		this.table = new THREE.Mesh(geometry, table_material);
 		this.table.position.set(0, -(table_height + sq_height) / 2, -sq_size / 2);
@@ -1790,13 +1794,13 @@ const board = {
 	},
 	// Add light for the table
 	addlight: function(){
-		this.pointLight = new THREE.PointLight(0x999999, light_radius[0], light_radius[1]);
+		this.pointLight = new THREE.PointLight(0x999999, light_radius[0] * POINT_LIGHT_SCALE, light_radius[1], 0);
 		this.pointLight.position.x = light_position[0];
 		this.pointLight.position.y = light_position[1];
 		this.pointLight.position.z = light_position[2];
 		this.pointLight.ispassive = true;
 		scene.add(this.pointLight);
-		this.hemisphereLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, 0.6);
+		this.hemisphereLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, 0.6 * LEGACY_LIGHT_SCALE);
 		this.hemisphereLight.color.setHSL(0.15, 0.1, 0.7);
 		this.hemisphereLight.groundColor.setHSL(0.1, 0.8, 1);
 		this.hemisphereLight.ispassive = true;
@@ -1806,8 +1810,8 @@ const board = {
 		this.ambientLight.ispassive = true;
 		scene.add(this.ambientLight);
 		// Store original intensities for toggling
-		this.pointLightIntensity = light_radius[0];
-		this.hemisphereLightIntensity = 0.6;
+		this.pointLightIntensity = light_radius[0] * POINT_LIGHT_SCALE;
+		this.hemisphereLightIntensity = 0.6 * LEGACY_LIGHT_SCALE;
 	},
 	// Update shadow camera frustum to match board size plus table area
 	updateShadowCamera: function(){
@@ -2875,8 +2879,8 @@ const board = {
 			this.boardside = (this.boardside === "white") ? "black" : "white";
 			camera.position.z = -camera.position.z;
 			camera.position.x = -camera.position.x;
-			controls.center.z=-controls.center.z;
-			controls.center.x=-controls.center.x;
+			controls.target.z=-controls.target.z;
+			controls.target.x=-controls.target.x;
 		}
 	},
 	setmovedir: function(){
@@ -4190,7 +4194,9 @@ function init3DBoard(){
 
 	scene = new THREE.Scene();
 
+	// r110-style linear output to match the old look; colour management is turned off in three-global.js
 	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: antialiasing_mode });
+	renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 	renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
 	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
 	renderer.setPixelRatio(pixelratio);
@@ -4221,9 +4227,10 @@ function init3DBoard(){
 	materials.aoShadow = new THREE.MeshBasicMaterial({map: aoTexture, transparent: true, depthWrite: false});
 	// Enable shadow mapping on renderer
 	renderer.shadowMap.enabled = true;
-	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	// PCFShadowMap is soft in r187+ (it samples around each point using shadow.radius); PCFSoftShadowMap was removed
+	renderer.shadowMap.type = THREE.PCFShadowMap;
 	// Create directional light for shadows (pointing straight down)
-	shadowLight = new THREE.DirectionalLight(0xffffff, 0.1);
+	shadowLight = new THREE.DirectionalLight(0xffffff, 0.1 * LEGACY_LIGHT_SCALE);
 	shadowLight.position.set(0, 500, 0);
 	shadowLight.target.position.set(0, 0, 0);
 	shadowLight.castShadow = true;

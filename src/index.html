@@ -2512,25 +2512,33 @@
 		<canvas id="gamecanvas"></canvas>
 
 
-		<script src="js/thirdparty/jquery.min.js"></script>
-		<script src="js/thirdparty/three.min.js"></script>
-		<script src="js/thirdparty/OrbitControlsNPD.min.js"></script>
-		<script src="js/thirdparty/linkify.min.js"></script>
-		<script src="js/thirdparty/linkify-string.min.js"></script>
-		<script src="js/thirdparty/bootstrap.bundle.min.js"></script>
-		<script src="js/thirdparty/jquery.contextMenu.min.js"></script>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./js/thirdparty/three/three.module.js",
+					"three/addons/": "./js/thirdparty/three/addons/"
+				}
+			}
+		</script>
+		<!-- Module and deferred scripts run in document order, so window.THREE exists before the app scripts below. -->
+		<script type="module" src="js/three-global.js"></script>
+		<script defer src="js/thirdparty/jquery.min.js"></script>
+		<script defer src="js/thirdparty/linkify.min.js"></script>
+		<script defer src="js/thirdparty/linkify-string.min.js"></script>
+		<script defer src="js/thirdparty/bootstrap.bundle.min.js"></script>
+		<script defer src="js/thirdparty/jquery.contextMenu.min.js"></script>
 
-		<script src="js/inline-markdown.js"></script>
-		<script src="js/chat.js"></script>
-		<script src="js/chat-hotkeys.js"></script>
-		<script src="js/server.js"></script>
-		<script src="js/style_selector.js"></script>
-		<script src="js/game-interface.js"></script>
-		<script src="js/board.js"></script>
-		<script src="js/2d-board.js"></script>
-		<script src="js/ptn.js"></script>
-		<script src="js/settings.js"></script>
-		<script src="js/main.js"></script>
+		<script defer src="js/inline-markdown.js"></script>
+		<script defer src="js/chat.js"></script>
+		<script defer src="js/chat-hotkeys.js"></script>
+		<script defer src="js/server.js"></script>
+		<script defer src="js/style_selector.js"></script>
+		<script defer src="js/game-interface.js"></script>
+		<script defer src="js/board.js"></script>
+		<script defer src="js/2d-board.js"></script>
+		<script defer src="js/ptn.js"></script>
+		<script defer src="js/settings.js"></script>
+		<script defer src="js/main.js"></script>
 
 		<!-- Google tag (gtag.js) -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-70K8FVMRFS"></script>

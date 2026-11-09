@@ -17,7 +17,9 @@ const OPENING_6 = '[Size "6"]';
 
 async function openBoard(page, ptn, settings = {}){
 	await page.addInitScript((s) => {
-		for(const [k, v] of Object.entries(s)){localStorage.setItem(k, v);}
+		// init scripts also run in the page's iframes, where storage is off limits
+		if(window !== window.top){return;}
+		for(const [k, v]of Object.entries(s)){localStorage.setItem(k, v);}
 	}, settings);
 	// keep the run offline: no playtak server, analytics or event feeds
 	await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
@@ -36,9 +38,12 @@ const cases = [
 	['6x6 opening', OPENING_6, {}]
 ];
 
-for(const [name, ptn, settings] of cases){
+for(const [name, ptn, settings]of cases){
 	test(name, async({page}) => {
+		const errors = [];
+		page.on('pageerror', (e) => errors.push(e.stack || e.message));
 		await openBoard(page, ptn, settings);
+		expect(errors).toEqual([]);
 		await expect(page).toHaveScreenshot(name.replace(/\W+/g, '-') + '.png');
 	});
 }

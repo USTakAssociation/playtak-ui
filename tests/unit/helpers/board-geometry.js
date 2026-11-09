@@ -7,9 +7,8 @@ import path from 'path';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const jsDir = path.join(here, '..', '..', '..', 'src', 'js');
 
-// three.min.js is a UMD bundle; handing it an exports object fills that in.
-export const THREE = {};
-new Function('exports', 'module', readFileSync(path.join(jsDir, 'thirdparty', 'three.min.js'), 'utf8'))(THREE, {});
+export *as THREE from '../../../src/js/thirdparty/three/three.module.js';
+import *as THREE from '../../../src/js/thirdparty/three/three.module.js';
 
 function slice(source, from, to){
 	const start = source.indexOf(from);
@@ -48,9 +47,7 @@ const round = (n) => {
 // corner) so two implementations can be compared regardless of vertex order or
 // indexing. Winding is preserved: each triangle is only rotated, never mirrored.
 export function triangles(geometry){
-	let g = geometry;
-	if(!g.isBufferGeometry){g = new THREE.BufferGeometry().fromGeometry(g);}
-	else if(g.index){g = g.toNonIndexed();}
+	const g = geometry.index ? geometry.toNonIndexed() : geometry;
 	const pos = g.attributes.position, uv = g.attributes.uv, nrm = g.attributes.normal;
 	const out = [];
 	for(let t = 0; t < pos.count; t += 3){
