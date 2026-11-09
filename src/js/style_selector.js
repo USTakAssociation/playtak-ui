@@ -325,16 +325,16 @@ function initOverlaySelector(){
 		document.getElementById(`${savedOverlayId}_overlay`).classList.add('active');
 	}
 	else{
-		// Default to boardDefaults.overlay - apply its border and text colors
+		// Default to boardDefaults.overlay and its colors, unless the user has saved their own colors
 		const defaultOverlay = boardDefaults.overlay;
 		document.getElementById('overlay_select').innerText = overlaysMap[defaultOverlay].name;
 		document.getElementById(`${defaultOverlay}_overlay`).classList.add('active');
-		document.getElementById("borderColor").value = boardDefaults.borderColor;
-		localStorage["borderColor"] = boardDefaults.borderColor;
-		board.updateBorderColor(boardDefaults.borderColor);
-		document.getElementById("letterColor").value = boardDefaults.letterColor;
-		localStorage["letterColor"] = boardDefaults.letterColor;
-		board.updateLetterColor(boardDefaults.letterColor);
+		const borderColor = localStorage["borderColor"] || boardDefaults.borderColor;
+		document.getElementById("borderColor").value = borderColor;
+		board.updateBorderColor(borderColor);
+		const letterColor = localStorage["letterColor"] || boardDefaults.letterColor;
+		document.getElementById("letterColor").value = letterColor;
+		board.updateLetterColor(letterColor);
 	}
 }
 

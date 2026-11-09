@@ -470,15 +470,15 @@ function checkboxAutoRotate(){
 			board.boardside = 'black';
 			camera.position.z = -camera.position.z;
 			camera.position.x = -camera.position.x;
-			controls.center.z = -controls.center.z;
-			controls.center.x = -controls.center.x;
+			controls.target.z = -controls.target.z;
+			controls.target.x = -controls.target.x;
 		}
 		else if(!isEnabled && isRotated){
 			board.boardside = 'white';
 			camera.position.z = -camera.position.z;
 			camera.position.x = -camera.position.x;
-			controls.center.z = -controls.center.z;
-			controls.center.x = -controls.center.x;
+			controls.target.z = -controls.target.z;
+			controls.target.x = -controls.target.x;
 		}
 		// Reposition unplayed pieces to reflect new layout
 		board.updatepieces();

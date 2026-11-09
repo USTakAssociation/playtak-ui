@@ -17,7 +17,7 @@ import path from 'path';
 // ptn.js is a plain script of globals rather than a module, so evaluate it and
 // pull the function out instead of importing it.
 const here = path.dirname(fileURLToPath(import.meta.url));
-const source = readFileSync(path.join(here, '..', 'ptn.js'), 'utf8');
+const source = readFileSync(path.join(here, '..', '..', 'src', 'js', 'ptn.js'), 'utf8');
 const start = source.indexOf('function ptnDurationToSeconds');
 const end = source.indexOf('// Play Tak Server notation');
 const {parsePTNClock} = new Function(

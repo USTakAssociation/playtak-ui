@@ -23,3 +23,7 @@ creds.js
  
 # Mac/OSX
 .DS_Store
+
+# Playwright output
+test-results/
+playwright-report/
