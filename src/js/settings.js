@@ -207,6 +207,12 @@ function gotnewtexturefile(){
 			alert('danger', 'File name cannot contain spaces, please rename the file and try again');
 			return;
 		}
+		// a file that is not an image never loads as a texture, which stops every piece texture from updating
+		if(!this.files[0].type.startsWith('image/')){
+			alert('danger', `${fileName} is not an image; 3D models (.glb) go in Custom 3D Pieces`);
+			this.value = '';
+			return;
+		}
 		reader.addEventListener("load",fileLoaded,false);
 		reader.readAsDataURL(this.files[0]);
 	}

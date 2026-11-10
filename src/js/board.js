@@ -36,6 +36,8 @@ function srgb(texture){
 }
 
 const raycaster = new THREE.Raycaster();
+// pieces showing a custom model hide their built-in mesh on layer 1, which is not drawn but can still be clicked
+raycaster.layers.enable(1);
 let highlighter;
 let lastMoveHighlighter;
 let shadowLight;
@@ -637,10 +639,12 @@ const materials = {
 		const loader = new THREE.TextureLoader();
 		this.piecesLoaded = 0;
 
-		this.black_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn))});
-		this.white_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn))});
-		this.white_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn))});
-		this.black_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn))});
+		// a texture that fails to load still counts, so the others are applied
+		const done = this.piecesLoadedFn;
+		this.black_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackPieceTextureName(),done,undefined,done))});
+		this.white_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhitePieceTextureName(),done,undefined,done))});
+		this.white_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhiteCapTextureName(),done,undefined,done))});
+		this.black_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackCapTextureName(),done,undefined,done))});
 		const an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_piece.map.anisotropy=an;
@@ -924,6 +928,7 @@ const pieceFactory = {
 		aoPlane.material.opacity = (stackheight === 0) ? 1.0 : 0;
 		scene.add(aoPlane);
 		piece.aoPlane = aoPlane;
+		applyCustomModel(piece);
 		scene.add(piece);
 		return piece;
 	},
@@ -969,6 +974,7 @@ const pieceFactory = {
 		aoPlane.visible = shadowsEnabled;
 		scene.add(aoPlane);
 		piece.aoPlane = aoPlane;
+		applyCustomModel(piece);
 		scene.add(piece);
 		return piece;
 	}
@@ -2108,6 +2114,8 @@ const board = {
 				}
 			}
 		}
+		// refit custom models to the new piece size
+		refreshCustomPieces();
 	},
 	file: function(no){
 		return String.fromCharCode('A'.charCodeAt(0) + no);
@@ -2198,7 +2206,9 @@ const board = {
 		raycaster.setFromCamera(mouse,camera);
 		const intersects = raycaster.intersectObjects(scene.children);
 		for(let a=0;a<intersects.length;a++){
-			const potential=intersects[a].object;
+			let potential=intersects[a].object;
+			// a custom model is a child of its piece
+			while(potential.parent && potential.parent !== scene){potential = potential.parent;}
 			if(potential.isboard){
 				return ["board",potential,potential.rank,potential.file];
 			}
@@ -3049,6 +3059,7 @@ const board = {
 		// Reverse black wall 90-degree rotation (after X rotation)
 		if(!piece.iswhitepiece){piece.rotateY(-Math.PI / 2);}
 		piece.isstanding = false;
+		applyCustomModel(piece);
 		// Update AO plane for flat shape, texture and position
 		resetAOToFlat(piece);
 		if(piece.aoPlane && piece.onsquare){
@@ -3082,6 +3093,7 @@ const board = {
 		piece.rotateX(-Math.PI / 2);
 		if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 		piece.isstanding = true;
+		applyCustomModel(piece);
 		// Update AO plane for wall shape, texture and position
 		setAOToWall(piece);
 		if(animate){
@@ -4269,6 +4281,7 @@ function init3DBoard(){
 
 	materials.updateBoardMaterials();
 	materials.updatePieceMaterials();
+	loadCustomPieces();
 
 	if(location.search.slice(0,6)===('?load=')){
 		const text = decodeURIComponent(location.search.split('?load=')[1]);

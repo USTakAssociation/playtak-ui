@@ -782,7 +782,26 @@
 							<div>
 								<label >
 									Custom Pieces
-									<input type="file" id="piecetexture"/>
+									<input type="file" id="piecetexture" accept="image/*"/>
+								</label>
+							</div>
+							<div class="flex flex-column gap--8">
+								Custom 3D Pieces (.glb, objects named flat, wall, cap)
+								<div id="custom-pieces-white-saved" class="flex gap--8" style="display:none; align-items:center;">
+									White: <span id="custom-pieces-white-name"></span>
+									<button type="button" class="btn btn-pill btn-secondary" onclick="removeCustomPieces('white')">Remove</button>
+								</div>
+								<label id="custom-pieces-white-upload">
+									White
+									<input type="file" id="custom-pieces-white" accept=".glb" onchange="uploadCustomPieces('white', this)" />
+								</label>
+								<div id="custom-pieces-black-saved" class="flex gap--8" style="display:none; align-items:center;">
+									Black: <span id="custom-pieces-black-name"></span>
+									<button type="button" class="btn btn-pill btn-secondary" onclick="removeCustomPieces('black')">Remove</button>
+								</div>
+								<label id="custom-pieces-black-upload">
+									Black
+									<input type="file" id="custom-pieces-black" accept=".glb" onchange="uploadCustomPieces('black', this)" />
 								</label>
 							</div>
 							<div id="white_squares_form">
@@ -2534,6 +2553,7 @@
 		<script defer src="js/server.js"></script>
 		<script defer src="js/style_selector.js"></script>
 		<script defer src="js/game-interface.js"></script>
+		<script defer src="js/custom-pieces.js"></script>
 		<script defer src="js/board.js"></script>
 		<script defer src="js/2d-board.js"></script>
 		<script defer src="js/ptn.js"></script>
