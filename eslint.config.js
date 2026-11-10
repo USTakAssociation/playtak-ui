@@ -211,7 +211,7 @@ module.exports = {
 		"no-whitespace-before-property": ["error"],
 		//"object-curly-spacing": ["error", "never"],
 		//"semi-spacing": ["error", {"before": false, "after": false}],
-		"space-before-blocks": ["error", "never"],
+		"space-before-blocks": ["warn", {"functions": "never", "keywords": "never", "classes": "always"}],
 		"space-before-function-paren": ["error", "never"],
 		"space-in-parens": ["error", "never"],
 		"space-unary-ops": ["error", {"nonwords": false, "words": true}]

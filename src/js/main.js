@@ -271,7 +271,8 @@ function init() {
 	} else {
 		ninjaElement.src = "https://ptn.ninja/" + ninjaParams;
 	}
-	if (prefers2DBoard()) {
+	// three.js needs WebGL2; without it (iOS 14 and older, blocklisted GPUs) fall back to the 2D board
+	if (prefers2DBoard() || !document.createElement("canvas").getContext("webgl2")) {
 		document.getElementById("ninja-wrapper").style.display = "block";
 		document.getElementById("3d-settings").style.display = "none";
 		document.getElementById("2d-settings").style.display = "block";

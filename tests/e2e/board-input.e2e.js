@@ -86,3 +86,35 @@ test('a horizontal drag turns the view at the r110 speed', async({page}) => {
 	// r110 turned 2π per canvas width dragged
 	expect(turned).toBeCloseTo(2 * Math.PI * 100 / box.width, 2);
 });
+
+const wheelInputs = {'a mouse notch': [100], 'a fast mouse notch': [400], 'a 30px trackpad swipe': [10, 10, 10]};
+for(const name in wheelInputs){
+	const deltas = wheelInputs[name];
+	test(`${name} zooms one r110 step`, async({page}) => {
+		const box = await page.locator('#gamecanvas').boundingBox();
+		await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.9);
+		const distance = () => page.evaluate(() => camera.position.distanceTo(controls.target));
+		const before = await distance();
+		for(const d of deltas){await page.mouse.wheel(0, d);}
+		await expect.poll(async() => await distance() / before).toBeCloseTo(1 / 0.95, 4);
+	});
+}
+
+test('without WebGL2 the page falls back to the 2D board', async({browser}) => {
+	const page = await browser.newPage();
+	await page.addInitScript(() => {
+		const getContext = HTMLCanvasElement.prototype.getContext;
+		HTMLCanvasElement.prototype.getContext = function(type, ...args){
+			return type === 'webgl2' ? null : getContext.call(this, type, ...args);
+		};
+	});
+	await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+	await page.routeWebSocket(/.*/, () => {});
+	const pageErrors = [];
+	page.on('pageerror', (e) => pageErrors.push(e.message));
+	await page.goto('/');
+	await page.waitForLoadState('networkidle');
+	expect(await page.evaluate(() => is2DBoard)).toBe(true);
+	expect(pageErrors).toEqual([]);
+	await page.close();
+});
