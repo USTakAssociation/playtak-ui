@@ -1784,7 +1784,7 @@ const board = {
 		const table_material = new THREE.MeshLambertMaterial({map: table_texture});
 		const geometry = constructBurredBox(table_width, table_height, table_depth, 5, 5, 5);
 		this.table = new THREE.Mesh(geometry, table_material);
-		this.table.position.set(0, -(table_height + sq_height) / 2, -sq_size / 2);
+		this.table.position.set(0, -(table_height + sq_height) / 2, 0);
 		this.table.ispassive = true;
 		this.table.receiveShadow = true;
 		scene.add(this.table);
@@ -1794,7 +1794,7 @@ const board = {
 		const shadowPlaneMaterial = new THREE.ShadowMaterial({opacity: 0.3});
 		this.shadowPlane = new THREE.Mesh(shadowPlaneGeometry, shadowPlaneMaterial);
 		this.shadowPlane.rotation.x = -Math.PI / 2;
-		this.shadowPlane.position.set(0, -sq_height / 2 - 0.5, -sq_size / 2);
+		this.shadowPlane.position.set(0, -sq_height / 2 - 0.5, 0);
 		this.shadowPlane.ispassive = true;
 		this.shadowPlane.receiveShadow = true;
 		scene.add(this.shadowPlane);

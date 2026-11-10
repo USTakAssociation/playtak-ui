@@ -5,4 +5,11 @@ import {OrbitControls}from 'three/addons/controls/OrbitControls.js';
 import {FontLoader}from 'three/addons/loaders/FontLoader.js';
 import {TextGeometry}from 'three/addons/geometries/TextGeometry.js';
 
-window.THREE = {...THREE, OrbitControls, FontLoader, TextGeometry};
+// The r110 controls turned horizontal drags by width, r187 by height, which spins far faster on wide screens.
+class OrbitControlsWidth extends OrbitControls {
+	_rotateLeft(angle){
+		super._rotateLeft(angle * this.domElement.clientHeight / this.domElement.clientWidth);
+	}
+}
+
+window.THREE = {...THREE, OrbitControls: OrbitControlsWidth, FontLoader, TextGeometry};

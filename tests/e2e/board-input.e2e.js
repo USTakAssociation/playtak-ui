@@ -73,3 +73,16 @@ test('dragging rotates the view without making a move', async({page}) => {
 	expect(after).not.toEqual(before);
 	expect(await page.evaluate(() => gameData.move_count)).toBe(0);
 });
+
+test('a horizontal drag turns the view at the r110 speed', async({page}) => {
+	const box = await page.locator('#gamecanvas').boundingBox();
+	const before = await page.evaluate(() => controls.getAzimuthalAngle());
+	const start = {x: box.x + box.width * 0.5, y: box.y + box.height * 0.9};
+	await page.mouse.move(start.x, start.y);
+	await page.mouse.down();
+	await page.mouse.move(start.x + 100, start.y, {steps: 10});
+	await page.mouse.up();
+	const turned = Math.abs(await page.evaluate(() => controls.getAzimuthalAngle()) - before);
+	// r110 turned 2π per canvas width dragged
+	expect(turned).toBeCloseTo(2 * Math.PI * 100 / box.width, 2);
+});
