@@ -4,6 +4,9 @@ import *as THREE from 'three';
 import {OrbitControls}from 'three/addons/controls/OrbitControls.js';
 import {FontLoader}from 'three/addons/loaders/FontLoader.js';
 import {TextGeometry}from 'three/addons/geometries/TextGeometry.js';
+import {GLTFLoader}from 'three/addons/loaders/GLTFLoader.js';
+import *as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import {RoomEnvironment}from 'three/addons/environments/RoomEnvironment.js';
 
 // Keep the r110 controls' feel where r187 changed it.
 class OrbitControlsR110 extends OrbitControls {
@@ -19,4 +22,4 @@ class OrbitControlsR110 extends OrbitControls {
 	}
 }
 
-window.THREE = {...THREE, OrbitControls: OrbitControlsR110, FontLoader, TextGeometry};
+window.THREE = {...THREE, OrbitControls: OrbitControlsR110, FontLoader, TextGeometry, GLTFLoader, SkeletonUtils, RoomEnvironment};

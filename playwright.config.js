@@ -18,7 +18,9 @@ export default defineConfig({
 	expect: {
 		toHaveScreenshot: {
 			// shortcut: one global tolerance; loosen per test if the three.js upgrade needs it
-			maxDiffPixelRatio: Number(process.env.SCREENSHOT_TOLERANCE ?? 0)
+			maxDiffPixelRatio: Number(process.env.SCREENSHOT_TOLERANCE ?? 0),
+			// any colour change counts: the default 0.2 let a 28% brightness change through, and SwiftShader renders the same every run
+			threshold: 0
 		}
 	},
 	webServer: {

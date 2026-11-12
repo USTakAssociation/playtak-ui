@@ -118,3 +118,75 @@ test('without WebGL2 the page falls back to the 2D board', async({browser}) => {
 	expect(pageErrors).toEqual([]);
 	await page.close();
 });
+
+test('every piece keeps casting a shadow after a move', async({page}) => {
+	await page.mouse.click(...Object.values(await toScreen(page, `${square(2, 2)}.position`)));
+	await expect.poll(() => page.evaluate(() => gameData.move_count)).toBe(1);
+	await page.waitForTimeout(500);
+	expect(await page.evaluate(() => board.piece_objects.filter((p) => !p.castShadow).length)).toBe(0);
+});
+
+test('a stone resting on the board has a contact shadow, hidden while it is lifted', async({page}) => {
+	await page.mouse.click(...Object.values(await toScreen(page, `${square(2, 2)}.position`)));
+	await expect.poll(() => page.evaluate(() => gameData.move_count)).toBe(1);
+	const visible = (lift) => page.evaluate(({sq, lift}) => {
+		const stone = board.top_of_stack(new Function('return ' + sq)());
+		stone.position.y += lift;
+		updateContactShadows();
+		stone.position.y -= lift;
+		return stone.contactShadow?.visible ?? false;
+	}, {sq: square(2, 2), lift});
+	await expect.poll(() => visible(0)).toBe(true);
+	expect(await visible(60)).toBe(false);
+});
+
+test('a stone\'s contact shadow is drawn on top of the board overlay, not under it', async({page}) => {
+	await page.mouse.click(...Object.values(await toScreen(page, `${square(2, 2)}.position`)));
+	await expect.poll(() => page.evaluate(() => gameData.move_count)).toBe(1);
+	// the overlay and the stone's landing both finish after the click returns
+	await expect.poll(() => page.evaluate((sq) => {
+		updateContactShadows();
+		const patch = board.top_of_stack(new Function('return ' + sq)())?.contactShadow;
+		if(!board.overlay?.parent || !patch?.visible){return null;}
+		return patch.position.y >= board.overlay.position.y + board.overlay.geometry.parameters.height / 2;
+	}, square(2, 2))).toBe(true);
+});
+
+test('loading a position keeps the table and fill lights', async({page}) => {
+	const scenery = () => page.evaluate(() => {
+		const types = [];
+		scene.traverse((o) => {if(o.isLight){types.push(o.type);}});
+		return [types.sort(), scene.children.includes(board.table)];
+	});
+	const before = await scenery();
+	await page.evaluate(() => board.loadtps('x5/x5/x,1,12121,2,x/x5/x5 1 6'));
+	expect(await scenery()).toEqual(before);
+});
+
+test('the brightness and shadow strength sliders set the lights and are kept across reloads', async({page}) => {
+	const lights = () => page.evaluate(() => [shadowLight.intensity, board.hemisphereLight.intensity].map((n) => +n.toFixed(4)));
+	const [main, fill] = await page.evaluate(() => [shadowLight.intensity, board.hemisphereLight.intensity]);
+	// the settings panel is closed; drag the sliders by setting them and firing their input event
+	const drag = (id, value) => page.locator(id).evaluate((el, v) => {
+		el.value = v;
+		el.dispatchEvent(new Event('input'));
+	}, value);
+	await drag('#light-brightness-slider', '150');
+	await drag('#light-shadow-slider', '300');
+	// brightness scales every light; shadow strength divides only the fill
+	const expected = [+(main * 1.5).toFixed(4), +(fill * 1.5 / 3).toFixed(4)];
+	expect(await lights()).toEqual(expected);
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+	await expect.poll(lights).toEqual(expected);
+	await expect(page.locator('#light-shadow-value')).toHaveText('300%');
+});
+
+test('the board has a contact shadow on the table, sized to the board', async({page}) => {
+	await page.waitForTimeout(500);
+	expect(await page.evaluate(() => {
+		updateContactShadows();
+		const s = boardContactShadow;
+		return [s.visible, s.parent === scene, Math.round(s.scale.x - boardContactShadowMargin * 2)];
+	})).toEqual([true, true, await page.evaluate(() => gameData.size * sq_size + border_size * 2)]);
+});

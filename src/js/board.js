@@ -21,13 +21,22 @@ const light_position = [0, 800, -45];
 const light_radius = [1.8, 1600];
 // Light intensities. r155+ lighting no longer multiplies by π, so the old r110 values are scaled by π to keep the look;
 // the point light's distance falloff also changed shape and 0.55 is the old/new ratio across the board at light_position.
-// point and hemisphere light the board with shadows on; ambient replaces them when shadows are off.
+// With shadows on, the shadow light is the main light and point and hemisphere are a low fill, so piece sides and shadows
+// have contrast; the main light is set so tops of pieces and squares keep the brightness they had before real shadows.
+// Ambient replaces all three when shadows are off.
 const lightIntensity = {
-	point: light_radius[0] * Math.PI * 0.55,
-	hemisphere: 0.6 * Math.PI,
-	shadow: 0.1 * Math.PI,
+	point: light_radius[0] * Math.PI * 0.55 * 0.06,
+	// ×3 lightens the sides of pieces, which only the fill lights reach, tuned by eye
+	hemisphere: 0.6 * Math.PI * 0.144 * 3,
+	shadow: 2.3,
 	ambient: 1.0 * Math.PI
 };
+// Player settings, as multipliers of the values above. Brightness scales every light. Shadow strength divides the fill,
+// which is what lights a shadow, so shadows and piece sides get darker while tops stay lit by the main light.
+let lightBrightness = 1;
+let shadowStrength = 1;
+// The shadow light is straight overhead: a lifted piece's shadow falls right below it.
+const shadowLightPosition = [0, 600, 0];
 
 // Image textures are sRGB; tag them so lighting is computed in linear space.
 function srgb(texture){
@@ -36,6 +45,8 @@ function srgb(texture){
 }
 
 const raycaster = new THREE.Raycaster();
+// pieces showing a custom model hide their built-in mesh on layer 1, which is not drawn but can still be clicked
+raycaster.layers.enable(1);
 let highlighter;
 let lastMoveHighlighter;
 let shadowLight;
@@ -63,179 +74,105 @@ catch(e){
 	animationSpeed = 1.0;
 }
 
-// ============================================
-// AO Shadow Configuration
-// ============================================
-const aoConfig = {
-	// Y offset from piece bottom to AO plane (prevents z-fighting)
-	yOffset: 0.75,
-	// Texture blur amount (pixels)
-	blur: 4,
-	// Shadow opacity in texture (0-1)
-	opacity: 0.4,
-	// Padding multiplier (relative to piece_size) added to all AO planes
-	padding: 0.5,
-	// Flat piece AO
-	flat: {
-		canvasSize: 128,
-		shapeSize: 90
-	},
-	// Capstone AO
-	cap: {
-		canvasSize: 128,
-		shapeSize: 85
-	},
-	// Wall AO
-	wall: {
-		canvasWidth: 128,
-		canvasHeight: 64,
-		shapeWidth: 90,
-		shapeHeight: 30
-	},
-	// Board AO
-	board: {
-		canvasSize: 512,
-		shapeSize: 490
+// ---- Contact shadows ----
+// The shadow light is overhead, so a piece resting on the board hides its own shadow. A soft dark patch around its
+// base shows where it touches. When the piece is lifted or moving its base leaves the surface, so the patch is hidden
+// and the real shadow shows instead. Both are as dark as each other: the share of the light that comes from the shadow light.
+const contactShadowMargin = 8;
+// the board is far bigger than a piece, so its shadow fades out over a wider margin
+const boardContactShadowMargin = 20;
+const contactShadowMaterials = new Map();
+let boardContactShadow = null;
+
+// A material whose texture is a soft-edged footprint of width × depth (or a circle of that width), with a margin to fade into.
+function contactShadowMaterial(width, depth, circle, margin = contactShadowMargin){
+	const key = `${width}x${depth}${circle ? 'o' : ''}m${margin}`;
+	if(!contactShadowMaterials.has(key)){
+		// texture pixels per unit, fewer for the board so its texture stays small
+		const scale = Math.min(2, 1024 / (Math.max(width, depth) + margin * 2));
+		const c = document.createElement('canvas');
+		c.width = Math.round((width + margin * 2) * scale);
+		c.height = Math.round((depth + margin * 2) * scale);
+		const ctx = c.getContext('2d');
+		ctx.filter = `blur(${margin * scale / 2}px)`;
+		ctx.fillStyle = '#000';
+		const m = margin * scale;
+		if(circle){
+			ctx.beginPath();
+			ctx.arc(c.width / 2, c.height / 2, width * scale / 2, 0, Math.PI * 2);
+			ctx.fill();
+		}
+		else{
+			ctx.fillRect(m, m, width * scale, depth * scale);
+		}
+		contactShadowMaterials.set(key, new THREE.MeshBasicMaterial({
+			color: 0x000000, map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false,
+			polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1
+		}));
 	}
-};
-
-// Create a blurred AO shadow texture using canvas blur filter
-function createBlurredAOTexture(width, height, shapeWidth, shapeHeight, shape, customBlur){
-	const canvas = document.createElement('canvas');
-	canvas.width = width;
-	canvas.height = height;
-	const ctx = canvas.getContext('2d');
-
-	const blur = customBlur !== undefined ? customBlur : aoConfig.blur;
-	ctx.clearRect(0, 0, width, height);
-	ctx.filter = 'blur(' + blur + 'px)';
-	ctx.fillStyle = 'rgba(0, 0, 0, ' + aoConfig.opacity + ')';
-	const centerX = width / 2;
-	const centerY = height / 2;
-
-	if(shape === 'circle'){
-		ctx.beginPath();
-		ctx.arc(centerX, centerY, shapeWidth / 2, 0, Math.PI * 2);
-		ctx.fill();
-	}
-	else{
-		ctx.fillRect(centerX - shapeWidth / 2, centerY - shapeHeight / 2, shapeWidth, shapeHeight);
-	}
-
-	const texture = new THREE.CanvasTexture(canvas);
-	texture.needsUpdate = true;
-	return texture;
+	return contactShadowMaterials.get(key);
 }
 
-// Cached AO textures
-let aoTextureFlat = null;
-let aoTextureCap = null;
-let aoTextureWall = null;
-let aoTextureBoard = null;
+// Show a contact shadow under the board and under every piece whose base rests on the board or table, and hide it otherwise.
+function updateContactShadows(){
+	// in shadow only the fill light is left, so the shadow light's share of the light on a top surface is how dark a shadow is
+	const fill = board.pointLight.intensity + board.hemisphereLight.intensity;
+	const opacity = shadowLight.intensity / (shadowLight.intensity + fill);
 
-function getFlatAOTexture(){
-	if(!aoTextureFlat){
-		const c = aoConfig.flat;
-		aoTextureFlat = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, 'square');
+	// the board rests on the table: its base is the squares' underside
+	const boardWidth = gameData.size * sq_size + border_size * 2;
+	if(!boardContactShadow){
+		boardContactShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1));
+		boardContactShadow.rotation.x = -Math.PI / 2;
+		boardContactShadow.ispassive = true;
 	}
-	return aoTextureFlat;
-}
+	if(boardContactShadow.parent !== scene){scene.add(boardContactShadow);}
+	boardContactShadow.visible = shadowsEnabled;
+	boardContactShadow.material = contactShadowMaterial(boardWidth, boardWidth, false, boardContactShadowMargin);
+	boardContactShadow.material.opacity = opacity;
+	boardContactShadow.scale.set(boardWidth + boardContactShadowMargin * 2, boardWidth + boardContactShadowMargin * 2, 1);
+	boardContactShadow.position.set(0, -sq_height / 2, 0);
 
-function getCapAOTexture(){
-	if(!aoTextureCap){
-		const c = aoConfig.cap;
-		aoTextureCap = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, 'circle');
-	}
-	return aoTextureCap;
-}
-
-function getWallAOTexture(){
-	if(!aoTextureWall){
-		const c = aoConfig.wall;
-		aoTextureWall = createBlurredAOTexture(c.canvasWidth, c.canvasHeight, c.shapeWidth, c.shapeHeight, 'rect');
-	}
-	return aoTextureWall;
-}
-
-function getBoardAOTexture(){
-	if(!aoTextureBoard){
-		const c = aoConfig.board;
-		aoTextureBoard = createBlurredAOTexture(c.canvasSize, c.canvasSize, c.shapeSize, c.shapeSize, 'square');
-	}
-	return aoTextureBoard;
-}
-
-// Create AO plane for a piece
-function createAOPlane(texture, width, height, yOffset){
-	const geometry = new THREE.PlaneGeometry(width, height);
-	const material = new THREE.MeshBasicMaterial({
-		map: texture,
-		transparent: true,
-		opacity: 1.0,
-		depthWrite: false,
-		side: THREE.DoubleSide
-	});
-	const plane = new THREE.Mesh(geometry, material);
-	plane.rotation.x = -Math.PI / 2;
-	plane.aoYOffset = yOffset;
-	return plane;
-}
-
-// Update AO plane visibility based on piece position and shadows setting
-function updatePieceAOVisibility(piece){
-	if(!piece.aoPlane){return;}
-	if(!shadowsEnabled){
-		piece.aoPlane.visible = false;
-		return;
-	}
-	// Capstones and walls on stacks should show AO
-	if(piece.iscapstone || piece.isstanding){
-		piece.aoPlane.visible = true;
-		return;
-	}
-	// Flats only show AO if at bottom of stack
-	if(piece.onsquare){
-		const stack = board.get_stack(piece.onsquare);
-		piece.aoPlane.visible = (stack.indexOf(piece) === 0);
-	}
-	else{
-		// Unplayed pieces - only bottom of stack shows AO
-		piece.aoPlane.visible = true; // Will be set correctly by caller
+	// the overlay, when there is one, covers the squares and stands a little above them
+	const overlay = board.overlay;
+	const boardTop = overlay?.parent ? Math.max(sq_height / 2, overlay.position.y + overlay.geometry.parameters.height / 2) : sq_height / 2;
+	const axis = new THREE.Vector3();
+	for(const piece of board.piece_objects){
+		let base, width, depth;
+		if(piece.iscapstone){
+			[base, width, depth] = [piece.position.y - capstone_height / 2, capstone_radius * 2, capstone_radius * 2];
+		}
+		else if(piece.isstanding){
+			[base, width, depth] = [piece.position.y - piece_size / 2, piece_size, piece_height];
+		}
+		else{
+			[base, width, depth] = [piece.position.y - piece_height / 2, piece_size, piece_size];
+		}
+		// pieces on a square rest on the board only at the bottom of the stack; unplayed pieces rest on the table
+		const surface = piece.onsquare ? sq_height / 2 : -sq_height / 2;
+		// a custom model's own shadow outlines it; a patch the size of the built-in piece would be a dark blob around it
+		const resting = !piece.customModel && Math.abs(base - surface) < 0.5 && (!piece.onsquare || board.get_stack(piece.onsquare)[0] === piece);
+		let patch = piece.contactShadow;
+		if(!patch){
+			if(!resting || !shadowsEnabled){continue;}
+			patch = piece.contactShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1));
+			patch.rotation.order = 'YXZ';
+			patch.rotation.x = -Math.PI / 2;
+			patch.ispassive = true;
+		}
+		if(patch.parent !== scene){scene.add(patch);}
+		patch.visible = resting && shadowsEnabled;
+		if(!patch.visible){continue;}
+		patch.material = contactShadowMaterial(width, depth, piece.iscapstone);
+		patch.material.opacity = opacity;
+		patch.scale.set(width + contactShadowMargin * 2, depth + contactShadowMargin * 2, 1);
+		patch.position.set(piece.position.x, piece.onsquare ? boardTop : surface, piece.position.z);
+		// turn with the piece: its local x is the long side of a wall, whichever way it was stood up
+		axis.set(1, 0, 0).applyQuaternion(piece.quaternion);
+		patch.rotation.y = Math.atan2(-axis.z, axis.x);
 	}
 }
 
-// Reset AO plane to flat piece shape and texture
-function resetAOToFlat(piece){
-	if(!piece.aoPlane){return;}
-	piece.aoPlane.aoYOffset = -piece_height / 2 + aoConfig.yOffset;
-	piece.aoPlane.geometry.dispose();
-	const aoSize = piece_size + piece_size * aoConfig.padding;
-	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoSize, aoSize);
-	piece.aoPlane.material.map = getFlatAOTexture();
-	piece.aoPlane.material.needsUpdate = true;
-	piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-}
-
-// Update AO plane to wall shape and texture
-function setAOToWall(piece){
-	if(!piece.aoPlane){return;}
-	piece.aoPlane.aoYOffset = -piece_size / 2 + aoConfig.yOffset;
-	piece.aoPlane.geometry.dispose();
-	const aoPadding = piece_size * aoConfig.padding;
-	const aoWidth = piece_size + aoPadding;
-	const aoDepth = piece_height + aoPadding;
-	piece.aoPlane.geometry = new THREE.PlaneGeometry(aoWidth, aoDepth);
-	piece.aoPlane.material.map = getWallAOTexture();
-	piece.aoPlane.material.needsUpdate = true;
-	piece.aoPlane.rotation.set(-Math.PI / 2, 0, 0);
-	if(diagonal_walls){
-		piece.aoPlane.rotation.z = -Math.PI / 4;
-	}
-	// Rotate black walls 90 degrees
-	if(!piece.iswhitepiece){
-		piece.aoPlane.rotation.z += Math.PI / 2;
-	}
-}
 let scenehash = 0;
 let lastanimate = 0;
 let camera,scene,renderer,light,canvas,controls = null;
@@ -250,6 +187,7 @@ function animate(){
 		if(scenehash!=newscenehash || lastanimate+1000<=now){
 			scenehash=newscenehash;
 			lastanimate=now;
+			updateContactShadows();
 			renderer.render(scene,camera);
 		}
 	}
@@ -535,7 +473,6 @@ const materials = {
 	},
 	border: new THREE.MeshLambertMaterial({color: 0x6f4734}),
 	letter: new THREE.MeshBasicMaterial({color: 0xffffff}),
-	aoShadow: null, // Will be created with gradient texture in init3DBoard
 	highlighter: new THREE.MeshBasicMaterial({color: 0xffffff}),
 	lastMoveHighlighter: new THREE.MeshBasicMaterial({color: 0x000000}),
 	getWhiteSquareTextureName: function(){
@@ -637,10 +574,12 @@ const materials = {
 		const loader = new THREE.TextureLoader();
 		this.piecesLoaded = 0;
 
-		this.black_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackPieceTextureName(),this.piecesLoadedFn))});
-		this.white_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhitePieceTextureName(),this.piecesLoadedFn))});
-		this.white_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhiteCapTextureName(),this.piecesLoadedFn))});
-		this.black_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackCapTextureName(),this.piecesLoadedFn))});
+		// a texture that fails to load still counts, so the others are applied
+		const done = this.piecesLoadedFn;
+		this.black_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackPieceTextureName(),done,undefined,done))});
+		this.white_piece = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhitePieceTextureName(),done,undefined,done))});
+		this.white_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getWhiteCapTextureName(),done,undefined,done))});
+		this.black_cap = new THREE.MeshLambertMaterial({map: srgb(loader.load(this.getBlackCapTextureName(),done,undefined,done))});
 		const an=Math.min(maxaniso,anisolevel);
 		if(an>1){
 			this.white_piece.map.anisotropy=an;
@@ -715,6 +654,7 @@ const boardFactory = {
 		square.rank = gameData.size - 1 - rankInverse;
 		square.isboard = true;
 		square.receiveShadow = true;
+		square.castShadow = true;
 		scene.add(square);
 		return square;
 	},
@@ -742,24 +682,28 @@ const boardFactory = {
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(0,0,board.corner_position.z + border_size/2);
 		border.receiveShadow = true;
+		border.castShadow = true;
 		materials.borders.push(border);
 		// Bottom border
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(0,0,board.corner_position.endz - border_size/2);
 		border.rotateY(Math.PI);
 		border.receiveShadow = true;
+		border.castShadow = true;
 		materials.borders.push(border);
 		// Left border
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(board.corner_position.x + border_size/2,0,0);
 		border.rotateY(Math.PI/2);
 		border.receiveShadow = true;
+		border.castShadow = true;
 		materials.borders.push(border);
 		// Right border
 		border = new THREE.Mesh(geometry,materials.border);
 		border.position.set(board.corner_position.endx - border_size/2,0,0);
 		border.rotateY(-Math.PI / 2);
 		border.receiveShadow = true;
+		border.castShadow = true;
 		materials.borders.push(border);
 
 		for(let i = 0; i < materials.borders.length; i++){
@@ -915,15 +859,8 @@ const pieceFactory = {
 		piece.pieceNum=pieceNum;
 		piece.positionAsWhite = positionAsWhite;
 		piece.receiveShadow = true;
-		piece.castShadow = false;
-		// Add ambient occlusion shadow plane
-		const aoSize = piece_size + piece_size * aoConfig.padding;
-		const aoPlane = createAOPlane(getFlatAOTexture(), aoSize, aoSize, -piece_height / 2 + aoConfig.yOffset);
-		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
-		aoPlane.visible = shadowsEnabled && (stackheight === 0);
-		aoPlane.material.opacity = (stackheight === 0) ? 1.0 : 0;
-		scene.add(aoPlane);
-		piece.aoPlane = aoPlane;
+		piece.castShadow = true;
+		applyCustomModel(piece);
 		scene.add(piece);
 		return piece;
 	},
@@ -961,14 +898,8 @@ const pieceFactory = {
 		piece.iscapstone = true;
 		piece.pieceNum=capNum;
 		piece.receiveShadow = true;
-		piece.castShadow = false;
-		// Add ambient occlusion shadow plane
-		const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
-		const aoPlane = createAOPlane(getCapAOTexture(), aoRadius * 2, aoRadius * 2, -capstone_height / 2 + aoConfig.yOffset);
-		aoPlane.position.set(piece.position.x, piece.position.y + aoPlane.aoYOffset, piece.position.z);
-		aoPlane.visible = shadowsEnabled;
-		scene.add(aoPlane);
-		piece.aoPlane = aoPlane;
+		piece.castShadow = true;
+		applyCustomModel(piece);
 		scene.add(piece);
 		return piece;
 	}
@@ -1234,9 +1165,10 @@ let shadowsEnabled = true;
 function updateShadowsVisibility(){
 	if(!scene){return;}
 	// Update shadow light casting
+	const fill = lightBrightness / shadowStrength;
 	if(shadowLight){
 		shadowLight.castShadow = shadowsEnabled;
-		shadowLight.intensity = shadowsEnabled ? lightIntensity.shadow : 0;
+		shadowLight.intensity = shadowsEnabled ? lightIntensity.shadow * lightBrightness : 0;
 	}
 	// Update renderer shadow map
 	if(renderer){
@@ -1244,44 +1176,16 @@ function updateShadowsVisibility(){
 	}
 	// Update lighting to use flat ambient light when shadows off
 	if(board.pointLight){
-		board.pointLight.intensity = shadowsEnabled ? board.pointLightIntensity : 0;
+		board.pointLight.intensity = shadowsEnabled ? board.pointLightIntensity * fill : 0;
 	}
 	if(board.hemisphereLight){
-		board.hemisphereLight.intensity = shadowsEnabled ? board.hemisphereLightIntensity : 0;
+		board.hemisphereLight.intensity = shadowsEnabled ? board.hemisphereLightIntensity * fill : 0;
 	}
 	if(board.ambientLight){
-		board.ambientLight.intensity = shadowsEnabled ? 0 : lightIntensity.ambient;
+		board.ambientLight.intensity = shadowsEnabled ? 0 : lightIntensity.ambient * lightBrightness;
 	}
-	// Update board AO
-	if(board.boardAO){
-		board.boardAO.visible = shadowsEnabled;
-	}
-	// Update piece AO planes and shadows
 	for(let i = 0; i < board.piece_objects.length; i++){
-		const piece = board.piece_objects[i];
-		// Update piece shadow receiving
-		piece.receiveShadow = shadowsEnabled;
-		if(piece.aoPlane){
-			if(!shadowsEnabled){
-				piece.aoPlane.visible = false;
-			}
-			else{
-				// Capstones and walls always show AO (they cast shadow on pieces below)
-				if(piece.iscapstone || piece.isstanding){
-					piece.aoPlane.visible = true;
-				}
-				else if(piece.onsquare){
-					// Played flats: only bottom of stack shows AO
-					const stack = board.get_stack(piece.onsquare);
-					piece.aoPlane.visible = (stack.indexOf(piece) === 0);
-				}
-				else{
-					// Unplayed pieces: only bottom of unplayed stack shows AO
-					// This is handled by stackheight during creation
-					piece.aoPlane.visible = (piece.aoPlane.material.opacity > 0);
-				}
-			}
-		}
+		board.piece_objects[i].receiveShadow = shadowsEnabled;
 	}
 	// Update table and board receiveShadow
 	if(board.table){
@@ -1331,14 +1235,6 @@ const animation = {
 				for(let i = 0; i < objects.length; i++){
 					objects[i].position.copy(from[i]);
 					objects[i].quaternion.copy(fromRot[i]);
-					// Also reset AO plane position
-					if(objects[i].aoPlane){
-						objects[i].aoPlane.position.set(
-							from[i].x,
-							from[i].y + objects[i].aoPlane.aoYOffset,
-							from[i].z
-						);
-					}
 				}
 			}
 			this.pendingFrom = null;
@@ -1357,14 +1253,6 @@ const animation = {
 				for(let i = 0; i < frame.objects.length; ++i){
 					frame.objects[i].position.copy(frame.to[i]);
 					frame.objects[i].quaternion.copy(frame.toRot[i]);
-					// Update AO plane position
-					if(frame.objects[i].aoPlane){
-						frame.objects[i].aoPlane.position.set(
-							frame.objects[i].position.x,
-							frame.objects[i].position.y + frame.objects[i].aoPlane.aoYOffset,
-							frame.objects[i].position.z
-						);
-					}
 				}
 				if(frame.onComplete){frame.onComplete();}
 			}
@@ -1424,14 +1312,6 @@ const animation = {
 			for(let i = 0; i < frame.objects.length; ++i){
 				frame.objects[i].position.copy(frame.to[i]);
 				frame.objects[i].quaternion.copy(frame.toRot[i]);
-				// Update AO plane position
-				if(frame.objects[i].aoPlane){
-					frame.objects[i].aoPlane.position.set(
-						frame.objects[i].position.x,
-						frame.objects[i].position.y + frame.objects[i].aoPlane.aoYOffset,
-						frame.objects[i].position.z
-					);
-				}
 			}
 		}
 		this.onAllComplete = null;
@@ -1505,25 +1385,6 @@ const animation = {
 						const baseY = from[i].y + (to[i].y - from[i].y) * t;
 						obj.position.y = baseY + jumpHeight * 4 * t * (1 - t);
 					}
-
-					// Update AO plane position to follow piece
-					if(objects[i].aoPlane){
-						objects[i].aoPlane.position.set(
-							objects[i].position.x,
-							objects[i].position.y + objects[i].aoPlane.aoYOffset,
-							objects[i].position.z
-						);
-						// Fade in AO during last 30% of animation if flagged for fade-in and visible
-						if(objects[i].aoPlane.fadeIn && objects[i].aoPlane.visible){
-							if(t > 0.7){
-								const fadeT = (t - 0.7) / 0.3; // 0 to 1 during last 30%
-								objects[i].aoPlane.material.opacity = fadeT;
-							}
-							else{
-								objects[i].aoPlane.material.opacity = 0;
-							}
-						}
-					}
 				}
 
 				if(t < 1){
@@ -1534,19 +1395,6 @@ const animation = {
 					for(let j = 0; j < objects.length; ++j){
 						objects[j].position.copy(to[j]);
 						objects[j].quaternion.copy(toRot[j]);
-						// Update AO plane final position and opacity
-						if(objects[j].aoPlane){
-							objects[j].aoPlane.position.set(
-								objects[j].position.x,
-								objects[j].position.y + objects[j].aoPlane.aoYOffset,
-								objects[j].position.z
-							);
-							// Set final opacity if AO was fading in and should be visible
-							if(objects[j].aoPlane.fadeIn){
-								objects[j].aoPlane.material.opacity = objects[j].aoPlane.visible ? 1.0 : 0;
-								objects[j].aoPlane.fadeIn = false;
-							}
-						}
 					}
 					self.nextFrame();
 				}
@@ -1731,24 +1579,6 @@ const board = {
 				this.addOverlay('images/board/overlays/' + boardDefaults.overlayFile);
 			}
 		}
-		// Add static AO shadow for the board
-		this.addBoardAO();
-	},
-	addBoardAO: function(){
-		// Remove existing board AO if present
-		if(this.boardAO){
-			scene.remove(this.boardAO);
-		}
-		// Create AO shadow with blurred square texture
-		const boardSize = sq_size * gameData.size + border_size * 2;
-		const referenceSize = 6;
-		const scaledPadding = piece_size * aoConfig.padding * (gameData.size / referenceSize);
-		const aoSize = boardSize + scaledPadding;
-		this.boardAO = createAOPlane(getBoardAOTexture(), aoSize, aoSize, 0);
-		this.boardAO.position.set(0, -sq_height / 2 + aoConfig.yOffset, 0);
-		this.boardAO.ispassive = true;
-		this.boardAO.visible = shadowsEnabled;
-		scene.add(this.boardAO);
 	},
 	addOverlay: function(value){
 		const overlay_texture = srgb(new THREE.TextureLoader().load(value ?? materials.boardOverlayPath));
@@ -1833,9 +1663,9 @@ const board = {
 		shadowLight.shadow.camera.right = shadowCamSize;
 		shadowLight.shadow.camera.top = shadowCamSize;
 		shadowLight.shadow.camera.bottom = -shadowCamSize;
-		// Ensure shadow camera covers from light position down to table level
+		// Cover from the light down past the table, whichever way the light is angled
 		shadowLight.shadow.camera.near = 1;
-		shadowLight.shadow.camera.far = 600;
+		shadowLight.shadow.camera.far = shadowLight.position.length() + 400;
 		shadowLight.shadow.camera.updateProjectionMatrix();
 	},
 	// addpieces: add the pieces to the scene, not on the board
@@ -1920,16 +1750,6 @@ const board = {
 							zPos
 						);
 					}
-					// Update AO plane for capstone
-					if(piece.aoPlane){
-						piece.aoPlane.aoYOffset = -capstone_height / 2 + aoConfig.yOffset;
-						piece.aoPlane.geometry.dispose();
-						const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
-						piece.aoPlane.geometry = new THREE.PlaneGeometry(aoRadius * 2, aoRadius * 2);
-						piece.aoPlane.material.map = getCapAOTexture();
-						piece.aoPlane.material.needsUpdate = true;
-						piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
-					}
 				}
 				else{
 					const wasStanding = piece.isstanding;
@@ -1943,12 +1763,6 @@ const board = {
 						if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
 						piece.rotateX(-Math.PI / 2);
 						if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
-						// Update AO plane rotation and texture for wall
-						setAOToWall(piece);
-					}
-					// Update AO plane for flat pieces (walls already handled by setAOToWall)
-					else if(piece.aoPlane){
-						resetAOToFlat(piece);
 					}
 					// Update position with selection offset
 					const stackno = Math.floor(piece.pieceNum / 10);
@@ -1976,10 +1790,6 @@ const board = {
 							zPos
 						);
 					}
-					// Update AO plane position
-					if(piece.aoPlane){
-						piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
-					}
 				}
 				continue;
 			}
@@ -1993,15 +1803,6 @@ const board = {
 					piece.geometry = capGeometryB;
 				}
 				piece.updateMatrix();
-				// Update AO plane for capstone
-				if(piece.aoPlane){
-					piece.aoPlane.aoYOffset = -capstone_height / 2 + aoConfig.yOffset;
-					piece.aoPlane.geometry.dispose();
-					const aoRadius = capstone_radius + piece_size * aoConfig.padding / 2;
-					piece.aoPlane.geometry = new THREE.PlaneGeometry(aoRadius * 2, aoRadius * 2);
-					piece.aoPlane.material.map = getCapAOTexture();
-					piece.aoPlane.material.needsUpdate = true;
-				}
 			}
 			else{
 				// Track if piece was standing before reset
@@ -2028,12 +1829,6 @@ const board = {
 					if(!piece.iswhitepiece){piece.rotateY(Math.PI / 2);}
 					piece.rotateX(-Math.PI / 2);
 					if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
-					// Update AO plane rotation and texture for wall
-					setAOToWall(piece);
-				}
-				// Update AO plane for flat pieces (walls already handled by setAOToWall)
-				else if(piece.aoPlane){
-					resetAOToFlat(piece);
 				}
 			}
 			// Update Y position for pieces on squares (piece_size may have changed)
@@ -2049,10 +1844,6 @@ const board = {
 				}
 				else{
 					piece.position.y = sq_height + stackIndex * piece_height;
-				}
-				// Update AO plane position
-				if(piece.aoPlane){
-					piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
 				}
 			}
 			else if(!piece.onsquare){
@@ -2102,12 +1893,10 @@ const board = {
 						);
 					}
 				}
-				// Update AO plane position for unplayed pieces
-				if(piece.aoPlane){
-					piece.aoPlane.position.set(piece.position.x, piece.position.y + piece.aoPlane.aoYOffset, piece.position.z);
-				}
 			}
 		}
+		// refit custom models to the new piece size
+		refreshCustomPieces();
 	},
 	file: function(no){
 		return String.fromCharCode('A'.charCodeAt(0) + no);
@@ -2198,7 +1987,9 @@ const board = {
 		raycaster.setFromCamera(mouse,camera);
 		const intersects = raycaster.intersectObjects(scene.children);
 		for(let a=0;a<intersects.length;a++){
-			const potential=intersects[a].object;
+			let potential=intersects[a].object;
+			// a custom model is a child of its piece
+			while(potential.parent && potential.parent !== scene){potential = potential.parent;}
 			if(potential.isboard){
 				return ["board",potential,potential.rank,potential.file];
 			}
@@ -2259,56 +2050,18 @@ const board = {
 							const wallToFlatten = this.top_of_stack(pick[1]);
 							const hasWallToFlatten = wallToFlatten && wallToFlatten.isstanding && !wallToFlatten.iscapstone && obj.iscapstone;
 							const objectsToAnimate = hasWallToFlatten ? [obj, wallToFlatten] : [obj];
-							const self = this;
-							// Enable drop shadow on wall being flattened
-							if(hasWallToFlatten){
-								wallToFlatten.castShadow = true;
-							}
-							// Set fadeIn flag for AO to fade in at end of animation
-							// Don't set visible here - pushPieceOntoSquare will set correct visibility
-							if(obj.aoPlane && animationsEnabled && shadowsEnabled){
-								obj.aoPlane.fadeIn = true;
-								obj.aoPlane.material.opacity = 0;
-							}
 							animation.push(objectsToAnimate);
 							this.pushPieceOntoSquare(pick[1],obj);
 							const animType = isSameSquare ? 'move' : 'jump';
-							animation.push(objectsToAnimate, animType, isSameSquare ? 100 : 200, function(){
-								self.hideSelectionShadow();
-								// Disable drop shadow on wall after animation
-								if(hasWallToFlatten){
-									wallToFlatten.castShadow = false;
-								}
-							});
+							animation.push(objectsToAnimate, animType, isSameSquare ? 100 : 200);
 							// Only play sound if move was actually made, not canceled
 							animation.play(isMoveCanceled ? null : playMoveSound);
 						}
 						else{
 							const allPieces = [obj].concat(this.selectedStack);
-							// Set fadeIn flag for dropped piece's AO to fade in at end of animation
-							// Don't set visible here - pushPieceOntoSquare will set correct visibility
-							if(obj.aoPlane && animationsEnabled && shadowsEnabled){
-								obj.aoPlane.fadeIn = true;
-								obj.aoPlane.material.opacity = 0;
-							}
-							// Hide AO of the new bottom piece (no longer in contact with piece below)
-							const newBottomPiece = this.selectedStack[this.selectedStack.length - 1];
-							if(newBottomPiece && newBottomPiece.aoPlane){
-								if(animationsEnabled){
-									newBottomPiece.aoPlane.material.opacity = 0;
-								}
-								else{
-									newBottomPiece.aoPlane.visible = false;
-								}
-							}
 							animation.push(allPieces);
 							this.pushPieceOntoSquare(pick[1],obj);
 							this.move_stack_over(pick[1],this.selectedStack, false);
-							// Update shadow position to follow the stack
-							const bottomPiece = this.selectedStack[this.selectedStack.length - 1];
-							if(bottomPiece){
-								this.showSelectionShadow(bottomPiece);
-							}
 							animation.push(allPieces, 'move', 100);
 							animation.play();
 						}
@@ -2320,7 +2073,6 @@ const board = {
 							this.move.end = pick[1];
 							this.selectedStack = null;
 							this.unhighlight_sq();
-							// hideSelectionShadow is called in animation onComplete callback
 							this.generateMove();
 						}
 					}
@@ -2452,8 +2204,7 @@ const board = {
 		}
 		return null;
 	},
-	placePieceOnSquare: function(piece, sq, hideSelectionShadowAfter){
-		const self = this;
+	placePieceOnSquare: function(piece, sq){
 		// Double Black Stack (DBS): white's first move places a second black flat on top,
 		// animated together with the first flat so the pair moves down as a unit.
 		// select() sets selectedCompanion for the lift-then-place flow; the direct
@@ -2463,26 +2214,13 @@ const board = {
 		const companion = this.selectedCompanion || this.getDoubleBlackStackCompanion();
 		const movers = companion ? [piece, companion] : [piece];
 		animation.push(movers);
-		if(piece.aoPlane && animationsEnabled){
-			piece.aoPlane.fadeIn = true;
-			piece.aoPlane.material.opacity = 0;
-		}
 		this.pushPieceOntoSquare(sq, piece);
 		if(companion){
-			if(companion.aoPlane && animationsEnabled){
-				companion.aoPlane.fadeIn = true;
-				companion.aoPlane.material.opacity = 0;
-			}
 			this.pushPieceOntoSquare(sq, companion);
 			this.blackpiecesleft--;
 			this.selectedCompanion = null;
 		}
-		if(hideSelectionShadowAfter){
-			animation.push(movers, 'jump', 300, function(){self.hideSelectionShadow();});
-		}
-		else{
-			animation.push(movers, 'jump', 300);
-		}
+		animation.push(movers, 'jump', 300);
 		animation.play(playMoveSound);
 
 		let stone = 'Piece';
@@ -2612,9 +2350,6 @@ const board = {
 			}
 		}
 		else{
-			// Enable drop shadow during animation
-			obj.castShadow = true;
-			if(companion){ companion.castShadow = true; }
 			const movers = companion ? [obj, companion] : [obj];
 			// Record start position before any changes
 			animation.push(movers);
@@ -2627,10 +2362,7 @@ const board = {
 				this.pushPieceOntoSquare(hlt, companion);
 				this.blackpiecesleft--;
 			}
-			animation.push(movers, 'jump', 300, function(){
-				obj.castShadow = false;
-				if(companion){ companion.castShadow = false; }
-			});
+			animation.push(movers, 'jump', 300);
 			animation.play(playMoveSound);
 		}
 		this.highlightLastMove_sq(hlt, gameData.move_count);
@@ -2707,39 +2439,14 @@ const board = {
 					}
 				}
 			}
-			// Find bottom pieces of each new stack (first piece dropped on each target square)
-			const bottomPiecesForShadow = [];
-			const seenTargets = [];
-			for(let i = 0; i < allPieces.length; i++){
-				const targetKey = pieceTargets[i].file + '_' + pieceTargets[i].rank;
-				if(seenTargets.indexOf(targetKey) === -1){
-					seenTargets.push(targetKey);
-					bottomPiecesForShadow.push(allPieces[i]);
-				}
-			}
 			// Record start positions for all pieces including walls to flatten
 			const objectsToAnimate = allPieces.concat(wallsToFlatten);
-			// Enable drop shadow on walls being flattened and bottom pieces during animation
-			for(let i = 0; i < wallsToFlatten.length; i++){
-				wallsToFlatten[i].castShadow = true;
-			}
-			for(let i = 0; i < bottomPiecesForShadow.length; i++){
-				bottomPiecesForShadow[i].castShadow = true;
-			}
 			animation.push(objectsToAnimate);
 			// Set end positions for all pieces
 			for(let i = 0; i < allPieces.length; i++){
 				this.pushPieceOntoSquare(pieceTargets[i], allPieces[i]);
 			}
-			animation.push(objectsToAnimate, 'jump', 300, function(){
-				// Disable drop shadow on walls and bottom pieces after animation
-				for(let j = 0; j < wallsToFlatten.length; j++){
-					wallsToFlatten[j].castShadow = false;
-				}
-				for(let k = 0; k < bottomPiecesForShadow.length; k++){
-					bottomPiecesForShadow[k].castShadow = false;
-				}
-			});
+			animation.push(objectsToAnimate, 'jump', 300);
 			animation.play(playMoveSound);
 		}
 		this.calculateMoveNotation(
@@ -2989,15 +2696,6 @@ const board = {
 			this.rotate(top, false);
 		}
 
-		// AO shadow logic:
-		// - Bottom piece of stack always shows AO (on table/board)
-		// - Standing pieces (walls/caps) on top of flats also show AO
-		// - Flat on flat does NOT show AO
-		// Only hide AO on previous top if it was a standing piece (wall/cap)
-		// The bottom flat of a stack should always keep its AO
-		if(top && top.aoPlane && top.isstanding){
-			top.aoPlane.visible = false;
-		}
 		pc.position.x = sq.position.x;
 
 		if(pc.isstanding){
@@ -3007,22 +2705,6 @@ const board = {
 		else{pc.position.y = sq_height + st.length * piece_height;}
 		pc.position.z = sq.position.z;
 
-		// Show AO on new piece only if shadows enabled AND:
-		// 1. It's at the bottom of the stack (st.length === 0), OR
-		// 2. It's a standing piece (wall/cap) on top of flats
-		if(pc.aoPlane){
-			const isBottom = (st.length === 0);
-			const isStandingOnFlats = pc.isstanding && st.length > 0;
-			const shouldShowAO = shadowsEnabled && (isBottom || isStandingOnFlats);
-			pc.aoPlane.visible = shouldShowAO;
-			// Don't overwrite fadeIn if it was already set (e.g., by leftclick before this call)
-			if(!pc.aoPlane.fadeIn){
-				pc.aoPlane.fadeIn = false;
-				pc.aoPlane.material.opacity = shouldShowAO ? 1.0 : 0;
-			}
-			// Update AO plane position to match piece
-			pc.aoPlane.position.set(pc.position.x, pc.position.y + pc.aoPlane.aoYOffset, pc.position.z);
-		}
 		pc.onsquare = sq;
 		st.push(pc);
 		return flattened;
@@ -3038,32 +2720,14 @@ const board = {
 			// Stop current animation and jump to final state before starting new one
 			animation.stop();
 		}
-		// Enable drop shadow while flattening
-		if(animate){
-			piece.castShadow = true;
-			animation.push([piece]);
-		}
+		if(animate){animation.push([piece]);}
 		piece.position.y -= piece_size / 2 - piece_height / 2;
 		if(diagonal_walls){piece.rotateZ(Math.PI / 4);}
 		piece.rotateX(Math.PI / 2);
 		// Reverse black wall 90-degree rotation (after X rotation)
 		if(!piece.iswhitepiece){piece.rotateY(-Math.PI / 2);}
 		piece.isstanding = false;
-		// Update AO plane for flat shape, texture and position
-		resetAOToFlat(piece);
-		if(piece.aoPlane && piece.onsquare){
-			const stack = this.get_stack(piece.onsquare);
-			// If there are other pieces in the stack, the smashed wall is on top - hide its AO
-			if(stack.length > 1){
-				piece.aoPlane.visible = false;
-				piece.aoPlane.material.opacity = 0;
-			}
-			else{
-				// Wall was alone on square, now it's a flat at bottom - show AO if shadows enabled
-				piece.aoPlane.visible = shadowsEnabled;
-				piece.aoPlane.material.opacity = 1.0;
-			}
-		}
+		applyCustomModel(piece);
 		if(animate){
 			animation.push([piece], 'move', 150);
 			animation.play();
@@ -3082,8 +2746,7 @@ const board = {
 		piece.rotateX(-Math.PI / 2);
 		if(diagonal_walls){piece.rotateZ(-Math.PI / 4);}
 		piece.isstanding = true;
-		// Update AO plane for wall shape, texture and position
-		setAOToWall(piece);
+		applyCustomModel(piece);
 		if(animate){
 			animation.push([piece], 'move', 150);
 			animation.play();
@@ -3116,14 +2779,8 @@ const board = {
 							pieceToSelect.rotateX(-Math.PI / 2);
 							if(diagonal_walls){pieceToSelect.rotateZ(-Math.PI / 4);}
 							pieceToSelect.isstanding = true;
-							// Update AO plane for wall shape and texture
-							setAOToWall(pieceToSelect);
-							// Hide AO when lifting
-							if(pieceToSelect.aoPlane){
-								pieceToSelect.aoPlane.material.opacity = 0;
-							}
+							applyCustomModel(pieceToSelect);
 							this.selected = pieceToSelect;
-							this.showSelectionShadow(pieceToSelect);
 							animation.push([pieceToSelect], 'move', 150);
 							animation.play();
 						}
@@ -3138,20 +2795,10 @@ const board = {
 					const obj=scene.children[i];
 					if(!obj.isboard && obj.onsquare){
 						obj.visible=false;
-						// Also hide AO plane
-						if(obj.aoPlane){
-							obj.aoPlane.visible=false;
-						}
 					}
 				}
 				for(i=0;i<stack.length;i++){
 					stack[i].visible=true;
-					// Show AO plane based on position in stack and shadows setting
-					if(stack[i].aoPlane && shadowsEnabled){
-						const isBottom = (i === 0);
-						const isStandingOnFlats = stack[i].isstanding && i > 0;
-						stack[i].aoPlane.visible = isBottom || isStandingOnFlats;
-					}
 				}
 				this.totalhighlighted=square;
 			}
@@ -3163,13 +2810,6 @@ const board = {
 				const obj = scene.children[i];
 				if(obj.isboard || !obj.onsquare){continue;}
 				obj.visible = true;
-				// Restore AO visibility based on stack position and shadows setting
-				if(obj.aoPlane && shadowsEnabled){
-					const stack = this.get_stack(obj.onsquare);
-					const isBottom = (stack.indexOf(obj) === 0);
-					const isStandingOnFlats = obj.isstanding && stack.indexOf(obj) > 0;
-					obj.aoPlane.visible = isBottom || isStandingOnFlats;
-				}
 			}
 			this.totalhighlighted = null;
 		}
@@ -3181,10 +2821,6 @@ const board = {
 	//bring pieces to original positions,
 	resetpieces: function(){
 		for(let i = this.piece_objects.length - 1;i >= 0;i--){
-			// Remove AO plane from scene if it exists
-			if(this.piece_objects[i].aoPlane){
-				scene.remove(this.piece_objects[i].aoPlane);
-			}
 			scene.remove(this.piece_objects[i]);
 		}
 
@@ -3212,8 +2848,13 @@ const board = {
 			}
 		}
 
+		// the scene was cleared: add back the table and fill lights as initEmpty does, or piece sides render black
+		this.addtable();
+		this.addlight();
 		this.addboard();
 		this.addpieces();
+		this.updateShadowCamera();
+		updateShadowsVisibility();
 	},
 	showmove: function(no,override){
 		if(gameData.move_count <= gameData.move_start || no>gameData.move_count || no<gameData.move_start || (gameData.move_shown === no && !override)){
@@ -3332,28 +2973,7 @@ const board = {
 		// Lift the Double Black Stack companion by the same amount so it stays stacked on top.
 		if(dbsCompanion){
 			dbsCompanion.position.y += stack_selection_height;
-			if(dbsCompanion.aoPlane){ dbsCompanion.aoPlane.material.opacity = 0; }
 			this.selectedCompanion = dbsCompanion;
-		}
-		this.showSelectionShadow(obj);
-		// Fade out AO shadow when lifting
-		if(obj.aoPlane && animationsEnabled){
-			obj.aoPlane.material.opacity = 0;
-		}
-		else if(obj.aoPlane){
-			obj.aoPlane.visible = false;
-		}
-		// Show AO on piece underneath if this was a standing piece on a stack
-		// Only show if the piece underneath is at the bottom of the stack or is standing
-		if(obj.onsquare && (obj.isstanding || obj.iscapstone)){
-			const stack = this.get_stack(obj.onsquare);
-			const objIndex = stack.indexOf(obj);
-			if(objIndex > 0 && stack[objIndex - 1].aoPlane && shadowsEnabled){
-				const pieceBelow = stack[objIndex - 1];
-				const shouldShowBelow = (objIndex === 1) || pieceBelow.isstanding;
-				pieceBelow.aoPlane.visible = shouldShowBelow;
-				pieceBelow.aoPlane.material.opacity = shouldShowBelow ? 1.0 : 0;
-			}
 		}
 		animation.push(movers, 'move', 100);
 		animation.play();
@@ -3361,7 +2981,6 @@ const board = {
 	unselect: function(options){
 		const animate = !options || options.animate !== false;
 		if(this.selected){
-			const self = this;
 			const piece = this.selected;
 			// Double Black Stack: lower the companion black flat together with the first.
 			const companion = this.selectedCompanion;
@@ -3375,55 +2994,17 @@ const board = {
 				// Reverse black wall 90-degree rotation (after X rotation)
 				if(!piece.iswhitepiece){piece.rotateY(-Math.PI / 2);}
 				piece.isstanding = false;
-				// Reset AO plane to flat shape and texture
-				resetAOToFlat(piece);
+				applyCustomModel(piece);
 			}
 			else{
 				piece.position.y -= stack_selection_height;
 			}
 			if(companion){
 				companion.position.y -= stack_selection_height;
-				if(companion.aoPlane){
-					companion.aoPlane.visible = shadowsEnabled;
-					companion.aoPlane.fadeIn = shadowsEnabled;
-					companion.aoPlane.material.opacity = 0;
-				}
 			}
-			// Restore AO visibility for unplayed pieces being dropped back
-			if(piece.aoPlane && !piece.onsquare){
-				piece.aoPlane.visible = shadowsEnabled;
-				piece.aoPlane.fadeIn = shadowsEnabled;
-				piece.aoPlane.material.opacity = 0;
-			}
-			// Hide AO on piece underneath if this is a standing piece or capstone going back on a stack
-			if(piece.onsquare && (piece.isstanding || piece.iscapstone)){
-				const stack = this.get_stack(piece.onsquare);
-				const pieceIndex = stack.indexOf(piece);
-				if(pieceIndex > 0 && stack[pieceIndex - 1].aoPlane){
-					stack[pieceIndex - 1].aoPlane.visible = false;
-					stack[pieceIndex - 1].aoPlane.material.opacity = 0;
-				}
-			}
-			animate && animation.push(movers, 'move', 75, function(){
-				self.hideSelectionShadow();
-				// Ensure AO is visible after animation completes
-				if(piece.aoPlane && !piece.onsquare){
-					piece.aoPlane.material.opacity = 1.0;
-					piece.aoPlane.fadeIn = false;
-				}
-				if(companion && companion.aoPlane && !companion.onsquare){
-					companion.aoPlane.material.opacity = 1.0;
-					companion.aoPlane.fadeIn = false;
-				}
-			});
+			animate && animation.push(movers, 'move', 75);
 			this.selected = null;
 			this.selectedCompanion = null;
-			if(!animate){
-				this.hideSelectionShadow();
-				if(piece.aoPlane && !piece.onsquare){
-					piece.aoPlane.material.opacity = 1.0;
-				}
-			}
 			animate && animation.play();
 		}
 	},
@@ -3436,44 +3017,11 @@ const board = {
 			objectsToAnimate.push(obj);
 			this.selectedStack.push(obj);
 		}
-		// Hide AO only on bottom piece of lifted stack (no longer in contact with board)
-		// Keep AO visible on other pieces (still in contact with piece below them)
-		const bottomPieceIndex = this.selectedStack.length - 1;
-		for(let i = 0; i < this.selectedStack.length; i++){
-			const obj = this.selectedStack[i];
-			if(obj.aoPlane){
-				if(i === bottomPieceIndex){
-					// Bottom piece - hide AO (no contact with board)
-					if(animationsEnabled){
-						obj.aoPlane.material.opacity = 0;
-					}
-					else{
-						obj.aoPlane.visible = false;
-					}
-				}
-				else{
-					// Other pieces - only show AO if standing (wall/cap), not for flats
-					const shouldShow = shadowsEnabled && obj.isstanding;
-					obj.aoPlane.visible = shouldShow;
-					obj.aoPlane.material.opacity = shouldShow ? 1.0 : 0;
-				}
-			}
-		}
-		// Show AO on piece that's now at top of remaining stack (only if bottom or standing)
-		if(stk.length > 0 && stk[stk.length - 1].aoPlane && shadowsEnabled){
-			const newTop = stk[stk.length - 1];
-			const shouldShowNewTopAO = (stk.length === 1) || newTop.isstanding;
-			newTop.aoPlane.visible = shouldShowNewTopAO;
-			newTop.aoPlane.material.opacity = shouldShowNewTopAO ? 1.0 : 0;
-		}
 		if(objectsToAnimate.length > 0){
 			animation.push(objectsToAnimate);
 			for(let i = 0;i < objectsToAnimate.length;i++){
 				objectsToAnimate[i].position.y += stack_selection_height;
 			}
-			// Bottom piece of selected stack is the last one in the array
-			const bottomPiece = this.selectedStack[this.selectedStack.length - 1];
-			this.showSelectionShadow(bottomPiece);
 			animation.push(objectsToAnimate, 'move', 100);
 			animation.play();
 		}
@@ -3524,40 +3072,14 @@ const board = {
 			if(needsFlatten){
 				piece.rotation.set(0, 0, 0);
 				piece.isstanding = false;
-				// Reset AO plane to flat shape and texture
-				resetAOToFlat(piece);
-			}
-			// Restore AO visibility only if piece is at bottom of unplayed stack and shadows enabled
-			const isBottomOfStack = (stackheight === 0);
-			if(piece.aoPlane){
-				if(isBottomOfStack && shadowsEnabled){
-					piece.aoPlane.visible = true;
-					piece.aoPlane.fadeIn = true;
-					piece.aoPlane.material.opacity = 0;
-				}
-				else{
-					piece.aoPlane.visible = false;
-					piece.aoPlane.material.opacity = 0;
-				}
+				applyCustomModel(piece);
 			}
 			// Lower the companion back to its staged position (one level above the
 			// first flat's rest slot) by reversing the selection lift.
 			if(companion){
 				companion.position.y -= stack_selection_height;
-				if(companion.aoPlane){
-					companion.aoPlane.visible = false;
-					companion.aoPlane.material.opacity = 0;
-				}
 			}
-			const self = this;
-			animation.push(movers, 'move', 100, function(){
-				self.hideSelectionShadow();
-				// Ensure AO is visible after animation completes (only for bottom pieces)
-				if(piece.aoPlane && isBottomOfStack){
-					piece.aoPlane.material.opacity = 1.0;
-					piece.aoPlane.fadeIn = false;
-				}
-			});
+			animation.push(movers, 'move', 100);
 			animation.play();
 			this.selected = null;
 			this.selectedCompanion = null;
@@ -3618,15 +3140,10 @@ const board = {
 				}
 				// Use pushPieceOntoSquare to set correct final positions
 				for(let k = 0; k < allPieces.length; k++){
-					// Reset fadeIn flag so pushPieceOntoSquare can set correct AO visibility
-					if(allPieces[k].aoPlane){
-						allPieces[k].aoPlane.fadeIn = false;
-					}
 					this.pushPieceOntoSquare(startSq, allPieces[k]);
 				}
 				const animType = isSameSquare ? 'move' : 'jump';
-				const self = this;
-				animation.push(allPieces, animType, isSameSquare ? 100 : 200, function(){self.hideSelectionShadow();});
+				animation.push(allPieces, animType, isSameSquare ? 100 : 200);
 				animation.play();
 				this.selectedStack = null;
 				this.move = { start: null, end: null, dir: 'U', squares: []};
@@ -3685,16 +3202,6 @@ const board = {
 			}
 			this.highlighted = null;
 			scene.remove(highlighter);
-		}
-	},
-	showSelectionShadow: function(obj){
-		// Enable shadow casting on the selected piece
-		obj.castShadow = true;
-	},
-	hideSelectionShadow: function(){
-		// Disable shadow casting on all pieces
-		for(let i = 0; i < this.piece_objects.length; i++){
-			this.piece_objects[i].castShadow = false;
 		}
 	},
 	get_stack: function(sq){
@@ -4180,7 +3687,7 @@ function onDocumentMouseUp(e){
 		// Handle pending piece placement (deferred from mousedown)
 		if(pendingPlacement){
 			if(wasClick && checkIfMyMove() && !gameData.is_game_end){
-				board.placePieceOnSquare(pendingPlacement.piece, pendingPlacement.sq, pendingPlacement.hideSelectionShadow);
+				board.placePieceOnSquare(pendingPlacement.piece, pendingPlacement.sq);
 			}
 			else if(pendingPlacement.hideSelectionShadow){
 				// Was a drag with a selected piece - restore the selection
@@ -4221,34 +3728,21 @@ function init3DBoard(){
 	highlighter.rotateX(Math.PI / 2);
 	lastMoveHighlighter = new THREE.Mesh(geometry, materials.lastMoveHighlighter);
 	lastMoveHighlighter.rotateX(Math.PI / 2);
-	// Create radial gradient texture for AO shadow (DEBUG: very obvious for testing)
-	const aoCanvas = document.createElement('canvas');
-	aoCanvas.width = 64;
-	aoCanvas.height = 64;
-	const aoCtx = aoCanvas.getContext('2d');
-	const gradient = aoCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-	gradient.addColorStop(0, 'rgba(255,0,0,0.8)');
-	gradient.addColorStop(0.5, 'rgba(255,0,0,0.5)');
-	gradient.addColorStop(1, 'rgba(255,0,0,0)');
-	aoCtx.fillStyle = gradient;
-	aoCtx.fillRect(0, 0, 64, 64);
-	const aoTexture = new THREE.CanvasTexture(aoCanvas);
-	materials.aoShadow = new THREE.MeshBasicMaterial({map: aoTexture, transparent: true, depthWrite: false});
 	// Enable shadow mapping on renderer
 	renderer.shadowMap.enabled = true;
 	// PCFShadowMap is soft in r187+ (it samples around each point using shadow.radius); PCFSoftShadowMap was removed
 	renderer.shadowMap.type = THREE.PCFShadowMap;
-	// Create directional light for shadows (pointing straight down)
+	// The main light, casting every piece's shadow
 	shadowLight = new THREE.DirectionalLight(0xffffff, lightIntensity.shadow);
-	shadowLight.position.set(0, 500, 0);
+	shadowLight.position.set(...shadowLightPosition);
 	shadowLight.target.position.set(0, 0, 0);
 	shadowLight.castShadow = true;
 	shadowLight.shadow.mapSize.width = 2048;
 	shadowLight.shadow.mapSize.height = 2048;
-	shadowLight.shadow.camera.near = 1;
-	shadowLight.shadow.camera.far = 1000;
 	shadowLight.shadow.bias = -0.001;
-	shadowLight.shadow.radius = 4;
+	// pieces also receive shadows; pushing the lookup out along the surface normal keeps them from shadowing themselves
+	shadowLight.shadow.normalBias = 0.5;
+	shadowLight.shadow.radius = 6;
 	shadowLight.ispassive = true;
 	scene.add(shadowLight);
 	scene.add(shadowLight.target);
@@ -4269,6 +3763,7 @@ function init3DBoard(){
 
 	materials.updateBoardMaterials();
 	materials.updatePieceMaterials();
+	loadCustomPieces();
 
 	if(location.search.slice(0,6)===('?load=')){
 		const text = decodeURIComponent(location.search.split('?load=')[1]);

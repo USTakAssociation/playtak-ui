@@ -145,6 +145,21 @@ function updateAnimationSpeed(value){
 }
 
 /*
+ * Brightness and shadow strength sliders, in percent
+ */
+function setLighting(name, percent, save = true){
+	const value = Number(percent) / 100;
+	if(name === 'brightness'){lightBrightness = value;}
+	else{shadowStrength = value;}
+	if(save){localStorage.setItem(`light_${name}`, String(percent));}
+	document.getElementById(`light-${name}-slider`).value = percent;
+	document.getElementById(`light-${name}-value`).textContent = `${percent}%`;
+	updateShadowsVisibility();
+	// redraw now, not at the next once-a-second refresh: light changes are not in the scene hash
+	scenehash = NaN;
+}
+
+/*
  * Notify checkbox change for checkbox:
  *	 Enable or disable shadows
  */
@@ -205,6 +220,12 @@ function gotnewtexturefile(){
 		// ensure the filename has no spaces
 		if(regex.test(fileName)){
 			alert('danger', 'File name cannot contain spaces, please rename the file and try again');
+			return;
+		}
+		// a file that is not an image never loads as a texture, which stops every piece texture from updating
+		if(!this.files[0].type.startsWith('image/')){
+			alert('danger', `${fileName} is not an image; 3D models (.glb) go in Custom 3D Pieces`);
+			this.value = '';
 			return;
 		}
 		reader.addEventListener("load",fileLoaded,false);
@@ -814,6 +835,9 @@ function load3DSettings(){
 		if(localStorage.getItem("shadows_enabled") !== null){
 			shadowsEnabled = localStorage.getItem("shadows_enabled") === 'true';
 			document.getElementById("shadows-checkbox").checked = shadowsEnabled;
+		}
+		for(const name of ['brightness', 'shadow']){
+			if(localStorage.getItem(`light_${name}`) !== null){setLighting(name, localStorage.getItem(`light_${name}`), false);}
 		}
 		// load background color setting
 		document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
