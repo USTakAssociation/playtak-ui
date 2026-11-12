@@ -14,9 +14,10 @@ const pad4 = (n) => (n + 3) & ~3;
 
 /**
  * objects: [{name, size: [x, y, z], position?: [x, y, z], children?: [...objects]}]
+ * sceneName: the name of the scene holding them, as Blender sets from the collection.
  * Returns the .glb as an ArrayBuffer.
  */
-export function makeGLB(objects){
+export function makeGLB(objects, sceneName){
 	const nodes = [];
 	const addNode = (o) => {
 		const index = nodes.length;
@@ -38,7 +39,7 @@ export function makeGLB(objects){
 	const json = {
 		asset: {version: '2.0'},
 		scene: 0,
-		scenes: [{nodes: roots}],
+		scenes: [{name: sceneName, nodes: roots}],
 		nodes,
 		meshes: [{primitives: [{attributes: {POSITION: 0}, indices: 1}]}],
 		accessors: [

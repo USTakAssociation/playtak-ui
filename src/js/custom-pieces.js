@@ -37,8 +37,12 @@ async function parseCustomPieces(buffer){
 	const gltf = await new THREE.GLTFLoader().parseAsync(buffer, '');
 	gltf.scene.updateMatrixWorld(true);
 	const pieces = {animations: gltf.animations};
+	// Objects by their name in the file, not counting the scene: Blender may name the scene "cap" too,
+	// and the loader then renames the cap object "cap_1" to keep names unique.
+	const objects = [];
+	gltf.scene.traverse((o) => {if(o !== gltf.scene && (o.userData.name ?? o.name)){objects.push(o);}});
 	for(const name of customPieceNames){
-		const node = gltf.scene.getObjectByName(name);
+		const node = objects.find((o) => (o.userData.name ?? o.name) === name);
 		pieces[name] = null;
 		if(node){
 			// keep the transforms of any parents it had in the file
@@ -48,8 +52,7 @@ async function parseCustomPieces(buffer){
 		}
 	}
 	if(!customPieceNames.some((name) => pieces[name])){
-		const found = [];
-		gltf.scene.traverse((o) => {if(o.name){found.push(o.name);}});
+		const found = objects.map((o) => o.userData.name ?? o.name);
 		throw new Error(`no object named flat, wall or cap; the file has: ${found.join(', ') || 'no named objects'}`);
 	}
 	return pieces;
@@ -73,7 +76,12 @@ function makeCustomTemplate(source, name){
 		fitted.position.y = -piece_size / 2;
 		holder.rotation.x = Math.PI / 2;
 	}
-	holder.traverse((o) => {if(o.isMesh){o.receiveShadow = true;}});
+	holder.traverse((o) => {
+		if(o.isMesh){
+			o.receiveShadow = true;
+			[].concat(o.material).forEach(lightCustomMaterial);
+		}
+	});
 	return holder;
 }
 
@@ -111,13 +119,28 @@ function refreshCustomPieces(){
 		}
 	}
 	board.piece_objects.forEach(applyCustomModel);
-	// glTF materials are physically based: metal shows its surroundings and renders black without any.
-	// Only these materials use scene.environment, so the built-in board and pieces look the same.
-	if(!scene.environment && (customPieces.white || customPieces.black)){
-		scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-		// the board's own lights already light these models; the environment only needs to give metal something to reflect
-		scene.environmentIntensity = 0.5;
-	}
+}
+
+// glTF materials are physically based: metal shows its surroundings and renders black without any.
+// The environment goes on these materials only: scene.environment would also light the board's Lambert materials
+// from every side, washing out their shading and shadows.
+// The environment's all-round light is not blocked by anything, so at full strength it lifts the models' shadows on themselves
+// until they barely show. They get a quarter of it, chosen by eye on a model with overhangs, and its full reflections.
+const customPieceEnvLight = 0.25;
+const customPieceEnvLightLine = 'iblIrradiance += getIBLIrradiance( geometryNormal );';
+let customPieceEnvMap = null;
+function lightCustomMaterial(material){
+	if(!material.isMeshStandardMaterial || material.envMap){return;}
+	customPieceEnvMap ??= new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+	material.envMap = customPieceEnvMap;
+	// the board's own lights already light these models; the environment only needs to give metal something to reflect
+	material.envMapIntensity = 0.5;
+	material.onBeforeCompile = (shader) => {
+		const envLight = `iblIrradiance += ${customPieceEnvLight.toFixed(2)} * getIBLIrradiance( geometryNormal );`;
+		const lights = THREE.ShaderChunk.lights_fragment_maps.replace(customPieceEnvLightLine, envLight);
+		shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_maps>', lights);
+	};
+	material.needsUpdate = true;
 }
 
 // ---- Storage ----

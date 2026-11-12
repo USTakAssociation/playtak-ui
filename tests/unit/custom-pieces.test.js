@@ -16,11 +16,15 @@ const THREE = {...THREE_CORE, GLTFLoader, SkeletonUtils};
 const here = path.dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(path.join(here, '..', '..', 'src', 'js', 'custom-pieces.js'), 'utf8');
 // custom-pieces.js is a plain script reading board.js's piece sizes as globals
-const {fitModel, customPieceSlot, parseCustomPieces} = new Function('THREE', `
+const {fitModel, customPieceSlot, parseCustomPieces, customPieceEnvLightLine} = new Function('THREE', `
 	const piece_size = 60, piece_height = 15, capstone_radius = 24, capstone_height = 66;
 	${source}
-	return {fitModel, customPieceSlot, parseCustomPieces};
+	return {fitModel, customPieceSlot, parseCustomPieces, customPieceEnvLightLine};
 `)(THREE);
+
+it('three.js still has the shader line that custom models turn their environment light down in', () => {
+	expect(THREE.ShaderChunk.lights_fragment_maps).toContain(customPieceEnvLightLine);
+});
 
 function boxOf(object){
 	object.updateMatrixWorld(true);
@@ -95,6 +99,14 @@ describe('parseCustomPieces', () => {
 		]));
 		expect(boxOf(pieces.cap)).toEqual({min: [2, 97.5, -1], max: [4, 102.5, 1]});
 		expect(pieces.cap.parent).toBe(null);
+	});
+
+	it('finds the cap object, not a scene that is also named cap', async() => {
+		const pieces = await parseCustomPieces(makeGLB([
+			{name: 'cap', size: [2, 5, 2]},
+			{name: 'flat', size: [4, 1, 4], position: [10, 0, 0]}
+		], 'cap'));
+		expect(boxOf(pieces.cap)).toEqual({min: [-1, -2.5, -1], max: [1, 2.5, 1]});
 	});
 
 	it('names what it found when there is no flat, wall or cap', async() => {

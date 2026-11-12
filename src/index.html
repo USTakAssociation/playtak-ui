@@ -714,6 +714,22 @@
 									Shadows
 								</label>
 							</div>
+							<div>
+								<label for="light-brightness-slider" style="display: block; margin-bottom: 5px;">
+									Brightness: <span id="light-brightness-value">100%</span>
+								</label>
+								<input type="range" id="light-brightness-slider" min="50" max="150" step="5" value="100"
+									style="width: 100%; margin-bottom: 10px;"
+									oninput="setLighting('brightness', this.value)" />
+							</div>
+							<div>
+								<label for="light-shadow-slider" style="display: block; margin-bottom: 5px;">
+									Shadow Strength: <span id="light-shadow-value">100%</span>
+								</label>
+								<input type="range" id="light-shadow-slider" min="50" max="300" step="10" value="100"
+									style="width: 100%; margin-bottom: 10px;"
+									oninput="setLighting('shadow', this.value)" />
+							</div>
 							<div data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
 								<label for="clearcolorbox">
 									Background color
@@ -787,7 +803,7 @@
 							</div>
 							<div class="flex flex-column gap--8">
 								Custom 3D Pieces (.glb, objects named flat, wall, cap)
-								<div id="custom-pieces-white-saved" class="flex gap--8" style="display:none; align-items:center;">
+								<div id="custom-pieces-white-saved" class="flex flex-wrap gap--8" style="display:none; align-items:center;">
 									White: <span id="custom-pieces-white-name"></span>
 									<button type="button" class="btn btn-pill btn-secondary" onclick="removeCustomPieces('white')">Remove</button>
 								</div>
@@ -795,7 +811,7 @@
 									White
 									<input type="file" id="custom-pieces-white" accept=".glb" onchange="uploadCustomPieces('white', this)" />
 								</label>
-								<div id="custom-pieces-black-saved" class="flex gap--8" style="display:none; align-items:center;">
+								<div id="custom-pieces-black-saved" class="flex flex-wrap gap--8" style="display:none; align-items:center;">
 									Black: <span id="custom-pieces-black-name"></span>
 									<button type="button" class="btn btn-pill btn-secondary" onclick="removeCustomPieces('black')">Remove</button>
 								</div>

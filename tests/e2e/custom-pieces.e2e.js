@@ -180,3 +180,36 @@ test('a piece texture that fails to load does not stop the others from applying'
 		return flat.material === materials.black_piece;
 	})).toBe(true);
 });
+
+test('pieces with a custom model get no contact shadow; their own shadow outlines them', async({page}) => {
+	await upload(page, 'white', 'cap.glb', [{name: 'cap', size: [1, 2, 1]}]);
+	expect(await page.evaluate(() => {
+		updateContactShadows();
+		const visible = (p) => p.contactShadow?.visible ?? false;
+		const cap = board.piece_objects.find((p) => p.iscapstone && p.iswhitepiece);
+		const otherCap = board.piece_objects.find((p) => p.iscapstone && !p.iswhitepiece);
+		return [visible(cap), visible(otherCap)];
+	})).toEqual([false, true]);
+});
+
+test('loading a custom model leaves the lighting of the board and built-in pieces unchanged', async({page}) => {
+	const square = () => page.evaluate(() => {
+		const gl = renderer.getContext();
+		updateContactShadows();
+		renderer.render(scene, camera);
+		const px = new Uint8Array(4);
+		gl.readPixels(gl.drawingBufferWidth / 2, gl.drawingBufferHeight / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+		return [...px];
+	});
+	await page.evaluate(() => {dontanimate = true;});
+	const before = await square();
+	await upload(page, 'white', 'cap.glb', [{name: 'cap', size: [1, 2, 1]}]);
+	expect(await square()).toEqual(before);
+	expect(await page.evaluate(() => {
+		const cap = board.piece_objects.find((p) => p.iscapstone && p.iswhitepiece);
+		let envMap = null;
+		cap.customModel.traverse((o) => {if(o.isMesh){envMap = o.material.envMap;}});
+		// metal in the model still has something to reflect, without lighting the whole scene
+		return [scene.environment, envMap !== null];
+	})).toEqual([null, true]);
+});
