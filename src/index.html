@@ -752,6 +752,24 @@
 									Light Follows Camera
 								</label>
 							</div>
+							<!-- temporary: try the point light at different heights above the board; it keeps the height for new games, not reloads -->
+							<div>
+								<label for="point-light-height-slider" style="display: block; margin-bottom: 5px;">
+									Point Light Height: <span id="point-light-height-value">800</span>
+								</label>
+								<input type="range" id="point-light-height-slider" min="100" max="1500" step="50" value="800"
+									style="width: 100%; margin-bottom: 10px;"
+									oninput="light_position[1] = Number(this.value); board.pointLight.position.y = light_position[1]; document.getElementById('point-light-height-value').textContent = this.value; scenehash = NaN;" />
+							</div>
+							<!-- temporary: try the point light at different strengths, as a multiple of its normal strength; Brightness and Shadow Strength still apply on top -->
+							<div>
+								<label for="point-light-strength-slider" style="display: block; margin-bottom: 5px;">
+									Point Light Strength: <span id="point-light-strength-value">1×</span>
+								</label>
+								<input type="range" id="point-light-strength-slider" min="0" max="15" step="0.5" value="1"
+									style="width: 100%; margin-bottom: 10px;"
+									oninput="board.pointLightIntensity = lightIntensity.point * Number(this.value); updateShadowsVisibility(); document.getElementById('point-light-strength-value').textContent = this.value + '×'; scenehash = NaN;" />
+							</div>
 							<div data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
 								<label for="clearcolorbox">
 									Background color
