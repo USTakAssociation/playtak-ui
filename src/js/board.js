@@ -2821,7 +2821,13 @@ const board = {
 	//bring pieces to original positions,
 	resetpieces: function(){
 		for(let i = this.piece_objects.length - 1;i >= 0;i--){
-			scene.remove(this.piece_objects[i]);
+			const piece = this.piece_objects[i];
+			// the contact shadow is not a child of the piece; left in the scene, a new one would pile up on each history step
+			if(piece.contactShadow){
+				scene.remove(piece.contactShadow);
+				piece.contactShadow.geometry.dispose();
+			}
+			scene.remove(piece);
 		}
 
 		this.whitepiecesleft = this.tottiles + this.totcaps;
