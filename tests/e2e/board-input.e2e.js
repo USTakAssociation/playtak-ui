@@ -152,6 +152,24 @@ test('a stone\'s contact shadow is drawn on top of the board overlay, not under 
 	}, square(2, 2))).toBe(true);
 });
 
+test('stepping through the move history does not pile up contact shadows', async({page}) => {
+	await page.mouse.click(...Object.values(await toScreen(page, `${square(2, 2)}.position`)));
+	await expect.poll(() => page.evaluate(() => gameData.move_count)).toBe(1);
+	await page.mouse.click(...Object.values(await toScreen(page, `${square(2, 3)}.position`)));
+	await expect.poll(() => page.evaluate(() => gameData.move_count)).toBe(2);
+	// every contact shadow in the scene belongs to a piece on the board, so none is left behind
+	const orphans = () => page.evaluate(() => {
+		updateContactShadows();
+		const owned = new Set(board.piece_objects.map((p) => p.contactShadow));
+		return scene.children.filter((o) => o.material?.map?.isCanvasTexture && o !== boardContactShadow && !owned.has(o)).length;
+	});
+	for(let i = 0; i < 3; i++){
+		await page.evaluate(() => {previousMove(); previousMove(); nextMove(); nextMove();});
+		await page.waitForTimeout(100);
+	}
+	expect(await orphans()).toBe(0);
+});
+
 test('loading a position keeps the table and fill lights', async({page}) => {
 	const scenery = () => page.evaluate(() => {
 		const types = [];
