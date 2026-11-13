@@ -231,6 +231,49 @@ test('with Light Follows Camera on, the light turns with the view and the settin
 	expect(await page.evaluate(() => lightFollowsCamera)).toBe(true);
 });
 
+test('every piece stays inside the shadow light\'s view, whichever way the light is turned', async({page}) => {
+	expect(await page.evaluate(() => {
+		return [[0, 0], [20, 240], [60, 45]].map(([angle, direction]) => {
+			setLighting('angle', angle, false);
+			setLighting('direction', direction, false);
+			// the view three.js gives the shadow camera when it renders the shadows
+			const cam = shadowLight.shadow.camera;
+			cam.position.copy(shadowLight.position);
+			cam.lookAt(shadowLight.target.position);
+			cam.updateMatrixWorld();
+			const corner = new THREE.Vector3();
+			return board.piece_objects.filter((p) => {
+				const box = new THREE.Box3().setFromObject(p);
+				return [0, 1, 2, 3, 4, 5, 6, 7].some((i) => {
+					corner.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).project(cam);
+					return Math.max(Math.abs(corner.x), Math.abs(corner.y), Math.abs(corner.z)) > 1;
+				});
+			}).length;
+		});
+	})).toEqual([0, 0, 0]);
+});
+
+test('a tall stack\'s whole shadow on the table stays inside the shadow light\'s view', async({page}) => {
+	expect(await page.evaluate(() => [80, 210].map((direction) => {
+		setLighting('angle', 60, false);
+		setLighting('direction', direction, false);
+		// as tall as a 26-piece stack
+		const piece = board.piece_objects[0];
+		piece.position.set(0, 400, 0);
+		placeShadowLight();
+		const cam = shadowLight.shadow.camera;
+		cam.position.copy(shadowLight.position);
+		cam.lookAt(shadowLight.target.position);
+		cam.updateMatrixWorld();
+		// where the light past the piece's top lands on the table
+		const box = new THREE.Box3().setFromObject(piece);
+		const down = shadowLight.position.clone().negate().normalize();
+		const tip = new THREE.Vector3(box.max.x, box.max.y, box.max.z);
+		tip.addScaledVector(down, (tip.y + table_height) / -down.y).project(cam);
+		return Math.max(Math.abs(tip.x), Math.abs(tip.y), Math.abs(tip.z)) <= 1;
+	}))).toEqual([true, true]);
+});
+
 test('the board has a contact shadow on the table, sized to the board', async({page}) => {
 	await page.waitForTimeout(500);
 	expect(await page.evaluate(() => {

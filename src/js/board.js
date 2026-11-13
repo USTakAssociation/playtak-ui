@@ -19,6 +19,8 @@ let table_height = 50;
 
 const light_position = [0, 800, -45];
 const light_radius = [1.8, 1600];
+// shortcut: temporary multiplier for the point light strength slider, while choosing its default
+let pointLightStrength = 1;
 // Light intensities. r155+ lighting no longer multiplies by π, so the old r110 values are scaled by π to keep the look;
 // the point light's distance falloff also changed shape and 0.55 is the old/new ratio across the board at light_position.
 // With shadows on, the shadow light is the main light and point and hemisphere are a low fill, so piece sides and shadows
@@ -52,6 +54,40 @@ function placeShadowLight(){
 		Math.cos(tilt),
 		Math.sin(tilt) * Math.cos(turn)
 	).multiplyScalar(shadowLightDistance);
+	fitShadowCamera();
+}
+
+// Fit the shadow light's view, the only area that gets shadows, around the table area from wherever the light shines.
+// Its view is a box square to the light: turned or tilted, a box sized for the table no longer covers the table's corners.
+function fitShadowCamera(){
+	if(!shadowLight || !gameData.size){return;}
+	// the board, plus the unplayed pieces and capstones beside it
+	const reach = gameData.size * sq_size / 2 + border_size + stackOffsetFromBorder + piece_size * 2;
+	// up to the tallest stack's top, a piece_size above its top piece's centre covers any piece shape
+	const top = (board.piece_objects || []).reduce((t, p) => Math.max(t, p.position.y + piece_size), piece_size);
+	const cam = shadowLight.shadow.camera;
+	// the same view three.js gives the shadow camera when it renders the shadows
+	cam.position.copy(shadowLight.position);
+	cam.lookAt(shadowLight.target.position);
+	cam.updateMatrixWorld();
+	const min = new THREE.Vector3(Infinity, Infinity, Infinity);
+	const max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
+	const corner = new THREE.Vector3();
+	for(let i = 0; i < 8; i++){
+		corner.set(i & 1 ? reach : -reach, i & 2 ? top : -table_height, i & 4 ? reach : -reach);
+		corner.applyMatrix4(cam.matrixWorldInverse);
+		min.min(corner);
+		max.max(corner);
+	}
+	cam.left = min.x;
+	cam.right = max.x;
+	cam.bottom = min.y;
+	cam.top = max.y;
+	// the camera looks down its -z; an orthographic camera can start behind its position
+	cam.near = -max.z;
+	// a tall stack's shadow lands on the table far beyond the table area; reach as deep as the light travels from its top down to the table
+	cam.far = -min.z + (top + table_height) * shadowLight.position.length() / shadowLight.position.y;
+	cam.updateProjectionMatrix();
 }
 
 // Image textures are sRGB; tag them so lighting is computed in linear space.
@@ -203,7 +239,8 @@ function animate(){
 		if(scenehash!=newscenehash || lastanimate+1000<=now){
 			scenehash=newscenehash;
 			lastanimate=now;
-			if(lightFollowsCamera && shadowLight){placeShadowLight();}
+			// also refits the shadow area as stacks grow
+			if(shadowLight){placeShadowLight();}
 			updateContactShadows();
 			renderer.render(scene,camera);
 		}
@@ -1653,7 +1690,8 @@ const board = {
 	},
 	// Add light for the table
 	addlight: function(){
-		this.pointLight = new THREE.PointLight(0x999999, lightIntensity.point, light_radius[1], 0);
+		// range 0 is unlimited: the old 1600 range faded it by about an eighth over the board, more at the edges
+		this.pointLight = new THREE.PointLight(0x999999, lightIntensity.point, 0, 0);
 		this.pointLight.position.x = light_position[0];
 		this.pointLight.position.y = light_position[1];
 		this.pointLight.position.z = light_position[2];
@@ -1669,22 +1707,12 @@ const board = {
 		this.ambientLight.ispassive = true;
 		scene.add(this.ambientLight);
 		// Store original intensities for toggling
-		this.pointLightIntensity = lightIntensity.point;
+		this.pointLightIntensity = lightIntensity.point * pointLightStrength;
 		this.hemisphereLightIntensity = lightIntensity.hemisphere;
 	},
 	// Update shadow camera frustum to match board size plus table area
 	updateShadowCamera: function(){
-		if(!shadowLight){return;}
-		// Include extra space for pieces on the table (capstones, unplayed pieces)
-		const shadowCamSize = gameData.size * sq_size / 2 + border_size + stackOffsetFromBorder + piece_size * 2;
-		shadowLight.shadow.camera.left = -shadowCamSize;
-		shadowLight.shadow.camera.right = shadowCamSize;
-		shadowLight.shadow.camera.top = shadowCamSize;
-		shadowLight.shadow.camera.bottom = -shadowCamSize;
-		// Cover from the light down past the table, whichever way the light is angled
-		shadowLight.shadow.camera.near = 1;
-		shadowLight.shadow.camera.far = shadowLight.position.length() + 400;
-		shadowLight.shadow.camera.updateProjectionMatrix();
+		fitShadowCamera();
 	},
 	// addpieces: add the pieces to the scene, not on the board
 	addpieces: function(){
