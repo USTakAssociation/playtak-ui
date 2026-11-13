@@ -35,8 +35,24 @@ const lightIntensity = {
 // which is what lights a shadow, so shadows and piece sides get darker while tops stay lit by the main light.
 let lightBrightness = 1;
 let shadowStrength = 1;
-// The shadow light is straight overhead: a lifted piece's shadow falls right below it.
-const shadowLightPosition = [0, 600, 0];
+// Where the shadow light shines from, in degrees: angle tilts it from straight overhead, direction turns it around the board
+// (0 is the white player's side). Overhead by default, so a lifted piece's shadow falls right below it.
+// The light is like the sun, its rays parallel and its strength the same at any distance, so distance is not a setting.
+let lightAngle = 0;
+let lightDirection = 0;
+// when set, the direction is measured from the camera instead, so the light turns with the view (0 is from behind the viewer)
+let lightFollowsCamera = false;
+const shadowLightDistance = 600;
+
+function placeShadowLight(){
+	const tilt = lightAngle * Math.PI / 180;
+	const turn = lightDirection * Math.PI / 180 + (lightFollowsCamera && controls ? controls.getAzimuthalAngle() : 0);
+	shadowLight.position.set(
+		Math.sin(tilt) * Math.sin(turn),
+		Math.cos(tilt),
+		Math.sin(tilt) * Math.cos(turn)
+	).multiplyScalar(shadowLightDistance);
+}
 
 // Image textures are sRGB; tag them so lighting is computed in linear space.
 function srgb(texture){
@@ -187,6 +203,7 @@ function animate(){
 		if(scenehash!=newscenehash || lastanimate+1000<=now){
 			scenehash=newscenehash;
 			lastanimate=now;
+			if(lightFollowsCamera && shadowLight){placeShadowLight();}
 			updateContactShadows();
 			renderer.render(scene,camera);
 		}
@@ -1167,6 +1184,7 @@ function updateShadowsVisibility(){
 	// Update shadow light casting
 	const fill = lightBrightness / shadowStrength;
 	if(shadowLight){
+		placeShadowLight();
 		shadowLight.castShadow = shadowsEnabled;
 		shadowLight.intensity = shadowsEnabled ? lightIntensity.shadow * lightBrightness : 0;
 	}
@@ -3740,7 +3758,7 @@ function init3DBoard(){
 	renderer.shadowMap.type = THREE.PCFShadowMap;
 	// The main light, casting every piece's shadow
 	shadowLight = new THREE.DirectionalLight(0xffffff, lightIntensity.shadow);
-	shadowLight.position.set(...shadowLightPosition);
+	shadowLight.position.set(0, shadowLightDistance, 0);
 	shadowLight.target.position.set(0, 0, 0);
 	shadowLight.castShadow = true;
 	shadowLight.shadow.mapSize.width = 2048;

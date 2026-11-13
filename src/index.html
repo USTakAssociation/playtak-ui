@@ -730,6 +730,28 @@
 									style="width: 100%; margin-bottom: 10px;"
 									oninput="setLighting('shadow', this.value)" />
 							</div>
+							<div>
+								<label for="light-angle-slider" style="display: block; margin-bottom: 5px;">
+									Light Angle: <span id="light-angle-value">0°</span>
+								</label>
+								<input type="range" id="light-angle-slider" min="0" max="60" step="5" value="0"
+									style="width: 100%; margin-bottom: 10px;"
+									oninput="setLighting('angle', this.value)" />
+							</div>
+							<div>
+								<label for="light-direction-slider" style="display: block; margin-bottom: 5px;">
+									Light Direction: <span id="light-direction-value">0°</span>
+								</label>
+								<input type="range" id="light-direction-slider" min="0" max="345" step="15" value="0"
+									style="width: 100%; margin-bottom: 10px;"
+									oninput="setLighting('direction', this.value)" />
+							</div>
+							<div>
+								<label>
+									<input id="light-follows-camera-checkbox" type="checkbox" onChange="toggleLightFollowsCamera(event.target.checked)" />
+									Light Follows Camera
+								</label>
+							</div>
 							<div data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
 								<label for="clearcolorbox">
 									Background color

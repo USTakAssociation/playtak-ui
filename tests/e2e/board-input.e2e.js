@@ -181,8 +181,10 @@ test('loading a position keeps the table and fill lights', async({page}) => {
 	expect(await scenery()).toEqual(before);
 });
 
-test('the brightness and shadow strength sliders set the lights and are kept across reloads', async({page}) => {
-	const lights = () => page.evaluate(() => [shadowLight.intensity, board.hemisphereLight.intensity].map((n) => +n.toFixed(4)));
+test('the lighting sliders set the lights and are kept across reloads', async({page}) => {
+	const lights = () => page.evaluate(() => [
+		shadowLight.intensity, board.hemisphereLight.intensity, ...shadowLight.position.toArray().map(Math.round)
+	].map((n) => +n.toFixed(4)));
 	const [main, fill] = await page.evaluate(() => [shadowLight.intensity, board.hemisphereLight.intensity]);
 	// the settings panel is closed; drag the sliders by setting them and firing their input event
 	const drag = (id, value) => page.locator(id).evaluate((el, v) => {
@@ -191,13 +193,42 @@ test('the brightness and shadow strength sliders set the lights and are kept acr
 	}, value);
 	await drag('#light-brightness-slider', '150');
 	await drag('#light-shadow-slider', '300');
-	// brightness scales every light; shadow strength divides only the fill
-	const expected = [+(main * 1.5).toFixed(4), +(fill * 1.5 / 3).toFixed(4)];
+	await drag('#light-angle-slider', '60');
+	await drag('#light-direction-slider', '90');
+	// brightness scales every light; shadow strength divides only the fill;
+	// the light tilts 60° from overhead towards +x, at the same distance (600)
+	const expected = [+(main * 1.5).toFixed(4), +(fill * 1.5 / 3).toFixed(4), 520, 300, 0];
 	expect(await lights()).toEqual(expected);
 	await page.reload();
 	await page.waitForLoadState('networkidle');
 	await expect.poll(lights).toEqual(expected);
 	await expect(page.locator('#light-shadow-value')).toHaveText('300%');
+	await expect(page.locator('#light-angle-value')).toHaveText('60°');
+});
+
+test('with Light Follows Camera on, the light turns with the view and the setting is kept', async({page}) => {
+	await page.evaluate(() => {
+		setLighting('angle', 45);
+		toggleLightFollowsCamera(true);
+	});
+	// the light's and the camera's turn around the board, which match when the direction setting is 0
+	const turns = () => page.evaluate(() => [
+		Math.atan2(shadowLight.position.x, shadowLight.position.z), controls.getAzimuthalAngle()
+	].map((a) => +a.toFixed(2)));
+	const box = await page.locator('#gamecanvas').boundingBox();
+	const start = {x: box.x + box.width * 0.5, y: box.y + box.height * 0.9};
+	await page.mouse.move(start.x, start.y);
+	await page.mouse.down();
+	await page.mouse.move(start.x + 200, start.y, {steps: 10});
+	await page.mouse.up();
+	await expect.poll(async() => {
+		const [light, view] = await turns();
+		return view !== 0 && light === view;
+	}).toBe(true);
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+	await expect(page.locator('#light-follows-camera-checkbox')).toBeChecked();
+	expect(await page.evaluate(() => lightFollowsCamera)).toBe(true);
 });
 
 test('the board has a contact shadow on the table, sized to the board', async({page}) => {

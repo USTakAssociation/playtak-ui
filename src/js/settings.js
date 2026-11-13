@@ -147,13 +147,17 @@ function updateAnimationSpeed(value){
 /*
  * Brightness and shadow strength sliders, in percent
  */
-function setLighting(name, percent, save = true){
-	const value = Number(percent) / 100;
-	if(name === 'brightness'){lightBrightness = value;}
-	else{shadowStrength = value;}
-	if(save){localStorage.setItem(`light_${name}`, String(percent));}
-	document.getElementById(`light-${name}-slider`).value = percent;
-	document.getElementById(`light-${name}-value`).textContent = `${percent}%`;
+const lightingSettings = {
+	brightness: {unit: '%', set: (v) => {lightBrightness = v / 100;}},
+	shadow: {unit: '%', set: (v) => {shadowStrength = v / 100;}},
+	angle: {unit: '°', set: (v) => {lightAngle = v;}},
+	direction: {unit: '°', set: (v) => {lightDirection = v;}}
+};
+function setLighting(name, value, save = true){
+	lightingSettings[name].set(Number(value));
+	if(save){localStorage.setItem(`light_${name}`, String(value));}
+	document.getElementById(`light-${name}-slider`).value = value;
+	document.getElementById(`light-${name}-value`).textContent = `${value}${lightingSettings[name].unit}`;
 	updateShadowsVisibility();
 	// redraw now, not at the next once-a-second refresh: light changes are not in the scene hash
 	scenehash = NaN;
@@ -163,6 +167,14 @@ function setLighting(name, percent, save = true){
  * Notify checkbox change for checkbox:
  *	 Enable or disable shadows
  */
+function toggleLightFollowsCamera(follow, save = true){
+	lightFollowsCamera = follow;
+	if(save){localStorage.setItem('light_follows_camera', follow ? 'true' : 'false');}
+	document.getElementById('light-follows-camera-checkbox').checked = follow;
+	updateShadowsVisibility();
+	scenehash = NaN;
+}
+
 function toggleShadows(event){
 	const enabled = event.target.checked;
 	localStorage.setItem('shadows_enabled', enabled ? 'true' : 'false');
@@ -836,7 +848,8 @@ function load3DSettings(){
 			shadowsEnabled = localStorage.getItem("shadows_enabled") === 'true';
 			document.getElementById("shadows-checkbox").checked = shadowsEnabled;
 		}
-		for(const name of ['brightness', 'shadow']){
+		if(localStorage.getItem("light_follows_camera") === 'true'){toggleLightFollowsCamera(true, false);}
+		for(const name in lightingSettings){
 			if(localStorage.getItem(`light_${name}`) !== null){setLighting(name, localStorage.getItem(`light_${name}`), false);}
 		}
 		// load background color setting
