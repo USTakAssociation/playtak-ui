@@ -17,16 +17,12 @@ let table_width = 1280;
 let table_depth = 920;
 let table_height = 50;
 
-const light_position = [0, 800, -45];
-const light_radius = [1.8, 1600];
-// Light intensities. r155+ lighting no longer multiplies by π, so the old r110 values are scaled by π to keep the look;
-// the point light's distance falloff also changed shape and 0.55 is the old/new ratio across the board at light_position.
-// With shadows on, the shadow light is the main light and point and hemisphere are a low fill, so piece sides and shadows
+// Light intensities. r155+ lighting no longer multiplies by π, so the old r110 values are scaled by π to keep the look.
+// With shadows on, the shadow light is the main light and the hemisphere light a low fill, so piece sides and shadows
 // have contrast; the main light is set so tops of pieces and squares keep the brightness they had before real shadows.
-// Ambient replaces all three when shadows are off.
+// Ambient replaces both when shadows are off.
 const lightIntensity = {
-	point: light_radius[0] * Math.PI * 0.55 * 0.06,
-	// ×3 lightens the sides of pieces, which only the fill lights reach, tuned by eye
+	// ×3 lightens the sides of pieces, which only the fill light reaches, tuned by eye
 	hemisphere: 0.6 * Math.PI * 0.144 * 3,
 	shadow: 2.3,
 	ambient: 1.0 * Math.PI
@@ -132,7 +128,7 @@ function contactShadowMaterial(width, depth, circle, margin = contactShadowMargi
 // Show a contact shadow under the board and under every piece whose base rests on the board or table, and hide it otherwise.
 function updateContactShadows(){
 	// in shadow only the fill light is left, so the shadow light's share of the light on a top surface is how dark a shadow is
-	const fill = board.pointLight.intensity + board.hemisphereLight.intensity;
+	const fill = board.hemisphereLight.intensity;
 	const opacity = shadowLight.intensity / (shadowLight.intensity + fill);
 
 	// the board rests on the table: its base is the squares' underside
@@ -1193,9 +1189,6 @@ function updateShadowsVisibility(){
 		renderer.shadowMap.enabled = shadowsEnabled;
 	}
 	// Update lighting to use flat ambient light when shadows off
-	if(board.pointLight){
-		board.pointLight.intensity = shadowsEnabled ? board.pointLightIntensity * fill : 0;
-	}
 	if(board.hemisphereLight){
 		board.hemisphereLight.intensity = shadowsEnabled ? board.hemisphereLightIntensity * fill : 0;
 	}
@@ -1653,12 +1646,6 @@ const board = {
 	},
 	// Add light for the table
 	addlight: function(){
-		this.pointLight = new THREE.PointLight(0x999999, lightIntensity.point, light_radius[1], 0);
-		this.pointLight.position.x = light_position[0];
-		this.pointLight.position.y = light_position[1];
-		this.pointLight.position.z = light_position[2];
-		this.pointLight.ispassive = true;
-		scene.add(this.pointLight);
 		this.hemisphereLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, lightIntensity.hemisphere);
 		this.hemisphereLight.color.setHSL(0.15, 0.1, 0.7);
 		this.hemisphereLight.groundColor.setHSL(0.1, 0.8, 1);
@@ -1669,7 +1656,6 @@ const board = {
 		this.ambientLight.ispassive = true;
 		scene.add(this.ambientLight);
 		// Store original intensities for toggling
-		this.pointLightIntensity = lightIntensity.point;
 		this.hemisphereLightIntensity = lightIntensity.hemisphere;
 	},
 	// Update shadow camera frustum to match board size plus table area
