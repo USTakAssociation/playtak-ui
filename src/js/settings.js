@@ -145,13 +145,22 @@ function updateAnimationSpeed(value){
 }
 
 /*
- * Brightness and shadow strength sliders, in percent
+ * Lighting sliders: each has a light-<name>-slider and light-<name>-value in the html and is saved as light_<name>
  */
 const lightingSettings = {
 	brightness: {unit: '%', set: (v) => {lightBrightness = v / 100;}},
 	shadow: {unit: '%', set: (v) => {shadowStrength = v / 100;}},
 	angle: {unit: '°', set: (v) => {lightAngle = v;}},
-	direction: {unit: '°', set: (v) => {lightDirection = v;}}
+	direction: {unit: '°', set: (v) => {lightDirection = v;}},
+	// the point light overhead, as a multiple of its normal strength, and its height above the board
+	point: {unit: '×', set: (v) => {
+		pointLightStrength = v;
+		board.pointLightIntensity = lightIntensity.point * v;
+	}},
+	height: {unit: '', set: (v) => {
+		light_position[1] = v;
+		if(board.pointLight){board.pointLight.position.y = v;}
+	}}
 };
 function setLighting(name, value, save = true){
 	lightingSettings[name].set(Number(value));
@@ -161,6 +170,32 @@ function setLighting(name, value, save = true){
 	updateShadowsVisibility();
 	// redraw now, not at the next once-a-second refresh: light changes are not in the scene hash
 	scenehash = NaN;
+}
+
+// Saved values that are not settings: the login, the game in progress, analytics, and the files the player uploaded.
+// Uploaded piece images are saved under their own names, which customPieces lists.
+const notSettings = ['usr', 'token', 'keeploggedin', 'isLoggedIn', 'guesttoken', 'guesttokendecay',
+	'currentGame', 'current-game-settings', 'current-game-data', '__nr_flags',
+	'customPieces', 'boardOverlay', 'borderTexture'];
+
+// Forget every saved setting and reload, so every setting starts from its default
+function resetAllSettings(){
+	if(!confirm('Put every setting back to its default? Your login, the game in progress and your uploads are kept.')){return;}
+	const keep = notSettings.concat(JSON.parse(localStorage.getItem('customPieces') || '[]'));
+	for(const key of Object.keys(localStorage)){
+		if(!keep.includes(key)){localStorage.removeItem(key);}
+	}
+	location.reload();
+}
+
+// Every lighting setting back to its default, which is the slider's value in the html, and forget the saved values
+function resetLighting(){
+	for(const name in lightingSettings){
+		localStorage.removeItem(`light_${name}`);
+		setLighting(name, document.getElementById(`light-${name}-slider`).defaultValue, false);
+	}
+	localStorage.removeItem('light_follows_camera');
+	toggleLightFollowsCamera(false, false);
 }
 
 /*
@@ -179,7 +214,13 @@ function toggleShadows(event){
 	const enabled = event.target.checked;
 	localStorage.setItem('shadows_enabled', enabled ? 'true' : 'false');
 	shadowsEnabled = enabled;
+	showShadowLightSettings();
 	updateShadowsVisibility();
+}
+
+// the shadow light's settings do nothing with shadows off
+function showShadowLightSettings(){
+	document.getElementById('shadow-light-settings').hidden = !shadowsEnabled;
 }
 
 /*
@@ -848,6 +889,7 @@ function load3DSettings(){
 			shadowsEnabled = localStorage.getItem("shadows_enabled") === 'true';
 			document.getElementById("shadows-checkbox").checked = shadowsEnabled;
 		}
+		showShadowLightSettings();
 		if(localStorage.getItem("light_follows_camera") === 'true'){toggleLightFollowsCamera(true, false);}
 		for(const name in lightingSettings){
 			if(localStorage.getItem(`light_${name}`) !== null){setLighting(name, localStorage.getItem(`light_${name}`), false);}

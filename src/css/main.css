@@ -1095,6 +1095,39 @@ a.btn.btn-primary {
 	white-space: nowrap;
 }
 
+/* || Lighting settings: name and value on one line, the slider full width under them */
+.light-row {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	column-gap: 8px;
+}
+.light-row label {
+	margin: 0;
+}
+.light-row input {
+	grid-column: 1 / -1;
+	grid-row: 2;
+	width: 100%;
+}
+.light-row span {
+	font-variant-numeric: tabular-nums;
+}
+.reset-all-settings {
+	margin-top: 24px;
+	padding-top: 16px;
+	border-top: 1px solid var(--primary-border-color);
+}
+/* the settings that belong to the Shadows checkbox, indented under it */
+.shadow-light-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-left: 6px;
+	padding-left: 12px;
+	border-left: 2px solid var(--primary-border-color);
+}
+
 /* below bootstrap's large breakpoint the dialogs are capped at 500px; use the screen width instead, keeping the 1.75rem side margin */
 @media (min-width: 576px) and (max-width: 991px) {
 	#joingame-modal .modal-dialog, #watchgame-modal .modal-dialog {

@@ -206,6 +206,66 @@ test('the lighting sliders set the lights and are kept across reloads', async({p
 	await expect(page.locator('#light-angle-value')).toHaveText('60°');
 });
 
+test('the top light sliders are kept across reloads, and the shadow light settings hide with shadows off', async({page}) => {
+	await page.evaluate(() => {
+		setLighting('point', '5');
+		setLighting('height', '400');
+	});
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+	const top = () => page.evaluate(() => [board.pointLight.position.y, +(board.pointLightIntensity / lightIntensity.point).toFixed(4)]);
+	await expect.poll(top).toEqual([400, 5]);
+	await expect(page.locator('#light-point-value')).toHaveText('5×');
+	const hidden = () => page.evaluate(() => document.getElementById('shadow-light-settings').hidden);
+	expect(await hidden()).toBe(false);
+	await page.evaluate(() => toggleShadows({target: {checked: false}}));
+	expect(await hidden()).toBe(true);
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+	expect(await hidden()).toBe(true);
+});
+
+test('Reset lighting puts every lighting setting back to its default and forgets the saved values', async({page}) => {
+	const state = () => page.evaluate(() => [
+		lightBrightness, shadowStrength, lightAngle, lightDirection, pointLightStrength, light_position[1], lightFollowsCamera,
+		document.getElementById('light-angle-value').textContent,
+		Object.keys(localStorage).filter((k) => k.startsWith('light_')).length
+	]);
+	const defaults = await state();
+	await page.evaluate(() => {
+		setLighting('brightness', '150');
+		setLighting('shadow', '200');
+		setLighting('angle', '45');
+		setLighting('direction', '90');
+		setLighting('point', '5');
+		setLighting('height', '400');
+		toggleLightFollowsCamera(true);
+	});
+	expect(await state()).not.toEqual(defaults);
+	// the settings panel is closed, so click the hidden button from the page
+	await page.locator('[onclick="resetLighting()"]').evaluate((b) => b.click());
+	expect(await state()).toEqual([1, 1, 0, 0, 1, 800, false, '0°', 0]);
+	expect(await state()).toEqual(defaults);
+});
+
+test('Reset all settings forgets every setting but keeps the login, the game and uploads', async({page}) => {
+	await page.evaluate(() => {
+		localStorage.setItem('light_angle', '45');
+		localStorage.setItem('piece_size', '70');
+		localStorage.setItem('usr', 'someone');
+		localStorage.setItem('customPieces', '["my pieces"]');
+		localStorage.setItem('my pieces', 'data:image/png;base64,');
+	});
+	page.once('dialog', (d) => d.accept());
+	await Promise.all([
+		page.waitForEvent('load'),
+		page.locator('[onclick="resetAllSettings()"]').evaluate((b) => b.click())
+	]);
+	expect(await page.evaluate(() => ['light_angle', 'piece_size', 'usr', 'customPieces', 'my pieces'].map((k) => localStorage.getItem(k))))
+		.toEqual([null, null, 'someone', '["my pieces"]', 'data:image/png;base64,']);
+	expect(await page.evaluate(() => lightAngle)).toBe(0);
+});
+
 test('with Light Follows Camera on, the light turns with the view and the setting is kept', async({page}) => {
 	await page.evaluate(() => {
 		setLighting('angle', 45);

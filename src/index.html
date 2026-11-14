@@ -708,67 +708,54 @@
 									style="width: 100%; margin-bottom: 10px;"
 									oninput="updateAnimationSpeed(this.value)" />
 							</div>
+							<!-- lighting: name and value on one line, the slider under them. The tooltips are on the names, so they stay out of the way while dragging -->
+							<div class="light-row">
+								<label for="light-brightness-slider" data-toggle="tooltip" data-placement="top" title="How bright the whole scene is. With shadows off this sets the even, all-round light.">Brightness</label>
+								<input type="range" id="light-brightness-slider" min="50" max="150" step="5" value="100" oninput="setLighting('brightness', this.value)" />
+								<span id="light-brightness-value">100%</span>
+							</div>
 							<div>
-								<label>
+								<label data-toggle="tooltip" data-placement="top" title="Pieces cast shadows from one main light. Turn off for even lighting with no shadows, which is lighter on slow devices.">
 									<input id="shadows-checkbox" type="checkbox" onChange="toggleShadows(event)" checked />
 									Shadows
 								</label>
 							</div>
-							<div>
-								<label for="light-brightness-slider" style="display: block; margin-bottom: 5px;">
-									Brightness: <span id="light-brightness-value">100%</span>
-								</label>
-								<input type="range" id="light-brightness-slider" min="50" max="150" step="5" value="100"
-									style="width: 100%; margin-bottom: 10px;"
-									oninput="setLighting('brightness', this.value)" />
+							<!-- these only do anything with shadows on, so they are hidden when shadows are off -->
+							<div id="shadow-light-settings" class="shadow-light-settings">
+								<div class="light-row">
+									<label for="light-shadow-slider" data-toggle="tooltip" data-placement="top" title="How dark shadows are compared with the lit areas.">Shadow strength</label>
+									<input type="range" id="light-shadow-slider" min="50" max="300" step="10" value="100" oninput="setLighting('shadow', this.value)" />
+									<span id="light-shadow-value">100%</span>
+								</div>
+								<div class="light-row">
+									<label for="light-angle-slider" data-toggle="tooltip" data-placement="top" title="How far the main light leans from straight overhead. A bigger angle gives longer shadows.">Light angle</label>
+									<input type="range" id="light-angle-slider" min="0" max="60" step="5" value="0" oninput="setLighting('angle', this.value)" />
+									<span id="light-angle-value">0°</span>
+								</div>
+								<div class="light-row">
+									<label for="light-direction-slider" data-toggle="tooltip" data-placement="top" title="Which side of the board the main light shines from. Only noticeable when the light angle is above 0°.">Light direction</label>
+									<input type="range" id="light-direction-slider" min="0" max="345" step="15" value="0" oninput="setLighting('direction', this.value)" />
+									<span id="light-direction-value">0°</span>
+								</div>
+								<div>
+									<label data-toggle="tooltip" data-placement="top" title="Turn the main light with your view as you rotate the board, so shadows always fall the same way on screen. Direction is then measured from behind you.">
+										<input id="light-follows-camera-checkbox" type="checkbox" onChange="toggleLightFollowsCamera(event.target.checked)" />
+										Light follows camera
+									</label>
+								</div>
+								<div class="light-row">
+									<label for="light-point-slider" data-toggle="tooltip" data-placement="top" title="A soft extra light above the board that brightens piece tops and the board. 0 turns it off.">Top light</label>
+									<input type="range" id="light-point-slider" min="0" max="40" step="1" value="1" oninput="setLighting('point', this.value)" />
+									<span id="light-point-value">1×</span>
+								</div>
+								<div class="light-row">
+									<label for="light-height-slider" data-toggle="tooltip" data-placement="top" title="How high the top light sits above the board.">Top light height</label>
+									<input type="range" id="light-height-slider" min="100" max="1500" step="50" value="800" oninput="setLighting('height', this.value)" />
+									<span id="light-height-value">800</span>
+								</div>
 							</div>
 							<div>
-								<label for="light-shadow-slider" style="display: block; margin-bottom: 5px;">
-									Shadow Strength: <span id="light-shadow-value">100%</span>
-								</label>
-								<input type="range" id="light-shadow-slider" min="50" max="300" step="10" value="100"
-									style="width: 100%; margin-bottom: 10px;"
-									oninput="setLighting('shadow', this.value)" />
-							</div>
-							<div>
-								<label for="light-angle-slider" style="display: block; margin-bottom: 5px;">
-									Light Angle: <span id="light-angle-value">0°</span>
-								</label>
-								<input type="range" id="light-angle-slider" min="0" max="60" step="5" value="0"
-									style="width: 100%; margin-bottom: 10px;"
-									oninput="setLighting('angle', this.value)" />
-							</div>
-							<div>
-								<label for="light-direction-slider" style="display: block; margin-bottom: 5px;">
-									Light Direction: <span id="light-direction-value">0°</span>
-								</label>
-								<input type="range" id="light-direction-slider" min="0" max="345" step="15" value="0"
-									style="width: 100%; margin-bottom: 10px;"
-									oninput="setLighting('direction', this.value)" />
-							</div>
-							<div>
-								<label>
-									<input id="light-follows-camera-checkbox" type="checkbox" onChange="toggleLightFollowsCamera(event.target.checked)" />
-									Light Follows Camera
-								</label>
-							</div>
-							<!-- temporary: try the point light at different heights above the board; it keeps the height for new games, not reloads -->
-							<div>
-								<label for="point-light-height-slider" style="display: block; margin-bottom: 5px;">
-									Point Light Height: <span id="point-light-height-value">800</span>
-								</label>
-								<input type="range" id="point-light-height-slider" min="100" max="1500" step="50" value="800"
-									style="width: 100%; margin-bottom: 10px;"
-									oninput="light_position[1] = Number(this.value); board.pointLight.position.y = light_position[1]; document.getElementById('point-light-height-value').textContent = this.value; scenehash = NaN;" />
-							</div>
-							<!-- temporary: try the point light at different strengths, as a multiple of its normal strength; Brightness and Shadow Strength still apply on top -->
-							<div>
-								<label for="point-light-strength-slider" style="display: block; margin-bottom: 5px;">
-									Point Light Strength: <span id="point-light-strength-value">1×</span>
-								</label>
-								<input type="range" id="point-light-strength-slider" min="0" max="40" step="1" value="1"
-									style="width: 100%; margin-bottom: 10px;"
-									oninput="pointLightStrength = Number(this.value); board.pointLightIntensity = lightIntensity.point * pointLightStrength; updateShadowsVisibility(); document.getElementById('point-light-strength-value').textContent = this.value + '×'; scenehash = NaN;" />
+								<button type="button" class="btn btn-pill btn-secondary btn-slim" onclick="resetLighting()" data-toggle="tooltip" data-placement="top" title="Put every lighting setting above back to its default.">Reset lighting</button>
 							</div>
 							<div data-toggle="tooltip" data-placement="top" title="Examples: #000000, #ffffff, #606060">
 								<label for="clearcolorbox">
@@ -984,6 +971,9 @@
 							</div>
 						</div>
 					</form>
+					<div class="reset-all-settings">
+						<button type="button" class="btn btn-pill btn-secondary" onclick="resetAllSettings()" data-toggle="tooltip" data-placement="top" title="Put every setting back to its default and reload. Keeps your login, the game in progress and anything you uploaded.">Reset all settings</button>
+					</div>
 				</div>
 				<!-- Interface Settings -->
 				<div class="tab-pane fade settings-pane" id="interface">

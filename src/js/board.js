@@ -19,7 +19,7 @@ let table_height = 50;
 
 const light_position = [0, 800, -45];
 const light_radius = [1.8, 1600];
-// shortcut: temporary multiplier for the point light strength slider, while choosing its default
+// the point light's strength setting, as a multiple of lightIntensity.point
 let pointLightStrength = 1;
 // Light intensities. r155+ lighting no longer multiplies by π, so the old r110 values are scaled by π to keep the look;
 // the point light's distance falloff also changed shape and 0.55 is the old/new ratio across the board at light_position.
@@ -1666,7 +1666,9 @@ const board = {
 	// Add the table
 	addtable: function(){
 		const table_texture = srgb(new THREE.TextureLoader().load(materials.table_texture_path));
-		const table_material = new THREE.MeshLambertMaterial({map: table_texture});
+		// 0.75 darkens the table: the shadow light shines on it at full strength where the old lighting barely did, which washed it out.
+		// Measured against the old look, it brings the back and sides of the table back to their old brightness.
+		const table_material = new THREE.MeshLambertMaterial({map: table_texture, color: new THREE.Color(0.75, 0.75, 0.75)});
 		const geometry = constructBurredBox(table_width, table_height, table_depth, 5, 5, 5);
 		this.table = new THREE.Mesh(geometry, table_material);
 		this.table.position.set(0, -(table_height + sq_height) / 2, 0);
