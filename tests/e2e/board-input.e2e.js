@@ -248,6 +248,41 @@ test('Reset lighting puts every lighting setting back to its default and forgets
 	expect(await state()).toEqual(defaults);
 });
 
+test('switching to 2D and back before any game clock has arrived throws no error', async({page}) => {
+	await page.evaluate(() => setBoardMode('2d'));
+	await page.waitForTimeout(500);
+	await page.evaluate(() => setBoardMode('3d'));
+	await page.waitForTimeout(500);
+	// afterEach fails the test on any page error
+});
+
+test('switching back to 3D shows the game straight away, with one render loop', async({page}) => {
+	await page.evaluate(() => {
+		localStorage.setItem('currentGame', '[Size "5"]\n1. a1 e5 2. c3 c2');
+		setBoardMode('2d');
+	});
+	await page.waitForTimeout(500);
+	// the game is on the board as soon as the switch returns, not after a delay that shows an empty board first
+	expect(await page.evaluate(() => {
+		setBoardMode('3d');
+		return board.piece_objects.filter((p) => p.onsquare).length;
+	})).toBe(4);
+	const framesPerSecond = await page.evaluate(() => new Promise((resolve) => {
+		let frames = 0;
+		const raf = window.requestAnimationFrame;
+		window.requestAnimationFrame = (f) => raf((t) => {
+			if(f === animate){frames++;}
+			f(t);
+		});
+		setTimeout(() => {
+			window.requestAnimationFrame = raf;
+			resolve(frames);
+		}, 1000);
+	}));
+	// one loop runs once a frame; a second loop would double it
+	expect(framesPerSecond).toBeLessThan(90);
+});
+
 test('Reset all settings forgets every setting but keeps the login, the game and uploads', async({page}) => {
 	await page.evaluate(() => {
 		localStorage.setItem('light_angle', '45');

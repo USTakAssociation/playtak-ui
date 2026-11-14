@@ -1113,10 +1113,46 @@ a.btn.btn-primary {
 .light-row span {
 	font-variant-numeric: tabular-nums;
 }
+/* || Settings groups that open and close */
+.settings-group {
+	border-bottom: 1px solid var(--primary-border-color);
+}
+.settings-group > summary {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 0;
+	font-weight: bold;
+	cursor: pointer;
+	list-style: none;
+}
+.settings-group > summary::-webkit-details-marker {
+	display: none;
+}
+/* a chevron that points down when open */
+.settings-group > summary::after {
+	content: "";
+	width: 8px;
+	height: 8px;
+	margin-right: 4px;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate(-45deg);
+	transition: transform 0.15s;
+}
+.settings-group[open] > summary::after {
+	transform: rotate(45deg);
+}
+.settings-group-body {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding-bottom: 12px;
+}
+
+/* the last settings group's bottom border already separates it */
 .reset-all-settings {
-	margin-top: 24px;
-	padding-top: 16px;
-	border-top: 1px solid var(--primary-border-color);
+	margin-top: 16px;
 }
 /* the settings that belong to the Shadows checkbox, indented under it */
 .shadow-light-settings {

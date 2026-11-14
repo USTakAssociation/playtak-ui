@@ -47,6 +47,12 @@ const defaultPiecesAndCaps = {
 };
 let hasPlayedHurry = false;
 
+// The last clock values from the server and when they arrived (server.js sets them on each Time message).
+// Declared here so reading them before the first Time message, e.g. switching between 2D and 3D, doesn't throw.
+let lastTimeUpdate = null;
+let lastWt = 0;
+let lastBt = 0;
+
 // Board mode switching state
 let isSwitchingBoardMode = false;
 let pendingServerMoves = [];

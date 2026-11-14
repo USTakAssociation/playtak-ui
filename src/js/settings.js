@@ -188,6 +188,16 @@ function resetAllSettings(){
 	location.reload();
 }
 
+// Remember which settings groups are open, saved as settings_group_<name>
+function settingsGroups(){
+	for(const group of document.querySelectorAll('.settings-group')){
+		const saved = localStorage.getItem('settings_group_' + group.dataset.group);
+		if(saved !== null){group.open = saved === 'true';}
+		// ontoggle, not addEventListener: this runs again on each switch back to 3D
+		group.ontoggle = () => localStorage.setItem('settings_group_' + group.dataset.group, String(group.open));
+	}
+}
+
 // Every lighting setting back to its default, which is the slider's value in the html, and forget the saved values
 function resetLighting(){
 	for(const name in lightingSettings){
@@ -637,18 +647,20 @@ function setBoardMode(mode){
 		document.getElementById("gamecanvas").style.display = "block";
 		makeStyleSelector();
 		load3DSettings();
+		// also starts the render loop
 		init3DBoard();
-		setTimeout(() => {
-			dontanimate = true;
-			animate();
-			dontanimate = false;
-		}, 500);
 	}
-	if(localStorage.getItem("currentGame")){
+	if(localStorage.getItem("currentGame") && want2D){
+		// the PTN Ninja iframe needs a moment to load before it takes the game
 		setTimeout(() => {
 			loadCurrentGameState();
 			processPendingServerMoves();
 		}, 400);
+	}
+	else if(localStorage.getItem("currentGame")){
+		// straight away, so the empty board init3DBoard built is replaced before it is ever drawn
+		loadCurrentGameState();
+		processPendingServerMoves();
 	}
 	else{
 		processPendingServerMoves();
@@ -871,6 +883,7 @@ function load2DSettings(){
  * First the left-hand div, then the right-hand div.
  */
 function load3DSettings(){
+	settingsGroups();
 	if(!is2DBoard){
 		// load animations setting
 		if(localStorage.getItem("animations_enabled") !== null){
