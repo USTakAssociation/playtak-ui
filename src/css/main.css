@@ -1091,6 +1091,71 @@ a.btn.btn-primary {
 	padding: 6px 0px;
 }
 
+.watch-player {
+	white-space: nowrap;
+}
+
+/* below bootstrap's large breakpoint the dialogs are capped at 500px; use the screen width instead, keeping the 1.75rem side margin */
+@media (min-width: 576px) and (max-width: 991px) {
+	#joingame-modal .modal-dialog, #watchgame-modal .modal-dialog {
+		max-width: calc(100% - 3.5rem);
+	}
+}
+
+/* phones and tablets: the player column takes the space left over and long names end in "…" (a tooltip has the full name) */
+@media (max-width: 991px) {
+	.seek-player, .watch-players {
+		width: 100%;
+		max-width: 0;
+	}
+	/* the player column would otherwise squeeze these to a word per line */
+	td.time-rule {
+		white-space: nowrap;
+	}
+	td.rules-col {
+		min-width: 6.5em;
+	}
+	.seek-player .seek-button {
+		display: block;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.watch-players .btn {
+		display: block;
+		width: 100%;
+	}
+	/* each player on their own line; only the name shrinks, so the rating stays visible */
+	.watch-player {
+		display: flex;
+		justify-content: center;
+		gap: 0.3em;
+	}
+	.watch-player .playernamegame {
+		min-width: 0;
+		max-width: none;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+@media (max-width: 400px) {
+	#joingame-modal .modal-body, #watchgame-modal .modal-body {
+		padding: 0.5rem;
+	}
+	#joingame-modal .linestable td, #joingame-modal .linestable th,
+	#watchgame-modal .linestable td, #watchgame-modal .linestable th {
+		padding: 6px 2px;
+	}
+	/* the join list's action column has a fixed 56px set inline */
+	#joingame-modal .linestable td:first-child {
+		width: auto !important;
+	}
+	#joingame-modal .linestable .btn:not(.seek-button),
+	#watchgame-modal .linestable .btn {
+		padding: 4px;
+	}
+}
+
 /* || Responsive CSS */
 @media (min-width: 768px){
 	.navbar-nav > li > a{
@@ -1190,8 +1255,8 @@ a.btn.btn-primary {
 	}
 }
 
-/* max width 500: collapse the Rules column into the detail menu (like the old Komi column did) */
-@media (max-width: 500px) {
+/* max width 700: collapse the Rules column into the detail menu (like the old Komi column did); wider and it leaves player names no room */
+@media (max-width: 700px) {
 	.rules-rule {
 		display: none;
 	}

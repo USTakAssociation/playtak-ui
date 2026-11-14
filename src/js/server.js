@@ -1162,15 +1162,16 @@ var server = {
 		players.className = "btn btn-transparent";
 		players.setAttribute("data-toggle", "tooltip");
 		players.setAttribute("title", "Watch game");
-		let p1Element = `<span data-toggle="tooltip" title="rating">${p1Rating}</span>&nbsp;<span class="playernamegame">${p1}</span>`;
-		let p2Element = `<span class="playernamegame">${p2}</span>&nbsp;<span data-toggle="tooltip" title="rating">${p2Rating}</span>`;
-		players.innerHTML = p1Element + " vs " + p2Element;
+		// one .watch-player per player, each kept on one line; phones stack them and shorten long names
+		let p1Element = `<span class="watch-player"><span data-toggle="tooltip" title="rating">${p1Rating}</span> <span class="playernamegame" title="${p1}">${p1}</span></span>`;
+		let p2Element = `<span class="watch-player">vs <span class="playernamegame" title="${p2}">${p2}</span> <span data-toggle="tooltip" title="rating">${p2Rating}</span></span>`;
+		players.innerHTML = p1Element + " " + p2Element;
 		const actionButton = document.createElement("button");
 		actionButton.className = "btn btn-transparent";
 		actionButton.innerHTML = watchIcon;
 		const row = $('<tr/>').attr("id", "game-" + game.id).addClass('game'+game.id).appendTo($('#gamelist'));
 		$('<td/>').append(actionButton).attr("data-toggle", "tooltip").attr("title", "Watch game").click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
-		$('<td/>').append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
+		$('<td/>').addClass("watch-players").append(players).click(game,function(ev){server.observegame(ev.data);}).appendTo(row);
 		// game details
 		$('<td/>').append("<span class='badge'>"+game.size+"x"+game.size+"</span>").appendTo(row);
 		// shared rule values, reused by the Rules cell and the mobile detail menu
@@ -1388,7 +1389,7 @@ var server = {
 				return server.acceptseek(ev.data);
 			}).attr("data-toggle", "tooltip").attr("title", mySeek ? "Remove seek" : "Challenge " + seek.player).appendTo(row);
 			$('<td/>').append(imgstring).attr("data-toggle", "tooltip").attr("title","Your color will be " + yourColor).appendTo(row);
-			$('<td/>').append(challengePlayerButton).click(seek.id,function(ev){
+			$('<td/>').addClass("seek-player").append(challengePlayerButton).click(seek.id,function(ev){
 				if(mySeek){
 					return server.removeseek(ev.data);
 				}
