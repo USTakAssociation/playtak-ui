@@ -248,6 +248,69 @@ test('Reset lighting puts every lighting setting back to its default and forgets
 	expect(await state()).toEqual(defaults);
 });
 
+test('warmth, softness, fill, table, tone mapping and shadow quality reach the scene, are kept, and reset', async({page}) => {
+	const state = () => page.evaluate(() => [
+		+shadowLight.color.b.toFixed(2), shadowLight.shadow.radius,
+		+(board.hemisphereLight.intensity / board.hemisphereLightIntensity).toFixed(2),
+		board.table.material.color.r, renderer.toneMapping, renderer.toneMappingExposure, shadowLight.shadow.mapSize.x
+	]);
+	const defaults = await state();
+	expect(defaults).toEqual([1, 6, 1, 0.75, 0, 1, 2048]);
+	await page.evaluate(() => {
+		setLighting('warmth', '100');
+		setLighting('softness', '12');
+		setLighting('fill', '200');
+		setLighting('table', '50');
+		setLighting('exposure', '150');
+		setToneMapping('ACESFilmicToneMapping');
+		setShadowQuality('4096');
+	});
+	await page.reload();
+	await page.waitForLoadState('networkidle');
+	const changed = [0.65, 12, 2, 0.5, 4, 1.5, 4096];
+	await expect.poll(state).toEqual(changed);
+	await expect(page.locator('#tone-mapping-select')).toHaveValue('ACESFilmicToneMapping');
+	// exposure does nothing without tone mapping, so it is only shown with it
+	expect(await page.evaluate(() => document.getElementById('exposure-row').hidden)).toBe(false);
+	await page.evaluate(() => setToneMapping('NoToneMapping'));
+	expect(await page.evaluate(() => document.getElementById('exposure-row').hidden)).toBe(true);
+	await page.evaluate(() => setToneMapping('ACESFilmicToneMapping'));
+	await expect(page.locator('#shadow-quality-select')).toHaveValue('4096');
+	// shadow quality is a performance setting, so Reset lighting leaves it
+	await page.locator('[onclick="resetLighting()"]').evaluate((b) => b.click());
+	expect(await state()).toEqual([...defaults.slice(0, 6), 4096]);
+});
+
+test('settings export to a file and import back, but an import never touches the login', async({page}) => {
+	await page.evaluate(() => {
+		localStorage.setItem('light_angle', '45');
+		localStorage.setItem('usr', 'someone');
+	});
+	const [download] = await Promise.all([
+		page.waitForEvent('download'),
+		page.locator('[onclick="exportSettings()"]').evaluate((b) => b.click())
+	]);
+	expect(download.suggestedFilename()).toBe('playtak-settings.json');
+	const exported = JSON.parse(await (await download.createReadStream()).toArray().then((c) => Buffer.concat(c).toString()));
+	expect(exported.light_angle).toBe('45');
+	expect(exported.usr).toBeUndefined();
+	// the look settings are in it on their defaults too
+	expect([exported.light_softness, exported.tone_mapping, exported.shadows_enabled]).toEqual(['6', 'NoToneMapping', 'true']);
+
+	// a shared file replaces every setting, and its login is ignored
+	const shared = {light_direction: '90', usr: 'intruder', token: 'x'};
+	await Promise.all([
+		page.waitForEvent('load'),
+		page.locator('#import-settings-input').setInputFiles({
+			name: 'shared.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(shared))
+		})
+	]);
+	await page.waitForLoadState('networkidle');
+	expect(await page.evaluate(() => ['light_angle', 'light_direction', 'usr', 'token'].map((k) => localStorage.getItem(k))))
+		.toEqual([null, '90', 'someone', null]);
+	expect(await page.evaluate(() => lightDirection)).toBe(90);
+});
+
 test('switching to 2D and back before any game clock has arrived throws no error', async({page}) => {
 	await page.evaluate(() => setBoardMode('2d'));
 	await page.waitForTimeout(500);

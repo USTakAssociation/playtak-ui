@@ -882,8 +882,32 @@
 									<!-- lighting: name and value on one line, the slider under them. The tooltips are on the names, so they stay out of the way while dragging -->
 									<div class="light-row">
 										<label for="light-brightness-slider" data-toggle="tooltip" data-placement="top" title="How bright the whole scene is. With shadows off this sets the even, all-round light.">Brightness</label>
-										<input type="range" id="light-brightness-slider" min="50" max="150" step="5" value="100" oninput="setLighting('brightness', this.value)" />
+										<input type="range" id="light-brightness-slider" min="20" max="200" step="5" value="100" oninput="setLighting('brightness', this.value)" />
 										<span id="light-brightness-value">100%</span>
+									</div>
+									<div class="light-row">
+										<label for="light-warmth-slider" data-toggle="tooltip" data-placement="top" title="The colour of the light, from cool blue on the left to warm orange on the right.">Light warmth</label>
+										<input type="range" id="light-warmth-slider" min="-100" max="100" step="5" value="0" oninput="setLighting('warmth', this.value)" />
+										<span id="light-warmth-value">0</span>
+									</div>
+									<div class="light-row">
+										<label for="light-table-slider" data-toggle="tooltip" data-placement="top" title="How bright the table&#39;s wood is. Lower it if the table looks washed out.">Table brightness</label>
+										<input type="range" id="light-table-slider" min="10" max="150" step="5" value="75" oninput="setLighting('table', this.value)" />
+										<span id="light-table-value">75%</span>
+									</div>
+									<div class="light-row">
+										<label for="tone-mapping-select" data-toggle="tooltip" data-placement="top" title="How very bright areas are drawn. None lets them turn plain white; the others keep some detail and colour in them.">Tone mapping</label>
+										<select id="tone-mapping-select" class="form-control" onchange="setToneMapping(this.value)">
+											<option value="NoToneMapping">None</option>
+											<option value="ACESFilmicToneMapping">Film (ACES)</option>
+											<option value="AgXToneMapping">Soft (AgX)</option>
+											<option value="NeutralToneMapping">Neutral</option>
+										</select>
+									</div>
+									<div class="light-row" id="exposure-row">
+										<label for="light-exposure-slider" data-toggle="tooltip" data-placement="top" title="Overall exposure, like a camera&#39;s. Shown when tone mapping is on.">Exposure</label>
+										<input type="range" id="light-exposure-slider" min="20" max="200" step="5" value="100" oninput="setLighting('exposure', this.value)" />
+										<span id="light-exposure-value">100%</span>
 									</div>
 									<div>
 										<label data-toggle="tooltip" data-placement="top" title="Pieces cast shadows from one main light. Turn off for even lighting with no shadows, which is lighter on slow devices.">
@@ -897,6 +921,16 @@
 											<label for="light-shadow-slider" data-toggle="tooltip" data-placement="top" title="How dark shadows are compared with the lit areas.">Shadow strength</label>
 											<input type="range" id="light-shadow-slider" min="50" max="300" step="10" value="100" oninput="setLighting('shadow', this.value)" />
 											<span id="light-shadow-value">100%</span>
+										</div>
+										<div class="light-row">
+											<label for="light-softness-slider" data-toggle="tooltip" data-placement="top" title="How blurred the edges of shadows are, from crisp to soft.">Shadow softness</label>
+											<input type="range" id="light-softness-slider" min="1" max="15" step="1" value="6" oninput="setLighting('softness', this.value)" />
+											<span id="light-softness-value">6</span>
+										</div>
+										<div class="light-row">
+											<label for="light-fill-slider" data-toggle="tooltip" data-placement="top" title="The soft all-round light that reaches piece sides and shadows. Raise it to lift dark sides without brightening the tops.">Fill light</label>
+											<input type="range" id="light-fill-slider" min="0" max="300" step="10" value="100" oninput="setLighting('fill', this.value)" />
+											<span id="light-fill-value">100%</span>
 										</div>
 										<div class="light-row">
 											<label for="light-angle-slider" data-toggle="tooltip" data-placement="top" title="How far the main light leans from straight overhead. A bigger angle gives longer shadows.">Light angle</label>
@@ -977,6 +1011,14 @@
 							<details class="settings-group" data-group="performance">
 								<summary>Performance</summary>
 								<div class="settings-group-body">
+									<div class="light-row">
+										<label for="shadow-quality-select" data-toggle="tooltip" data-placement="top" title="How detailed shadows are. Lower is faster on slow devices, higher gives sharper shadows.">Shadow quality</label>
+										<select id="shadow-quality-select" class="form-control" onchange="setShadowQuality(this.value)">
+											<option value="1024">Low</option>
+											<option value="2048">Medium</option>
+											<option value="4096">High</option>
+										</select>
+									</div>
 									<div data-toggle="tooltip" data-placement="top" title="Makes edges less jaggy, requires page reload to take effect">
 										<label for="antialiasing-checkbox">
 											<input id="antialiasing-checkbox" type="checkbox" onClick="checkboxAntialiasing()" checked/>
@@ -1002,6 +1044,12 @@
 						</div>
 					</form>
 					<div class="reset-all-settings">
+						<button type="button" class="btn btn-pill btn-secondary" onclick="exportSettings()" data-toggle="tooltip" data-placement="top" title="Save all your settings to a file you can share, or keep as a backup.">Export settings</button>
+						<!-- a label, so clicking it opens the file picker of the hidden input inside it -->
+						<label class="btn btn-pill btn-secondary mb-0 d-inline-flex align-items-center" data-toggle="tooltip" data-placement="top" title="Load settings from an exported file. Replaces all your settings, but keeps your login, the game in progress and anything you uploaded.">
+							Import settings
+							<input type="file" id="import-settings-input" accept=".json,application/json" hidden onchange="importSettings(this.files[0]); this.value = '';" />
+						</label>
 						<button type="button" class="btn btn-pill btn-secondary" onclick="resetAllSettings()" data-toggle="tooltip" data-placement="top" title="Put every setting back to its default and reload. Keeps your login, the game in progress and anything you uploaded.">Reset all settings</button>
 					</div>
 				</div>

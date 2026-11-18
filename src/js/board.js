@@ -37,6 +37,19 @@ const lightIntensity = {
 // which is what lights a shadow, so shadows and piece sides get darker while tops stay lit by the main light.
 let lightBrightness = 1;
 let shadowStrength = 1;
+// Fill strength scales the hemisphere light, the one that lights piece sides and shadows. Warmth tints the lights,
+// -1 cool blue to 1 warm orange. Softness is the shadow light's blur radius.
+let fillStrength = 1;
+let lightWarmth = 0;
+let shadowSoftness = 6;
+// How bright the table's wood is: the shadow light shines on it at full strength where the old lighting barely did,
+// which washed it out, and 0.75 brings it back to the old look
+let tableShade = 0.75;
+// Renderer settings, applied whenever the renderer is made: tone mapping (a THREE tone mapping name) with its exposure,
+// and the shadow map's size in pixels
+let toneMapping = 'NoToneMapping';
+let toneExposure = 1;
+let shadowMapSize = 2048;
 // Where the shadow light shines from, in degrees: angle tilts it from straight overhead, direction turns it around the board
 // (0 is the white player's side). Overhead by default, so a lifted piece's shadow falls right below it.
 // The light is like the sun, its rays parallel and its strength the same at any distance, so distance is not a setting.
@@ -1220,10 +1233,15 @@ function updateShadowsVisibility(){
 	if(!scene){return;}
 	// Update shadow light casting
 	const fill = lightBrightness / shadowStrength;
+	// warm lights lose blue and some green, cool ones lose red
+	const w = lightWarmth;
+	const tint = w >= 0 ? new THREE.Color(1, 1 - 0.12 * w, 1 - 0.35 * w) : new THREE.Color(1 + 0.3 * w, 1 + 0.1 * w, 1);
 	if(shadowLight){
 		placeShadowLight();
 		shadowLight.castShadow = shadowsEnabled;
 		shadowLight.intensity = shadowsEnabled ? lightIntensity.shadow * lightBrightness : 0;
+		shadowLight.color.copy(tint);
+		shadowLight.shadow.radius = shadowSoftness;
 	}
 	// Update renderer shadow map
 	if(renderer){
@@ -1232,13 +1250,16 @@ function updateShadowsVisibility(){
 	// Update lighting to use flat ambient light when shadows off
 	if(board.pointLight){
 		board.pointLight.intensity = shadowsEnabled ? board.pointLightIntensity * fill : 0;
+		board.pointLight.color.setHex(0x999999).multiply(tint);
 	}
 	if(board.hemisphereLight){
-		board.hemisphereLight.intensity = shadowsEnabled ? board.hemisphereLightIntensity * fill : 0;
+		board.hemisphereLight.intensity = shadowsEnabled ? board.hemisphereLightIntensity * fill * fillStrength : 0;
 	}
 	if(board.ambientLight){
 		board.ambientLight.intensity = shadowsEnabled ? 0 : lightIntensity.ambient * lightBrightness;
+		board.ambientLight.color.copy(tint);
 	}
+	if(board.table){board.table.material.color.setScalar(tableShade);}
 	for(let i = 0; i < board.piece_objects.length; i++){
 		board.piece_objects[i].receiveShadow = shadowsEnabled;
 	}
@@ -1666,9 +1687,7 @@ const board = {
 	// Add the table
 	addtable: function(){
 		const table_texture = srgb(new THREE.TextureLoader().load(materials.table_texture_path));
-		// 0.75 darkens the table: the shadow light shines on it at full strength where the old lighting barely did, which washed it out.
-		// Measured against the old look, it brings the back and sides of the table back to their old brightness.
-		const table_material = new THREE.MeshLambertMaterial({map: table_texture, color: new THREE.Color(0.75, 0.75, 0.75)});
+		const table_material = new THREE.MeshLambertMaterial({map: table_texture, color: new THREE.Color(tableShade, tableShade, tableShade)});
 		const geometry = constructBurredBox(table_width, table_height, table_depth, 5, 5, 5);
 		this.table = new THREE.Mesh(geometry, table_material);
 		this.table.position.set(0, -(table_height + sq_height) / 2, 0);
@@ -3771,6 +3790,8 @@ function init3DBoard(){
 	pixelratio = (window.devicePixelRatio || 1) * scalelevel;
 	renderer.setPixelRatio(pixelratio);
 	renderer.setClearColor(clearcolor, 1);
+	renderer.toneMapping = THREE[toneMapping];
+	renderer.toneMappingExposure = toneExposure;
 	maxaniso = Math.min((renderer.capabilities ? renderer.capabilities.getMaxAnisotropy() : renderer.getMaxAnisotropy()) || 1, 16);
 
 	window.addEventListener("resize", onWindowResize, false);
@@ -3791,12 +3812,11 @@ function init3DBoard(){
 	shadowLight.position.set(0, shadowLightDistance, 0);
 	shadowLight.target.position.set(0, 0, 0);
 	shadowLight.castShadow = true;
-	shadowLight.shadow.mapSize.width = 2048;
-	shadowLight.shadow.mapSize.height = 2048;
+	shadowLight.shadow.mapSize.set(shadowMapSize, shadowMapSize);
 	shadowLight.shadow.bias = -0.001;
 	// pieces also receive shadows; pushing the lookup out along the surface normal keeps them from shadowing themselves
 	shadowLight.shadow.normalBias = 0.5;
-	shadowLight.shadow.radius = 6;
+	shadowLight.shadow.radius = shadowSoftness;
 	shadowLight.ispassive = true;
 	scene.add(shadowLight);
 	scene.add(shadowLight.target);

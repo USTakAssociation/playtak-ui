@@ -1113,6 +1113,9 @@ a.btn.btn-primary {
 .light-row span {
 	font-variant-numeric: tabular-nums;
 }
+.light-row select {
+	width: auto;
+}
 /* || Settings groups that open and close */
 .settings-group {
 	border-bottom: 1px solid var(--primary-border-color);
@@ -1153,6 +1156,9 @@ a.btn.btn-primary {
 /* the last settings group's bottom border already separates it */
 .reset-all-settings {
 	margin-top: 16px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 /* the settings that belong to the Shadows checkbox, indented under it */
 .shadow-light-settings {

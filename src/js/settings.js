@@ -160,8 +160,47 @@ const lightingSettings = {
 	height: {unit: '', set: (v) => {
 		light_position[1] = v;
 		if(board.pointLight){board.pointLight.position.y = v;}
+	}},
+	fill: {unit: '%', set: (v) => {fillStrength = v / 100;}},
+	warmth: {unit: '', set: (v) => {lightWarmth = v / 100;}},
+	softness: {unit: '', set: (v) => {shadowSoftness = v;}},
+	table: {unit: '%', set: (v) => {tableShade = v / 100;}},
+	exposure: {unit: '%', set: (v) => {
+		toneExposure = v / 100;
+		if(renderer){renderer.toneMappingExposure = toneExposure;}
 	}}
 };
+
+// Tone mapping squeezes bright areas into range instead of letting them clip to white. value is a THREE tone mapping name.
+function setToneMapping(value, save = true){
+	toneMapping = value;
+	if(save){localStorage.setItem('tone_mapping', value);}
+	document.getElementById('tone-mapping-select').value = value;
+	// three.js only applies exposure inside tone mapping
+	document.getElementById('exposure-row').hidden = value === 'NoToneMapping';
+	if(renderer){
+		renderer.toneMapping = THREE[value];
+		// tone mapping is compiled into each material's shader
+		scene.traverse((o) => {if(o.material){o.material.needsUpdate = true;}});
+	}
+	scenehash = NaN;
+}
+
+// The shadow map's size in pixels: bigger is sharper and slower
+function setShadowQuality(value, save = true){
+	shadowMapSize = Number(value);
+	if(save){localStorage.setItem('shadow_map_size', String(value));}
+	document.getElementById('shadow-quality-select').value = value;
+	if(shadowLight){
+		shadowLight.shadow.mapSize.set(shadowMapSize, shadowMapSize);
+		// three.js makes a new map at the new size when the old one is gone
+		if(shadowLight.shadow.map){
+			shadowLight.shadow.map.dispose();
+			shadowLight.shadow.map = null;
+		}
+	}
+	scenehash = NaN;
+}
 function setLighting(name, value, save = true){
 	lightingSettings[name].set(Number(value));
 	if(save){localStorage.setItem(`light_${name}`, String(value));}
@@ -178,14 +217,61 @@ const notSettings = ['usr', 'token', 'keeploggedin', 'isLoggedIn', 'guesttoken',
 	'currentGame', 'current-game-settings', 'current-game-data', '__nr_flags',
 	'customPieces', 'boardOverlay', 'borderTexture'];
 
+// Whether a saved value is a setting, as opposed to the login, the game or an upload
+function isSetting(key){
+	return !notSettings.includes(key) && !JSON.parse(localStorage.getItem('customPieces') || '[]').includes(key);
+}
+
+function forgetAllSettings(){
+	for(const key of Object.keys(localStorage).filter(isSetting)){localStorage.removeItem(key);}
+}
+
 // Forget every saved setting and reload, so every setting starts from its default
 function resetAllSettings(){
 	if(!confirm('Put every setting back to its default? Your login, the game in progress and your uploads are kept.')){return;}
-	const keep = notSettings.concat(JSON.parse(localStorage.getItem('customPieces') || '[]'));
-	for(const key of Object.keys(localStorage)){
-		if(!keep.includes(key)){localStorage.removeItem(key);}
-	}
+	forgetAllSettings();
 	location.reload();
+}
+
+// Save every setting to a JSON file that can be shared and imported
+function exportSettings(){
+	// The look settings go in even on their defaults, which are never saved, so a shared file shows every value to tweak.
+	// The other settings are only in it once changed; importing puts any setting missing from the file on its default.
+	const settings = {
+		shadows_enabled: String(shadowsEnabled),
+		light_follows_camera: String(lightFollowsCamera),
+		tone_mapping: toneMapping,
+		shadow_map_size: String(shadowMapSize)
+	};
+	for(const name in lightingSettings){settings[`light_${name}`] = document.getElementById(`light-${name}-slider`).value;}
+	for(const key of Object.keys(localStorage).filter(isSetting)){settings[key] = localStorage.getItem(key);}
+	// sorted, so the file is easy to read and compare
+	const sorted = Object.fromEntries(Object.entries(settings).sort(([a], [b]) => a.localeCompare(b)));
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(new Blob([JSON.stringify(sorted, null, 2)], {type: 'application/json'}));
+	link.download = 'playtak-settings.json';
+	link.click();
+	URL.revokeObjectURL(link.href);
+}
+
+// Replace every setting with the ones in an exported file and reload. Only settings are taken from the file:
+// it may come from someone else, so it can't change the login, the game or uploads.
+function importSettings(file){
+	if(!file){return;}
+	file.text().then((text) => {
+		let settings;
+		try{settings = JSON.parse(text);}
+		catch(e){settings = null;}
+		if(!settings || typeof settings !== 'object' || Array.isArray(settings)){
+			alert('That file is not a settings file exported from Playtak.');
+			return;
+		}
+		forgetAllSettings();
+		for(const [key, value]of Object.entries(settings)){
+			if(isSetting(key) && typeof value === 'string'){localStorage.setItem(key, value);}
+		}
+		location.reload();
+	});
 }
 
 // Remember which settings groups are open, saved as settings_group_<name>
@@ -206,6 +292,8 @@ function resetLighting(){
 	}
 	localStorage.removeItem('light_follows_camera');
 	toggleLightFollowsCamera(false, false);
+	localStorage.removeItem('tone_mapping');
+	setToneMapping('NoToneMapping', false);
 }
 
 /*
@@ -907,6 +995,8 @@ function load3DSettings(){
 		for(const name in lightingSettings){
 			if(localStorage.getItem(`light_${name}`) !== null){setLighting(name, localStorage.getItem(`light_${name}`), false);}
 		}
+		setToneMapping(localStorage.getItem('tone_mapping') || 'NoToneMapping', false);
+		setShadowQuality(localStorage.getItem('shadow_map_size') || '2048', false);
 		// load background color setting
 		document.getElementById("clearcolorbox").value = localStorage["clearcolor"] || "#dddddd";
 		clearcolorchange();
