@@ -919,7 +919,7 @@
 									<div id="shadow-light-settings" class="shadow-light-settings">
 										<div class="light-row">
 											<label for="light-shadow-slider" data-toggle="tooltip" data-placement="top" title="How dark shadows are compared with the lit areas.">Shadow strength</label>
-											<input type="range" id="light-shadow-slider" min="50" max="300" step="10" value="100" oninput="setLighting('shadow', this.value)" />
+											<input type="range" id="light-shadow-slider" min="50" max="300" step="5" value="100" oninput="setLighting('shadow', this.value)" />
 											<span id="light-shadow-value">100%</span>
 										</div>
 										<div class="light-row">
@@ -929,7 +929,7 @@
 										</div>
 										<div class="light-row">
 											<label for="light-fill-slider" data-toggle="tooltip" data-placement="top" title="The soft all-round light that reaches piece sides and shadows. Raise it to lift dark sides without brightening the tops.">Fill light</label>
-											<input type="range" id="light-fill-slider" min="0" max="300" step="10" value="100" oninput="setLighting('fill', this.value)" />
+											<input type="range" id="light-fill-slider" min="0" max="300" step="5" value="100" oninput="setLighting('fill', this.value)" />
 											<span id="light-fill-value">100%</span>
 										</div>
 										<div class="light-row">
@@ -939,7 +939,7 @@
 										</div>
 										<div class="light-row">
 											<label for="light-direction-slider" data-toggle="tooltip" data-placement="top" title="Which side of the board the main light shines from. Only noticeable when the light angle is above 0°.">Light direction</label>
-											<input type="range" id="light-direction-slider" min="0" max="345" step="15" value="0" oninput="setLighting('direction', this.value)" />
+											<input type="range" id="light-direction-slider" min="0" max="355" step="5" value="0" oninput="setLighting('direction', this.value)" />
 											<span id="light-direction-value">0°</span>
 										</div>
 										<div>
@@ -955,7 +955,7 @@
 										</div>
 										<div class="light-row">
 											<label for="light-height-slider" data-toggle="tooltip" data-placement="top" title="How high the top light sits above the board.">Top light height</label>
-											<input type="range" id="light-height-slider" min="100" max="1500" step="50" value="800" oninput="setLighting('height', this.value)" />
+											<input type="range" id="light-height-slider" min="100" max="1500" step="5" value="800" oninput="setLighting('height', this.value)" />
 											<span id="light-height-value">800</span>
 										</div>
 									</div>
