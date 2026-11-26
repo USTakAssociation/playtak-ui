@@ -869,6 +869,12 @@ function undoMove(){
 	if(is2DBoard){
 		const timerTurn = (gameData.move_count % 2 === 0) ? 1 : 2;
 		set2DGameTimerTurn(timerTurn);
+		// Give the board back when the undo makes it my move. This used to wait
+		// for PTN Ninja to echo the DELETE_PLY sent above, which it no longer
+		// does for a host's own commands.
+		if(!gameData.observing && checkIfMyMove()){
+			setDisable2DBoard(false);
+		}
 	}
 }
 

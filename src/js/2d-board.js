@@ -101,6 +101,8 @@ async function messageHandler(event){
 			}
 			break;
 		case "DELETE_PLY":
+			// Only from a PTN Ninja that still echoes the host's commands;
+			// undoMove does this itself now
 			if(!gameData.observing && checkIfMyMove()){
 				setDisable2DBoard(false);
 			}
