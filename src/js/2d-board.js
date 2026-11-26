@@ -1,4 +1,6 @@
 let ptnNinjaHasLoaded = false;
+// Whether PTN Ninja has said READY since this page loaded
+let ptnNinjaWasReady = false;
 const ninja = document.getElementById("ninja");
 
 async function messageHandler(event){
@@ -107,11 +109,39 @@ async function messageHandler(event){
 				setDisable2DBoard(false);
 			}
 			break;
+		case "READY":
+			// PTN Ninja says READY each time it loads. The first is this page's
+			// own load; another means it reloaded itself, as it does after one of
+			// its releases, and has lost its settings and game.
+			if(ptnNinjaWasReady){
+				restore2DBoard();
+			}
+			ptnNinjaWasReady = true;
+			break;
 		case "UNHANDLED_KEY":
 			onKeyUp(value);
 			break;
 		default:
 			break;
+	}
+}
+
+// Give a PTN Ninja that has just reloaded its settings, the game as it
+// stands, and whose move it is
+function restore2DBoard(){
+	if(!is2DBoard){
+		return;
+	}
+	load2DSettings();
+	set2DBoard(getNotation());
+	send2DAction('LAST');
+	setShownMove(gameData.move_count);
+	if(!gameData.is_scratch && !gameData.observing){
+		set2DPlayer(gameData.my_color === 'white' ? 1 : 2);
+	}
+	setDisable2DBoard(!(gameData.is_scratch || checkIfMyMove()));
+	if(lastTimeUpdate){
+		forward2DGameTime(lastWt, lastBt);
 	}
 }
 
