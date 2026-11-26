@@ -287,7 +287,8 @@ var server = {
 			}
 			this.connection = new WebSocket(proto+url,"binary");
 			this.connection.onerror = function(e){
-				console.error("Connection error: " + e);
+				// Browsers hide WebSocket failure details on purpose; the close event below has the code.
+				console.error("Connection error on " + e.target.url + " (readyState " + e.target.readyState + ")");
 			};
 			this.connection.onmessage = function(e){
 				const blob = e.data;
@@ -301,6 +302,8 @@ var server = {
 				gotreply();
 			};
 			this.connection.onclose = function(e){
+				console.warn("Connection closed: code=" + e.code + " reason=" + (e.reason || "(none)") + " wasClean=" + e.wasClean);
+				gotreply(); // no reply can come on a closed socket; stop the "Server unresponsive" alert
 				server.loggedin=false;
 				resetToLoginState();
 				document.getElementById("onlineplayers").style.display = "none";
